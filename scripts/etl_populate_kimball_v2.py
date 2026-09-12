@@ -140,9 +140,9 @@ def run_etl():
         dist_rows = []
         for r in cur_rem.fetchall():
             id_dist, nombre, region, pob = r[0], r[1], r[2], int(r[3])
-            salario = float(r[4]) if r[4] and str(r[4]).strip() != '?' else None
-            desempleo = float(r[5]) if r[5] and str(r[5]).strip() != '?' else None
-            crimen = float(r[6]) if r[6] and str(r[6]).strip() != '?' else None
+            salario = float(r[4]) if r[4] is not None and str(r[4]).strip() not in ('?', '') else None
+            desempleo = float(r[5]) if r[5] is not None and str(r[5]).strip() not in ('?', '') else None
+            crimen = float(r[6]) if r[6] is not None and str(r[6]).strip() not in ('?', '') else None
             dist_rows.append((id_dist, nombre, region, pob, salario, desempleo, crimen))
             
         cur_loc.fast_executemany = True
