@@ -12,7 +12,7 @@
 
 ### 📂 Contenido del Repositorio
 
-Este repositorio contiene la documentación metodológica oficial, el modelado de arquitecturas de almacenamiento de datos corporativos (DW/BI) y los scripts de implementación DDL en SQL Server para el caso de estudio `Financial_ijs`:
+Este repositorio contiene la documentación metodológica oficial, el modelado de arquitecturas de almacenamiento de datos corporativos (DW/BI), los scripts DDL y el pipeline de carga ETL automatizado para el caso de estudio `Financial_ijs`:
 
 #### 1. Documentación Metodológica y Guías Prácticas
 * 📄 **[01. Carta de Diseño Oficial (v6 Definitiva)](01_Carta_de_Diseno_Financial_ijs.md)**  
@@ -24,7 +24,32 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * 💾 **[`sql/01_DDL_Kimball_DM_Financial.sql`](sql/01_DDL_Kimball_DM_Financial.sql)**  
   *Script DDL completo para la arquitectura dimensional de Ralph Kimball (`DM_Financial_Kimball_v2`). Define las 4 dimensiones conformadas (`Tiempo`, `Cuenta`, `Cliente`, `Distrito`), los catálogos específicos (`Estado_Prestamo`, `Operacion`, `Orden`) y las tablas de hechos atómicas (`Fact_Prestamos`, `Fact_Transacciones`, `Fact_Ordenes`) con tipos monetarios exactos `DECIMAL(12,2)`.*
 * 💾 **[`sql/02_DDL_Inmon_EDW_Financial.sql`](sql/02_DDL_Inmon_EDW_Financial.sql)**  
-  *Script DDL completo para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`). Modela el repositorio central en Tercera Forma Normal (3FN) organizado por áreas temáticas (`Distrito`, `Cliente`, `Cuenta`, `Disposicion`, `Tarjeta`, `Prestamo`, `Transaccion`, `Orden`, `EtiquetaCliente`) e incluye las vistas analíticas departamentales derivadas (`Vista_Mora_Distrito`, `Vista_Calidad_Historica`, `Vista_Volumen_Operaciones`, `Vista_Ordenes_Recurrentes`).*
+  *Script DDL documental para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`). Modela el repositorio central en Tercera Forma Normal (3FN) organizado por áreas temáticas y las vistas analíticas departamentales derivadas.*
+
+#### 3. Pipeline ETL Automatizado (Python)
+* ⚙️ **[`scripts/etl_populate_kimball_v2.py`](scripts/etl_populate_kimball_v2.py)**  
+  *Script ETL optimizado para extraer los datos desde la base de datos remota MySQL (`Financial_ijs`), aplicar reglas de limpieza (distritos, edad de corte, etiquetas de pago) y poblar el modelo Kimball en SQL Server.*
+
+---
+
+### 🚀 Cómo Ejecutar o Volver a Poblar el Modelo Kimball
+
+Para poblar la base de datos `DM_Financial_Kimball_v2` desde cero en cualquier momento:
+
+#### Requisitos:
+```bash
+pip install pymysql pyodbc
+```
+
+#### Ejecución normal (verifica y puebla tablas vacías):
+```bash
+python scripts/etl_populate_kimball_v2.py
+```
+
+#### Ejecución con reinicio total (limpia tablas y repuebla desde la fuente remota):
+```bash
+python scripts/etl_populate_kimball_v2.py --reset
+```
 
 ---
 
@@ -37,7 +62,7 @@ flowchart LR
     end
 
     subgraph Kimball["Ruta Ralph Kimball (Bottom-Up)"]
-        ETL_K["ETL Directo"]
+        ETL_K["ETL Python / SSIS"]
         DM_K["Constelación Dimensional<br>• Fact_Prestamos (682)<br>• Fact_Transacciones (1.05M)<br>• Fact_Ordenes (6,471)<br>• 4 Dimensiones Conformadas"]
     end
 
@@ -54,6 +79,3 @@ flowchart LR
     OLTP --> ETL_K --> DM_K --> Dashboards
     OLTP --> ETL_I --> EDW --> DM_I --> Dashboards
 ```
-
----
-*Repositorio oficial generado bajo estándares de modelado de Ralph Kimball y Bill Inmon.*
