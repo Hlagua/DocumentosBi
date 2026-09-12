@@ -12,7 +12,7 @@
 
 ### 📂 Contenido del Repositorio
 
-Este repositorio contiene la documentación metodológica oficial, el modelado de arquitecturas de almacenamiento de datos corporativos (DW/BI), los scripts DDL y el pipeline de carga ETL automatizado para el caso de estudio `Financial_ijs`:
+Este repositorio contiene la documentación metodológica oficial, el modelado de arquitecturas de almacenamiento de datos corporativos (DW/BI), los scripts DDL y los DataFrames analíticos para el caso de estudio `Financial_ijs`:
 
 #### 1. Documentación Metodológica y Guías Prácticas
 * 📄 **[01. Carta de Diseño Oficial (v6 Definitiva)](01_Carta_de_Diseno_Financial_ijs.md)**  
@@ -26,29 +26,37 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * 💾 **[`sql/02_DDL_Inmon_EDW_Financial.sql`](sql/02_DDL_Inmon_EDW_Financial.sql)**  
   *Script DDL documental para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`). Modela el repositorio central en Tercera Forma Normal (3FN) organizado por áreas temáticas y las vistas analíticas departamentales derivadas.*
 
-#### 3. Pipeline ETL Automatizado (Python)
+#### 3. Pipelines de Carga y Generación (Python)
 * ⚙️ **[`scripts/etl_populate_kimball_v2.py`](scripts/etl_populate_kimball_v2.py)**  
-  *Script ETL optimizado para extraer los datos desde la base de datos remota MySQL (`Financial_ijs`), aplicar reglas de limpieza (distritos, edad de corte, etiquetas de pago) y poblar el modelo Kimball en SQL Server.*
+  *Pipeline ETL para extraer los datos desde la base de datos remota MySQL (`Financial_ijs`), aplicar reglas de limpieza (distritos, edad de corte, etiquetas de pago) y poblar el modelo Kimball en SQL Server.*
+* ⚙️ **[`scripts/generar_4_dataframes.py`](scripts/generar_4_dataframes.py)**  
+  *Script para extraer, transformar y exportar los **4 DataFrames analíticos** consolidados a partir de la base dimensional.*
+
+#### 4. DataFrames Analíticos Exportados (`dataframes/`)
+* 📊 **[`dataframes/df_prestamos.csv`](dataframes/df_prestamos.csv):** 682 filas $\times$ 24 columnas (Cartera de créditos, morosidad y riesgo).
+* 📊 **[`dataframes/df_ordenes.csv`](dataframes/df_ordenes.csv):** 6,471 filas $\times$ 14 columnas (Débitos automáticos programados, bancos destino y categorías).
+* 📊 **[`dataframes/df_cliente_consolidado.csv`](dataframes/df_cliente_consolidado.csv):** 5,369 filas $\times$ 29 columnas (Matriz Cliente 360 para clusterización y minería de datos).
+* 📊 **[`dataframes/df_transacciones.csv.gz`](dataframes/df_transacciones.csv.gz):** 1,056,320 filas $\times$ 21 columnas (Movimientos contables completos en CSV comprimido Gzip).
 
 ---
 
-### 🚀 Cómo Ejecutar o Volver a Poblar el Modelo Kimball
+### 🐍 Cómo Cargar los DataFrames en Python
 
-Para poblar la base de datos `DM_Financial_Kimball_v2` desde cero en cualquier momento:
+```python
+import pandas as pd
 
-#### Requisitos:
-```bash
-pip install pymysql pyodbc
-```
+# 1. Cargar Préstamos
+df_prestamos = pd.read_csv('dataframes/df_prestamos.csv')
 
-#### Ejecución normal (verifica y puebla tablas vacías):
-```bash
-python scripts/etl_populate_kimball_v2.py
-```
+# 2. Cargar Órdenes
+df_ordenes = pd.read_csv('dataframes/df_ordenes.csv')
 
-#### Ejecución con reinicio total (limpia tablas y repuebla desde la fuente remota):
-```bash
-python scripts/etl_populate_kimball_v2.py --reset
+# 3. Cargar Cliente Consolidado (360)
+df_cliente = pd.read_csv('dataframes/df_cliente_consolidado.csv')
+
+# 4. Cargar Transacciones (Pandas descomprime el .csv.gz automáticamente en memoria)
+df_trans = pd.read_csv('dataframes/df_transacciones.csv.gz')
+print(f"Transacciones cargadas: {df_trans.shape[0]:,} filas x {df_trans.shape[1]} columnas")
 ```
 
 ---
@@ -74,8 +82,10 @@ flowchart LR
 
     subgraph BI["Capa de Consumo"]
         Dashboards["Power BI / DAX<br>Tableros de Decisión"]
+        PythonDF["DataFrames (Pandas)<br>Minería de Datos / ML"]
     end
 
     OLTP --> ETL_K --> DM_K --> Dashboards
+    DM_K --> PythonDF
     OLTP --> ETL_I --> EDW --> DM_I --> Dashboards
 ```
