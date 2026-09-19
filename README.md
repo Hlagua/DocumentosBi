@@ -21,6 +21,8 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
   *Diseño comparativo entre el enfoque Bottom-Up (Data Mart Bus Architecture con esquema en constelación) y el enfoque Top-Down (Corporate Information Factory con EDW en 3FN y data marts derivados), Matriz de Bus Corporativa, Source-to-Target Mapping y evaluación técnica de rendimiento.*
 * 📄 **[03. Informe de Guía Práctica: Limpieza y Transformación de Datos](03_Informe_Limpieza_y_Transformacion_de_Datos.md)**  
   *Guía práctica oficial de completitud de datos (enfoque híbrido OpenRefine + Python/Pandas/NumPy vectorizado), imputación causal vs. K-Means en distritos, resolución de contrapares bancarias, enriquecimiento semántico y validación de 0% nulos.*
+* 📄 **[04. Informe de Guía Práctica: Sistemas de Recomendación](04_Informe_Sistemas_de_Recomendacion.md)**  
+  *Guía práctica oficial de Sistemas de Recomendación bancarios estructurados bajo los paradigmas Demográfico (K-Means), Colaborativo (Slope One, Correlación de Pearson y Similitud de Coseno) y Basado en Contenido (Item-to-Item de Amazon con Frecuencia Inversa ITF), con formato CERO CÓDIGO sustentado en evidencias visuales y métricas formales.*
 
 #### 2. Scripts DDL de Implementación Física (SQL Server)
 * 💾 **[`sql/01_DDL_Kimball_DM_Financial.sql`](sql/01_DDL_Kimball_DM_Financial.sql)**  
@@ -28,11 +30,12 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * 💾 **[`sql/02_DDL_Inmon_EDW_Financial.sql`](sql/02_DDL_Inmon_EDW_Financial.sql)**  
   *Script DDL documental para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`). Modela el repositorio central en Tercera Forma Normal (3FN) organizado por áreas temáticas y las vistas analíticas departamentales derivadas.*
 
-#### 3. Pipelines de Carga, Calidad y Limpieza (Python)
+#### 3. Pipelines de Carga, Calidad y Recomendación (Python)
 * ⚙️ **[`scripts/etl_populate_kimball_v2.py`](scripts/etl_populate_kimball_v2.py):** Pipeline ETL para extraer datos desde MySQL (`Financial_ijs`), aplicar reglas de staging y poblar el modelo dimensional en SQL Server.
 * ⚙️ **[`scripts/generar_4_dataframes.py`](scripts/generar_4_dataframes.py):** Script para extraer y exportar los 4 DataFrames analíticos a partir de la base dimensional.
 * ⚙️ **[`scripts/completar_transacciones.py`](scripts/completar_transacciones.py):** Pipeline vectorizado de completitud e imputación multicriterio sobre 1,056,320 transacciones (<24 s).
 * ⚙️ **[`scripts/clustering.py`](scripts/clustering.py) / [`scripts/imputar_final.py`](scripts/imputar_final.py):** Algoritmos de correlación, codo/silueta K-Means e imputación para `df_cliente_consolidado`.
+* ⚙️ **[`scripts/sistemas_recomendacion.py`](scripts/sistemas_recomendacion.py):** Pipeline analítico de recomendación que ejecuta los modelos Demográfico, Colaborativo (Slope One, Pearson, Coseno) e Item-to-Item con ITF, exportando las evidencias gráficas en alta definición.
 
 #### 4. DataFrames Analíticos Originales y Limpios (`dataframes/`)
 * 📊 **[`dataframes/df_prestamos.csv`](dataframes/df_prestamos.csv):** 682 filas $\times$ 24 columnas (Cartera de créditos, 100% completo).
