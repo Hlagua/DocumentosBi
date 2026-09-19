@@ -82,15 +82,60 @@ Todos los modelos implementados responden a las formulaciones matemáticas exact
 * **Correlación de Pearson (Diapositiva 11):** Coeficiente de afinidad lineal centrado en la media:
   $$r_{i, j} = rac{\sum_u (r_{u, i} - ar{r}_i)(r_{u, j} - ar{r}_j)}{\sqrt{\sum_u (r_{u, i} - ar{r}_i)^2} \sqrt{\sum_u (r_{u, j} - ar{r}_j)^2}}$$
 * **Frecuencia Inversa de Ítems (ITF):** Ponderación de especificidad logarítmica de productos:
-  $$	ext{ITF}(i) = \ln\left(rac{N}{|u \in U : 	ext{posee ítem } i|}ight)$$
+  $$\text{ITF}(i) = \ln\left(\frac{N}{|u \in U : 	ext{posee ítem } i|}
+ight)$$
 * **Distancia Euclídea para Clustering K-Means (PDF 1, Diapositiva 3):**
   $$d_E(P_1, P_2) = \sqrt{\sum_{k=1}^m (x_{2,k} - x_{1,k})^2}$$
 
-#### 3. Arquitectura de Procesamiento: Offline, Nearline y Online (Diapositiva 9)
-Conforme a la arquitectura de referencia de Netflix y Amazon Web Services (AWS) explicada en la cátedra:
-* **Offline (Batch):** Procesa de madrugada el millón de transacciones en el Data Warehouse, recalculando los centroides K-Means, la matriz de diferencias Slope One y las correlaciones de Pearson.
-* **Nearline (Streaming):** Captura eventos transaccionales en tiempo casi real (retiros en cajeros o pagos de tarjetas), actualizando los vectores de afinidad de los clientes.
-* **Online (Real-Time):** Responde en menos de 50 milisegundos en la banca móvil, filtrando las recomendaciones por capacidad de endeudamiento antes de visualizarlas en pantalla.
+#### 3. Arquitectura de Cómputo Empresarial: Desacoplamiento Offline, Nearline y Online en el Caso Real Bancario (Diapositiva 9)
+En la práctica de la ingeniería de software y la ciencia de datos aplicada a la banca, ningún sistema de recomendación puede ejecutar todos sus cálculos a la misma velocidad. Inspirado en la arquitectura de referencia de **Netflix y Amazon Web Services (AWS)** expuesta en la Diapositiva 9 del PDF 2, los cuatro sistemas de recomendación implementados en este proyecto se distribuyen estratégicamente en tres capas temporales de cómputo para garantizar la máxima precisión analítica sobre volúmenes masivos sin sacrificar la latencia de respuesta al usuario final:
+
+`	ext
+========================================================================================
+                      ARQUITECTURA DE PROCESAMIENTO DW/BI (BANCO COMERCIAL)
+========================================================================================
+
+ [CAPA 1: OFFLINE / BATCH] (Horas - Procesamiento nocturno en Data Warehouse)
+  ├── df_cliente_consolidado_clean  ──► Clustering K-Means (Centroides demográficos)
+  ├── df_transacciones_completado   ──► Matrices masivas de Pearson (r) y Coseno (cos θ)
+  └── df_ordenes_clean              ──► Factores de Frecuencia Inversa ITF = ln(N / n_i)
+                                                    │
+                                                    ▼ (Tablas precalculadas y matrices base)
+ [CAPA 2: NEARLINE / STREAMING] (Segundos - Eventos asíncronos en colas de mensajes)
+  ├── Nuevo Retiro / Pago (Transacción) ──► Actualización incremental Slope One: f(x) = x + b
+  └── Nueva Domiciliación (Orden)       ──► Actualización de vector binario Item-to-Item (0 -> 1)
+                                                    │
+                                                    ▼ (Caché en memoria Redis / EVCache)
+ [CAPA 3: ONLINE / TIEMPO REAL] (< 50 ms - Inferencia síncrona en Banca Móvil / Web)
+  ├── df_prestamos (Filtro de Riesgo)   ──► Regla de exclusión morosa (Estatus B y D bloqueados)
+  ├── Salario disponible distrital       ──► Restricción de Utilidad: Cuota mensual <= 30% Salario
+  ├── Cliente nuevo sin historial        ──► Onboarding Demográfico: Distancia euclídea d_E
+  └── SERVING LAYER                     ──► Renderizado del Top-3 de productos recomendados
+========================================================================================
+`
+
+##### A. Capa Offline (Batch / Lote Nocturno en el Data Warehouse)
+* **Frecuencia y Latencia:** Procesamiento por lotes programado durante ventanas de bajo tráfico operativo (madrugada). Su tiempo de ejecución varía entre minutos y horas, priorizando la exhaustividad matemática sobre la inmediatez.
+* **Sistemas y Datasets Involucrados:**
+  1. **Clustering Demográfico (df_cliente_consolidado_clean.csv):** Agrupa a los 5,369 clientes y calcula las coordenadas de los 4 centroides sociodemográficos (edad, salario distrital, población, saldo). Como las variables sociodemográficas cambian lentamente, esta rutina se ejecuta semanal o mensualmente.
+  2. **Matrices Pesadas de Pearson y Coseno (df_transacciones_completado.csv.gz):** Correlacionar 1,056,320 transacciones entre todos los pares de productos demanda millones de operaciones vectoriales en coma flotante. El motor offline calcula las matrices de afinidad global y las almacena precalculadas en tablas indexadas del Data Mart analítico.
+  3. **Ponderación de Frecuencia Inversa de Ítems (df_ordenes_clean.csv):** Evalúa la popularidad global de cada contrato ($) y actualiza los pesos de especificidad $\text{ITF} = \ln(N / n_i)$.
+
+##### B. Capa Nearline (Streaming / Flujo de Eventos Asíncronos)
+* **Frecuencia y Latencia:** Procesamiento reactivo en tiempo casi real (1 a 5 segundos tras registrarse un evento). No bloquea la navegación del usuario en la aplicación bancaria.
+* **Sistemas y Datasets Involucrados:**
+  1. **Algoritmo Slope One ((x) = x + b$):** Diseñado específicamente por Lemire et al. (2005) para actualización incremental. Cuando un cliente realiza una nueva transacción en cajero o ventanilla, el evento es capturado por un bus de mensajería (Kafka/RabbitMQ); el sistema no recalcula la base de datos completa, sino que suma $+1$ al conteo de pares y actualiza la media aritmética de desviaciones {i,j}$ en tiempo (1)$ en una base de datos en memoria (Redis/Cassandra).
+  2. **Actualización del Catálogo en Item-to-Item (Amazon):** Si un cliente contrata una nueva orden periódica de seguro (POJISTNE), el motor nearline actualiza su vector binario de adquisición ( 
+ightarrow 1$) en segundos, afinando inmediatamente su perfil para las siguientes interacciones.
+
+##### C. Capa Online (Tiempo Real < 50 ms en la Banca Móvil)
+* **Frecuencia y Latencia:** Inferencia síncrona de ultrabaja latencia (< 50 milisegundos) en el milisegundo exacto en que el usuario abre su aplicación móvil o interactúa con el portal web.
+* **Sistemas y Datasets Involucrados:**
+  1. **Sistema Basado en Conocimiento y Utilidad (df_prestamos.csv):** Actúa como un cortafuegos ético y financiero en tiempo real. En menos de 30 milisegundos evalúa:
+     * *Filtro de Riesgo (Conocimiento):* Verifica si el cliente registra cuotas morosas activas (status = 'D') en ese instante; de ser así, bloquea inmediatamente la oferta de crédito para no comprometer al banco.
+     * *Función de Utilidad Financiera:* Consulta el salario disponible del cliente y ajusta dinámicamente el plazo (12 a 60 meses) de modo que la cuota sugerida nunca supere el 30% del ingreso mensual neto.
+  2. **Onboarding Inmediato de Clientes Nuevos (Demográfico):** Si un cliente recién abre su cuenta y carece de transacciones, en 10 milisegundos se calcula la distancia euclídea simple ($) contra los 4 centroides precalculados y se le despliegan en la pantalla de bienvenida los productos predilectos de su clúster.
+  3. **Serving Layer (Entrega y Ranking Top-K):** Combina los candidatos precalculados en Offline, ajustados por los eventos de Nearline y filtrados por las reglas de riesgo de Online, entregando el Top-3 de productos en pantalla con latencia imperceptible.
 
 ---
 
@@ -178,7 +223,7 @@ Este sistema modela los atributos de los contratos permanentes y aplica el algor
 * **Panel A (Coseno Binario Amazon):** Analiza la co-ocurrencia estricta. La similitud binaria entre `SERVICIOS_HOGAR` y `TRANSF_EXTERNA` es de **$0.54$**, demostrando que más de la mitad de los usuarios con transferencias periódicas también mantienen débitos domiciliados.
 * **Panel B (El dilema de popularidad resuelto por ITF):**
   * `SERVICIOS_HOGAR` es contratado por **3,439 clientes**, por lo que su peso ITF se deprime a **$0.45$**. Sin este factor, cualquier recomendador basado en popularidad le sugeriría servicios básicos a toda la cartera.
-  * Por el contrario, `LEASING` (**341 clientes**, $	ext{ITF} = \mathbf{2.76}$) y `SEGURO` (**533 clientes**, $	ext{ITF} = \mathbf{2.31}$) multiplican su relevancia hasta por 6 veces, logrando que el recomendador priorice contratos estratégicos de alto margen financiero.
+  * Por el contrario, `LEASING` (**341 clientes**, $\text{ITF} = \mathbf{2.76}$) y `SEGURO` (**533 clientes**, $\text{ITF} = \mathbf{2.31}$) multiplican su relevancia hasta por 6 veces, logrando que el recomendador priorice contratos estratégicos de alto margen financiero.
 
 ##### Ejemplo Real de Aplicación Basada en Contenido con ITF:
 * **Caso:** El **Cliente #19** tiene una orden recurrente de `SERVICIOS_HOGAR`.
@@ -195,9 +240,12 @@ Conforme a la **Diapositiva 4 del PDF 2**, los productos de crédito de alto rie
 
 ##### Análisis Descriptivo y de Negocio (Figura 7):
 * **Panel A (Regla de Conocimiento - Elegibilidad Crediticia):** Sobre los 682 créditos históricos auditados en `df_prestamos.csv`:
-  * **Estatus A (203 préstamos, 29.8%):** Contratos concluidos con pago puntual $ightarrow$ **Elegibilidad Inmediata / Pre-aprobado**.
-  * **Estatus C (403 préstamos, 59.1%):** Créditos activos al corriente $ightarrow$ **Elegibilidad Condicionada a Capacidad de Pago o Refinanciamiento**.
-  * **Estatus B (31 préstamos, 4.5%) y D (45 préstamos, 6.6%):** Clientes con morosidad o impago $ightarrow$ **Regla de Exclusión Estricta**. El sistema bloquea automáticamente cualquier recomendación de crédito y ofrece en su lugar planes de reestructuración o consolidación de pasivos.
+  * **Estatus A (203 préstamos, 29.8%):** Contratos concluidos con pago puntual $
+ightarrow$ **Elegibilidad Inmediata / Pre-aprobado**.
+  * **Estatus C (403 préstamos, 59.1%):** Créditos activos al corriente $
+ightarrow$ **Elegibilidad Condicionada a Capacidad de Pago o Refinanciamiento**.
+  * **Estatus B (31 préstamos, 4.5%) y D (45 préstamos, 6.6%):** Clientes con morosidad o impago $
+ightarrow$ **Regla de Exclusión Estricta**. El sistema bloquea automáticamente cualquier recomendación de crédito y ofrece en su lugar planes de reestructuración o consolidación de pasivos.
 * **Panel B (Función de Utilidad Financiera de Cuota y Plazo):**
   * La función de utilidad impone la restricción prudencial de Basilea: la cuota mensual sugerida no debe exceder el **30% del salario neto disponible del distrito**:
     $$	ext{RatioEndeudamiento} = rac{	ext{PagoMensual}}{	ext{SalarioPromedio}} \le 0.30$$
@@ -250,7 +298,7 @@ La Figura 6 consolida la inferencia cruzada de los modelos evaluados sobre clien
 
 * **Justificación plena del enfoque híbrido multimodelo:** La investigación evidenció que ningún algoritmo individual es capaz de satisfacer todas las necesidades del negocio financiero. Mientras que el **Sistema Demográfico (`df_cliente_consolidado`)** es imprescindible para resolver el arranque en frío de clientes nuevos, el **Sistema Colaborativo (`df_transacciones`)** provee máxima precisión matemática para clientes activos, el **Sistema de Contenido (`df_ordenes`)** afina la especificidad mediante ITF, y el **Sistema Basado en Conocimiento (`df_prestamos`)** actúa como un cortafuegos ético y financiero indispensable que previene la sobreexposición crediticia.
 * **Superioridad operativa de Slope One en producción transaccional:** En concordancia con los hallazgos de Lemire et al. (2005), Slope One demostró ser la alternativa de menor fricción computacional. Al sustentarse en desviaciones medias acumulativas ($f(x) = x + b$), permite actualizaciones incrementales en tiempo $O(1)$ cada vez que un cliente realiza un nuevo movimiento bancario, superando la pesada carga de recalcular matrices trigonométricas de Coseno o Pearson.
-* **Control del sesgo de popularidad mediante ITF:** La introducción de la Frecuencia Inversa de Ítems (ITF) dentro del esquema Item-to-Item de Amazon corrigió de forma contundente la distorsión producida por productos de uso ubicuo como `SERVICIOS_HOGAR` (presente en 3,439 clientes, $	ext{ITF} = 0.45$). Gracias a esta métrica, el motor bancario enfoca sus recomendaciones comerciales en productos de alta rentabilidad como `LEASING` ($	ext{ITF} = 2.76$) y `SEGURO` ($	ext{ITF} = 2.31$).
+* **Control del sesgo de popularidad mediante ITF:** La introducción de la Frecuencia Inversa de Ítems (ITF) dentro del esquema Item-to-Item de Amazon corrigió de forma contundente la distorsión producida por productos de uso ubicuo como `SERVICIOS_HOGAR` (presente en 3,439 clientes, $\text{ITF} = 0.45$). Gracias a esta métrica, el motor bancario enfoca sus recomendaciones comerciales en productos de alta rentabilidad como `LEASING` ($\text{ITF} = 2.76$) y `SEGURO` ($\text{ITF} = 2.31$).
 
 ---
 
