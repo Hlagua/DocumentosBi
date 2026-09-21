@@ -702,35 +702,60 @@ Para garantizar que los doce modelos de recomendación operen con alta disponibi
 
 ## VI. ANEXOS
 
-### Anexo A. Procedimiento Metodológico de Extracción Dimensional y Limpieza en Kimball DW
-El flujo ETL implementado en Python y validado en OpenRefine procesó los archivos de texto originales del repositorio PKDD'99 Financial Discovery Challenge mediante transformaciones estructuradas:
-1. **Integración Relacional y Auditoría de Claves:** Carga relacional de las siete tablas transaccionales en SQLite y resolución del vínculo cliente-cuenta a través de `disp_id` con discriminación de roles ('OWNER' y 'DISPONENT'). Se auditaron las claves foráneas para garantizar integridad referencial plena sin registros huérfanos.
-2. **Estandarización Temporal e Imputación de Conceptos:** Normalización de fechas bancarias en formato gregoriano estándar (AAAA-MM-DD) e imputación determinista de 480,951 registros transaccionales con concepto contable `k_symbol` faltante mediante las reglas operacionales del catálogo bancario checo.
-3. **Consolidación Analítica:** Generación de los cuatro DataFrames canónicos limpios: `df_transacciones` (1,056,320 registros), `df_ordenes` (6,471 contratos), `df_prestamos` (682 créditos) y `df_cliente_consolidado` (5,369 clientes con visión 360°).
+### Anexo A. Diagrama de Flujo del Ciclo Analítico y Motores de Recomendación
+La Figura 15 sintetiza la arquitectura extremo a extremo del sistema de recomendación implementado sobre el banco comercial `Financial_ijs`. El flujo se origina en el DataMart dimensional bajo metodología de Ralph Kimball (tablas de hechos `FactTransaccion`, `FactOrden`, `FactPrestamo` y dimensiones `DimCliente`, `DimCuenta` y `DimDistrito`), transita por la fase estructurada de preparación (Organizar por grano de decisión, Clasificar el catálogo financiero y Filtrar sesgos de Pareto mediante logaritmos), se bifurca hacia los cuatro DataFrames analíticos limpios para alimentar los doce motores de recomendación, y culmina en la capa de evaluación experimental auditada y el despliegue productivo en dos fases con compuerta prudencial de riesgo:
 
-### Anexo B. Matriz de Trazabilidad y Reproducibilidad Experimental
-Todos los resultados, métricas y figuras presentados en este informe son directamente reproducibles a partir de los scripts del proyecto estructurados en el entorno analítico. Para garantizar reproducibilidad exacta, todas las funciones aleatorias fijaron la semilla estándar del proyecto: `seed = 42`. La correspondencia entre módulos analíticos y secciones del informe se detalla a continuación:
-* **Transacciones:** `00_generar_4_dataframes.py` y `01_rec_transacciones_slope_one.py`: Generación de matrices y cálculo de Slope One (Eje 1).
-* **Coseno Ajustado:** `18_calc_coseno_ajustado.py`: Cálculo de matrices de similitud del Coseno Ajustado centrado en medias de usuario (Eje 1).
-* **Validación Slope One:** `14_eval_5fold_slope_one.py` y `15_eval_topn_ranking.py`: Validación cruzada de 5 pliegues y métricas Hit-Rate@k (Eje 1).
-* **Órdenes Domiciliadas:** `04_rec_ordenes_coseno.py`, `05_rec_ordenes_itf.py` y `06_rec_ordenes_pearson.py`: Modelado de co-adquisición, factores ITF y correlaciones en órdenes (Eje 2).
-* **Préstamos:** `16_eval_lopo_tfidf.py` y `09_rec_utilidad_riesgo.py`: Vectorización TF-IDF de contratos arquetípicos y cálculo de la función de utilidad del 30% (Eje 3).
-* **Significancia de Riesgo:** `17_test_chi2_estereotipos_riesgo.py`: Pruebas de significancia estadística Chi-cuadrado y Test de Fisher sobre ratios de endeudamiento (Eje 3).
-* **Clientes:** `10_rec_demografico_estereotipos.py`, `11_rec_colaborativo_knn_usuarios.py` y `12_rec_pearson_usuarios.py`: Segmentación demográfica, kNN y perfiles multivariantes (Eje 4).
-* **Descarte y Mapa Global:** `generate_figures_13_14.py`: Simulación comparativa y justificación cuantitativa del descarte de co-ocurrencia transaccional cruda y mapa estratégico.
+![Figura 15: Diagrama de Flujo del Ciclo Analítico, Transformación Dimensional y Despliegue de los Motores de Recomendación](img/fig_anexo_a_diagrama_flujo.png)
+*Figura 15: Diagrama de Flujo del Ciclo Analítico, Transformación Dimensional y Despliegue de los Motores de Recomendación.*
 
-### Anexo C. Resumen Cuantitativo de la Práctica
-La siguiente síntesis cuantitativa unifica los principales indicadores experimentales obtenidos:
+Procedimiento metodológico de transformación dimensional en Kimball DW:
+* **Integración Relacional y Auditoría de Claves:** Carga relacional de las tablas originales del repositorio PKDD'99 en SQLite y resolución de la jerarquía cliente-cuenta mediante `disp_id`, discriminando titulares (`'OWNER'`) de autorizados (`'DISPONENT'`). Se auditaron las claves foráneas para certificar integridad referencial plena sin registros huérfanos.
+* **Estandarización Temporal e Imputación de Conceptos:** Normalización de fechas contables al estándar gregoriano (AAAA-MM-DD) e imputación determinista de 480,951 registros transaccionales con concepto `k_symbol` faltante mediante las reglas operacionales del catálogo bancario checo.
+* **Consolidación Analítica:** Generación de los cuatro DataFrames limpios auditados: `df_transacciones` (1,056,320 registros), `df_ordenes` (6,471 contratos), `df_prestamos` (682 créditos) y `df_cliente_consolidado` (5,369 perfiles sociodemográficos).
+
+### Anexo B. Representación Gráfica de la Matriz de Asignación y Viabilidad Técnica
+La Figura 16 presenta la representación gráfica de la matriz de viabilidad técnica y asignación de familias algorítmicas sobre los cuatro DataFrames del banco. Cada celda resume el dictamen de ingeniería analítica: verde para algoritmos líderes (ÓPTIMO), azul para modelos de soporte analítico (COMPLEMENTARIO), naranja para modelos viables con limitaciones de grano (LIMITADO) y rojo para combinaciones matemáticamente impedidas por degeneración de soporte o carencia de corpus textual (INVIABLE):
+
+![Figura 16: Representación Gráfica de la Matriz de Asignación y Viabilidad Técnica de los Algoritmos sobre los Cuatro DataFrames](img/fig_anexo_b_matriz_grafica.png)
+*Figura 16: Representación Gráfica de la Matriz de Asignación y Viabilidad Técnica de los Algoritmos sobre los Cuatro DataFrames.*
+
+Fundamentación técnica de las asignaciones del sistema bancario:
+* **Asignación en Transacciones:** En `df_transacciones`, Slope One resulta óptimo porque la masa crítica de operaciones cliente-producto permite calcular desviaciones medias con soportes robustos (hasta $S = 3,365$), logrando un MAE de 0.2593 y un Hit-Rate@1 del 91.79%. Coseno y Pearson actúan como soporte complementario centrado en medias y series mensuales.
+* **Asignación en Órdenes Domiciliadas:** En `df_ordenes`, la co-adquisición binaria de débitos automáticos combinada con ponderación ITF es el enfoque líder al castigar ítems masivos como Servicios del Hogar y rescatar nichos de alto valor (Leasing e Hipotecas). Slope One queda inhabilitado al no existir ratings continuos de intensidad.
+* **Asignación en Préstamos:** En `df_prestamos`, cada cliente posee estrictamente un crédito en la historia, provocando que los soportes conjuntos de co-ocurrencia sean nulos ($|S(j,i)| = 0$), lo que invalida cualquier filtrado colaborativo. En cambio, TF-IDF sobre cláusulas contractuales alcanza una precisión del 100% en LOPO (8/8), gobernado por la regla de scoring y utilidad del 30%.
+* **Asignación en Perfil de Clientes:** En `df_cliente_consolidado`, los estereotipos demográficos resuelven el arranque en frío de nuevos usuarios al 100% de cobertura, mientras que kNN usuario a usuario (AUC = 0.7905) refina la predicción para clientes con mayor historial.
+
+### Anexo C. Programas Desarrollados y Artefactos de Salida
+Todos los sistemas, métricas y figuras presentados en este informe son directamente reproducibles a partir de los scripts del proyecto estructurados en el entorno analítico. Para garantizar reproducibilidad exacta, todas las rutinas aleatorias fijaron la semilla estándar del proyecto: `seed = 42`. La Tabla 18 detalla la relación entre los módulos de código desarrollados y las salidas analíticas generadas:
+
+##### TABLA 18
+##### PROGRAMAS ANALÍTICOS DESARROLLADOS EN LA PRÁCTICA Y ARCHIVOS QUE GENERAN.
+
+| Archivo de Código / Script | Sistema / Módulo que Implementa | Salida Analítica Generada |
+| :--- | :--- | :--- |
+| `00_generar_4_dataframes.py` | ETL Dimensional y Extracción desde Kimball DW | 4 DataFrames canónicos limpios (.csv.gz) con auditoría de claves. |
+| `14_eval_5fold_slope_one.py` | Validación Cruzada 5-Fold de Slope One (Eje 1) | Métricas de error: MAE = 0.2593 ± 0.0052 y RMSE sobre 5 pliegues. |
+| `15_eval_topn_ranking.py` | Evaluación de Ranking Top-N Leave-One-Out (Eje 1) | Curvas Hit-Rate@k (HR@1 = 91.79%) y MRR = 0.9567. |
+| `16_eval_lopo_tfidf.py` | Validación Leave-One-Product-Out de TF-IDF (Eje 3) | Matriz de similitud léxica 8 × 8 y 100% de acierto Top-2 en LOPO. |
+| `17_test_chi2_estereotipos_riesgo.py` | Pruebas de Hipótesis Chi² y Test de Fisher (Eje 3) | Significancia estadística de mora: χ² = 10.62 (p = 0.0011) y Fisher. |
+| `18_calc_coseno_ajustado.py` | Coseno Ajustado Centrado en Medias de Usuario (Eje 1) | Matriz 5 × 5 de similitud angular centrada sin compresión. |
+| `generate_14_figures_from_04.py` | Generador de Figuras Individuales en Alta Definición | 12 Figuras individuales a 300 DPI para los cuatro DataFrames analíticos. |
+| `generate_figures_13_14.py` | Generador de Descarte Empírico y Mapa Estratégico | Figura 13 (Descarte Empírico) y Figura 14 (Lienzo Estratégico). |
+| `generate_annex_figures.py` | Generador Gráfico de Diagramas de Anexos | Figura 15 (Diagrama de Flujo) y Figura 16 (Matriz Gráfica 5 × 4). |
+| `build_final_04_word.py` | Constructor Maestro del Informe Institucional Word | 04_Informe_Sistemas_de_Recomendacion.docx con formato oficial UTA. |
+
+### Anexo D. Resumen Cuantitativo de la Práctica y Glosario Técnico de Recomendadores
+La siguiente síntesis cuantitativa unifica los principales indicadores experimentales obtenidos a lo largo de la investigación:
 * **4 DataFrames analizados:** `df_transacciones` (1,056,320 registros), `df_ordenes` (6,471 registros), `df_prestamos` (682 registros) y `df_cliente_consolidado` (5,369 registros).
 * **12 modelos de recomendación implementados:** Evaluados y contrastados a través de los cuatro DataFrames (3 modelos por DataFrame).
 * **Cobertura completa de las 3 familias clásicas:** Filtrado Colaborativo, Basado en Contenidos, Demográfico y Modelos de Conocimiento/Utilidad.
 * **100% de clientes y productos cubiertos:** En la combinación global de la arquitectura en dos fases.
 * **Reducción del error absoluto (MAE) en Slope One:** 37.61% de reducción frente a la media de usuario en partición 80/20 (MAE = 0.2535 frente a 0.4063 de media de usuario de entrenamiento) y 36.18% en validación cruzada de 5 pliegues (MAE = 0.2593 ± 0.0052 frente a 0.4063 de media de usuario, y 43.70% frente a la media global de 0.4606).
 * **Hit-Rate@1 de Slope One:** Empate estadístico en ranking Top-N con la popularidad pura (91.79% vs 91.29%, Z = 0.7634, p = 0.4452), garantizando personalización individual sin penalizar la tasa de acierto.
-* **Evidencia transversal de mora en la regla del 30%:** Contratos con endeudamiento ≤ 30% registran mora de 6.57%, frente a 16.86% en endeudamiento > 50% (confirmado con $\chi^2 = 10.62, p = 0.0011$; Fisher $p = 0.0007$).
+* **Evidencia transversal de mora en la regla del 30%:** Contratos con endeudamiento ≤ 30% registran mora de 6.57%, frente a 16.86% en endeudamiento > 50% (confirmado con χ² = 10.62, p = 0.0011; Fisher p = 0.0007).
 * **Dictamen técnico por DataFrame:** Cada DataFrame cuenta con su conclusión y dictamen técnico que determina el método óptimo para ese grano operacional.
 
-### Anexo D. Glosario Técnico y Financiero de Sistemas de Recomendación
+#### Glosario Técnico y Financiero de Sistemas de Recomendación
 Para facilitar la lectura y auditoría académica del documento, se definen los términos matemáticos y financieros fundamentales:
 * **Desviación Media de Slope One $b(j, i)$:** Diferencia promedio aritmética entre las calificaciones de dos productos $j$ e $i$ sobre el conjunto de usuarios comunes $S(j, i)$. Mide la sobre-propensión o sub-propensión relativa de un producto sobre otro.
 * **Soporte Conjunto $|S(j, i)|$:** Número de clientes u observaciones comunes que registraron consumo simultáneo en ambos productos evaluados. Actúa como ponderador de fiabilidad en la predicción.
@@ -757,7 +782,7 @@ Para facilitar la lectura y auditoría académica del documento, se definen los 
 ### Anexo E. Matriz de Gobernanza Ética, Cumplimiento Regulatorio y Mitigación de Sesgos Algorítmicos
 En el marco de la regulación bancaria internacional y los estándares éticos de Inteligencia Artificial aplicada a servicios financieros, el despliegue de los doce modelos desarrollados se somete a una matriz de gobernanza integral:
 
-##### TABLA XVIII
+##### TABLA 19
 ##### MATRIZ DE GOBERNANZA ÉTICA Y MITIGACIÓN DE RIESGOS EN MODELOS DE RECOMENDACIÓN BANCARIOS.
 
 | Dimensión de Gobernanza | Riesgo Algorítmico Identificado | Mecanismo de Mitigación Implementado en la Práctica | Normativa de Referencia |
@@ -766,4 +791,4 @@ En el marco de la regulación bancaria internacional y los estándares éticos d
 | **Transparencia y Explicabilidad** | Decisiones opacas en redes o cajas negras que impidan explicar una denegación. | Slope One, Coseno Ajustado y Reglas de Utilidad son algoritmos de caja blanca con trazabilidad matemática auditable paso a paso. | Reglamento General de Protección de Datos (RGPD) Art. 22 |
 | **Prevención de Sobreendeudamiento** | Recomendación de créditos a clientes vulnerables con alta propensión pero baja liquidez. | Compuerta obligatoria de utilidad (ratio cuota/salario ≤ 30%) y bloqueo histórico del 11.15% por mora en estados B y D. | Directiva Europea de Crédito al Consumo (CCD) |
 | **Integridad y Fuga de Datos** | Sobreestimación del poder predictivo por inclusión de cuotas en variables transaccionales. | Protocolo de aislamiento estricto de variables en 4B, excluyendo débitos crediticios del vector de características de entrada. | Estándares ISO/IEC 23894 para Gestión de Riesgos de IA |
-| **Estabilidad Temporal** | Degradación del rendimiento por cambios en la macroeconomía (inflación, desempleo). | Monitoreo semanal de Concept Drift con tests de Kolmogorov-Smirnov y reentrenamiento trimestral de matrices b(j, i). | Guía de Gestión de Modelos de Riesgo SR 11-7 (Fed) |
+| **Estabilidad Temporal** | Degradación del rendimiento por cambios en la macroeconomía (inflación, desempleo). | Monitoreo semanal de Concept Drift con tests de Kolmogorov-Smirnov y reentrenamiento trimestral de matrices $b(j, i)$. | Guía de Gestión de Modelos de Riesgo SR 11-7 (Fed) |

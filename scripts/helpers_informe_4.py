@@ -145,6 +145,13 @@ def clean_math_in_prose(text):
     text = re.sub(r'\\cdot\s*', '·', text)
     text = re.sub(r'\\approx\s*', '≈', text)
     text = re.sub(r'\\in\s*', '∈', text)
+    text = re.sub(r'\\chi\^2\s*', 'χ²', text)
+    text = re.sub(r'\\sigma\^2\s*', 'σ²', text)
+    text = re.sub(r'\\sigma\s*', 'σ', text)
+    text = re.sub(r'\\rho\s*', 'ρ', text)
+    text = re.sub(r'\\cos\s*', 'cos', text)
+    text = re.sub(r'\\ln\s*', 'ln', text)
+    text = text.replace('$', '')
     return text
 
 def render_inline(p, text, base_size=11.0, default_italic=False):
@@ -198,25 +205,25 @@ def add_heading(doc, level, text):
     if level == 1:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_before = Pt(14)
-        p.paragraph_format.space_after = Pt(8)
-        render_inline(p, text, base_size=12.0)
+        p.paragraph_format.space_after = Pt(6)
+        render_inline(p, text, base_size=14.0)
         p.runs[0].bold = True
     elif level == 2:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(12)
-        p.paragraph_format.space_after = Pt(6)
-        render_inline(p, text, base_size=12.0)
+        p.paragraph_format.space_after = Pt(4)
+        render_inline(p, text, base_size=12.5)
         p.runs[0].bold = True
     elif level == 3:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_before = Pt(10)
-        p.paragraph_format.space_after = Pt(4)
+        p.paragraph_format.space_before = Pt(9)
+        p.paragraph_format.space_after = Pt(3)
         render_inline(p, text, base_size=11.5)
         p.runs[0].bold = True
     elif level == 4:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_before = Pt(8)
-        p.paragraph_format.space_after = Pt(3)
+        p.paragraph_format.space_before = Pt(7)
+        p.paragraph_format.space_after = Pt(2)
         render_inline(p, text, base_size=11.0)
         p.runs[0].bold = True
     else:
@@ -244,6 +251,11 @@ def add_bullet(doc, text, bold_prefix=""):
     p.paragraph_format.left_indent = Inches(0.28)
     p.paragraph_format.first_line_indent = Inches(-0.28)
     
+    # Strip any accidental double numbering or leading bullet characters
+    if bold_prefix:
+        bold_prefix = re.sub(r'^[\s\*\-\•\u2022\d+\.\)]+', '', bold_prefix).strip()
+    text = re.sub(r'^[\s\*\-\•\u2022\d+\.\)]+', '', text).strip()
+    
     r_bullet = p.add_run("•  ")
     r_bullet.font.name = "Times New Roman"
     r_bullet.font.size = Pt(11.0)
@@ -265,6 +277,11 @@ def add_numbered(doc, num, text, bold_prefix=""):
     p.paragraph_format.space_after = Pt(3.5)
     p.paragraph_format.left_indent = Inches(0.28)
     p.paragraph_format.first_line_indent = Inches(-0.28)
+    
+    # Strip any accidental duplicate numbers or bullets
+    if bold_prefix:
+        bold_prefix = re.sub(r'^[\s\*\-\•\u2022\d+\.\)]+', '', bold_prefix).strip()
+    text = re.sub(r'^[\s\*\-\•\u2022\d+\.\)]+', '', text).strip()
     
     r_num = p.add_run(f"{num}.  ")
     r_num.font.name = "Times New Roman"
