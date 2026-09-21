@@ -972,3 +972,104 @@ python scripts/13_descarte_empirico_graficos.py
 * **100% de clientes y productos cubiertos** en la combinación global de modelos.
 * **34.69% de reducción del error absoluto (MAE)** en partición 80/20 y **36.18% en validación cruzada de 5 pliegues** en Slope One.
 * **Conclusiones por DataFrame:** Cada conjunto de datos cuenta con su dictamen técnico justificando cuál es el mejor método.
+
+#### Anexo D. Funciones centrales de implementación en Python (Código Fuente Embebido)
+
+Para asegurar que la presente guía APE sea 100% autocontenida y auditable directamente desde este informe sin requerir acceso al repositorio de código, se reproducen a continuación las implementaciones canónicas de los motores de recomendación:
+
+##### 1. Algoritmo Slope One (Filtrado Colaborativo Ítem a Ítem)
+```python
+import numpy as np
+
+def entrenar_slope_one(R):
+    """Calcula la matriz de desviaciones relativas b(j, i) y soportes S(j, i)."""
+    n_users, n_items = R.shape
+    diff_sum = np.zeros((n_items, n_items))
+    diff_count = np.zeros((n_items, n_items))
+    
+    for i in range(n_items):
+        for j in range(n_items):
+            if i != j:
+                mask = ~np.isnan(R[:, i]) & ~np.isnan(R[:, j])
+                diff_count[i, j] = np.sum(mask)
+                if diff_count[i, j] > 0:
+                    diff_sum[i, j] = np.sum(R[mask, i] - R[mask, j])
+                    
+    dev = np.divide(diff_sum, diff_count, out=np.zeros_like(diff_sum), where=diff_count > 0)
+    return dev, diff_count
+
+def predecir_slope_one(u_ratings, dev, diff_count, item_target):
+    """Predice la calificación para un ítem objetivo ponderando por soporte."""
+    rated = np.where(~np.isnan(u_ratings))[0]
+    rated = rated[rated != item_target]
+    if len(rated) == 0:
+        return np.nan
+    weights = diff_count[item_target, rated]
+    if np.sum(weights) == 0:
+        return np.nan
+    vals = u_ratings[rated] + dev[item_target, rated]
+    return np.sum(vals * weights) / np.sum(weights)
+```
+
+##### 2. Filtrado Colaborativo Ítem a Ítem con Ponderación de Frecuencia Inversa (ITF)
+```python
+import numpy as np
+
+def score_itf(matriz_binaria, n_cuentas, cuentas_items):
+    """Calcula pesos ITF y puntúa candidatos castigando la ubicuidad de servicios masivos."""
+    n_i = np.sum(matriz_binaria, axis=0)
+    itf = np.log(n_cuentas / np.maximum(n_i, 1))
+    
+    # Coseno binario
+    dot = matriz_binaria.T.dot(matriz_binaria)
+    norms = np.sqrt(np.diag(dot))
+    cos_bin = dot / (np.outer(norms, norms) + 1e-9)
+    
+    # Puntuación ITF ponderada
+    scores = {}
+    for j in range(len(itf)):
+        scores[j] = np.sum(cos_bin[cuentas_items, j]) * itf[j]
+    return scores
+```
+
+##### 3. Sistema Basado en Reglas de Scoring y Función de Utilidad Financiera
+```python
+def evaluar_utilidad_credito(monto, plazo_meses, tasa_anual, salario_distrito, estado_historico):
+    """Aplica compuerta de solvencia y restricción de cuota <= 30% del ingreso."""
+    # Regla de Scoring 1: Bloqueo de morosidad histórica (Estados B y D)
+    if estado_historico in ['B', 'D']:
+        return {'decision': 'BLOQUEADO', 'razon': 'Historial de morosidad o contrato fallido'}
+        
+    # Amortización francesa
+    r_mensual = tasa_anual / 12.0
+    cuota = monto * (r_mensual * (1 + r_mensual)**plazo_meses) / ((1 + r_mensual)**plazo_meses - 1)
+    ratio_endeudamiento = (cuota / salario_distrito) * 100.0
+    
+    # Regla de Utilidad 2: Umbral prudencial <= 30%
+    es_viable = ratio_endeudamiento <= 30.0
+    return {
+        'cuota_mensual': round(cuota, 2),
+        'ratio_endeudamiento_pct': round(ratio_endeudamiento, 2),
+        'utilidad': 1 if es_viable else 0,
+        'decision': 'APROBADO_FAST_TRACK' if es_viable else 'RECHAZADO_SOBRECARGA'
+    }
+```
+
+##### 4. Filtrado Demográfico por Estereotipos y Brecha de Afinidad (Gap Analysis)
+```python
+def recomendar_por_brecha(cliente_edad, cliente_region, consumos_cliente, perfiles_estereotipo):
+    """Calcula la brecha insatisfecha del usuario frente a la línea base de su arquetipo."""
+    macro_reg = 'Praga' if 'prag' in cliente_region.lower() else ('Bohemia' if 'bohem' in cliente_region.lower() else 'Moravia')
+    rango_edad = 'Joven' if cliente_edad < 30 else ('Adulto' if cliente_edad <= 50 else 'Mayor')
+    arquetipo = f'{macro_reg} - {rango_edad}'
+    
+    linea_base = perfiles_estereotipo.loc[arquetipo]
+    
+    brechas = {}
+    for producto in linea_base.index:
+        consumo_actual = consumos_cliente.get(producto, 0.0)
+        brechas[producto] = linea_base[producto] - consumo_actual
+        
+    return sorted(brechas.items(), key=lambda x: x[1], reverse=True)
+```
+
