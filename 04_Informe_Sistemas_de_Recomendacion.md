@@ -116,9 +116,15 @@ Siguiendo la taxonomía clásica de Montaner et al. [3], los fundamentos de filt
 ========================================================================================
 ```
 
-* **Filtrado Colaborativo:** Explota la sabiduría colectiva (*wisdom of the crowd*). No requiere conocer las características técnicas de los productos ni los datos demográficos del usuario; únicamente procesa la matriz de interacciones previas (calificaciones implícitas o explícitas).
-* **Filtrado Basado en Contenidos:** Utiliza los metadatos y descriptores objetivos de los productos. Aprende las preferencias del usuario a partir de las características de los ítems que contrató en el pasado.
-* **Filtrado Demográfico:** Asume que individuos con perfiles demográficos análogos (edad, ubicación geográfica, nivel de ingresos) comparten hábitos financieros semejantes, permitiendo recomendar desde el instante cero (*Cold Start* absoluto).
+* **Filtrado Colaborativo:** Explota la sabiduría colectiva (*wisdom of the crowd*). No requiere conocer las características técnicas de los productos ni los datos demográficos del usuario; únicamente procesa la matriz de interacciones previas (calificaciones implícitas o explícitas) mediante proximidad entre usuarios o entre ítems.
+* **Filtrado Basado en Contenidos:** Utiliza los descriptores objetivos y cláusulas contractuales de los productos. Modela las preferencias del usuario comparando las características técnicas de los ítems con el catálogo disponible en un espacio vectorial.
+* **Filtrado Demográfico:** Asume que individuos con perfiles demográficos análogos (edad, ubicación geográfica, estrato socioeconómico) comparten patrones financieros similares, permitiendo generar recomendaciones desde el instante de apertura de cuenta (*User Cold Start* absoluto).
+* **Filtrado Basado en Conocimiento (*Knowledge-Based*) y en Utilidad (*Utility-Based*):** A diferencia de los métodos estadísticos puros, estos sistemas emplean reglas explícitas de dominio financiero y funciones matemáticas de utilidad. Evalúan si un producto satisface las restricciones contractuales y la capacidad de pago del cliente (ej. la regla del ratio de endeudamiento $\le 30\%$ y el bloqueo de solicitantes con mora histórica en el Eje 3), previniendo el sobreendeudamiento sin depender de historiales compartidos.
+* **Distinción Crítica: Perfil Explícito frente a Perfil Implícito en Banca:**
+  - *Calificación Explícita:* El cliente declara formalmente su valoración mediante puntuaciones directas (estrellas o encuestas de satisfacción). En la operativa bancaria comercial cotidiana, este mecanismo es inviable: ningún usuario evalúa un retiro en cajero o una transferencia saliente.
+  - *Calificación Implícita:* Las preferencias se infieren de manera pasiva y no intrusiva a partir de la conducta transaccional registrada (frecuencia de uso, montos transferidos y domiciliación de contratos). La totalidad de las calificaciones procesadas en esta investigación corresponde a señales implícitas transformadas matemáticamente a escalas estandarizadas $[1.0, 5.0]$ o variables booleanas $\{0, 1\}$.
+* **Consideración de la Dinámica Temporal y Limitación de Interacciones Recientes:**
+  Los algoritmos convencionales agregados procesan la ventana transaccional completa (1993 a 1998) con pesos uniformes, sin incorporar factores de descuento temporal (*time-decay*). Esta simplificación heurística debe tenerse en cuenta al interpretar las afinidades resultantes, ya que asume invariabilidad en la estructura de gasto del cliente a lo largo del tiempo.
 
 ---
 
@@ -255,17 +261,17 @@ Para asegurar una trazabilidad y reproducibilidad analítica, se documenta a con
 
 #### 2.7.4 Matriz cruzada de viabilidad técnica ($5 \text{ Algoritmos} \times 4 \text{ DataFrames}$)
 
-La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibles** ($5 \text{ Algoritmos} \times 4 \text{ DataFrames}$), justificando por qué ciertos algoritmos son óptimos y por qué otros son inviables en cada tabla según su información disponible:
+La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibles** ($5 \text{ Algoritmos} \times 4 \text{ DataFrames}$), justificando por qué ciertos algoritmos son adecuados y preferentes y por qué otros son inviables en cada tabla según su información disponible:
 
 ##### TABLA IV
 ##### MATRIZ CRUZADA DE VIABILIDAD TÉCNICA (5 ALGORITMOS $\times$ 4 DATAFRAMES).
 
 | DataFrame Base | 1. Slope One | 2. Similitud Coseno | 3. Correlación Pearson | 4. TF-IDF (Contenidos) | 5. Demográfico (Estereotipos) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`df_transacciones`**<br>(1,056,320 movs) | **ÓPTIMO (Método 1A)**<br>Masa crítica de transacciones repetidas cliente-producto. | **ÓPTIMO (Método 1B)**<br>Coseno continuo sobre vectores de intensidad de uso. | **ÓPTIMO (Método 1C)**<br>Series mensuales diferenciadas (Δx_t) para aislar covariaciones sin tendencia espuria. | **NO APLICABLE**<br>No contiene texto descriptivo; solo importes, fechas y cuentas. | **VIABLE (Vía JOIN)**<br>Requiere desnormalizar atributos de clientes. |
-| **`df_ordenes`**<br>(6,471 órdenes) | **VIABLE (Secundario)**<br>Menor varianza de frecuencias que en transacciones diarias. | **ÓPTIMO (Método 2A)**<br>Matriz binaria limpia de co-contratación de débitos fijos. | **ÓPTIMO (Método 2C)**<br>Correlación de adopción de órdenes fijas entre cuentas. | **ÓPTIMO (Método 2B: ITF)**<br>Ponderación logarítmica de frecuencia inversa de ítems. | **VIABLE (Vía JOIN)**<br>Agregación de órdenes promedio por perfil. |
-| **`df_prestamos`**<br>(682 créditos) | **INVÁLIDO (Degenerado)**<br>Clientes poseen un único crédito; soporte conjunto $|S(j,i)| \approx 0$. | **ÓPTIMO (Método 3B)**<br>Proximidad numérica sobre condiciones $[monto, plazo, cuota]$. | **SECUNDARIO**<br>Volumen mensual de concesión; muestra reducida (682 filas). | **ÓPTIMO (Método 3A)**<br>Cláusulas contractuales, garantías y condiciones de crédito. | **ÓPTIMO (Método 3C: Utilidad)**<br>Reglas de scoring de riesgo y cuota $\le 30\%$ salario. |
-| **`df_cliente_consolidado`**<br>(5,369 clientes) | **NO APLICABLE**<br>Variables estáticas de usuario; no representa matriz de ítems. | **ÓPTIMO (Método 4B)**<br>Similitud Coseno Usuario a Usuario (gemelos financieros). | **ÓPTIMO (Método 4C)**<br>Correlación multivariante de perfil (edad, saldo, salario). | **NO APLICABLE**<br>Atributos numéricos y discretos; no posee corpus textual. | **ÓPTIMO (Método 4A)**<br>Dimensión maestra para construir arquetipos de negocio. |
+| **`df_transacciones`**<br>(1,056,320 movs) | **SELECCIONADO (Método 1A)**<br>Masa crítica de transacciones repetidas cliente-producto. | **SELECCIONADO (Método 1B)**<br>Coseno continuo sobre vectores de intensidad de uso. | **COMPLEMENTARIO (Método 1C)**<br>Series mensuales diferenciadas (Δx_t) para aislar covariaciones sin tendencia espuria. | **NO APLICABLE**<br>No contiene texto descriptivo; solo importes, fechas y cuentas. | **VIABLE (Vía JOIN)**<br>Requiere desnormalizar atributos de clientes. |
+| **`df_ordenes`**<br>(6,471 órdenes) | **VIABLE (Secundario)**<br>Menor varianza de frecuencias que en transacciones diarias. | **SELECCIONADO (Método 2A)**<br>Matriz binaria limpia de co-contratación de débitos fijos. | **COMPLEMENTARIO (Método 2C)**<br>Correlación de adopción de órdenes fijas entre cuentas. | **SELECCIONADO (Método 2B: ITF)**<br>Ponderación logarítmica de frecuencia inversa de ítems. | **VIABLE (Vía JOIN)**<br>Agregación de órdenes promedio por perfil. |
+| **`df_prestamos`**<br>(682 créditos) | **INVÁLIDO (Degenerado)**<br>Clientes poseen un único crédito; soporte conjunto $|S(j,i)| \approx 0$. | **COMPLEMENTARIO (Método 3B)**<br>Proximidad numérica sobre condiciones $[monto, plazo, cuota]$. | **SECUNDARIO**<br>Volumen mensual de concesión; muestra reducida (682 filas). | **SELECCIONADO (Método 3A)**<br>Cláusulas contractuales, garantías y condiciones de crédito. | **SELECCIONADO (Método 3C: Utilidad)**<br>Reglas de scoring de riesgo y cuota $\le 30\%$ salario. |
+| **`df_cliente_consolidado`**<br>(5,369 clientes) | **NO APLICABLE**<br>Variables estáticas de usuario; no representa matriz de ítems. | **SELECCIONADO (Método 4B)**<br>Similitud Coseno Usuario a Usuario (gemelos financieros). | **COMPLEMENTARIO (Método 4C)**<br>Correlación multivariante de perfil (edad, saldo, salario). | **NO APLICABLE**<br>Atributos numéricos y discretos; no posee corpus textual. | **SELECCIONADO (Método 4A)**<br>Dimensión maestra para construir arquetipos de negocio. |
 
 ---
 
@@ -366,21 +372,31 @@ Valores calculados sobre la masa crítica de 3,653 clientes activos con $\ge 2$ 
   * *$\cos_{\text{adj}}(\text{SERVICIOS\_HOGAR}, \text{TARJETA\_DEBITO}) = \mathbf{-0.6001}$:* A pesar de que en bruto ambos servicios son ubicuos ($0.9781$), al centrar en medias se observa una compensación operativa: el uso intensivo de efectivo para gastos corrientes cotidianos compite por el saldo frente a los débitos domiciliados fijos.
   * *$\cos_{\text{adj}}(\text{SEGURO}, \text{TRANSF\_EXTERNA}) = \mathbf{-0.3107}$:* Refleja que la intensidad relativa de transferencias discrecionales hacia terceros no evoluciona de forma paralela a las primas fijas de aseguramiento.
 
-##### Método 1C: Correlación de Pearson sobre Series Temporales (Filtrado Colaborativo Temporal)
-* **Contexto Teórico:** Modela el acoplamiento dinámico de la demanda a lo largo del tiempo. Permite descubrir si la demanda de dos productos se mueve de forma coordinada mes a mes, aislando las tendencias macroeconómicas de inflación, liquidez estacional y fechas de cobro salarial.
+##### Método 1C: Correlación de Pearson Ítem-a-Ítem y Análisis Complementario Temporal
+* **Contexto Teórico:** Como se aborda en los fundamentos de filtrado colaborativo ítem a ítem (Sarwar et al., 2001 [5]), la correlación de Pearson bivariada mide la similitud lineal entre pares de productos evaluando las calificaciones otorgadas por los clientes en común. En esta investigación se aplican dos aproximaciones complementarias:
+  1. *Pearson Ítem-a-Ítem sobre Calificaciones Implícitas (Matriz $3,653 \times 5$):* Centra las calificaciones respecto a la media de cada ítem sobre los usuarios que consumieron ambos servicios, midiendo si los clientes que intensifican el uso del producto $i$ tienden a intensificar el producto $j$.
+  2. *Pearson sobre Series Temporales Mensuales Diferenciadas (72 meses):* Evalúa el acoplamiento macroscópico mensual de flujos monetarios tras eliminar la tendencia tendencial de crecimiento mediante primeras diferencias ($\Delta x_t = x_t - x_{t-1}$).
 * **Procedimiento Metodológico de Obtención (Sin Código):**
-  1. Se agregó el monto total transferido en coronas checas (`monto_transaccion`) por mes y año a lo largo de los 6 años de operación bancaria (1993 a 1998), conformando 72 períodos temporales continuos.
-  2. Se extrajo la serie temporal mensualizada para cada uno de los 5 productos.
-  3. Se calculó la media histórica mensual $\bar{A}$ y $\bar{B}$ de cada serie.
-  4. Se computó el coeficiente de correlación de Pearson bivariado estandarizando la covarianza temporal por las varianzas de ambas series temporales.
+  1. *A nivel de calificaciones:* Para cada par de productos se identificó el subconjunto de clientes co-consumidores $U_{i,j}$; se computó la media de cada producto en dicha intersección y se calculó el coeficiente de correlación producto-momento de Pearson.
+  2. *A nivel de flujos mensuales:* Se acumuló el monto mensual transferido por concepto en los 72 meses (1993–1998), se aplicó diferenciación de primer orden y se calculó la correlación entre series temporales estacionarizadas.
 * **Formulación Matemática:**
-  $$r(A, B) = \frac{\sum_{t=1}^{72} (A_t - \bar{A})(B_t - \bar{B})}{\sqrt{\sum_{t=1}^{72} (A_t - \bar{A})^2} \cdot \sqrt{\sum_{t=1}^{72} (B_t - \bar{B})^2}}$$
-* **Resultados Obtenidos y Matriz:** Tabla VII.
+  $$r_{\text{calif}}(i, j) = \frac{\sum_{u \in U_{i,j}} (r_{u,i} - \bar{r}_i)(r_{u,j} - \bar{r}_j)}{\sqrt{\sum_{u \in U_{i,j}} (r_{u,i} - \bar{r}_i)^2} \cdot \sqrt{\sum_{u \in U_{i,j}} (r_{u,j} - \bar{r}_j)^2}}, \quad r_{\text{temp}}(\Delta A, \Delta B) = \frac{\sum_{t=1}^{71} (\Delta A_t - \overline{\Delta A})(\Delta B_t - \overline{\Delta B})}{\sqrt{\sum_{t=1}^{71} (\Delta A_t - \overline{\Delta A})^2} \cdot \sqrt{\sum_{t=1}^{71} (\Delta B_t - \overline{\Delta B})^2}}$$
+* **Resultados Obtenidos y Matrices:** Tablas VII-A y VII-B.
 
 ##### TABLA VII
-##### MATRIZ DE CORRELACIÓN DE PEARSON SOBRE SERIES MENSUALES DIFERENCIADAS (Δx_t = x_t - x_t-1).
+##### MATRICES DE CORRELACIÓN DE PEARSON: ÍTEM-A-ÍTEM EN RATINGS Y SERIES MENSUALES DIFERENCIADAS.
 
-Para eliminar la correlación espuria provocada por la tendencia común de expansión del banco checo (1993–1998) y aislar las covariaciones dinámicas genuinas, se computó Pearson sobre las primeras diferencias mensuales:
+**A. Correlación de Pearson Ítem-a-Ítem sobre Calificaciones Implícitas (Matriz $3,653 \times 5$ en usuarios comunes):**
+
+| Producto Financiero | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **PRESTAMO** | 1.0000 | +0.7061 | +0.7113 | +0.4993 | +0.5903 |
+| **SEGURO** | +0.7061 | 1.0000 | **+0.9957** | +0.8566 | **+0.8764** |
+| **SERVICIOS_HOGAR** | +0.7113 | **+0.9957** | 1.0000 | +0.8022 | **+0.9155** |
+| **TARJETA_DEBITO** | +0.4993 | +0.8566 | +0.8022 | 1.0000 | +0.8075 |
+| **TRANSF_EXTERNA** | +0.5903 | **+0.8764** | **+0.9155** | +0.8075 | 1.0000 |
+
+**B. Correlación de Pearson sobre Series Mensuales Diferenciadas ($\Delta x_t = x_t - x_{t-1}$, 71 observaciones):**
 
 | Flujo Transaccional | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -614,7 +630,7 @@ Para eliminar la correlación espuria provocada por la tendencia común de expan
 | **24 meses** | 4,522.73 CZK | 10,000 CZK | **45.23%** | Inviable ($>30\%$) | **Rechazado:** Cuota asfixiante sobre el presupuesto familiar |
 | **36 meses** | 3,133.64 CZK | 10,000 CZK | **31.34%** | Inviable ($>30\%$) | **Rechazado marginal:** Supera el umbral prudencial bancario |
 | **48 meses** | 2,441.29 CZK | 10,000 CZK | **24.41%** | **Viable ($\le 30\%$)** | **Recomendado:** Zona de Utilidad Financiera Sostenible |
-| **60 meses** | 2,027.64 CZK | 10,000 CZK | **20.28%** | **Viable ($\le 30\%$)** | **Recomendado Óptimo:** Máxima holgura de pago y menor mora |
+| **60 meses** | 2,027.64 CZK | 10,000 CZK | **20.28%** | **Viable ($\le 30\%$)** | **Recomendado Preferente:** Máxima holgura de pago y menor mora |
 
 * **Interpretación Analítica y de Negocio:**
   * *Plazo de 12 meses:* La cuota de 8,698.84 CZK compromete el **86.99% del ingreso familiar**. Asignar este plazo provocaría impago inmediato en el segundo mes de amortización; por ende, el recomendador le asigna utilidad cero y lo bloquea.
@@ -749,7 +765,7 @@ Para eliminar distorsiones causadas por usuarios disponentes sin transacciones i
 * **Dictamen Técnico:** **El mejor método para `df_cliente_consolidado` es una arquitectura híbrida en dos fases: Filtrado Demográfico por Estereotipos para clientes nuevos (*onboarding*), complementado con Filtrado Colaborativo Usuario a Usuario para clientes con historial consolidado.**
 * **Justificación técnica comparativa:**
   1. *Fase 1 (Arranque en Frío / Onboarding):* El Filtrado Demográfico es insustituible porque resuelve el *User Cold Start* con una **cobertura perfecta del 100% de la cartera**, permitiendo sugerir productos desde el instante en que el cliente abre la cuenta sin requerir historial previo.
-  2. *Fase 2 (Cliente con Actividad Consolidada, $\ge 2$ productos o $\ge 10$ movimientos):* Una vez que el cliente realiza movimientos y acumula saldos, el modelo Usuario a Usuario refina la oferta detectando clientes análogos con similitudes angulares superiores a **0.99**, logrando una transición óptima desde la segmentación grupal hacia la personalización fina individualizada. Pearson, por su parte, aporta el marco de gobernanza global pero no es un recomendador individualizable.
+  2. *Fase 2 (Cliente con Actividad Consolidada, $\ge 2$ productos o $\ge 10$ movimientos):* Una vez que el cliente realiza movimientos y acumula saldos, el modelo Usuario a Usuario refina la oferta detectando clientes análogos con similitudes angulares superiores a **0.99**, logrando una transición fluida desde la segmentación grupal hacia la personalización fina individualizada. Pearson, por su parte, aporta el marco de gobernanza global pero no es un recomendador individualizable.
 
 ---
 
@@ -797,20 +813,20 @@ La Tabla XVII y la Figura 6 consolidan el rendimiento y rol de los **12 modelos 
 ##### TABLA XVII
 ##### SÍNTESIS COMPARATIVA DE LOS 12 MODELOS DE RECOMENDACIÓN IMPLEMENTADOS POR DATAFRAME.
 
-| DataFrame | Sistema / Técnica | Familia Analítica | Dimensiones de Salida | Métrica Clave Obtenida | Cobertura | Rol de Negocio en la Entidad |
-| :--- | :--- | :--- | :--- | :--- | :---: | :--- |
-| **`df_transacciones`** | **Slope One (1A)** | Colaborativo Ítem-Ítem | 18,265 predicciones | **MAE: 0.2593 ± 0.0052 (5-fold CV)** | 68.0% | Venta cruzada fina cliente a producto. |
-| **`df_transacciones`** | **Coseno Continuo (1B)** | Colaborativo Intensidad | Matriz $5 \times 5$ | $\cos_{\text{adj}}(\text{Seguro, Hogar}) = \mathbf{+0.3360}$ | 68.0% | Análisis de propensión relativa centrada en medias. |
-| **`df_transacciones`** | **Pearson Temporal (1C)** | Colaborativo Temporal | Matriz $5 \times 5$ (72 meses) | $r(\Delta \text{Hogar, Transf}) = \mathbf{+0.7192}$ | 100.0% | Sincronización mensual de flujos y tesorería. |
-| **`df_ordenes`** | **Coseno Binario (2A)** | Colaborativo Ítem-Ítem | Matriz $5 \times 5$ | $\cos(\text{Seguro, Hogar}) = \mathbf{0.3976}$ | 83.5% | Empaquetamiento (*bundling*) de débitos fijos. |
-| **`df_ordenes`** | **Contenido + ITF (2B)** | Ítem-Ítem con Ponderación | 5 factores de especificidad | Factor ITF Leasing: **2.3998** (vs Hogar: **0.1105**) | 83.5% | Compensación de popularidad y foco en margen. |
-| **`df_ordenes`** | **Pearson Órdenes (2C)** | Colaborativo Correlación | Matriz $5 \times 5$ | $r(\text{Hogar, Préstamo}) = \mathbf{-0.4117}$ | 83.5% | Correlación negativa estructural (-0.41). |
-| **`df_prestamos`** | **TF-IDF Contratos (3A)** | Basado en Contenidos | Matriz $8 \times 8$ léxica | Factor IDF máx (suavizado): **2.5041** | 100.0% | Resolución de *Item Cold Start* (productos nuevos). |
-| **`df_prestamos`** | **Coseno Numérico (3B)** | Geométrico Centroidal | Matriz $5 \times 5$ (plazos) | $\cos(12\text{m}, 60\text{m}) = \mathbf{-0.9991}$ | 100.0% | Mapa estructural de distancias entre plazos. |
-| **`df_prestamos`** | **Scoring y Utilidad (3C)**| Conocimiento / Utilidad | 682 contratos | Mora $\le 30\%$: **6.57%** (vs $>50\%$: **16.86%**) | 100.0% | Prevención de morosidad y sobreendeudamiento. |
-| **`df_cliente`** | **Demográfico (4A)** | Filtrado Demográfico | 9 arquetipos | Adopción Praga: **18.8%** vs 12.5% | **100.0%** | Resolución de *User Cold Start* (*onboarding*). |
-| **`df_cliente`** | **User-to-User (4B)** | Colaborativo Usuario | 4,500 titulares | **AUC: 0.7905**, Brier Score: **0.1098** | **83.8%** | Venta cruzada por vecindarios ponderados. |
-| **`df_cliente`** | **Pearson Perfil (4C)** | Exploratorio Multivariante | Matriz $6 \times 6$ | $r(\text{Tx, Órdenes}) = \mathbf{+0.4965}$ | **100.0%** | Gobernanza y segmentación de cartera global. |
+| DataFrame | Sistema / Técnica | Tipo de Modelo | Familia Analítica | Dimensiones de Salida | Métrica Clave Obtenida | Cobertura | Rol de Negocio en la Entidad |
+| :--- | :--- | :---: | :--- | :--- | :--- | :---: | :--- |
+| **`df_transacciones`** | **Slope One (1A)** | **Recomendador** | Colaborativo Ítem-Ítem | 18,265 predicciones | **MAE: 0.2593 ± 0.0052 (5-fold CV)** | 68.0% | Calibración de intensidad y venta cruzada fina. |
+| **`df_transacciones`** | **Coseno Ajustado (1B)** | **Recomendador** | Colaborativo Ítem-Ítem | Matriz $5 \times 5$ | $\cos_{\text{adj}}(\text{Seguro, Hogar}) = \mathbf{+0.3360}$ | 68.0% | Orientación angular centrada en medias de usuario. |
+| **`df_transacciones`** | **Pearson Ítem-Ítem (1C)**| **Complementario** | Colaborativo / Temporal | Matrices $5 \times 5$ | $r_{\text{calif}} = \mathbf{+0.9957}$, $r_{\Delta \text{mes}} = \mathbf{+0.7192}$ | 100.0% | Correlación lineal de ratings y sincronización de tesorería. |
+| **`df_ordenes`** | **Coseno Binario (2A)** | **Recomendador** | Colaborativo de Co-adquisición | Matriz $5 \times 5$ | $\cos(\text{Seguro, Hogar}) = \mathbf{0.3976}$ | 83.5% | Detección de co-adquisición y empaquetamiento (*bundling*). |
+| **`df_ordenes`** | **Ponderación ITF (2B)** | **Recomendador** | Ítem-Ítem con Penalización | 5 factores de especificidad | Factor ITF Leasing: **2.3998** (vs Hogar: **0.1105**) | 83.5% | Corrección de sesgo de popularidad hacia nichos no triviales. |
+| **`df_ordenes`** | **Pearson Órdenes (2C)** | **Complementario** | Asociación de Contratos | Matriz $5 \times 5$ | $r(\text{Hogar, Préstamo}) = \mathbf{-0.4117}$ | 83.5% | Detección de disociación y exclusión contractual. |
+| **`df_prestamos`** | **TF-IDF Contratos (3A)** | **Recomendador** | Basado en Contenidos | Matriz $8 \times 8$ léxica | Factor IDF máx (suavizado): **2.5041** | 100.0% | Resolución de *Item Cold Start* para productos nuevos. |
+| **`df_prestamos`** | **Coseno Numérico (3B)** | **Complementario** | Geométrico Centroidal | Matriz $5 \times 5$ (plazos) | $\cos(12\text{m}, 60\text{m}) = \mathbf{-0.9991}$ | 100.0% | Mapeo estructural de distancias entre plazos crediticios. |
+| **`df_prestamos`** | **Scoring y Utilidad (3C)**| **Recomendador / Control**| Conocimiento y Utilidad | 682 contratos | Mora $\le 30\%$: **6.57%** (vs $>50\%$: **16.86%**) | 100.0% | Filtro prudencial de capacidad de pago y control de riesgo. |
+| **`df_cliente`** | **Demográfico (4A)** | **Recomendador** | Filtrado Demográfico | 9 arquetipos | Adopción Praga: **18.8%** vs 12.5% | **100.0%** | Resolución de *User Cold Start* en apertura de cuenta. |
+| **`df_cliente`** | **User-to-User kNN (4B)**| **Recomendador** | Colaborativo Usuario-Usuario | 4,500 titulares | **AUC: 0.7905**, Brier Score: **0.1098** | **83.8%** | Exploración de vecindarios y gemelos financieros. |
+| **`df_cliente`** | **Pearson Perfil (4C)** | **Complementario** | Exploratorio Multivariante | Matriz $6 \times 6$ | $r(\text{Tx, Órdenes}) = \mathbf{+0.4965}$ | **100.0%** | Marco de gobernanza estructural y segmentación macro. |
 
 ![Figura 6. Mapa Estratégico de Cobertura vs Nivel de Personalización](img/fig_06_comparativa_global.png)
 *Figura 6. Mapa estratégico de los sistemas de recomendación: Cobertura de cartera objetivo (%) frente al nivel de resolución analítica (personalización individual vs segmentación grupal).*
@@ -843,7 +859,7 @@ La Tabla XVII y la Figura 6 consolidan el rendimiento y rol de los **12 modelos 
 ### 2.9 Conclusiones Generales del Proyecto
 
 1. **Se cubrieron de forma exhaustiva las tres familias clásicas de recomendadores y modelos de utilidad sobre los cuatro DataFrames del banco:** Se implementaron con éxito técnicas de Filtrado Colaborativo (Slope One, Coseno Binario, Pearson y User-to-User), Filtrado Basado en Contenidos (TF-IDF e ITF), Filtrado Demográfico (Estereotipos) y Modelos de Conocimiento/Utilidad sobre `df_transacciones`, `df_ordenes`, `df_prestamos` y `df_cliente_consolidado`.
-2. **Slope One optimizó la precisión de calificación e intensidad de consumo:** En validación cruzada de 5 pliegues sobre 9,503 celdas de clientes activos, redujo el error absoluto medio (**MAE**) a **0.2593 ± 0.0052** (frente a 0.4063 de la media de usuario y 0.4606 de la media global, una mejora del 36.18%). En pruebas de ranking Top-N sobre los 3,653 clientes activos, empató en Hit-Rate@1 con la popularidad masiva (91.79% vs 91.29%), lo que indica que aporta personalización individualizada sin penalizar la tasa de acierto en el primer producto sugerido.
+2. **Slope One mejoró la precisión de calificación e intensidad de consumo:** En validación cruzada de 5 pliegues sobre 9,503 celdas de clientes activos, redujo el error absoluto medio (**MAE**) a **0.2593 ± 0.0052** (frente a 0.4063 de la media de usuario y 0.4606 de la media global, una mejora del 36.18%). En pruebas de ranking Top-N sobre los 3,653 clientes activos, empató en Hit-Rate@1 con la popularidad masiva (91.79% vs 91.29%), lo que indica que aporta personalización individualizada sin penalizar la tasa de acierto en el primer producto sugerido.
 3. **La selección del grano analítico y de la matriz condiciona el éxito del recomendador:** El descarte empírico evidenció que calcular similitudes sobre transacciones crudas sin transformar colapsa el modelo en similitudes planas ($0.93 - 0.96$) por la ubicuidad de los movimientos bancarios básicos (egresos corrientes, depósitos de nómina, retiros en cajero e intereses ganados). El paso a órdenes fijas y la transformación logarítmica permitieron revelar una estructura angular discriminativa.
 4. **Estrategias heurísticas para el arranque en frío (*Cold Start*):** El Filtrado Demográfico provee una cobertura inicial del **100% de la cartera** desde la apertura de cuenta asociando arquetipos sociodemográficos con promedios grupales, mientras que el modelo basado en descripciones textuales de productos (TF-IDF) permite vincular semánticamente nuevos créditos o coberturas (por ejemplo, asociando préstamos personales con créditos de consumo con similitud léxica de 0.1784) antes de acumular interacciones transaccionales.
 5. **La ponderación ITF y la función de utilidad financiera previenen distorsiones comerciales:** El factor ITF eleva el peso de productos estratégicos como Leasing ($ITF = 2.40$) y Seguros ($ITF = 1.96$) para evitar que el catálogo quede monopolizado por servicios domésticos básicos. Asimismo, las reglas de scoring bloquean al 11.1% de clientes morosos y garantizan que la cuota no exceda el 30% del salario distrital promedio.
@@ -888,6 +904,7 @@ DocumentosBi/
 |   |-- df_prestamos.csv                      (0.11 MB, 682 contratos de crédito)
 |   \-- df_transacciones_completado.csv.gz    (15.30 MB, 1,056,320 transacciones)
 |-- scripts/
+|   |-- 00_generar_4_dataframes.py            (ETL relacional: extracción y conformación de los 4 DataFrames desde Financial_ijs)
 |   |-- 01_rec_slope_one.py                   (Sistema 1A: Slope One + Partición 80/20)
 |   |-- 02_rec_coseno_transacciones.py        (Sistema 1B: Coseno Continuo Transaccional)
 |   |-- 03_rec_pearson_temporal.py            (Sistema 1C: Pearson series 72 meses)
@@ -913,6 +930,9 @@ DocumentosBi/
 #### Anexo B. Orden de ejecución y reproducibilidad técnica
 
 ```bash
+# 0. Extracción relacional y conformación dimensional desde la base de datos
+python scripts/00_generar_4_dataframes.py
+
 # 1. Modelos sobre df_transacciones
 python scripts/01_rec_slope_one.py
 python scripts/02_rec_coseno_transacciones.py
