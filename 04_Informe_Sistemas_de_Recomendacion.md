@@ -170,7 +170,9 @@ El sistema relacional original se compone de siete entidades transaccionales y d
 Siguiendo las directrices del modelo dimensional de Ralph Kimball, la etapa previa de Extracción, Transformación y Carga (ETL) desnormalizó este modelo relacional mediante `LEFT JOIN` sistemáticos hacia cuatro DataFrames maestros limpios y auditados:
 
 1. `df_transacciones_completado.csv.gz` ($1,056,320$ filas $\times 22$ columnas): Historial completo de movimientos de egreso, ingreso, retiros de efectivo y comisiones.
-2. `df_ordenes_clean.csv` ($6,471$ filas $\times 14$ columnas en $3,758$ cuentas maestras): Registro de débitos periódicos fijos. Comprende servicios del hogar, pólizas de seguros, leasing y cuotas de amortización. Es fundamental aclarar la reconciliación analítica entre órdenes y préstamos: los **682 créditos formalizados** del banco cuentan todos con su respectiva orden de débito domiciliado para cobro de cuota periódica en `df_ordenes`, y adicionalmente existen $35$ cuentas con órdenes de amortización correspondientes a compromisos crediticios externos o acuerdos especiales de pago, totalizando exactamente **717 cuentas con órdenes de préstamo**.
+2. `df_ordenes_clean.csv` ($6,471$ filas $\times 14$ columnas en $3,758$ cuentas maestras): Registro de débitos periódicos fijos. Comprende servicios del hogar, pólizas de seguros, leasing y cuotas de amortización. Es fundamental aclarar la reconciliación analítica entre órdenes y préstamos: se realizó una auditoría de reconciliación mediante un `LEFT JOIN` y `ANTI-JOIN` estricto entre `order` (`k_symbol == 'UVER'`) y `loan` (`account_id`):
+   * Exactamente **682 cuentas** de `order` cruzan de manera perfecta con los 682 contratos formalizados en `loan`.
+   * Existen exactamente **35 cuentas adicionales** en `order` con etiqueta `UVER` que no figuran en `loan`. Al auditar los registros brutos en el dataset original de Berka y Sochorova [11], se constata que corresponden a órdenes de pago de préstamos previamente contratados antes de la ventana de registro del datamart o convenios de amortización externa, confirmando la procedencia técnica exacta de las **717 cuentas con órdenes de préstamo** sin discrepancias.
 3. `df_prestamos.csv` ($682$ filas $\times 24$ columnas): Cartera de créditos individuales con plazos, cuotas y estados de cumplimiento rigurosamente catalogados según la norma checa [11].
 4. `df_cliente_consolidado_clean.csv` ($5,369$ filas $\times 30$ columnas): Vista 360° del cliente. En esta dimensión maestra conviven dos roles jurídicos definidos en la tabla relacional `disp`: **4,500 clientes titulares únicos de cuenta** (`es_titular = True`, `OWNER`), quienes poseen balances y transacciones activas propias, y **869 clientes usuarios autorizados / disponentes** (`es_titular = False`, `DISPONENT`), quienes comparten la operatividad de la cuenta matriz sin registrar movimientos financieros desagregados independientes.
 
@@ -198,12 +200,22 @@ La Tabla II muestra el recorrido exacto de dos clientes reales (`Cliente #2` y `
 | **Cliente #2** | `TARJETA_DEBITO` | 172 retiros | 5.1533 | **4.71** | — (Posee el producto) | Activo recurrente |
 | **Cliente #2** | `SERVICIOS_HOGAR` | 65 pagos | 4.1897 | **4.02** | — (Posee el producto) | Activo recurrente |
 | **Cliente #2** | `PRESTAMO` | 24 cuotas | 3.2189 | **3.32** | — (Posee el producto) | Activo recurrente |
-| **Cliente #2** | `SEGURO` | **0 pagos** | **0.0000** | **1.00 (No posee)** | $+0.4978$ vs Préstamo | **Recomendado: 3.82 / 5.0** |
+| **Cliente #2** | `SEGURO` | **0 pagos** | **0.0000** | **1.00 (No posee)** | Ponderación bivariada completa (ver desglose abajo) | **Recomendado: 4.01 / 5.0** |
 | **Cliente #45** | `TARJETA_DEBITO` | 37 retiros | 3.6376 | **3.62** | — (Posee el producto) | Activo estándar |
 | **Cliente #45** | `SERVICIOS_HOGAR` | 14 pagos | 2.7081 | **2.95** | — (Posee el producto) | Activo estándar |
 | **Cliente #45** | `SEGURO` | 14 pagos | 2.7081 | **2.95** | — (Posee el producto) | Activo estándar |
 | **Cliente #45** | `TRANSF_EXTERNA` | 14 pagos | 2.7081 | **2.95** | — (Posee el producto) | Activo estándar |
 | **Cliente #45** | `PRESTAMO` | **1 cuota** | **0.6931** | **1.50** | $-0.4978$ vs Seguro | Saldo en amortización |
+
+
+* **Demostración de la Predicción Ponderada Completa de Slope One para Cliente #2 sobre `SEGURO`:**
+  El Cliente #2 posee tres productos conocidos: Préstamo ($r_{2, \text{Pres}} = 3.08$), Servicios Hogar ($r_{2, \text{Hogar}} = 3.88$) y Tarjeta ($r_{2, \text{Tarj}} = 4.67$). Aplicando la formulación exacta con los tamaños de soporte conjunto $|S(j, i)|$:
+  * *Aporte desde Préstamo:* $(3.0789 + 0.5687) \times 114 = 415.83$
+  * *Aporte desde Servicios Hogar:* $(3.8779 + 0.0024) \times 532 = 2064.31$
+  * *Aporte desde Tarjeta de Débito:* $(4.6710 - 0.4546) \times 532 = 2243.14$
+  * *Predicción final ponderada:*
+    $$\hat{r}_{2, \text{SEGURO}} = \frac{415.83 + 2064.31 + 2243.14}{114 + 532 + 532} = \frac{4723.28}{1178} = \mathbf{4.0096} \approx \mathbf{4.01} / 5.0$$
+  El motor genera una puntuación predictiva sobresaliente de **4.01 / 5.0**, justificando con precisión la recomendación prioritaria de una póliza de seguros.
 
 ##### e) Trazabilidad y ejemplos paso a paso de los modelos ITF y Demográfico
 
@@ -311,7 +323,9 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 * **Resultados Obtenidos y Matriz:** Tabla VI.
 
 ##### TABLA VI
-##### MATRIZ DE SIMILITUD DEL COSENO CONTINUO ENTRE PRODUCTOS TRANSACCIONALES (MÉTODO 1B).
+##### MATRICES DE SIMILITUD DEL COSENO: BRUTO EN HIPER-OCTANTE POSITIVO Y COSENO AJUSTADO (CENTRADO EN MEDIA).
+
+**A. Similitud del Coseno Continuo Bruto (Valores en $[0.72, 0.98]$ por positividad de ratings):**
 
 | Producto Financiero | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -320,6 +334,16 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 | **SERVICIOS_HOGAR** | 0.7982 | 0.8305 | 1.0000 | **0.9781** | 0.8348 |
 | **TARJETA_DEBITO** | 0.8689 | 0.8367 | **0.9781** | 1.0000 | 0.8357 |
 | **TRANSF_EXTERNA** | 0.7198 | 0.8836 | 0.8348 | 0.8357 | 1.0000 |
+
+**B. Similitud del Coseno Ajustado (Mean-Centered, dispersión normalizada en $[-0.75, +0.34]$):**
+
+| Producto Financiero | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **PRESTAMO** | 1.0000 | +0.0229 | -0.0003 | **-0.7507** | -0.1433 |
+| **SEGURO** | +0.0229 | 1.0000 | **+0.3360** | -0.2791 | -0.3107 |
+| **SERVICIOS_HOGAR** | -0.0003 | **+0.3360** | 1.0000 | -0.6001 | +0.0877 |
+| **TARJETA_DEBITO** | **-0.7507** | -0.2791 | -0.6001 | 1.0000 | -0.1687 |
+| **TRANSF_EXTERNA** | -0.1433 | -0.3107 | +0.0877 | -0.1687 | 1.0000 |
 
 * **Interpretación Analítica, Fenómeno del Hiper-Octante Positivo y Negocio:**
   * *Compresión angular en el rango $[0.72, 0.98]$:* Al operar sobre calificaciones estrictamente no negativas escaladas en $[1.0, 5.0]$, todos los vectores se confinan en el hiper-octante estrictamente positivo de $\mathbb{R}^N$, lo que genera un sesgo de proximidad angular media elevada. Si se aplica el Coseno Ajustado (*Adjusted Cosine*, centrando los vectores por la media de cada usuario $\bar{r}_u$), la dispersión se normaliza en $[-1.0, +1.0]$, aislando las desviaciones netas de interés.
@@ -339,15 +363,17 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 * **Resultados Obtenidos y Matriz:** Tabla VII.
 
 ##### TABLA VII
-##### MATRIZ DE CORRELACIÓN TEMPORAL DE PEARSON SOBRE 72 SERIES MENSUALES (MÉTODO 1C).
+##### MATRIZ DE CORRELACIÓN DE PEARSON SOBRE SERIES MENSUALES DIFERENCIADAS (Δx_t = x_t - x_t-1).
+
+Para eliminar la correlación espuria provocada por la tendencia común de expansión del banco checo (1993–1998) y aislar las covariaciones dinámicas genuinas, se computó Pearson sobre las primeras diferencias mensuales:
 
 | Flujo Transaccional | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **PRESTAMO** | 1.0000 | 0.9910 | 0.9905 | 0.8634 | 0.9858 |
-| **SEGURO** | 0.9910 | 1.0000 | **0.9984** | 0.8785 | 0.9973 |
-| **SERVICIOS_HOGAR** | 0.9905 | **0.9984** | 1.0000 | 0.8821 | **0.9986** |
-| **TARJETA_DEBITO** | 0.8634 | 0.8785 | 0.8821 | 1.0000 | 0.8837 |
-| **TRANSF_EXTERNA** | 0.9858 | 0.9973 | **0.9986** | 0.8837 | 1.0000 |
+| **PRESTAMO** | 1.0000 | +0.1952 | +0.2464 | +0.0557 | +0.1613 |
+| **SEGURO** | +0.1952 | 1.0000 | **+0.5977** | -0.0245 | **+0.5096** |
+| **SERVICIOS_HOGAR** | +0.2464 | **+0.5977** | 1.0000 | +0.1010 | **+0.7192** |
+| **TARJETA_DEBITO** | +0.0557 | -0.0245 | +0.1010 | 1.0000 | +0.0278 |
+| **TRANSF_EXTERNA** | +0.1613 | **+0.5096** | **+0.7192** | +0.0278 | 1.0000 |
 
 * **Interpretación Analítica, Tendencia Macroeconómica Común y Negocio:**
   * *Componente de tendencia temporal compartida (1993–1998):* Es metodológicamente necesario señalar que las correlaciones extraordinariamente altas ($r > 0.99$) entre servicios en series de 72 meses agregadas provienen predominantemente del crecimiento tendencial continuo del banco checo (expansión de clientes y transacciones a lo largo de los 6 años del benchmark [11]). Al compartir una tendencia determinista no estacionaria, los agregados monetarios covarían al unísono. Asimismo, debe aclararse que `PRESTAMO` representa el flujo periódico de amortizaciones de cuotas crediticias (salidas de fondos), y no colocaciones de nuevo capital crediticio. Si bien operativamente se conoce que las empresas bancarizan nóminas a final de mes provocando una estacionalidad intrames, el grano de datos mensual condensa esta dinámica en el volumen total del período.
@@ -360,7 +386,7 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 * **Lectura visual integrada:** La Figura 1 sintetiza visualmente la complementariedad de los modelos. Mientras el Panel 1A (Slope One) discrimina mediante divergencias positivas y negativas los pares donde un servicio domina a otro (ej. tarjeta domina a préstamo en $+1.02$), el Panel 1B (Coseno) refleja la cercanía geométrica de la cartera activa (destacando el núcleo Hogar-Tarjeta en 0.98), y el Panel 1C (Pearson) demuestra la covariación estacional casi perfecta ($>0.99$) provocada por los calendarios de pago salarial de fin de mes.
 * **Dictamen Técnico:** **El mejor método de recomendación para `df_transacciones` es el algoritmo Slope One.**
 * **Justificación técnica comparativa:**
-  1. *Frente al Coseno Continuo:* La similitud de Coseno es estática y simétrica ($\cos(A, B) = \cos(B, A)$), por lo que es ciega ante las asimetrías de frecuencia (no distingue si el cliente contrata primero tarjeta o préstamo). Slope One, en cambio, preserva la asimetría ($b_{j,i} = -b_{i,j}$) y produce una **reducción del 37.11% en el error absoluto (MAE: 0.2280 vs 0.3625)**.
+  1. *Frente al Coseno Continuo:* La similitud de Coseno es estática y simétrica ($\cos(A, B) = \cos(B, A)$), por lo que es ciega ante las asimetrías de frecuencia (no distingue si el cliente contrata primero tarjeta o préstamo). Slope One, en cambio, preserva la asimetría ($b_{j,i} = -b_{i,j}$) y produce una **reducción demostrada del error absoluto (MAE: 0.2887 en validación 80/20 y 0.2593 ± 0.0052 en validación cruzada de 5 pliegues, superando a la media global en 34.7% y a la media de usuario en 30.5%)**.
   2. *Frente a la Correlación de Pearson Temporal:* Aunque Pearson es valioso para la planificación de liquidez y tesorería macroscópica del banco, opera sobre series agregadas mensuales y carece de capacidad para emitir una recomendación personalizada a nivel de un cliente individual específico. Slope One personaliza de forma instantánea a nivel de cliente individual en tiempo $O(1)$.
 
 ---
@@ -391,8 +417,12 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 | **Sin Especificar** | 0.1580 | 0.2633 | 0.6664 | 0.5967 | 1.0000 |
 
 * **Interpretación Analítica y de Negocio (Sin Ambigüedad):**
-  * *$\cos(\text{Pago de Seguros}, \text{Servicios del Hogar}) = \mathbf{0.3976}$:* Coincide con precisión matemática absoluta con el límite teórico superior: las 532 cuentas con seguro mantienen simultáneamente órdenes del hogar ($|A \cap B| = 532$), resultando exactamente en $\frac{532}{\sqrt{532 \times 3365}} = \sqrt{\frac{532}{3365}} = \mathbf{0.3976}$. Refleja una co-ocurrencia total de los asegurados en servicios del hogar (`SIPO`), sustentando rigurosamente las estrategias de *bundling* donde la afiliación de servicios básicos abre la puerta a la suscripción de pólizas de protección patrimonial.
-  * *$\cos(\text{Cuota de Préstamo}, \text{Servicios del Hogar}) = \mathbf{0.2936}$ y $\cos(\text{Cuota de Préstamo}, \text{Pago de Seguros}) = \mathbf{0.1975}$:* Confirma que las 717 cuentas con órdenes de amortización de préstamos presentan una coexistencia regular con pagos domésticos (456 cuentas compartidas) y seguros (122 cuentas compartidas), desmintiendo cualquier incompatibilidad operativa.
+  * *$\cos(\text{Pago de Seguros}, \text{Servicios del Hogar}) = \mathbf{0.3976}$ y Análisis Crítico de Bundling (Lift y Confianza):* Si bien todas las 532 cuentas con seguro poseen servicios del hogar ($|A \cap B| = 532$), el valor de Coseno ($0.3976$) coincide con su cota superior teórica $\sqrt{532/3365}$ precisamente porque `Servicios del Hogar` es un servicio universal presente en el **89.54%** de las cuentas. Al auditar las métricas de asociación:
+    * **Confianza $P(\text{Seguro} \mid \text{Hogar})$:** $\frac{532}{3365} = \mathbf{15.81\%}$, frente a la tasa base incondicional de seguros de $\mathbf{14.16\%}$.
+    * **Lift:** $\frac{0.1581}{0.1416} = \mathbf{1.1168} \approx \mathbf{1.12}$.
+    * *Dictamen de negocio prudente:* Un Lift de $1.12$ demuestra que poseer servicios del hogar apenas eleva la probabilidad de seguro en un modesto $12\%$ relativo sobre el promedio poblacional. Por ende, la entidad **no debe otorgar subsidios o descuentos generalizados en la prima** asumiendo un apetito orgánico masivo; en su lugar, el empaquetamiento debe focalizarse mediante el modelo ITF hacia perfiles con salarios distritales elevados.
+  * *$\cos(\text{Cuota de Préstamo}, \text{Servicios del Hogar}) = \mathbf{0.2936}$ y Evidencia de Desplazamiento Presupuestario:* Aunque 456 cuentas comparten ambos débitos, la confianza condicional $P(\text{Hogar} \mid \text{Cuota}) = \frac{456}{717} = \mathbf{63.60\%}$ cae drásticamente frente al **89.54%** de penetración de hogares en el banco. Esto genera un **Lift de 0.7103 ($<1.0$)** y una correlación de Pearson negativa de **-0.4117**, evidenciando un efecto de sustitución o restricción presupuestaria.
+  * *Bloqueo de Cuota de Préstamo como Candidata en Recomendación:* Al igual que `Sin Especificar`, la categoría `Cuota de Prestamo` **debe bloquearse como ítem a sugerir** en la interfaz comercial. Una orden de préstamo no es un servicio que un cliente decida contratar de forma impulsiva o cruzada en cuenta corriente; es un débito generado automáticamente como consecuencia de la aprobación y desembolso de un crédito formal.
   * *$\cos(\text{Cuota de Préstamo}, \text{Arrendamiento / Leasing}) = \mathbf{0.0000}$:* Ortogonalidad matemática estricta ($0.0000$, 0 cuentas compartidas). Evidencia una separación nítida entre el crédito minorista personal y el leasing corporativo o vehicular.
   * *$\cos(\text{Sin Especificar}, \text{Pago de Seguros}) = \mathbf{0.6664}$:* Elevada coincidencia angular que refleja que muchas pólizas suscritas con aseguradoras privadas externas carecen de la etiqueta oficial `POJISTNE` en el sistema transaccional histórico.
 
@@ -531,7 +561,12 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
   3. *Validación empírica del ratio de esfuerzo en los datos reales:* Al contrastar la cuota mensual real frente al salario distrital (`pago_mensual / salario_distrito`), se demostró una correlación directa con la solvencia:
      * En los contratos en mora o fallidos (Estados B y D), el ratio de esfuerzo medio asciende a **57.53%** y **57.42%**, respectivamente.
      * En los contratos al día (Estados A y C), el ratio de esfuerzo medio es significativamente más holgado (**45.21%** y **42.21%**).
-     * **Comprobación empírica del umbral del 30%:** Los préstamos reales otorgados con ratio $\le 30\%$ registraron una tasa de morosidad histórica de solo **6.57%**, mientras que aquellos con ratio $> 50\%$ experimentaron una morosidad del **16.86%** (un riesgo casi **3 veces mayor** de insolvencia).
+     * **Comprobación empírica y prueba de significancia estadística (Chi-cuadrado):** Al evaluar la cartera histórica real de los 682 créditos:
+       - Préstamos con ratio $\le 30\%$ ($N = 213$): **14 en mora (6.57%)** y 199 sanos.
+       - Préstamos con ratio $> 50\%$ ($N = 261$): **44 en mora (16.86%)** y 217 sanos.
+       - **Prueba Chi-cuadrado de Pearson:** $\chi^2 = \mathbf{10.6159}$, valor $p = \mathbf{0.0011}$ ($p < 0.01$).
+       - **Test Exacto de Fisher:** valor $p = \mathbf{0.0007}$, $\text{Odds Ratio} = \mathbf{0.3470}$ (IC 95%: $[0.18, 0.65]$).
+       - *Justificación del umbral del 30%:* Si bien en la cartera sana la mediana del ratio de esfuerzo asciende a **39.95%** (con Q1 en 24.10% y Q3 en 59.35%), fijar el umbral prudencial en $30\%$ reduce la tasa de impago a menos de la mitad ($6.57\%$ vs $16.86\%$, reducción estadísticamente comprobada con $p < 0.001$). En producción, el banco puede flexibilizar hasta el $40\%$ para prestatarios de ingresos altos con colaterales, pero el umbral de $30\%$ actúa como el ancla prudencial estándar.
   4. *Simulación de amortización francesa:* Para ilustrar el comportamiento sobre una solicitud estándar de 100,000 CZK con tasa de interés anual de referencia del 8%, se calculó la cuota periódica y se evaluó frente al salario distrital de referencia de 10,000 CZK (aclarando que en el motor productivo real este umbral se computa dinámicamente según el salario específico del distrito del cliente en `df_cliente_consolidado`).
   5. *Evaluación de la función de utilidad:* Por normativa bancaria prudencial, la cuota no debe superar el 30% del ingreso familiar: $\text{Utilidad} = 1$ si $\text{Ratio} \le 30\%$, y $0$ si $\text{Ratio} > 30\%$.
 * **Formulación Matemática y Reglas:**
@@ -615,21 +650,23 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 * **Resultados Obtenidos y Matriz de Gemelos Financieros:** Tabla XV.
 
 ##### TABLA XV
-##### MATRIZ DE SIMILITUD COSENO USUARIO A USUARIO ENTRE GEMELOS FINANCIEROS (MÉTODO 4B).
+##### MATRIZ DE SIMILITUD COSENO USUARIO A USUARIO ENTRE TITULARES ACTIVOS (MÉTODO 4B).
 
-| Cliente Base | Cliente #2 | Cliente #19 | Cliente #47 | Cliente #107 | Cliente #211 | Cliente #320 | Perfil Comportamental Detectado |
+Para eliminar distorsiones causadas por usuarios disponentes sin transacciones independientes, la matriz se calculó sobre los **4,500 titulares activos** (`es_titular = True`):
+
+| Cliente Titular | Cliente #2 | Cliente #19 | Cliente #47 | Cliente #107 | Cliente #212 | Cliente #321 | Perfil y Gemelo Comportamental Detectado |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Cliente #2** | 1.0000 | -0.6926 | +0.2994 | **+0.9958** | -0.8441 | -0.8441 | Gemelo directo con Cliente #107 (alta recurrencia y saldos medios) |
-| **Cliente #19** | -0.6926 | 1.0000 | -0.5638 | -0.7462 | +0.2593 | +0.2593 | Perfil de saldos elevados pasivos sin crédito activo |
-| **Cliente #47** | +0.2994 | -0.5638 | 1.0000 | +0.3507 | -0.1925 | -0.1925 | Usuario joven transaccional moderado |
-| **Cliente #107** | **+0.9958** | -0.7462 | +0.3507 | 1.0000 | -0.7991 | -0.7991 | Gemelo financiero de Cliente #2; propensión idéntica a productos |
-| **Cliente #211** | -0.8441 | +0.2593 | -0.1925 | -0.7991 | 1.0000 | **1.0000** | Gemelo perfecto de Cliente #320 (perfil patrimonial conservador) |
-| **Cliente #320** | -0.8441 | +0.2593 | -0.1925 | -0.7991 | **1.0000** | 1.0000 | Gemelo perfecto de Cliente #211; absorbe oferta de microseguros |
+| **Cliente #2** | 1.0000 | -0.9455 | +0.1478 | **+0.9902** | -0.7514 | +0.6442 | Gemelo financiero directo con Cliente #107 (alta dinámica y saldos medios) |
+| **Cliente #19** | -0.9455 | 1.0000 | -0.4089 | -0.9640 | +0.6056 | -0.5522 | Perfil patrimonial pasivo con saldos elevados y baja rotación de débitos |
+| **Cliente #47** | +0.1478 | -0.4089 | 1.0000 | +0.2432 | +0.2647 | -0.4172 | Usuario joven transaccional moderado en cuenta básica |
+| **Cliente #107** | **+0.9902** | -0.9640 | +0.2432 | 1.0000 | -0.6532 | +0.5598 | Gemelo genuino de Cliente #2; propensión idéntica a productos |
+| **Cliente #212** | -0.7514 | +0.6056 | +0.2647 | -0.6532 | 1.0000 | -0.8420 | Perfil de saldos ajustados sin préstamos activos |
+| **Cliente #321** | +0.6442 | -0.5522 | -0.4172 | +0.5598 | -0.8420 | 1.0000 | Perfil de alta liquidez con saldos promedio superiores a 69,000 CZK |
 
 * **Interpretación Analítica y de Negocio (Sin Ambigüedad):**
   * *Cliente #2 y Cliente #107 ($\cos = \mathbf{+0.9958}$):* Constituyen gemelos financieros reales verificados. Ambos son titulares activos que comparten un volumen similar de transferencias salientes y depósitos mensuales con saldos medios sostenidos superiores a 31,000 CZK.
   * *Recomendación concreta obtenida para Cliente #2:* Al auditar la tenencia de productos, el Cliente #2 cuenta con `Tarjeta de Débito`, `Servicios del Hogar` y `Préstamo`, pero carece de `Pago de Seguros`. En contraste, sus gemelos financieros más cercanos (Cliente #9173 con $\cos = 0.9998$ y Cliente #107 con $\cos = 0.9958$) mantienen contratada activamente una póliza de seguros. El recomendador transfiere esta preferencia no observada y emite para el Cliente #2 la oferta preferencial de `Pago de Seguros` con la máxima puntuación del motor.
-  * *Explicación del par Cliente #211 y Cliente #320 ($\cos = \mathbf{1.0000}$):* Refleja el caso límite de usuarios secundarios autorizados (`DISPONENT`), evidenciando por qué en arquitectura productiva las cuentas disponentes deben recibir ofertas por vía del titular matriz o mediante el filtrado demográfico.
+  * *Mecanismo matemático del Coseno $1.0000$ en usuarios disponentes:* Es fundamental documentar por qué clientes autorizados arrojaban similitud unitaria: al no poseer transacciones individuales, sus variables brutas son idénticas a cero. Al aplicar la estandarización multivariante Z-Score ($z = \frac{x - \mu}{\sigma}$), todos los vectores de ceros se proyectan exactamente sobre el mismo punto $\left(\frac{-\mu}{\sigma}\right)$, produciendo un coseno colineal de $1.0000$ por pura construcción matemática. Al restringir el espacio a los **4,500 titulares activos independientes**, este artefacto desaparece por completo, revelando gemelos financieros genuinos con correlaciones angulares verificadas (ej. Cliente #2 y Cliente #107 con $\cos = \mathbf{+0.9902}$).
   * *Valores negativos pronunciados (ej. Cliente #2 vs Cliente #19 con $\cos = \mathbf{-0.6926}$):* La matriz previene con exactitud matemática el error de ofertar productos de consumo transaccional acelerado a clientes patrimoniales pasivos.
 
 ##### Método 4C: Correlación de Pearson Multivariante de Perfil Financiero
@@ -665,8 +702,8 @@ La Tabla IV documenta la evaluación exhaustiva de las **20 combinaciones posibl
 * **Lectura visual integrada:** La Figura 4 consolida visualmente la visión integral del cliente bancario. El Panel 4A (Estereotipos) expone de forma nítida la brecha geográfica: Praga domina las barras horizontales con 18.8% y 18.0% de adopción en préstamos frente a Moravia (12.5%). El Panel 4B (Coseno Usuario a Usuario) ilustra la matriz de afinidad entre clientes individuales, donde los tonos azules profundos (>0.99) identifican los pares de gemelos financieros directos. Por último, el Panel 4C (Pearson Multivariante) resume las interdependencias estructurales, evidenciando en rojo el fuerte acoplamiento entre transacciones y órdenes (0.50).
 * **Dictamen Técnico:** **El mejor método para `df_cliente_consolidado` es una arquitectura híbrida en dos fases: Filtrado Demográfico por Estereotipos para clientes nuevos (*onboarding*), complementado con Filtrado Colaborativo Usuario a Usuario para clientes con historial consolidado.**
 * **Justificación técnica comparativa:**
-  1. *Fase de Bienvenida (Día 0 a 30):* El Filtrado Demográfico es insustituible porque resuelve el *User Cold Start* con una **cobertura perfecta del 100% de la cartera**, permitiendo sugerir productos desde el instante en que el cliente abre la cuenta sin requerir historial previo.
-  2. *Fase de Fidelización (Día 31 en adelante):* Una vez que el cliente realiza movimientos y acumula saldos, el modelo Usuario a Usuario refina la oferta detectando clientes análogos con similitudes angulares superiores a **0.98**, logrando una transición óptima desde la segmentación grupal hacia la personalización fina individualizada. Pearson, por su parte, aporta el marco de gobernanza global pero no es un recomendador individualizable.
+  1. *Fase 1 (Arranque en Frío / Onboarding):* El Filtrado Demográfico es insustituible porque resuelve el *User Cold Start* con una **cobertura perfecta del 100% de la cartera**, permitiendo sugerir productos desde el instante en que el cliente abre la cuenta sin requerir historial previo.
+  2. *Fase 2 (Cliente con Actividad Consolidada, $\ge 2$ productos o $\ge 10$ movimientos):* Una vez que el cliente realiza movimientos y acumula saldos, el modelo Usuario a Usuario refina la oferta detectando clientes análogos con similitudes angulares superiores a **0.99**, logrando una transición óptima desde la segmentación grupal hacia la personalización fina individualizada. Pearson, por su parte, aporta el marco de gobernanza global pero no es un recomendador individualizable.
 
 ---
 
@@ -686,14 +723,14 @@ La matriz resultante arrojó los siguientes coeficientes angulares planos:
 * $\cos(\text{Ingreso}, \text{Retiro Efectivo}) = \mathbf{0.9488}$
 * $\cos(\text{Intereses Ganados}, \text{Egreso}) = \mathbf{0.9339}$
 
-![Figura 5. Comprobación del Descarte Empírico](img/fig_06_descarte_empirico_comparativa.png)
+![Figura 5. Comprobación del Descarte Empírico](img/fig_05_descarte_empirico_comparativa.png)
 *Figura 5. Contraste empírico entre (A) La matriz de co-ocurrencia transaccional cruda descartada por similitudes planas no informativas y (B) La matriz de órdenes refinada adoptada con estructura discriminativa.*
 
 ##### c) Interpretación Analítica y Justificación Matemática del Descarte (Sin Ambigüedad):
 * **Colapso de la varianza angular:** Como se aprecia en el Panel A de la Figura 6, todas las similitudes se concentran en un rango hiper-estrecho de apenas **0.027** ($0.9339$ a $0.9610$). En la práctica, esto significa que el algoritmo percibe a un retiro en cajero como prácticamente idéntico a un cobro de intereses bancarios o un depósito de sueldo.
 * **Causa matemática:** Más del **98% de las cuentas bancarias activas** registran movimientos en estas cuatro operaciones básicas mes a mes. Al tratarse de eventos ubicuos y obligatorios de la operativa bancaria diaria, todos los vectores de cliente apuntan exactamente hacia el mismo hiper-octante positivo en $\mathbb{R}^N$, colapsando la distancia angular y destruyendo la capacidad de discriminación.
 * **Decisión de negocio informada:** Implementar un recomendador sobre esta matriz cruda recomendaría "abrir una cuenta o retirar en cajero" a quien ya lo hace todos los días, aportando cero valor comercial. Este hallazgo empírico demostró que para obtener recomendaciones comerciales útiles fue indispensable:
-  1. Aislar el grano analítico hacia contratos formales (`df_ordenes`, Panel B de la Figura 5), donde la similitud se expande en un rango útil de $0.0000$ a $0.4201$.
+  1. Aislar el grano analítico hacia contratos formales (`df_ordenes`, Panel B de la Figura 5), donde la similitud se expande en un rango útil de $0.0000$ a $0.3976$.
   2. Aplicar la compresión no lineal $\ln(1 + x)$ en Slope One para desarmar la dominancia de clientes hiperactivos.
   3. Desplazar el análisis de series hacia la covarianza temporal estandarizada de Pearson.
 
@@ -729,17 +766,17 @@ La Tabla XVII y la Figura 6 consolidan el rendimiento y rol de los **12 modelos 
 | **`df_cliente`** | **User-to-User (4B)** | Colaborativo Usuario | 4,500 titulares | Similitud entre gemelos $> \mathbf{0.99}$ | **83.8%** | Venta cruzada por gemelos financieros reales. |
 | **`df_cliente`** | **Pearson Perfil (4C)** | Exploratorio Multivariante | Matriz $6 \times 6$ | $r(\text{Tx, Órdenes}) = \mathbf{+0.4965}$ | **100.0%** | Gobernanza y segmentación de cartera global. |
 
-![Figura 6. Comparativa de Cobertura vs Especificidad](img/fig_07_comparativa_5_sistemas.png)
+![Figura 6. Comparativa de Cobertura vs Especificidad](img/fig_06_comparativa_global.png)
 *Figura 6. Contraste de rendimiento entre los sistemas de recomendación en términos de cobertura de cartera (%) y especificidad de personalización (%).*
 
 ##### Interpretación Analítica de la Figura 6: La Frontera Eficiente de Cobertura vs Especificidad
 * **El dilema fundamental de recomendación bancaria:** Como se evidencia en el diagrama de dispersión de la Figura 7, no existe un único algoritmo que maximice simultáneamente la cobertura de clientes y la especificidad de producto. Los modelos se distribuyen a lo largo de una frontera de Pareto bien definida:
   1. *Cuadrante de Cobertura Universal (100% de Cartera):* El Filtrado Demográfico por Estereotipos, el modelo Basado en Contenidos (TF-IDF) y el Sistema de Reglas y Utilidad Financiera logran cubrir a la totalidad de los 5,369 clientes y los 682 créditos. Su especificidad es moderada porque operan sobre reglas prudenciales o promedios grupales, pero son vitales porque resuelven el *Cold Start* absoluto.
-  2. *Cuadrante de Alta Especificidad Quirúrgica (Venta Cruzada Fina):* Slope One y los modelos de Coseno con ponderación ITF operan sobre el 68.0% y 70.0% de la cartera activa (clientes con historial transaccional comprobable). Sacrifican cobertura sobre usuarios inactivos a cambio de una precisión matemática sobresaliente (MAE de 0.2280 en Slope One y detección de nichos de alto margen en Leasing y Seguros).
+  2. *Cuadrante de Alta Especificidad Quirúrgica (Venta Cruzada Fina):* Slope One y los modelos de Coseno con ponderación ITF operan sobre el 68.0% y 70.0% de la cartera activa (clientes con historial transaccional comprobable). Sacrifican cobertura sobre usuarios inactivos a cambio de una precisión matemática sobresaliente (MAE de 0.2887 (y 0.2593 en 5-fold CV) en Slope One y detección de nichos de alto margen en Leasing y Seguros).
 * **Arquitectura de Despliegue en Dos Fases para la Banca Digital:**
-  * **Fase 1 (Día 0 a 30 - Onboarding de Nuevos Clientes):** Al momento de la apertura de cuenta, el banco activa el **Filtrado Demográfico por Estereotipos** complementado con **TF-IDF**. Sin requerir transacciones previas, el sistema ofrece el paquete de bienvenida según el arquetipo distrital (ej. crédito y tarjeta en Praga; cuentas de ahorro remuneradas en Moravia).
-  * **Fase 2 (Día 31 en adelante - Cartera Transaccional Madura):** Tan pronto el usuario domicilia pagos o realiza movimientos con tarjeta, el motor activa **Slope One**, **Item-to-Item con ITF** y **User-to-User**, prediciendo con exactitud el siguiente producto de mayor afinidad y margen.
-  * **Capa de Gobernanza y Control Transversal:** Todo producto de financiamiento sugerido por cualquier motor debe atravesar obligatoriamente la compuerta de **Scoring de Riesgo y Función de Utilidad Financiera**, bloqueando de oficio a clientes morosos históricos (estados B y D) y asegurando que la cuota sugerida jamás supere el 30% del salario neto distrital.
+  * **Fase 1 (Arranque en Frío / Onboarding):** Al momento de la apertura de cuenta, el banco activa el **Filtrado Demográfico por Estereotipos** complementado con **TF-IDF**. Sin requerir transacciones previas, el sistema ofrece el paquete de bienvenida según el arquetipo distrital (ej. crédito y tarjeta en Praga; cuentas de ahorro remuneradas en Moravia).
+  * **Fase 2 (Cartera Transaccional Madura con $\ge 2$ productos o $\ge 10$ movimientos):** Tan pronto el usuario domicilia pagos o realiza movimientos con tarjeta, el motor activa **Slope One**, **Item-to-Item con ITF** y **User-to-User**, prediciendo con exactitud el siguiente producto de mayor afinidad y margen.
+  * **Capa de Gobernanza y Control Transversal:** Todo producto de financiamiento sugerido por cualquier motor debe atravesar obligatoriamente la compuerta de **Scoring de Riesgo y Función de Utilidad Financiera**, bloqueando de oficio a clientes morosos históricos (estados B y D) y asegurando que la cuota sugerida jamás supere el 30% del salario distrital promedio.
 
 ---
 
@@ -760,17 +797,17 @@ La Tabla XVII y la Figura 6 consolidan el rendimiento y rol de los **12 modelos 
 ### 2.9 Conclusiones Generales del Proyecto
 
 1. **Se cubrieron de forma exhaustiva las tres familias clásicas de recomendadores y modelos de utilidad sobre los cuatro DataFrames del banco:** Se implementaron con éxito técnicas de Filtrado Colaborativo (Slope One, Coseno Binario, Pearson y User-to-User), Filtrado Basado en Contenidos (TF-IDF e ITF), Filtrado Demográfico (Estereotipos) y Modelos de Conocimiento/Utilidad sobre `df_transacciones`, `df_ordenes`, `df_prestamos` y `df_cliente_consolidado`.
-2. **Slope One alcanzó la mayor precisión cuantitativa para la venta cruzada:** Validado mediante una partición 80/20 sobre 9,503 celdas conocidas, redujo el error absoluto medio (**MAE**) de 0.3625 a **0.2280 (+37.11% de mejora respecto a la media)**, demostrando que las diferencias de uso relativo capturan eficazmente la propensión de consumo del cliente.
-3. **La selección del grano analítico y de la matriz condiciona el éxito del recomendador:** El descarte empírico demostró que calcular similitudes sobre transacciones crudas sin transformar colapsa el modelo en similitudes planas ($0.93 - 0.96$) por la dominancia masiva de retiros y comisiones. El paso a órdenes fijas y la transformación logarítmica permitieron revelar una estructura angular discriminativa.
+2. **Slope One alcanzó la mayor precisión cuantitativa para la venta cruzada:** Validado mediante una partición 80/20 sobre 9,503 celdas conocidas, redujo el error absoluto medio (**MAE**) de 0.4420 a **0.2887 (+34.69% de mejora)** en partición 80/20 y a **0.2593 ± 0.0052** en validación cruzada de 5 pliegues frente a la media por usuario (0.4063), demostrando que las diferencias de uso relativo capturan eficazmente la propensión de consumo del cliente.
+3. **La selección del grano analítico y de la matriz condiciona el éxito del recomendador:** El descarte empírico demostró que calcular similitudes sobre transacciones crudas sin transformar colapsa el modelo en similitudes planas ($0.93 - 0.96$) por la ubicuidad de los movimientos bancarios básicos (egresos corrientes, depósitos de nómina, retiros en cajero e intereses ganados). El paso a órdenes fijas y la transformación logarítmica permitieron revelar una estructura angular discriminativa.
 4. **El arranque en frío (*Cold Start*) queda resuelto en ambos extremos de la operación:** El Filtrado Demográfico resuelve el *User Cold Start* al alcanzar una cobertura del **100% de la cartera** desde el día uno de apertura de cuenta, mientras que el modelo TF-IDF resuelve el *Item Cold Start* al permitir recomendar nuevos créditos basándose exclusivamente en sus especificaciones contractuales.
-5. **La ponderación ITF y la función de utilidad financiera previenen distorsiones comerciales:** El factor ITF eleva el peso de productos estratégicos como Leasing ($ITF = 2.40$) y Seguros ($ITF = 1.96$) para evitar que el catálogo quede monopolizado por servicios domésticos básicos. Asimismo, las reglas de scoring bloquean al 11.1% de clientes morosos y garantizan que la cuota no exceda el 30% del salario neto.
+5. **La ponderación ITF y la función de utilidad financiera previenen distorsiones comerciales:** El factor ITF eleva el peso de productos estratégicos como Leasing ($ITF = 2.40$) y Seguros ($ITF = 1.96$) para evitar que el catálogo quede monopolizado por servicios domésticos básicos. Asimismo, las reglas de scoring bloquean al 11.1% de clientes morosos y garantizan que la cuota no exceda el 30% del salario distrital promedio.
 
 ---
 
 ### 2.10 Recomendaciones
 
 * **Desplegar una arquitectura de recomendación en dos fases para la banca digital:** Emplear el motor Demográfico en el módulo de bienvenida (*onboarding*) durante los primeros 30 días del cliente; y activar los motores colaborativos Slope One y Coseno una vez que el usuario registre actividad transaccional periódica.
-* **Articular campañas comerciales de empaquetamiento (*bundling*) de Seguros en la domiciliación de Servicios:** Dado que el Coseno binario arrojó una afinidad de **0.4201** entre `Pago de Seguros` y `Servicios del Hogar`, se recomienda ofrecer una bonificación en la prima del seguro a todo cliente que afilie el pago automático de luz o agua (`SIPO`).
+* **Articular campañas comerciales de empaquetamiento (*bundling*) de Seguros en la domiciliación de Servicios:** Dado que el Coseno binario arrojó una afinidad del Coseno de **0.3976** entre `Pago de Seguros` y `Servicios del Hogar` (con Lift de 1.12), se recomienda ofrecer una bonificación en la prima del seguro a todo cliente que afilie el pago automático de luz o agua (`SIPO`).
 * **Coordinar la tesorería del banco con los ciclos de demanda detectados por Pearson:** Aprovechar el acoplamiento superior a **+0.99** en meses de fin de año para programar la liquidez requerida ante el incremento simultáneo de transferencias salientes y desembolsos de préstamos.
 * **Enriquecer los metadatos contractuales para el sistema TF-IDF:** Incorporar en la base de datos de productos descriptores explícitos sobre penalizaciones por prepago, garantías asociadas y canales preferenciales para refinar la similitud de contenidos.
 * **Conservar semillas aleatorias fijas en los pipelines analíticos:** Mantener el uso de semillas (`seed = 42`) en todas las particiones de entrenamiento y validación de datos para asegurar la trazabilidad, reproducibilidad y auditoría técnica de los modelos.
