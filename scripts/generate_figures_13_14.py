@@ -72,7 +72,7 @@ def generate_fig_14():
         ("3A: TF-IDF Contratos", 100.0, 1.95, "df_prestamos", "Sim: 0.1611 (LOPO: 8/8)", (-145, 8)),
         ("3B: Coseno Numérico", 100.0, 1.55, "df_prestamos", "cos(12m, 60m): -0.9991", (-155, -15)),
         ("3C: Scoring y Utilidad", 100.0, 2.35, "df_prestamos", "Mora ≤30%: 6.57% (χ²=10.62)", (-175, 8)),
-        ("4A: Demográfico Estereotipos", 100.0, 2.75, "df_cliente", "Adopción Praga: 18.8%", (-160, 8)),
+        ("4A: Demográfico Estereotipos", 100.0, 2.75, "df_cliente", "9 arquetipos (χ²=63.78)", (-160, 8)),
         ("4B: User-to-User kNN", 83.8, 3.10, "df_cliente", "AUC: 0.7905 (Brier: 0.1098)", (10, 8)),
         ("4C: Pearson Perfil", 100.0, 0.85, "df_cliente", "r(Tx, Ord): +0.4965", (-140, -15))
     ]

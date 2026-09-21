@@ -121,21 +121,21 @@ def build_part3(doc):
     
     tbl14_headers = ["Macro-Región", "Rango Etario", "Clientes (N)", "% Cartera", "Adopción Préstamos (%)", "Órdenes Activas Prom.", "Saldo Promedio (CZK)"]
     tbl14_rows = [
-        ["Metropolitana (Praga)", "Joven (<30)", "154", "2.9%", "18.8%", "1.34", "39,094.48"],
-        ["Metropolitana (Praga)", "Adulto (30-50)", "245", "4.6%", "18.0%", "1.37", "39,804.66"],
-        ["Metropolitana (Praga)", "Adulto Mayor (>50)", "264", "4.9%", "10.6%", "1.15", "33,594.09"],
-        ["Bohemia (Centro-Oeste)", "Joven (<30)", "695", "12.9%", "13.5%", "1.25", "38,522.71"],
-        ["Bohemia (Centro-Oeste)", "Adulto (30-50)", "1,075", "20.0%", "13.6%", "1.23", "39,658.97"],
-        ["Bohemia (Centro-Oeste)", "Adulto Mayor (>50)", "1,079", "20.1%", "11.4%", "1.16", "32,233.85"],
-        ["Moravia (Este)", "Joven (<30)", "433", "8.1%", "12.5%", "1.20", "37,614.83"],
-        ["Moravia (Este)", "Adulto (30-50)", "709", "13.2%", "12.6%", "1.23", "39,322.29"],
-        ["Moravia (Este)", "Adulto Mayor (>50)", "715", "13.3%", "11.5%", "1.13", "32,765.23"],
-        ["TOTAL / MEDIA GLOBAL", "—", "5,369", "100.0%", "12.7%", "1.21", "36,187.35"]
+        ["Metropolitana (Praga)", "Joven (<30)", "154", "2.9%", "14.9%", "1.27", "39,094.48"],
+        ["Metropolitana (Praga)", "Adulto (30-50)", "238", "4.4%", "16.0%", "1.36", "39,881.77"],
+        ["Metropolitana (Praga)", "Adulto Mayor (>50)", "271", "5.0%", "6.6%", "1.08", "33,725.68"],
+        ["Bohemia (Centro-Oeste)", "Joven (<30)", "695", "12.9%", "12.1%", "1.17", "38,522.71"],
+        ["Bohemia (Centro-Oeste)", "Adulto (30-50)", "1,013", "18.9%", "16.7%", "1.30", "39,626.70"],
+        ["Bohemia (Centro-Oeste)", "Adulto Mayor (>50)", "1,141", "21.3%", "8.8%", "1.12", "32,705.75"],
+        ["Moravia (Este)", "Joven (<30)", "433", "8.1%", "15.2%", "1.11", "37,614.83"],
+        ["Moravia (Este)", "Adulto (30-50)", "673", "12.5%", "16.9%", "1.30", "39,484.81"],
+        ["Moravia (Este)", "Adulto Mayor (>50)", "751", "14.0%", "9.3%", "1.19", "32,916.02"],
+        ["TOTAL / MEDIA GLOBAL", "—", "5,369", "100.0%", "12.7%", "1.21", "36,667.91"]
     ]
     add_table(doc, "Tabla 14: Caracterización y Consumo Medio de los 9 Estereotipos Sociodemográficos (df_cliente_consolidado).", tbl14_headers, tbl14_rows)
     add_figure(doc, "img/individual/fig_4a_estereotipos.png", "Figura 10: Tasa de Adopción Crediticia por los 9 Estereotipos Demográficos.", 4.8)
     
-    add_paragraph(doc, "Validación estadística y de negocio: La dependencia entre estereotipo y adopción crediticia es estadísticamente rotunda (Chi-cuadrado χ² = 63.7832, 8 gl, p = 8.39 × 10^(-11) < 0.0001). Los jóvenes de Praga presentan la tasa de adopción crediticia más elevada (18.8%), mientras que en adultos mayores de Bohemia y Moravia la adopción desciende a 11.4% y 11.5%, reflejando el ciclo biológico de desendeudamiento en edades de jubilación. Este modelo otorga cobertura perfecta del 100% de la cartera desde el día cero.")
+    add_paragraph(doc, "Validación estadística y de negocio: La dependencia entre estereotipo y adopción crediticia es estadísticamente rotunda (Chi-cuadrado χ² = 63.7832, 8 gl, p = 8.39 × 10^(-11) < 0.0001). Los adultos de 30 a 50 años en Moravia y Bohemia presentan las tasas de adopción crediticia más elevadas (16.9% y 16.7%), seguidos por adultos de Praga (16.0%) y jóvenes (12.1% a 15.2%), mientras que en adultos mayores (>50 años) la adopción desciende marcadamente a 6.6% en Praga y a 8.8%–9.3% en Bohemia y Moravia, reflejando el ciclo biológico de desendeudamiento en edades de jubilación. Este modelo otorga cobertura perfecta del 100% de la cartera desde el día cero.")
     add_paragraph(doc, "Recomendación estratégica de producto: Configurar paquetes de bienvenida diferenciados por región: préstamos de consumo y tarjetas en Praga, y productos de ahorro pasivo en Moravia.")
     
     # Modelo 4B

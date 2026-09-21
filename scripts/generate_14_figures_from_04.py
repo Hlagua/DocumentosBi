@@ -331,8 +331,8 @@ def make_fig_4a():
         'Moravia - Adulto (30-50)',
         'Moravia - Mayor (>50)'
     ]
-    adopcion_prestamo = [18.8, 18.0, 10.6, 13.5, 13.6, 11.4, 12.5, 12.6, 11.5]
-    n_clientes = [154, 245, 264, 695, 1075, 1079, 433, 709, 715]
+    adopcion_prestamo = [14.9, 16.0, 6.6, 12.1, 16.7, 8.8, 15.2, 16.9, 9.3]
+    n_clientes = [154, 238, 271, 695, 1013, 1141, 433, 673, 751]
     
     y = np.arange(len(arquetipos))
     fig, ax = plt.subplots(figsize=(7.6, 5.0), dpi=300)

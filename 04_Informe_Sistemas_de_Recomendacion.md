@@ -358,7 +358,7 @@ Métricas de reglas de asociación y Lift: El soporte conjunto del par {Seguro, 
 
 $$\text{Lift}(\text{Seguro} \to \text{Hogar}) = \frac{P(\text{Seguro} \cap \text{Hogar})}{P(\text{Seguro}) \cdot P(\text{Hogar})} = \frac{532 / 3758}{(532 / 3758) \cdot (3365 / 3758)} = \frac{3758}{3365} \approx \mathbf{1.12}$$
 
-Un Lift de 1.12 confirma una convivencia armoniosa y positiva entre ambos servicios contractuales.
+Un Lift de 1.12 confirma una asociación estadística positiva pero débil entre ambos servicios contractuales.
 
 ##### TABLA VIII
 ##### MATRIZ DE SIMILITUD DEL COSENO BINARIO ENTRE CONTRATOS DOMICILIADOS (`DF_ORDENES`).
@@ -374,7 +374,7 @@ Un Lift de 1.12 confirma una convivencia armoniosa y positiva entre ambos servic
 ![Figura 4: Matriz de Similitud del Coseno Binario de Co-adquisición en Órdenes](img/individual/fig_2a_coseno_binario.png)
 *Figura 4: Matriz de Similitud del Coseno Binario de Co-adquisición en Órdenes.*
 
-Interpretación analítica y de negocio: El valor de 0.3976 entre Seguros y Hogar representa el techo geométrico posible para coberturas tan dispares (532 frente a 3,365 cuentas). El análisis de inclusión cruzada revela una jerarquía anidada estricta: Seguros (532) ⊂ Sin Especificar (1,198) ⊂ Servicios del Hogar (3,365). El ratio Lift asociado es de 1.12, lo cual confirma una convivencia armoniosa aunque moderada (la contratación de seguro está condicionada a poseer previamente débito del hogar, el cual abarca al 89.54% de las cuentas).
+Interpretación analítica y de negocio: El valor de 0.3976 entre Seguros y Hogar representa el techo geométrico posible para coberturas tan dispares (532 frente a 3,365 cuentas). El análisis de inclusión cruzada revela una jerarquía anidada estricta: Seguros (532) ⊂ Sin Especificar (1,198) ⊂ Servicios del Hogar (3,365). El ratio Lift asociado es de 1.12, lo cual refleja una asociación estadística positiva pero débil: la co-ocurrencia observada apenas supera ligeramente lo esperado por azar debido a la omnipresencia del débito doméstico (89.54% de cuentas). Por ende, el empaquetamiento (bundling) no se fundamenta en una fuerte sinergia espontánea, sino en una estrategia comercial deliberada para utilizar el débito del hogar como canal operativo natural de recaudación para seguros.
 
 Recomendación estratégica de producto: Lanzar un producto empaquetado (bundling) denominado 'Hogar Integral', que incorpore una póliza de seguro de incendio o responsabilidad civil dentro del débito mensual de servicios básicos con una bonificación en comisiones.
 
@@ -399,7 +399,7 @@ $$\text{ITF}(i) = \ln\left(\frac{N_{\text{cuentas}}}{n_i}\right), \quad \text{Sc
 
 Simulación comparativa de ordenamiento con y sin ITF: Considérese una cuenta activa que domicilia exclusivamente Cuota de Préstamo (717 cuentas). Bajo un recomendador no ponderado basado en co-ocurrencia pura:
 * **Sin Ponderación ITF (Recomendación Trivial):** El producto con mayor similitud bruta es Servicios del Hogar ($\cos = 0.2936$), seguido de Sin Especificar (0.2633), Pago de Seguros (0.1975) y Leasing (0.0000). El sistema sugeriría domiciliar el pago de servicios básicos, aportando una recomendación genérica y de mínimo valor bancario.
-* **Con Ponderación ITF (Rescate de Alto Margen):** Al ponderar por el factor ITF, el score para Seguros asciende a $0.1975 \times 1.9550 = 0.3861$, mientras que el score para Servicios del Hogar se comprime drásticamente a $0.2936 \times 0.1105 = 0.0324$ (un factor 12 veces menor). El orden de recomendación se reestructura completamente, posicionando a Pago de Seguros en el primer lugar absoluto del ranking.
+* **Con Ponderación ITF (Rescate de Alto Margen):** Al ponderar por el factor ITF, el score para Seguros asciende a $0.1975 \times 1.9550 = 0.3861$, mientras que el score para Servicios del Hogar se comprime a $0.2936 \times 0.1105 = 0.0324$ (reduciéndose en un factor de 9.05 veces frente a su valor no ponderado, resultando casi 12 veces menor que el score de Seguros: 0.0324 vs. 0.3861). El orden de recomendación se reestructura completamente, posicionando a Pago de Seguros en el primer lugar absoluto del ranking.
 
 Interpretación analítica y de negocio: Gracias al factor ITF, el peso asignado a Leasing (2.3998) y Seguros (1.9550) supera en más de 17 y 21 veces al de Servicios del Hogar (0.1105). En una cuenta que ya domicilia pagos básicos, el modelo prioriza recomendar seguros o leasing en lugar de emitir sugerencias redundantes, diversificando la cartera de productos.
 
@@ -470,7 +470,7 @@ Validación Leave-One-Product-Out (LOPO): Para verificar objetivamente la capaci
 7. **Servicios del Hogar (P07):** recupera en Top-1 a P02 (Consumo Familiar) con 0.0616 y en Top-2 a P05 (Vida y Salud) con 0.0381.
 8. **Arrendamiento / Leasing (P08):** recupera en Top-1 a P03 (Hipotecario) con 0.0806 y en Top-2 a P02 (Consumo Familiar) con 0.0541.
 
-Se aclara que el corpus analizado es un catálogo curado de 8 productos arquetípicos representativo de la cartera bancaria. La tasa de acierto del 100% en Top-2 demuestra que el motor semántico captura con fidelidad las relaciones técnicas entre productos.
+Se aclara que el corpus analizado es un catálogo curado de 8 productos arquetípicos representativo de la cartera bancaria. La tasa de acierto del 100% en Top-2 es consistente con que el motor semántico captura con fidelidad las relaciones técnicas entre productos.
 
 Recomendación estratégica de producto: Configurar el recomendador TF-IDF en el módulo de diseño de nuevos productos para pre-etiquetar ofertas verdes o créditos educativos y asociarlos a seguros vinculados sin esperar meses de transacciones.
 
@@ -548,21 +548,21 @@ $$\text{Afinidad}(u, i) = \overline{C}_{\text{estereotipo}(u), i} - C_{u, i}$$
 
 | Macro-Región | Rango Etario | Clientes ($N$) | % Cartera | Adopción Préstamos (%) | Órdenes Activas Prom. | Saldo Promedio (CZK) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Metropolitana (Praga)** | Joven (<30) | 154 | 2.9% | **18.8%** | 1.34 | 39,094.48 |
-| **Metropolitana (Praga)** | Adulto (30-50) | 245 | 4.6% | **18.0%** | 1.37 | 39,804.66 |
-| **Metropolitana (Praga)** | Adulto Mayor (>50) | 264 | 4.9% | **10.6%** | 1.15 | 33,594.09 |
-| **Bohemia (Centro-Oeste)** | Joven (<30) | 695 | 12.9% | **13.5%** | 1.25 | 38,522.71 |
-| **Bohemia (Centro-Oeste)** | Adulto (30-50) | 1,075 | 20.0% | **13.6%** | 1.23 | 39,658.97 |
-| **Bohemia (Centro-Oeste)** | Adulto Mayor (>50) | 1,079 | 20.1% | **11.4%** | 1.16 | 32,233.85 |
-| **Moravia (Este)** | Joven (<30) | 433 | 8.1% | **12.5%** | 1.20 | 37,614.83 |
-| **Moravia (Este)** | Adulto (30-50) | 709 | 13.2% | **12.6%** | 1.23 | 39,322.29 |
-| **Moravia (Este)** | Adulto Mayor (>50) | 715 | 13.3% | **11.5%** | 1.13 | 32,765.23 |
-| **TOTAL / MEDIA GLOBAL** | — | **5,369** | **100.0%** | **12.7%** | **1.21** | **36,187.35** |
+| **Metropolitana (Praga)** | Joven (<30) | 154 | 2.9% | **14.9%** | 1.27 | 39,094.48 |
+| **Metropolitana (Praga)** | Adulto (30-50) | 238 | 4.4% | **16.0%** | 1.36 | 39,881.77 |
+| **Metropolitana (Praga)** | Adulto Mayor (>50) | 271 | 5.0% | **6.6%** | 1.08 | 33,725.68 |
+| **Bohemia (Centro-Oeste)** | Joven (<30) | 695 | 12.9% | **12.1%** | 1.17 | 38,522.71 |
+| **Bohemia (Centro-Oeste)** | Adulto (30-50) | 1,013 | 18.9% | **16.7%** | 1.30 | 39,626.70 |
+| **Bohemia (Centro-Oeste)** | Adulto Mayor (>50) | 1,141 | 21.3% | **8.8%** | 1.12 | 32,705.75 |
+| **Moravia (Este)** | Joven (<30) | 433 | 8.1% | **15.2%** | 1.11 | 37,614.83 |
+| **Moravia (Este)** | Adulto (30-50) | 673 | 12.5% | **16.9%** | 1.30 | 39,484.81 |
+| **Moravia (Este)** | Adulto Mayor (>50) | 751 | 14.0% | **9.3%** | 1.19 | 32,916.02 |
+| **TOTAL / MEDIA GLOBAL** | — | **5,369** | **100.0%** | **12.7%** | **1.21** | **36,667.91** |
 
 ![Figura 10: Tasa de Adopción Crediticia por los 9 Estereotipos Demográficos](img/individual/fig_4a_estereotipos.png)
 *Figura 10: Tasa de Adopción Crediticia por los 9 Estereotipos Demográficos.*
 
-Validación estadística y de negocio: La dependencia entre estereotipo y adopción crediticia es estadísticamente rotunda (Chi-cuadrado $\chi^2 = 63.7832, 8 \text{ gl}, p = 8.39 \times 10^{-11} < 0.0001$). Los jóvenes de Praga presentan la tasa de adopción crediticia más elevada (18.8%), mientras que en adultos mayores de Bohemia y Moravia la adopción desciende a 11.4% y 11.5%, reflejando el ciclo biológico de desendeudamiento en edades de jubilación. Este modelo otorga cobertura perfecta del 100% de la cartera desde el día cero.
+Validación estadística y de negocio: La dependencia entre estereotipo y adopción crediticia es estadísticamente rotunda (Chi-cuadrado $\chi^2 = 63.7832, 8 \text{ gl}, p = 8.39 \times 10^{-11} < 0.0001$). Los adultos de 30 a 50 años en Moravia y Bohemia presentan las tasas de adopción crediticia más elevadas (16.9% y 16.7%), seguidos por adultos de Praga (16.0%) y jóvenes (12.1% a 15.2%), mientras que en adultos mayores (>50 años) la adopción desciende marcadamente a 6.6% en Praga y a 8.8%–9.3% en Bohemia y Moravia, reflejando el ciclo biológico de desendeudamiento en edades de jubilación. Este modelo otorga cobertura perfecta del 100% de la cartera desde el día cero.
 
 Recomendación estratégica de producto: Configurar paquetes de bienvenida diferenciados por región: préstamos de consumo y tarjetas en Praga, y productos de ahorro pasivo en Moravia.
 
@@ -654,7 +654,7 @@ La Tabla XVII y la Figura 14 consolidan la síntesis comparativa exhaustiva de l
 | `df_prestamos` | TF-IDF Contratos (3A) | Recomendador | Basado en Contenidos | Matriz 8 × 8 léxica | **Sim: 0.1611 (LOPO: 8/8, 100%)** | 100.0% | Resolución de Item Cold Start para productos nuevos. |
 | `df_prestamos` | Coseno Numérico (3B) | Complementario | Geométrico Centroidal | Matriz 5 × 5 (plazos) | **cos(12m, 60m) = -0.9991** | 100.0% | Mapeo estructural de distancias entre plazos crediticios. |
 | `df_prestamos` | Scoring y Utilidad (3C) | Recomendador / Control | Conocimiento y Utilidad | 682 contratos | **Mora ≤ 30%: 6.57%** (vs > 50%: 16.86%) | 100.0% | Filtro prudencial de capacidad de pago y control de riesgo. |
-| `df_cliente` | Demográfico (4A) | Recomendador | Filtrado Demográfico | 9 arquetipos | **Adopción Praga: 18.8% (χ²=63.78)** | 100.0% | Resolución de User Cold Start en apertura de cuenta. |
+| `df_cliente` | Demográfico (4A) | Recomendador | Filtrado Demográfico | 9 arquetipos | **Adopción Adultos: 16.9% (χ²=63.78)** | 100.0% | Resolución de User Cold Start en apertura de cuenta. |
 | `df_cliente` | User-to-User kNN (4B) | Recomendador | Colaborativo Usuario-Usuario| 4,500 titulares | **AUC: 0.7905, Brier Score: 0.1098** | 83.8% | Exploración de vecindarios y gemelos financieros. |
 | `df_cliente` | Pearson Perfil (4C) | Complementario | Exploratorio Multivariante | Matriz 6 × 6 | **r(Tx, Órdenes) = +0.4965** | 100.0% | Marco de gobernanza estructural y segmentación macro. |
 
@@ -779,7 +779,7 @@ Todos los sistemas, métricas y figuras presentados en este informe son directam
 La siguiente síntesis cuantitativa unifica los principales indicadores experimentales obtenidos a lo largo de la investigación:
 * **4 DataFrames analizados:** `df_transacciones` (1,056,320 registros), `df_ordenes` (6,471 registros), `df_prestamos` (682 registros) y `df_cliente_consolidado` (5,369 registros).
 * **12 modelos de recomendación implementados:** Evaluados y contrastados a través de los cuatro DataFrames (3 modelos por DataFrame).
-* **Cobertura completa de las 3 familias clásicas:** Filtrado Colaborativo, Basado en Contenidos, Demográfico y Modelos de Conocimiento/Utilidad.
+* **Cobertura de 4 familias metodológicas:** Las tres familias clásicas (Filtrado Colaborativo, Basado en Contenidos y Demográfico), complementadas con una cuarta categoría transversal de gobernanza: Modelos Basados en el Conocimiento y en la Utilidad Financiera.
 * **100% de clientes y productos cubiertos:** En la combinación global de la arquitectura en dos fases.
 * **Reducción del error absoluto (MAE) en Slope One:** 37.61% de reducción frente a la media de usuario en partición 80/20 (MAE = 0.2535 frente a 0.4063 de media de usuario de entrenamiento) y 36.18% en validación cruzada de 5 pliegues (MAE = 0.2593 ± 0.0052 frente a 0.4063 de media de usuario, y 43.70% frente a la media global de 0.4606).
 * **Hit-Rate@1 de Slope One:** Empate estadístico en ranking Top-N con la popularidad pura (91.79% vs 91.29%, Z = 0.7634, p = 0.4452), garantizando personalización individual sin penalizar la tasa de acierto.

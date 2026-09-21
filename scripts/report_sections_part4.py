@@ -42,7 +42,7 @@ def build_part4(doc):
         ["df_prestamos", "TF-IDF Contratos (3A)", "Recomendador", "Basado en Contenidos", "Matriz 8 × 8 léxica", "Sim: 0.1611 (LOPO: 8/8, 100%)", "100.0%", "Resolución de Item Cold Start para productos nuevos."],
         ["df_prestamos", "Coseno Numérico (3B)", "Complementario", "Geométrico Centroidal", "Matriz 5 × 5 (plazos)", "cos(12m, 60m) = -0.9991", "100.0%", "Mapeo estructural de distancias entre plazos crediticios."],
         ["df_prestamos", "Scoring y Utilidad (3C)", "Recomendador / Control", "Conocimiento y Utilidad", "682 contratos", "Mora ≤ 30%: 6.57% (vs > 50%: 16.86%)", "100.0%", "Filtro prudencial de capacidad de pago y control de riesgo."],
-        ["df_cliente", "Demográfico (4A)", "Recomendador", "Filtrado Demográfico", "9 arquetipos", "Adopción Praga: 18.8% (χ²=63.78)", "100.0%", "Resolución de User Cold Start en apertura de cuenta."],
+        ["df_cliente", "Demográfico (4A)", "Recomendador", "Filtrado Demográfico", "9 arquetipos", "Adopción Adultos: 16.9% (χ²=63.78)", "100.0%", "Resolución de User Cold Start en apertura de cuenta."],
         ["df_cliente", "User-to-User kNN (4B)", "Recomendador", "Colaborativo Usuario-Usuario", "4,500 titulares", "AUC: 0.7905, Brier Score: 0.1098", "83.8%", "Exploración de vecindarios y gemelos financieros."],
         ["df_cliente", "Pearson Perfil (4C)", "Complementario", "Exploratorio Multivariante", "Matriz 6 × 6", "r(Tx, Órdenes) = +0.4965", "100.0%", "Marco de gobernanza estructural y segmentación macro."]
     ]
@@ -170,7 +170,7 @@ def build_part4(doc):
     add_paragraph(doc, "La siguiente síntesis cuantitativa unifica los principales indicadores experimentales obtenidos a lo largo de la investigación:")
     add_bullet(doc, "df_transacciones (1,056,320 registros), df_ordenes (6,471 registros), df_prestamos (682 registros) y df_cliente_consolidado (5,369 registros).", "4 DataFrames analizados:")
     add_bullet(doc, "Evaluados y contrastados a través de los cuatro DataFrames (3 modelos por DataFrame).", "12 modelos de recomendación implementados:")
-    add_bullet(doc, "Filtrado Colaborativo, Basado en Contenidos, Demográfico y Modelos de Conocimiento/Utilidad.", "Cobertura completa de las 3 familias clásicas:")
+    add_bullet(doc, "Las tres familias clásicas (Filtrado Colaborativo, Basado en Contenidos y Demográfico), complementadas con una cuarta categoría transversal de gobernanza: Modelos Basados en el Conocimiento y en la Utilidad Financiera.", "Cobertura de 4 familias metodológicas:")
     add_bullet(doc, "En la combinación global de la arquitectura en dos fases.", "100% de clientes y productos cubiertos:")
     add_bullet(doc, "37.61% de reducción frente a la media de usuario en partición 80/20 (MAE = 0.2535 frente a 0.4063 de media de usuario de entrenamiento) y 36.18% en validación cruzada de 5 pliegues (MAE = 0.2593 ± 0.0052 frente a 0.4063 de media de usuario, y 43.70% frente a la media global de 0.4606).", "Reducción del error absoluto (MAE) en Slope One:")
     add_bullet(doc, "Empate estadístico en ranking Top-N con la popularidad pura (91.79% vs 91.29%, Z = 0.7634, p = 0.4452), garantizando personalización individual sin penalizar la tasa de acierto.", "Hit-Rate@1 de Slope One:")
