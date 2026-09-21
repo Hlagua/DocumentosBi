@@ -1,0 +1,358 @@
+{
+  "slope_one": {
+    "mae_slope": 0.22799458139753886,
+    "rmse_slope": 0.300563673859754,
+    "mae_base": 0.36254499775635257,
+    "rmse_base": 0.440408049983955,
+    "mejora_pct": 37.112749366697365,
+    "dev_matrix": {
+      "PRESTAMO": {
+        "PRESTAMO": 0.0,
+        "SEGURO": 0.4978,
+        "SERVICIOS_HOGAR": 0.4381,
+        "TARJETA_DEBITO": 1.0217,
+        "TRANSF_EXTERNA": 0.5575
+      },
+      "SEGURO": {
+        "PRESTAMO": -0.4978,
+        "SEGURO": 0.0,
+        "SERVICIOS_HOGAR": -0.0021,
+        "TARJETA_DEBITO": 0.3979,
+        "TRANSF_EXTERNA": 0.1642
+      },
+      "SERVICIOS_HOGAR": {
+        "PRESTAMO": -0.4381,
+        "SEGURO": 0.0021,
+        "SERVICIOS_HOGAR": 0.0,
+        "TARJETA_DEBITO": 0.303,
+        "TRANSF_EXTERNA": 0.0738
+      },
+      "TARJETA_DEBITO": {
+        "PRESTAMO": -1.0217,
+        "SEGURO": -0.3979,
+        "SERVICIOS_HOGAR": -0.303,
+        "TARJETA_DEBITO": 0.0,
+        "TRANSF_EXTERNA": -0.3107
+      },
+      "TRANSF_EXTERNA": {
+        "PRESTAMO": -0.5575,
+        "SEGURO": -0.1642,
+        "SERVICIOS_HOGAR": -0.0738,
+        "TARJETA_DEBITO": 0.3107,
+        "TRANSF_EXTERNA": 0.0
+      }
+    },
+    "card_matrix": {
+      "PRESTAMO": {
+        "PRESTAMO": 682.0,
+        "SEGURO": 114.0,
+        "SERVICIOS_HOGAR": 468.0,
+        "TARJETA_DEBITO": 682.0,
+        "TRANSF_EXTERNA": 233.0
+      },
+      "SEGURO": {
+        "PRESTAMO": 114.0,
+        "SEGURO": 532.0,
+        "SERVICIOS_HOGAR": 532.0,
+        "TARJETA_DEBITO": 532.0,
+        "TRANSF_EXTERNA": 531.0
+      },
+      "SERVICIOS_HOGAR": {
+        "PRESTAMO": 468.0,
+        "SEGURO": 532.0,
+        "SERVICIOS_HOGAR": 3439.0,
+        "TARJETA_DEBITO": 3439.0,
+        "TRANSF_EXTERNA": 1197.0
+      },
+      "TARJETA_DEBITO": {
+        "PRESTAMO": 682.0,
+        "SEGURO": 532.0,
+        "SERVICIOS_HOGAR": 3439.0,
+        "TARJETA_DEBITO": 3653.0,
+        "TRANSF_EXTERNA": 1197.0
+      },
+      "TRANSF_EXTERNA": {
+        "PRESTAMO": 233.0,
+        "SEGURO": 531.0,
+        "SERVICIOS_HOGAR": 1197.0,
+        "TARJETA_DEBITO": 1197.0,
+        "TRANSF_EXTERNA": 1197.0
+      }
+    }
+  },
+  "coseno_ordenes": {
+    "Arrendamiento / Leasing": {
+      "Arrendamiento / Leasing": 1.0,
+      "Cuota de Prestamo": 0.0,
+      "Pago de Seguros": 0.1174,
+      "Servicios del Hogar": 0.1951,
+      "Sin Especificar": 0.158
+    },
+    "Cuota de Prestamo": {
+      "Arrendamiento / Leasing": 0.0,
+      "Cuota de Prestamo": 1.0,
+      "Pago de Seguros": 0.1975,
+      "Servicios del Hogar": 0.2936,
+      "Sin Especificar": 0.2633
+    },
+    "Pago de Seguros": {
+      "Arrendamiento / Leasing": 0.1174,
+      "Cuota de Prestamo": 0.1975,
+      "Pago de Seguros": 1.0,
+      "Servicios del Hogar": 0.3976,
+      "Sin Especificar": 0.6664
+    },
+    "Servicios del Hogar": {
+      "Arrendamiento / Leasing": 0.1951,
+      "Cuota de Prestamo": 0.2936,
+      "Pago de Seguros": 0.3976,
+      "Servicios del Hogar": 1.0,
+      "Sin Especificar": 0.5967
+    },
+    "Sin Especificar": {
+      "Arrendamiento / Leasing": 0.158,
+      "Cuota de Prestamo": 0.2633,
+      "Pago de Seguros": 0.6664,
+      "Servicios del Hogar": 0.5967,
+      "Sin Especificar": 1.0
+    }
+  },
+  "pearson_temporal": {
+    "PRESTAMO": {
+      "PRESTAMO": 1.0,
+      "SEGURO": 0.991,
+      "SERVICIOS_HOGAR": 0.9905,
+      "TARJETA_DEBITO": 0.8634,
+      "TRANSF_EXTERNA": 0.9858
+    },
+    "SEGURO": {
+      "PRESTAMO": 0.991,
+      "SEGURO": 1.0,
+      "SERVICIOS_HOGAR": 0.9984,
+      "TARJETA_DEBITO": 0.8785,
+      "TRANSF_EXTERNA": 0.9973
+    },
+    "SERVICIOS_HOGAR": {
+      "PRESTAMO": 0.9905,
+      "SEGURO": 0.9984,
+      "SERVICIOS_HOGAR": 1.0,
+      "TARJETA_DEBITO": 0.8821,
+      "TRANSF_EXTERNA": 0.9986
+    },
+    "TARJETA_DEBITO": {
+      "PRESTAMO": 0.8634,
+      "SEGURO": 0.8785,
+      "SERVICIOS_HOGAR": 0.8821,
+      "TARJETA_DEBITO": 1.0,
+      "TRANSF_EXTERNA": 0.8837
+    },
+    "TRANSF_EXTERNA": {
+      "PRESTAMO": 0.9858,
+      "SEGURO": 0.9973,
+      "SERVICIOS_HOGAR": 0.9986,
+      "TARJETA_DEBITO": 0.8837,
+      "TRANSF_EXTERNA": 1.0
+    }
+  },
+  "tfidf_vocab_len": 109,
+  "tfidf_top_common": [
+    {
+      "termino": "cuota",
+      "idf": 1.4054651081081644
+    },
+    {
+      "termino": "de",
+      "idf": 1.4054651081081644
+    },
+    {
+      "termino": "mensual",
+      "idf": 1.4054651081081644
+    },
+    {
+      "termino": "financiamiento",
+      "idf": 1.587786664902119
+    },
+    {
+      "termino": "meses",
+      "idf": 1.587786664902119
+    }
+  ],
+  "tfidf_top_distintivos": [
+    {
+      "termino": "vehiculos",
+      "idf": 2.504077396776274
+    },
+    {
+      "termino": "ventajoso",
+      "idf": 2.504077396776274
+    },
+    {
+      "termino": "vida",
+      "idf": 2.504077396776274
+    },
+    {
+      "termino": "vinculado",
+      "idf": 2.504077396776274
+    },
+    {
+      "termino": "vivienda",
+      "idf": 2.504077396776274
+    }
+  ],
+  "tfidf_similarity": {
+    "Prestamo Personal Express": {
+      "Prestamo Personal Express": 1.0,
+      "Credito Consumo Familiar": 0.1488,
+      "Prestamo Hipotecario Vivienda": 0.1298,
+      "Credito Comercial PyME": 0.0706,
+      "Poliza Seguro Vida y Salud": 0.0525,
+      "Seguro Proteccion Financiera y Desgravamen": 0.0168,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0611,
+      "Arrendamiento Financiero / Leasing": 0.0387
+    },
+    "Credito Consumo Familiar": {
+      "Prestamo Personal Express": 0.1488,
+      "Credito Consumo Familiar": 1.0,
+      "Prestamo Hipotecario Vivienda": 0.0939,
+      "Credito Comercial PyME": 0.0747,
+      "Poliza Seguro Vida y Salud": 0.2296,
+      "Seguro Proteccion Financiera y Desgravamen": 0.0177,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0532,
+      "Arrendamiento Financiero / Leasing": 0.0409
+    },
+    "Prestamo Hipotecario Vivienda": {
+      "Prestamo Personal Express": 0.1298,
+      "Credito Consumo Familiar": 0.0939,
+      "Prestamo Hipotecario Vivienda": 1.0,
+      "Credito Comercial PyME": 0.2116,
+      "Poliza Seguro Vida y Salud": 0.1027,
+      "Seguro Proteccion Financiera y Desgravamen": 0.3094,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0185,
+      "Arrendamiento Financiero / Leasing": 0.1261
+    },
+    "Credito Comercial PyME": {
+      "Prestamo Personal Express": 0.0706,
+      "Credito Consumo Familiar": 0.0747,
+      "Prestamo Hipotecario Vivienda": 0.2116,
+      "Credito Comercial PyME": 1.0,
+      "Poliza Seguro Vida y Salud": 0.0387,
+      "Seguro Proteccion Financiera y Desgravamen": 0.1645,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0,
+      "Arrendamiento Financiero / Leasing": 0.1498
+    },
+    "Poliza Seguro Vida y Salud": {
+      "Prestamo Personal Express": 0.0525,
+      "Credito Consumo Familiar": 0.2296,
+      "Prestamo Hipotecario Vivienda": 0.1027,
+      "Credito Comercial PyME": 0.0387,
+      "Poliza Seguro Vida y Salud": 1.0,
+      "Seguro Proteccion Financiera y Desgravamen": 0.3207,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.033,
+      "Arrendamiento Financiero / Leasing": 0.1062
+    },
+    "Seguro Proteccion Financiera y Desgravamen": {
+      "Prestamo Personal Express": 0.0168,
+      "Credito Consumo Familiar": 0.0177,
+      "Prestamo Hipotecario Vivienda": 0.3094,
+      "Credito Comercial PyME": 0.1645,
+      "Poliza Seguro Vida y Salud": 0.3207,
+      "Seguro Proteccion Financiera y Desgravamen": 1.0,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0,
+      "Arrendamiento Financiero / Leasing": 0.1897
+    },
+    "Domiciliacion Servicios del Hogar (SIPO)": {
+      "Prestamo Personal Express": 0.0611,
+      "Credito Consumo Familiar": 0.0532,
+      "Prestamo Hipotecario Vivienda": 0.0185,
+      "Credito Comercial PyME": 0.0,
+      "Poliza Seguro Vida y Salud": 0.033,
+      "Seguro Proteccion Financiera y Desgravamen": 0.0,
+      "Domiciliacion Servicios del Hogar (SIPO)": 1.0,
+      "Arrendamiento Financiero / Leasing": 0.0195
+    },
+    "Arrendamiento Financiero / Leasing": {
+      "Prestamo Personal Express": 0.0387,
+      "Credito Consumo Familiar": 0.0409,
+      "Prestamo Hipotecario Vivienda": 0.1261,
+      "Credito Comercial PyME": 0.1498,
+      "Poliza Seguro Vida y Salud": 0.1062,
+      "Seguro Proteccion Financiera y Desgravamen": 0.1897,
+      "Domiciliacion Servicios del Hogar (SIPO)": 0.0195,
+      "Arrendamiento Financiero / Leasing": 1.0
+    }
+  },
+  "demografico_estereotipos": {
+    "Bohemia (Centro-Oeste) | Adulto (30-50)": {
+      "clientes": 1075,
+      "adopcion_prestamo": 0.16,
+      "ordenes_activas": 1.3,
+      "monto_ordenes": 4540.89,
+      "transacciones": 208.19,
+      "saldo_promedio": 39658.97
+    },
+    "Bohemia (Centro-Oeste) | Adulto Mayor (>50)": {
+      "clientes": 1079,
+      "adopcion_prestamo": 0.09,
+      "ordenes_activas": 1.11,
+      "monto_ordenes": 3379.76,
+      "transacciones": 177.47,
+      "saldo_promedio": 32233.85
+    },
+    "Bohemia (Centro-Oeste) | Joven (<30)": {
+      "clientes": 695,
+      "adopcion_prestamo": 0.12,
+      "ordenes_activas": 1.17,
+      "monto_ordenes": 3846.34,
+      "transacciones": 207.08,
+      "saldo_promedio": 38522.71
+    },
+    "Metropolitana (Praga) | Adulto (30-50)": {
+      "clientes": 245,
+      "adopcion_prestamo": 0.16,
+      "ordenes_activas": 1.38,
+      "monto_ordenes": 4972.3,
+      "transacciones": 206.43,
+      "saldo_promedio": 39804.66
+    },
+    "Metropolitana (Praga) | Adulto Mayor (>50)": {
+      "clientes": 264,
+      "adopcion_prestamo": 0.07,
+      "ordenes_activas": 1.05,
+      "monto_ordenes": 3264.55,
+      "transacciones": 176.64,
+      "saldo_promedio": 33594.09
+    },
+    "Metropolitana (Praga) | Joven (<30)": {
+      "clientes": 154,
+      "adopcion_prestamo": 0.15,
+      "ordenes_activas": 1.27,
+      "monto_ordenes": 4540.45,
+      "transacciones": 208.69,
+      "saldo_promedio": 39094.48
+    },
+    "Moravia (Este) | Adulto (30-50)": {
+      "clientes": 709,
+      "adopcion_prestamo": 0.17,
+      "ordenes_activas": 1.3,
+      "monto_ordenes": 4471.12,
+      "transacciones": 204.05,
+      "saldo_promedio": 39322.29
+    },
+    "Moravia (Este) | Adulto Mayor (>50)": {
+      "clientes": 715,
+      "adopcion_prestamo": 0.09,
+      "ordenes_activas": 1.18,
+      "monto_ordenes": 3576.3,
+      "transacciones": 185.61,
+      "saldo_promedio": 32765.23
+    },
+    "Moravia (Este) | Joven (<30)": {
+      "clientes": 433,
+      "adopcion_prestamo": 0.15,
+      "ordenes_activas": 1.11,
+      "monto_ordenes": 3513.28,
+      "transacciones": 208.72,
+      "saldo_promedio": 37614.83
+    }
+  }
+}

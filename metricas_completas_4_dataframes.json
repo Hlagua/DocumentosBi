@@ -1,0 +1,488 @@
+{
+  "df_cliente": {
+    "filas": 5369,
+    "estereotipos": {
+      "Bohemia (Centro-Oeste) | Adulto (30-50)": {
+        "n_clientes": 1075,
+        "tasa_prestamo": 0.16,
+        "ordenes_promedio": 1.3,
+        "monto_ordenes_promedio": 4540.89,
+        "transacciones_anuales": 208.19,
+        "saldo_promedio": 39658.97,
+        "salario_distrital": 9025.96
+      },
+      "Bohemia (Centro-Oeste) | Adulto Mayor (>50)": {
+        "n_clientes": 1079,
+        "tasa_prestamo": 0.09,
+        "ordenes_promedio": 1.11,
+        "monto_ordenes_promedio": 3379.76,
+        "transacciones_anuales": 177.47,
+        "saldo_promedio": 32233.85,
+        "salario_distrital": 9028.9
+      },
+      "Bohemia (Centro-Oeste) | Joven (<30)": {
+        "n_clientes": 695,
+        "tasa_prestamo": 0.12,
+        "ordenes_promedio": 1.17,
+        "monto_ordenes_promedio": 3846.34,
+        "transacciones_anuales": 207.08,
+        "saldo_promedio": 38522.71,
+        "salario_distrital": 9040.81
+      },
+      "Metropolitana (Praga) | Adulto (30-50)": {
+        "n_clientes": 245,
+        "tasa_prestamo": 0.16,
+        "ordenes_promedio": 1.38,
+        "monto_ordenes_promedio": 4972.3,
+        "transacciones_anuales": 206.43,
+        "saldo_promedio": 39804.66,
+        "salario_distrital": 12541.0
+      },
+      "Metropolitana (Praga) | Adulto Mayor (>50)": {
+        "n_clientes": 264,
+        "tasa_prestamo": 0.07,
+        "ordenes_promedio": 1.05,
+        "monto_ordenes_promedio": 3264.55,
+        "transacciones_anuales": 176.64,
+        "saldo_promedio": 33594.09,
+        "salario_distrital": 12541.0
+      },
+      "Metropolitana (Praga) | Joven (<30)": {
+        "n_clientes": 154,
+        "tasa_prestamo": 0.15,
+        "ordenes_promedio": 1.27,
+        "monto_ordenes_promedio": 4540.45,
+        "transacciones_anuales": 208.69,
+        "saldo_promedio": 39094.48,
+        "salario_distrital": 12541.0
+      },
+      "Moravia (Este) | Adulto (30-50)": {
+        "n_clientes": 709,
+        "tasa_prestamo": 0.17,
+        "ordenes_promedio": 1.3,
+        "monto_ordenes_promedio": 4471.12,
+        "transacciones_anuales": 204.05,
+        "saldo_promedio": 39322.29,
+        "salario_distrital": 9169.42
+      },
+      "Moravia (Este) | Adulto Mayor (>50)": {
+        "n_clientes": 715,
+        "tasa_prestamo": 0.09,
+        "ordenes_promedio": 1.18,
+        "monto_ordenes_promedio": 3576.3,
+        "transacciones_anuales": 185.61,
+        "saldo_promedio": 32765.23,
+        "salario_distrital": 9146.48
+      },
+      "Moravia (Este) | Joven (<30)": {
+        "n_clientes": 433,
+        "tasa_prestamo": 0.15,
+        "ordenes_promedio": 1.11,
+        "monto_ordenes_promedio": 3513.28,
+        "transacciones_anuales": 208.72,
+        "saldo_promedio": 37614.83,
+        "salario_distrital": 9190.03
+      }
+    },
+    "user_to_user_vecinos": {
+      "2": [
+        {
+          "vecino_id": 9173,
+          "similitud": 0.9999,
+          "tiene_prestamo": 1,
+          "ordenes": 2,
+          "saldo": 35557.59
+        },
+        {
+          "vecino_id": 6922,
+          "similitud": 0.9995,
+          "tiene_prestamo": 1,
+          "ordenes": 5,
+          "saldo": 34838.18
+        },
+        {
+          "vecino_id": 1691,
+          "similitud": 0.9989,
+          "tiene_prestamo": 0,
+          "ordenes": 1,
+          "saldo": 35361.85
+        }
+      ],
+      "19": [
+        {
+          "vecino_id": 1642,
+          "similitud": 0.9991,
+          "tiene_prestamo": 0,
+          "ordenes": 1,
+          "saldo": 43578.99
+        },
+        {
+          "vecino_id": 3620,
+          "similitud": 0.9968,
+          "tiene_prestamo": 0,
+          "ordenes": 3,
+          "saldo": 44457.87
+        },
+        {
+          "vecino_id": 7855,
+          "similitud": 0.9956,
+          "tiene_prestamo": 1,
+          "ordenes": 1,
+          "saldo": 45556.53
+        }
+      ],
+      "47": [
+        {
+          "vecino_id": 4679,
+          "similitud": 0.9995,
+          "tiene_prestamo": 0,
+          "ordenes": 4,
+          "saldo": 20930.69
+        },
+        {
+          "vecino_id": 3831,
+          "similitud": 0.9992,
+          "tiene_prestamo": 0,
+          "ordenes": 1,
+          "saldo": 26700.9
+        },
+        {
+          "vecino_id": 1075,
+          "similitud": 0.9986,
+          "tiene_prestamo": 0,
+          "ordenes": 2,
+          "saldo": 25584.79
+        }
+      ]
+    }
+  },
+  "df_transacciones": {
+    "filas": 1056320,
+    "slope_one_dev": {
+      "PRESTAMO": {
+        "PRESTAMO": 0.0,
+        "SEGURO": 0.4978,
+        "SERVICIOS_HOGAR": 0.4381,
+        "TARJETA_DEBITO": 1.0217,
+        "TRANSF_EXTERNA": 0.5575
+      },
+      "SEGURO": {
+        "PRESTAMO": -0.4978,
+        "SEGURO": 0.0,
+        "SERVICIOS_HOGAR": -0.0021,
+        "TARJETA_DEBITO": 0.3979,
+        "TRANSF_EXTERNA": 0.1642
+      },
+      "SERVICIOS_HOGAR": {
+        "PRESTAMO": -0.4381,
+        "SEGURO": 0.0021,
+        "SERVICIOS_HOGAR": 0.0,
+        "TARJETA_DEBITO": 0.303,
+        "TRANSF_EXTERNA": 0.0738
+      },
+      "TARJETA_DEBITO": {
+        "PRESTAMO": -1.0217,
+        "SEGURO": -0.3979,
+        "SERVICIOS_HOGAR": -0.303,
+        "TARJETA_DEBITO": 0.0,
+        "TRANSF_EXTERNA": -0.3107
+      },
+      "TRANSF_EXTERNA": {
+        "PRESTAMO": -0.5575,
+        "SEGURO": -0.1642,
+        "SERVICIOS_HOGAR": -0.0738,
+        "TARJETA_DEBITO": 0.3107,
+        "TRANSF_EXTERNA": 0.0
+      }
+    },
+    "pearson_corr": {
+      "PRESTAMO": {
+        "PRESTAMO": 1.0,
+        "SEGURO": 0.991,
+        "SERVICIOS_HOGAR": 0.9905,
+        "TARJETA_DEBITO": 0.8634,
+        "TRANSF_EXTERNA": 0.9858
+      },
+      "SEGURO": {
+        "PRESTAMO": 0.991,
+        "SEGURO": 1.0,
+        "SERVICIOS_HOGAR": 0.9984,
+        "TARJETA_DEBITO": 0.8785,
+        "TRANSF_EXTERNA": 0.9973
+      },
+      "SERVICIOS_HOGAR": {
+        "PRESTAMO": 0.9905,
+        "SEGURO": 0.9984,
+        "SERVICIOS_HOGAR": 1.0,
+        "TARJETA_DEBITO": 0.8821,
+        "TRANSF_EXTERNA": 0.9986
+      },
+      "TARJETA_DEBITO": {
+        "PRESTAMO": 0.8634,
+        "SEGURO": 0.8785,
+        "SERVICIOS_HOGAR": 0.8821,
+        "TARJETA_DEBITO": 1.0,
+        "TRANSF_EXTERNA": 0.8837
+      },
+      "TRANSF_EXTERNA": {
+        "PRESTAMO": 0.9858,
+        "SEGURO": 0.9973,
+        "SERVICIOS_HOGAR": 0.9986,
+        "TARJETA_DEBITO": 0.8837,
+        "TRANSF_EXTERNA": 1.0
+      }
+    }
+  },
+  "df_ordenes": {
+    "filas": 6471,
+    "coseno_binario": {
+      "Arrendamiento / Leasing": {
+        "Arrendamiento / Leasing": 1.0,
+        "Cuota de Prestamo": 0.0,
+        "Pago de Seguros": 0.1174,
+        "Servicios del Hogar": 0.1951,
+        "Sin Especificar": 0.158
+      },
+      "Cuota de Prestamo": {
+        "Arrendamiento / Leasing": 0.0,
+        "Cuota de Prestamo": 1.0,
+        "Pago de Seguros": 0.1975,
+        "Servicios del Hogar": 0.2936,
+        "Sin Especificar": 0.2633
+      },
+      "Pago de Seguros": {
+        "Arrendamiento / Leasing": 0.1174,
+        "Cuota de Prestamo": 0.1975,
+        "Pago de Seguros": 1.0,
+        "Servicios del Hogar": 0.3976,
+        "Sin Especificar": 0.6664
+      },
+      "Servicios del Hogar": {
+        "Arrendamiento / Leasing": 0.1951,
+        "Cuota de Prestamo": 0.2936,
+        "Pago de Seguros": 0.3976,
+        "Servicios del Hogar": 1.0,
+        "Sin Especificar": 0.5967
+      },
+      "Sin Especificar": {
+        "Arrendamiento / Leasing": 0.158,
+        "Cuota de Prestamo": 0.2633,
+        "Pago de Seguros": 0.6664,
+        "Servicios del Hogar": 0.5967,
+        "Sin Especificar": 1.0
+      }
+    },
+    "itf_pesos": {
+      "Arrendamiento / Leasing": {
+        "cuentas_poseen": 341,
+        "popularidad_pct": 9.07,
+        "peso_itf": 2.3998
+      },
+      "Cuota de Prestamo": {
+        "cuentas_poseen": 717,
+        "popularidad_pct": 19.08,
+        "peso_itf": 1.6566
+      },
+      "Pago de Seguros": {
+        "cuentas_poseen": 532,
+        "popularidad_pct": 14.16,
+        "peso_itf": 1.955
+      },
+      "Servicios del Hogar": {
+        "cuentas_poseen": 3365,
+        "popularidad_pct": 89.54,
+        "peso_itf": 0.1105
+      },
+      "Sin Especificar": {
+        "cuentas_poseen": 1198,
+        "popularidad_pct": 31.88,
+        "peso_itf": 1.1432
+      }
+    },
+    "coseno_itf": {
+      "Arrendamiento / Leasing": {
+        "Arrendamiento / Leasing": 2.3998,
+        "Cuota de Prestamo": 0.0,
+        "Pago de Seguros": 0.2817,
+        "Servicios del Hogar": 0.4682,
+        "Sin Especificar": 0.3792
+      },
+      "Cuota de Prestamo": {
+        "Arrendamiento / Leasing": 0.0,
+        "Cuota de Prestamo": 1.6566,
+        "Pago de Seguros": 0.3272,
+        "Servicios del Hogar": 0.4863,
+        "Sin Especificar": 0.4361
+      },
+      "Pago de Seguros": {
+        "Arrendamiento / Leasing": 0.2295,
+        "Cuota de Prestamo": 0.3862,
+        "Pago de Seguros": 1.955,
+        "Servicios del Hogar": 0.7773,
+        "Sin Especificar": 1.3028
+      },
+      "Servicios del Hogar": {
+        "Arrendamiento / Leasing": 0.0216,
+        "Cuota de Prestamo": 0.0324,
+        "Pago de Seguros": 0.0439,
+        "Servicios del Hogar": 0.1105,
+        "Sin Especificar": 0.0659
+      },
+      "Sin Especificar": {
+        "Arrendamiento / Leasing": 0.1807,
+        "Cuota de Prestamo": 0.301,
+        "Pago de Seguros": 0.7618,
+        "Servicios del Hogar": 0.6821,
+        "Sin Especificar": 1.1432
+      }
+    }
+  },
+  "df_prestamos": {
+    "filas": 682,
+    "tfidf_similitud": {
+      "Prestamo Personal Express": {
+        "Prestamo Personal Express": 1.0,
+        "Credito Consumo Familiar": 0.1611,
+        "Prestamo Hipotecario Vivienda": 0.1257,
+        "Credito Comercial PyME": 0.0909,
+        "Poliza Seguro Vida y Salud": 0.0409,
+        "Seguro Desgravamen e Invalidez": 0.0,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0244,
+        "Arrendamiento Financiero / Leasing": 0.0251
+      },
+      "Credito Consumo Familiar": {
+        "Prestamo Personal Express": 0.1611,
+        "Credito Consumo Familiar": 1.0,
+        "Prestamo Hipotecario Vivienda": 0.1193,
+        "Credito Comercial PyME": 0.0863,
+        "Poliza Seguro Vida y Salud": 0.2116,
+        "Seguro Desgravamen e Invalidez": 0.0321,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0616,
+        "Arrendamiento Financiero / Leasing": 0.0541
+      },
+      "Prestamo Hipotecario Vivienda": {
+        "Prestamo Personal Express": 0.1257,
+        "Credito Consumo Familiar": 0.1193,
+        "Prestamo Hipotecario Vivienda": 1.0,
+        "Credito Comercial PyME": 0.1432,
+        "Poliza Seguro Vida y Salud": 0.0407,
+        "Seguro Desgravamen e Invalidez": 0.1026,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0243,
+        "Arrendamiento Financiero / Leasing": 0.0806
+      },
+      "Credito Comercial PyME": {
+        "Prestamo Personal Express": 0.0909,
+        "Credito Consumo Familiar": 0.0863,
+        "Prestamo Hipotecario Vivienda": 0.1432,
+        "Credito Comercial PyME": 1.0,
+        "Poliza Seguro Vida y Salud": 0.0,
+        "Seguro Desgravamen e Invalidez": 0.0,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0,
+        "Arrendamiento Financiero / Leasing": 0.0507
+      },
+      "Poliza Seguro Vida y Salud": {
+        "Prestamo Personal Express": 0.0409,
+        "Credito Consumo Familiar": 0.2116,
+        "Prestamo Hipotecario Vivienda": 0.0407,
+        "Credito Comercial PyME": 0.0,
+        "Poliza Seguro Vida y Salud": 1.0,
+        "Seguro Desgravamen e Invalidez": 0.2957,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0381,
+        "Arrendamiento Financiero / Leasing": 0.0301
+      },
+      "Seguro Desgravamen e Invalidez": {
+        "Prestamo Personal Express": 0.0,
+        "Credito Consumo Familiar": 0.0321,
+        "Prestamo Hipotecario Vivienda": 0.1026,
+        "Credito Comercial PyME": 0.0,
+        "Poliza Seguro Vida y Salud": 0.2957,
+        "Seguro Desgravamen e Invalidez": 1.0,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0,
+        "Arrendamiento Financiero / Leasing": 0.0324
+      },
+      "Domiciliacion Servicios del Hogar (SIPO)": {
+        "Prestamo Personal Express": 0.0244,
+        "Credito Consumo Familiar": 0.0616,
+        "Prestamo Hipotecario Vivienda": 0.0243,
+        "Credito Comercial PyME": 0.0,
+        "Poliza Seguro Vida y Salud": 0.0381,
+        "Seguro Desgravamen e Invalidez": 0.0,
+        "Domiciliacion Servicios del Hogar (SIPO)": 1.0,
+        "Arrendamiento Financiero / Leasing": 0.0234
+      },
+      "Arrendamiento Financiero / Leasing": {
+        "Prestamo Personal Express": 0.0251,
+        "Credito Consumo Familiar": 0.0541,
+        "Prestamo Hipotecario Vivienda": 0.0806,
+        "Credito Comercial PyME": 0.0507,
+        "Poliza Seguro Vida y Salud": 0.0301,
+        "Seguro Desgravamen e Invalidez": 0.0324,
+        "Domiciliacion Servicios del Hogar (SIPO)": 0.0234,
+        "Arrendamiento Financiero / Leasing": 1.0
+      }
+    },
+    "scoring_riesgo": {
+      "A": {
+        "desc": "Pagado sin problemas (A)",
+        "conteo": 203,
+        "pct": 29.77,
+        "regla": "Pre-aprobado para crédito preferencial"
+      },
+      "C": {
+        "desc": "En curso, al dia (C)",
+        "conteo": 403,
+        "pct": 59.09,
+        "regla": "Elegible para refinanciamiento / ampliación"
+      },
+      "B": {
+        "desc": "Pagado con deuda (B)",
+        "conteo": 31,
+        "pct": 4.55,
+        "regla": "BLOQUEADO por riesgo histórico"
+      },
+      "D": {
+        "desc": "En curso, en mora (D)",
+        "conteo": 45,
+        "pct": 6.6,
+        "regla": "BLOQUEADO por morosidad activa"
+      }
+    },
+    "simulacion_utilidad_cuota": [
+      {
+        "plazo_meses": 12,
+        "cuota_mensual": 8698.84,
+        "ratio_endeudamiento_pct": 86.99,
+        "cumple_utilidad": false,
+        "decision": "Rechazado (Sobrecarga de Endeudamiento > 30%)"
+      },
+      {
+        "plazo_meses": 24,
+        "cuota_mensual": 4522.73,
+        "ratio_endeudamiento_pct": 45.23,
+        "cumple_utilidad": false,
+        "decision": "Rechazado (Sobrecarga de Endeudamiento > 30%)"
+      },
+      {
+        "plazo_meses": 36,
+        "cuota_mensual": 3133.64,
+        "ratio_endeudamiento_pct": 31.34,
+        "cumple_utilidad": false,
+        "decision": "Rechazado (Sobrecarga de Endeudamiento > 30%)"
+      },
+      {
+        "plazo_meses": 48,
+        "cuota_mensual": 2441.29,
+        "ratio_endeudamiento_pct": 24.41,
+        "cumple_utilidad": true,
+        "decision": "Recomendado (Zona de Utilidad Aceptable)"
+      },
+      {
+        "plazo_meses": 60,
+        "cuota_mensual": 2027.64,
+        "ratio_endeudamiento_pct": 20.28,
+        "cumple_utilidad": true,
+        "decision": "Recomendado (Zona de Utilidad Aceptable)"
+      }
+    ]
+  }
+}
