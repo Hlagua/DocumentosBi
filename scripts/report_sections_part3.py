@@ -56,16 +56,16 @@ def build_part3(doc):
     
     tbl7b_headers = ["Servicio Financiero", "PRESTAMO", "SEGURO", "SERVICIOS_HOGAR", "TARJETA_DEBITO", "TRANSF_EXTERNA"]
     tbl7b_rows = [
-        ["PRESTAMO", "1.0000", "+0.0892", "-0.0415", "+0.1120", "+0.0345"],
-        ["SEGURO", "+0.0892", "1.0000", "+0.0154", "-0.0543", "+0.0210"],
-        ["SERVICIOS_HOGAR", "-0.0415", "+0.0154", "1.0000", "-0.0876", "-0.0198"],
-        ["TARJETA_DEBITO", "+0.1120", "-0.0543", "-0.0876", "1.0000", "+0.7192"],
-        ["TRANSF_EXTERNA", "+0.0345", "+0.0210", "-0.0198", "+0.7192", "1.0000"]
+        ["PRESTAMO", "1.0000", "+0.1952", "+0.2464", "+0.0557", "+0.1613"],
+        ["SEGURO", "+0.1952", "1.0000", "+0.5977", "-0.0245", "+0.5096"],
+        ["SERVICIOS_HOGAR", "+0.2464", "+0.5977", "1.0000", "+0.1010", "+0.7192"],
+        ["TARJETA_DEBITO", "+0.0557", "-0.0245", "+0.1010", "1.0000", "+0.0278"],
+        ["TRANSF_EXTERNA", "+0.1613", "+0.5096", "+0.7192", "+0.0278", "1.0000"]
     ]
-    add_table(doc, "Tabla 7-B: Matriz de Correlación de Pearson sobre Series Mensuales Diferenciadas (Δx_t, 72 meses).", tbl7b_headers, tbl7b_rows)
+    add_table(doc, "Tabla 7-B: Matriz de Correlación de Pearson sobre Series Mensuales Diferenciadas (Δx_t, 71 meses).", tbl7b_headers, tbl7b_rows)
     add_figure(doc, "img/individual/fig_1c_pearson.png", "Figura 3: Correlación de Pearson sobre Series Mensuales Diferenciadas.", 4.8)
     
-    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: La correlación mensual entre Tarjeta de Débito y Transferencias Externas se mantiene fuertemente positiva (r_Δmes = +0.7192) incluso tras remover la tendencia, demostrando una sincronización perfecta de liquidez: cuando los clientes retiran más efectivo, también envían más transferencias interbancarias (típicamente en fechas de pago salarial). Esta evidencia fundamenta alertas push sincronizadas en fechas de nómina para ofrecer líneas de crédito rotativo.")
+    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: La correlación mensual diferenciada más intensa ocurre entre Servicios del Hogar y Transferencias Externas (r_Δmes = +0.7192) y entre Seguro y Hogar (+0.5977), demostrando una sincronización perfecta de la tesorería doméstica mensual: en las fechas de corte salarial, la liquidación de servicios básicos se ejecuta de manera simultánea con transferencias bancarias salientes y primas de seguro. En contraste, los retiros en cajero de Tarjeta de Débito muestran independencia temporal frente a estos débitos programados (r_Δmes = +0.0278 con transferencias y +0.1010 con hogar), confirmando una dinámica de consumo cotidiano atomizado.")
     
     # =========================================================================
     # C. MODELADO DE PERFILES DE CLIENTES

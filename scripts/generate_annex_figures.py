@@ -80,7 +80,7 @@ def generate_anexo_a_flowchart():
     # 5. Evaluation Layer
     ax.text(50, 26, "EVALUACIÓN EXPERIMENTAL & MÉTRICAS AUDITADAS\n"
                     "• 5-Fold Cross Validation (MAE = 0.2593 ± 0.0052, mejora 36.18%)\n"
-                    "• Top-N Ranking Leave-One-Out (Hit-Rate@1 = 91.79%, MRR = 0.9567)\n"
+                    "• Top-N Ranking Leave-One-Out (Hit-Rate@1 = 91.79%, MRR = 0.9469)\n"
                     "• Leave-One-Product-Out TF-IDF (Precisión 8/8 = 100%)\n"
                     "• Validación Predictiva kNN (AUC = 0.7905, Brier = 0.1098)\n"
                     "• Pruebas de Hipótesis: Chi-cuadrado (χ² = 10.62, p = 0.0011) y Fisher Exacto",

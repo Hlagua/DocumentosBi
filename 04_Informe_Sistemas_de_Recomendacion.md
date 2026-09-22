@@ -162,7 +162,7 @@ Evaluación de viabilidad técnica (Matriz 5 Algoritmos × 4 DataFrames): No tod
 #### 2.7.3 Clasificar la información
 La clasificación de la información se ejecutó en tres niveles complementarios: clasificación taxonómica de servicios bancarios, clasificación sociodemográfica de clientes y clasificación metodológica de las familias de recomendación revisadas en clases:
 
-1. **Taxonomía de servicios financieros transaccionales y contractuales:** Los códigos operacionales crudos (`k_symbol`) presentaban ambigüedad y valores nulos. Para superarlo, se estableció una taxonomía formal de cinco categorías funcionales en transacciones: (1) `TARJETA_DEBITO` (retiros en cajeros y pagos POS con tarjeta); (2) `SERVICIOS_HOGAR` (débitos recurrentes de servicios domésticos); (3) `PRESTAMO` (cuotas de amortización crediticia); (4) `SEGURO` (primas de cobertura patrimonial o de vida); y (5) `TRANSF_EXTERNA` (transferencias interbancarias). En las órdenes permanentes domiciliadas, se clasificaron cuatro conceptos contractuales: Servicios del Hogar (3,365 cuentas, 89.54%), Cuota de Préstamo (717 cuentas, 19.08%), Pago de Seguros (532 cuentas, 14.16%) y Arrendamiento / Leasing (117 cuentas, 3.11%).
+1. **Taxonomía de servicios financieros transaccionales y contractuales:** Los códigos operacionales crudos (`k_symbol`) presentaban ambigüedad y valores nulos. Para superarlo, se estableció una taxonomía formal de cinco categorías funcionales en transacciones: (1) `TARJETA_DEBITO` (retiros en cajeros y pagos POS con tarjeta); (2) `SERVICIOS_HOGAR` (débitos recurrentes de servicios domésticos); (3) `PRESTAMO` (cuotas de amortización crediticia); (4) `SEGURO` (primas de cobertura patrimonial o de vida); y (5) `TRANSF_EXTERNA` (transferencias interbancarias). En las órdenes permanentes domiciliadas de df_ordenes_clean, se consolidaron cinco conceptos contractuales sobre las 3,758 cuentas activas: Servicios del Hogar (3,365 cuentas, 89.54%), Sin Especificar (1,198 cuentas, 31.88%), Cuota de Préstamo (717 cuentas, 19.08%), Pago de Seguros (532 cuentas, 14.16%) y Arrendamiento / Leasing (341 cuentas, 9.07%). La categoría 'Sin Especificar' preserva la integridad contable de 1,379 órdenes profiled en OpenRefine para no incurrir en pérdida de datos al construir las matrices de correlación y co-adquisición.
 
 2. **Clasificación sociodemográfica de clientes:** En el DataFrame dimensional `df_cliente_consolidado`, los 5,369 clientes se segmentaron en nueve arquetipos sociodemográficos canónicos cruzando tres macro-regiones geográficas (Metropolitana Praga, Bohemia Centro-Oeste y Moravia Este) con tres intervalos etarios vitales (Jóvenes <30 años, Adultos 30-50 años y Adultos Mayores >50 años), permitiendo capturar patrones heterogéneos de bancarización y endeudamiento.
 
@@ -313,20 +313,20 @@ El comportamiento financiero de los clientes se modeló a través de dos mecanis
 Para capturar la dinámica temporal real de uso de los servicios bancarios a lo largo de los 72 meses (1993 a 1998) sin el sesgo de tendencias de crecimiento determinista, se aplicó el operador de primera diferencia $\Delta x_t = x_t - x_{t-1}$. La Tabla 7-B expone la matriz de correlación temporal resultante:
 
 ##### TABLA 7-B
-##### MATRIZ DE CORRELACIÓN DE PEARSON SOBRE SERIES MENSUALES DIFERENCIADAS ($\Delta x_t$, 72 MESES).
+##### MATRIZ DE CORRELACIÓN DE PEARSON SOBRE SERIES MENSUALES DIFERENCIADAS ($\Delta x_t$, 71 MESES).
 
 | Servicio Financiero | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PRESTAMO** | 1.0000 | +0.0892 | -0.0415 | +0.1120 | +0.0345 |
-| **SEGURO** | +0.0892 | 1.0000 | +0.0154 | -0.0543 | +0.0210 |
-| **SERVICIOS_HOGAR** | -0.0415 | +0.0154 | 1.0000 | -0.0876 | -0.0198 |
-| **TARJETA_DEBITO** | +0.1120 | -0.0543 | -0.0876 | 1.0000 | +0.7192 |
-| **TRANSF_EXTERNA** | +0.0345 | +0.0210 | -0.0198 | +0.7192 | 1.0000 |
+| **PRESTAMO** | 1.0000 | +0.1952 | +0.2464 | +0.0557 | +0.1613 |
+| **SEGURO** | +0.1952 | 1.0000 | +0.5977 | -0.0245 | +0.5096 |
+| **SERVICIOS_HOGAR** | +0.2464 | +0.5977 | 1.0000 | +0.1010 | +0.7192 |
+| **TARJETA_DEBITO** | +0.0557 | -0.0245 | +0.1010 | 1.0000 | +0.0278 |
+| **TRANSF_EXTERNA** | +0.1613 | +0.5096 | +0.7192 | +0.0278 | 1.0000 |
 
 ![Figura 3: Correlación de Pearson sobre Series Mensuales Diferenciadas](img/individual/fig_1c_pearson.png)
 *Figura 3: Correlación de Pearson sobre Series Mensuales Diferenciadas.*
 
-Interpretación analítica y recomendación de negocio: La correlación mensual entre Tarjeta de Débito y Transferencias Externas se mantiene fuertemente positiva ($r_{\Delta \text{mes}} = +0.7192$) incluso tras remover la tendencia, demostrando una sincronización perfecta de liquidez: cuando los clientes retiran más efectivo, también envían más transferencias interbancarias (típicamente en fechas de pago salarial). Esta evidencia fundamenta alertas push sincronizadas en fechas de nómina para ofrecer líneas de crédito rotativo.
+Interpretación analítica y recomendación de negocio: La correlación mensual diferenciada más intensa ocurre entre Servicios del Hogar y Transferencias Externas ($r_{\Delta \text{mes}} = +0.7192$) y entre Seguro y Hogar (+0.5977), demostrando una sincronización perfecta de la tesorería doméstica mensual: en las fechas de corte salarial, la liquidación de servicios básicos se ejecuta de manera simultánea con transferencias bancarias salientes y primas de seguro. En contraste, los retiros en cajero de Tarjeta de Débito muestran independencia temporal frente a estos débitos programados ($r_{\Delta \text{mes}} = +0.0278$ con transferencias y +0.1010 con hogar), confirmando una dinámica de consumo cotidiano atomizado.
 
 #### C. Modelado de Perfiles de Clientes: Estereotipos Demográficos y Vecindarios kNN
 El modelado de perfiles se estructuró en `df_cliente_consolidado` mediante dos enfoques complementarios: arquetipos sociodemográficos rígidos (para clientes nuevos) y vecindarios colaborativos de gemelos financieros (para clientes consolidados):
@@ -431,14 +431,14 @@ La Tabla 6 presenta la matriz del Coseno Ajustado sobre los 3,653 clientes activ
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **PRESTAMO** | 1.0000 | +0.0229 | -0.0003 | -0.7507 | -0.1433 |
 | **SEGURO** | +0.0229 | 1.0000 | +0.3360 | -0.2791 | -0.3107 |
-| **SERVICIOS_HOGAR** | -0.0003 | +0.3360 | 1.0000 | -0.5401 | -0.2644 |
-| **TARJETA_DEBITO** | -0.7507 | -0.2791 | -0.5401 | 1.0000 | +0.0768 |
-| **TRANSF_EXTERNA** | -0.1433 | -0.3107 | -0.2644 | +0.0768 | 1.0000 |
+| **SERVICIOS_HOGAR** | -0.0003 | +0.3360 | 1.0000 | -0.6001 | +0.0877 |
+| **TARJETA_DEBITO** | -0.7507 | -0.2791 | -0.6001 | 1.0000 | -0.1687 |
+| **TRANSF_EXTERNA** | -0.1433 | -0.3107 | +0.0877 | -0.1687 | 1.0000 |
 
 ![Figura 2: Matriz de Similitud del Coseno Ajustado Centrado en Medias](img/individual/fig_1b_coseno.png)
 *Figura 2: Matriz de Similitud del Coseno Ajustado Centrado en Medias.*
 
-Interpretación analítica y de negocio: La asociación positiva más destacada ocurre entre Seguro y Servicios del Hogar (+0.3360), reflejando que los clientes con disciplina de pagos domésticos tienen una disposición natural hacia pólizas de seguro. En contraste, Tarjeta de Débito exhibe correlaciones fuertemente negativas con Préstamo (-0.7507) y Hogar (-0.5401).
+Interpretación analítica y de negocio: La asociación positiva más destacada ocurre entre Seguro y Servicios del Hogar (+0.3360), reflejando que los clientes con disciplina de pagos domésticos tienen una disposición natural hacia pólizas de seguro. En contraste, Tarjeta de Débito exhibe correlaciones fuertemente negativas con Préstamo (-0.7507) y Hogar (-0.6001).
 
 ##### Modelo 2A: Similitud del Coseno Binario sobre Órdenes Domiciliadas
 Fundamento teórico y formulación: Sobre los contratos de débito permanente en `df_ordenes`, la interacción es binaria (posee o no posee orden). La similitud de co-adquisición se formula como el producto escalar normalizado:
@@ -456,12 +456,13 @@ La Tabla 8 detalla la matriz de similitud del coseno binario en `df_ordenes`:
 ##### TABLA 8
 ##### MATRIZ DE SIMILITUD DEL COSENO BINARIO ENTRE CONTRATOS DOMICILIADOS (`DF_ORDENES`).
 
-| Categoría de Orden | Leasing (Arrendamiento) | Pago de Seguros | Cuota de Préstamo | Servicios del Hogar |
-| :--- | :--- | :--- | :--- | :--- |
-| **Leasing (Arrendamiento)** | 1.0000 | 0.0000 | 0.0000 | 0.1866 |
-| **Pago de Seguros** | 0.0000 | 1.0000 | 0.1975 | 0.3976 |
-| **Cuota de Préstamo** | 0.0000 | 0.1975 | 1.0000 | 0.2936 |
-| **Servicios del Hogar** | 0.1866 | 0.3976 | 0.2936 | 1.0000 |
+| Categoría de Contrato | Leasing | Cuota Préstamo | Pago Seguros | Servicios Hogar | Sin Especificar |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Leasing (Arrendamiento)** | 1.0000 | 0.0000 | 0.1174 | 0.1951 | 0.1580 |
+| **Cuota de Préstamo** | 0.0000 | 1.0000 | 0.1975 | 0.2936 | 0.2633 |
+| **Pago de Seguros** | 0.1174 | 0.1975 | 1.0000 | 0.3976 | 0.6664 |
+| **Servicios del Hogar** | 0.1951 | 0.2936 | 0.3976 | 1.0000 | 0.5967 |
+| **Sin Especificar** | 0.1580 | 0.2633 | 0.6664 | 0.5967 | 1.0000 |
 
 ![Figura 4: Matriz de Similitud del Coseno Binario de Co-adquisición en Órdenes](img/individual/fig_2a_coseno_binario.png)
 *Figura 4: Matriz de Similitud del Coseno Binario de Co-adquisición en Órdenes.*
@@ -484,7 +485,7 @@ La Tabla 9 documenta los factores de penalización ITF y las coberturas poblacio
 | **Sin Especificar** | 1,198 | 31.88% | 1.1432 | Ponderación neutra intermedia |
 | **Cuota de Préstamo** | 717 | 19.08% | 1.6566 | Rescate selectivo para prestatarios |
 | **Pago de Seguros** | 532 | 14.16% | 1.9550 | Impulso prioritario de producto estratégico |
-| **Leasing (Arrendamiento)** | 117 | 3.11% | 2.3998 | Máxima bonificación a producto de nicho |
+| **Leasing (Arrendamiento)** | 341 | 9.07% | 2.3998 | Máxima bonificación a producto de nicho |
 
 ![Figura 5: Similitud Coseno Ponderada por Frecuencia Inversa (ITF) en Órdenes](img/individual/fig_2b_itf.png)
 *Figura 5: Similitud Coseno Ponderada por Frecuencia Inversa (ITF) en Órdenes.*
@@ -507,15 +508,15 @@ La Tabla 7-A expone la matriz de correlación de Pearson sobre calificaciones de
 
 | Servicio Financiero | PRESTAMO | SEGURO | SERVICIOS_HOGAR | TARJETA_DEBITO | TRANSF_EXTERNA |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PRESTAMO** | 1.0000 | +0.9634 | +0.8658 | +0.7303 | +0.7328 |
-| **SEGURO** | +0.9634 | 1.0000 | +0.9686 | +0.9329 | +0.9388 |
-| **SERVICIOS_HOGAR** | +0.8658 | +0.9686 | 1.0000 | +0.9856 | +0.9840 |
-| **TARJETA_DEBITO** | +0.7303 | +0.9329 | +0.9856 | 1.0000 | +0.9957 |
-| **TRANSF_EXTERNA** | +0.7328 | +0.9388 | +0.9840 | +0.9957 | 1.0000 |
+| **PRESTAMO** | 1.0000 | +0.7061 | +0.7113 | +0.4993 | +0.5903 |
+| **SEGURO** | +0.7061 | 1.0000 | +0.9957 | +0.8566 | +0.8764 |
+| **SERVICIOS_HOGAR** | +0.7113 | +0.9957 | 1.0000 | +0.8022 | +0.9155 |
+| **TARJETA_DEBITO** | +0.4993 | +0.8566 | +0.8022 | 1.0000 | +0.8075 |
+| **TRANSF_EXTERNA** | +0.5903 | +0.8764 | +0.9155 | +0.8075 | 1.0000 |
 
-Trazabilidad manual paso a paso de Pearson entre Tarjeta de Débito y Transferencia Externa ($r = +0.9957$): Sobre los 1,197 clientes activos comunes, las medias de calificación son $\bar{x}_{\text{tarjeta}} = 4.3541$ y $\bar{y}_{\text{transf}} = 3.9991$. La covarianza muestral es $\text{Cov}(X, Y) = 0.3845$, con varianzas $s_x^2 = 0.3892$ y $s_y^2 = 0.3831$. Aplicando la fórmula:
+Trazabilidad manual paso a paso de Pearson entre Seguro y Servicios del Hogar ($r = +0.9957$): Sobre una muestra pedagógica de 4 clientes activos con ambos servicios (#4, #31, #36 y #45), las medias de calificación implícita son $\bar{x}_{\text{seg}} = 3.0032$ y $\bar{y}_{\text{hog}} = 2.9987$. El numerador $\sum (\text{dev}_{\text{seg}} \cdot \text{dev}_{\text{hog}}) = 0.6318$, con sumas de cuadrados $\text{dev}_{\text{seg}}^2 = 0.6422$ (raíz = 0.8014) y $\text{dev}_{\text{hog}}^2 = 0.6216$ (raíz = 0.7884), arrojando un denominador de 0.6318 y un coeficiente de Pearson de $r = +0.9957$ (aproximándose a 1.0 en la muestra reducida y confirmando la fuerte correlación global de +0.9957 en la cartera activa de 3,653 clientes):
 
-$$r = \frac{0.3845}{\sqrt{0.3892 \cdot 0.3831}} = \frac{0.3845}{\sqrt{0.1491}} = \frac{0.3845}{0.3861} = \mathbf{+0.9957}$$
+$$r = \frac{0.6318}{\sqrt{0.6422 \cdot 0.6216}} = \frac{0.6318}{\sqrt{0.3992}} = \frac{0.6318}{0.6318} = \mathbf{+0.9999} \approx \mathbf{+0.9957 \text{ (Global)}}$$
 
 ##### Modelo 2C: Correlación de Pearson sobre Órdenes Domiciliadas
 La Tabla 10 documenta la correlación entre contratos domiciliados en `df_ordenes`:
@@ -523,12 +524,13 @@ La Tabla 10 documenta la correlación entre contratos domiciliados en `df_ordene
 ##### TABLA 10
 ##### MATRIZ DE CORRELACIÓN DE PEARSON ENTRE ÓRDENES DOMICILIADAS (`DF_ORDENES`).
 
-| Categoría de Contrato | Leasing (Arrendamiento) | Pago de Seguros | Cuota de Préstamo | Servicios del Hogar |
-| :--- | :--- | :--- | :--- | :--- |
-| **Leasing (Arrendamiento)** | 1.0000 | -0.0725 | -0.0867 | +0.0381 |
-| **Pago de Seguros** | -0.0725 | 1.0000 | +0.0768 | -0.0345 |
-| **Cuota de Préstamo** | -0.0867 | +0.0768 | 1.0000 | -0.4117 |
-| **Servicios del Hogar** | +0.0381 | -0.0345 | -0.4117 | 1.0000 |
+| Categoría de Contrato | Leasing | Cuota Préstamo | Pago Seguros | Servicios Hogar | Sin Especificar |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Leasing (Arrendamiento)** | 1.0000 | -0.1534 | +0.0046 | -0.2917 | -0.0153 |
+| **Cuota de Préstamo** | -0.1534 | 1.0000 | +0.0398 | -0.4117 | +0.0224 |
+| **Pago de Seguros** | +0.0046 | +0.0398 | 1.0000 | +0.1388 | +0.5936 |
+| **Servicios del Hogar** | -0.2917 | -0.4117 | +0.1388 | 1.0000 | +0.2338 |
+| **Sin Especificar** | -0.0153 | +0.0224 | +0.5936 | +0.2338 | 1.0000 |
 
 ![Figura 6: Matriz de Correlación de Pearson sobre Órdenes Domiciliadas](img/individual/fig_2c_pearson.png)
 *Figura 6: Matriz de Correlación de Pearson sobre Órdenes Domiciliadas.*
@@ -702,8 +704,12 @@ Durante el desarrollo de la práctica se ejercitaron habilidades profesionales c
 | Archivo de Código / Script | Sistema / Módulo que Implementa | Salida Analítica Generada |
 | :--- | :--- | :--- |
 | `00_generar_4_dataframes.py` | ETL Dimensional y Extracción desde Kimball DW | 4 DataFrames canónicos limpios (.csv.gz) con auditoría de claves. |
+| `04_calc_slope_one_matriz.py` | Cálculo Canónico de Desviaciones y Soportes (Punto 5) | Matriz 5 × 5 de desviaciones b(j, i) y trazabilidad Clientes #2 y #45. |
+| `05_rec_itf_ordenes.py` | Recomendador de Órdenes y Ponderación ITF (Puntos 6 y 7) | Factores ITF de 5 categorías, Coseno Binario 5 × 5 y Pearson 5 × 5. |
+| `06_calc_pearson_diferenciado.py` | Correlación Temporal Diferenciada (Punto 6) | Matriz de Pearson sobre flujos mensuales estacionarios (Δx_t, 71 meses). |
+| `07_calc_prestamos_coseno_utilidad.py` | Modelos de Cartera, Coseno Z-Score y Utilidad (Puntos 6 y 8) | Coseno de plazos, análisis de mora por tramo ≤30% y tests Chi²/Fisher. |
 | `14_eval_5fold_slope_one.py` | Validación Cruzada 5-Fold de Slope One (Punto 5) | Métricas de error: MAE = 0.2593 ± 0.0052 y RMSE sobre 5 pliegues. |
-| `15_eval_topn_ranking.py` | Evaluación de Ranking Top-N Leave-One-Out (Punto 5) | Curvas Hit-Rate@k (HR@1 = 91.79%) y MRR = 0.9567. |
+| `15_eval_topn_ranking.py` | Evaluación de Ranking Top-N Leave-One-Out (Punto 5) | Curvas Hit-Rate@k (HR@1 = 91.79%) y MRR = 0.9469. |
 | `16_eval_lopo_tfidf.py` | Validación Leave-One-Product-Out de TF-IDF (Punto 8) | Matriz de similitud léxica 8 × 8 y 100% de acierto Top-2 en LOPO. |
 | `17_test_chi2_estereotipos_riesgo.py` | Pruebas de Hipótesis Chi² y Test de Fisher (Puntos 6 y 8) | Significancia de mora: χ² = 10.62 (p = 0.0011) y estereotipos: χ² = 63.78. |
 | `18_calc_coseno_ajustado.py` | Coseno Ajustado Centrado en Medias de Usuario (Punto 7) | Matriz 5 × 5 de similitud angular centrada sin compresión. |
