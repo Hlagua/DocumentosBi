@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Módulo Parte 1: Portada, Objetivos, Metodología, Marco Conceptual,
-Origen de Datos y Preparación Matemática con Trazabilidad Exhaustiva.
+Módulo Parte 1: Portada, Objetivos, Metodología, Equipos, Actividades,
+Punto 1 (DataFrames desde DataMart), Punto 2 (Organizar), Punto 3 (Clasificar) y Punto 4 (Filtrar).
+Alineado estrictamente con la consigna docente de Inteligencia de Negocios.
 """
 from docx.shared import Inches, Pt
 from helpers_informe_4 import (
@@ -18,7 +19,16 @@ def build_part1(doc):
     
     portada_headers = ["Campo Institucional", "Detalle de la Práctica"]
     portada_rows = [
-        ["Tema:", "Implementación, Validación Experimental y Evaluación Multicriterio de Sistemas de Recomendación Colaborativos, Basados en Contenidos, Demográficos y de Utilidad sobre los Cuatro DataFrames del Banco Comercial (Financial_ijs)"],
+        ["Tema:", "Tomando como base los datos que están siendo tratados genere al menos un sistema de recomendación de cada uno de los algoritmos revisados en clases (Financial_ijs):\n\n"
+                 "Utilizando los datos con los que se encuentra trabajando genere:\n"
+                 "1. Uno o varios dataframe a partir de un datamart\n"
+                 "2. Organizar\n"
+                 "3. Clasificar\n"
+                 "4. Filtrar la información\n"
+                 "5. Generar un sistema de recomendación Slope One\n"
+                 "6. Modele productos, comportamientos, perfiles\n"
+                 "7. Sistema de recomendación item to item (similitud de cosenos y Pearson)\n"
+                 "8. Sistema de recomendación basado en contenidos"],
         ["Unidad de Organización Curricular:", "Unidad Profesional"],
         ["Nivel y Paralelo:", "Sexto Semestre – Software \"A\""],
         ["Alumnos participantes:", "Cobos Taco Alison Marcela\nLagua Flores Henry Daniel"],
@@ -35,13 +45,15 @@ def build_part1(doc):
     # 2.1 Objetivos
     add_heading(doc, 3, "2.1 Objetivos")
     add_heading(doc, 4, "General:")
-    add_paragraph(doc, "Desarrollar, evaluar, contrastar empíricamente y desplegar en una arquitectura analítica coherente múltiples sistemas de recomendación sobre cada uno de los cuatro DataFrames limpios del banco comercial Financial_ijs (PKDD'99 Financial Discovery Challenge), aplicando para cada conjunto de datos los algoritmos canónicos válidos según su nivel de agregación, granularidad temporal y naturaleza de información, incorporando sus respectivas formulaciones matemáticas rigurosas, procedimientos metodológicos paso a paso, matrices numéricas auditadas, gráficos individuales en alta definición (300 DPI), ejemplos numéricos de cálculo paso a paso con clientes reales de la entidad e interpretaciones comerciales profundas que fundamenten las conclusiones y recomendaciones estratégicas de negocio para cada método evaluado.")
+    add_paragraph(doc, "Tomando como base los datos que están siendo tratados de la entidad bancaria Financial_ijs (PKDD'99 Financial Discovery Challenge), generar al menos un sistema de recomendación de cada uno de los algoritmos revisados en clases, modelando DataFrames desde un DataMart, organizando, clasificando y filtrando la información, generando un sistema de recomendación Slope One, modelando productos, comportamientos y perfiles, implementando sistemas ítem a ítem (similitud de cosenos y Pearson) y sistemas basados en contenidos y utilidades financieras, evaluando exhaustivamente sus métricas predictivas, ranking Top-N y viabilidad matemática.")
     
     add_heading(doc, 4, "Específicos:")
-    add_numbered(doc, 1, "Modelar y estructurar los cuatro DataFrames analíticos limpios procedentes del Data Warehouse bancario bajo la metodología dimensional de Ralph Kimball (df_transacciones, df_ordenes, df_prestamos y df_cliente_consolidado), resolviendo inconsistencias de grano, auditando las claves foráneas y evaluando sistemáticamente la viabilidad matemática de las 20 combinaciones matriciales posibles (5 familias de algoritmos × 4 DataFrames).", "Objetivo Específico 1:")
-    add_numbered(doc, 2, "Implementar, verificar y documentar doce motores de recomendación con su ciclo analítico completo: fundamento teórico, formulación matemática en ecuaciones estándar, procedimiento metodológico paso a paso, trazabilidad numérica manual sobre clientes reales, matrices de resultados auditadas, representaciones gráficas individuales y análisis pormenorizado de implicaciones financieras.", "Objetivo Específico 2:")
-    add_numbered(doc, 3, "Emitir un dictamen técnico riguroso y cuantitativamente respaldado al cierre de cada DataFrame que determine el mejor método para ese entorno operativo, contrastando sus ventajas frente a los modelos alternativos con base en métricas objetivas de error de intensidad (MAE, RMSE), capacidad de ordenamiento (Hit-Rate@k, MRR), capacidad discriminativa (AUC, Brier Score) y mitigación del riesgo crediticio.", "Objetivo Específico 3:")
-    add_numbered(doc, 4, "Demostrar analítica y empíricamente las patologías matemáticas que motivaron el descarte de la co-ocurrencia transaccional cruda frente a los modelos refinados, y sintetizar el rendimiento global de los doce sistemas en un mapa estratégico de cobertura frente a personalización, definiendo una arquitectura de despliegue bancario en dos fases gobernada transversalmente por compuertas prudenciales de solvencia y riesgo de impago.", "Objetivo Específico 4:")
+    add_numbered(doc, 1, "Generar y estructurar cuatro DataFrames limpios a partir del DataMart bancario de Ralph Kimball (df_transacciones, df_ordenes, df_prestamos y df_cliente_consolidado), resolviendo inconsistencias de grano y auditando las claves foráneas.", "Objetivo Específico 1 (Puntos 1 y 2):")
+    add_numbered(doc, 2, "Organizar, clasificar y filtrar la información operativa aplicando taxonomías funcionales de servicios, arquetipos demográficos, estabilización logarítmica de Pareto y compuertas prudenciales de solvencia crediticia.", "Objetivo Específico 2 (Puntos 2, 3 y 4):")
+    add_numbered(doc, 3, "Generar e implementar el algoritmo de recomendación Slope One con su formulación matemática rigurosa, matriz de desviaciones medias y soportes conjuntos, trazabilidad manual paso a paso con clientes reales (#2 y #45), validación cruzada 5-fold (MAE, RMSE) y evaluación de ranking Top-N Leave-One-Out.", "Objetivo Específico 3 (Punto 5):")
+    add_numbered(doc, 4, "Modelar productos (espacio tridimensional Z-Score y cláusulas contractuales), comportamientos (dinámica mensual de tesorería y frecuencia inversa ITF) y perfiles sociodemográficos (estereotipos y vecindarios kNN) resolviendo el problema de arranque en frío.", "Objetivo Específico 4 (Punto 6):")
+    add_numbered(doc, 5, "Implementar sistemas de recomendación ítem a ítem mediante similitud de cosenos (ajustado, binario e ITF) y correlación de Pearson sobre ratings continuos y contratos domiciliados, contrastando empíricamente sus niveles de dispersión.", "Objetivo Específico 5 (Punto 7):")
+    add_numbered(doc, 6, "Desarrollar sistemas de recomendación basados en contenidos mediante vectorización léxica TF-IDF sobre cláusulas legales con validación Leave-One-Product-Out (LOPO), integrando compuertas de gobernanza y reglas de utilidad financiera.", "Objetivo Específico 6 (Punto 8):")
     
     # 2.2 Modalidad
     add_heading(doc, 3, "2.2 Modalidad")
@@ -54,7 +66,7 @@ def build_part1(doc):
     
     # 2.4 Instrucciones
     add_heading(doc, 3, "2.4 Instrucciones")
-    add_paragraph(doc, "Tomando como base los cuatro DataFrames analíticos limpios y consolidados de la entidad bancaria Financial_ijs, estructurar para cada algoritmo la matriz de datos que proporcione la señal analítica adecuada. Programar los motores de recomendación respetando los estándares de reproducibilidad científica (semilla aleatoria fijada seed = 42), evaluar los errores predictivos y niveles de afinidad, e interpretar los hallazgos en función de la toma de decisiones comerciales, la fidelización del cliente y la gestión prudencial del riesgo de la institución bancaria.")
+    add_paragraph(doc, "Tomando como base los cuatro DataFrames analíticos limpios y consolidados de la entidad bancaria Financial_ijs, estructurar para cada algoritmo la matriz de datos que proporcione la señal analítica adecuada. Desarrollar cada uno de los 8 puntos requeridos por la consigna docente de forma secuencial, programando los motores de recomendación respetando los estándares de reproducibilidad científica (semilla aleatoria fijada seed = 42), evaluando los errores predictivos y niveles de afinidad, e interpretando los hallazgos en función de la toma de decisiones comerciales, la fidelización del cliente y la gestión prudencial del riesgo de la institución bancaria.")
     
     # 2.5 Equipos y Materiales
     add_heading(doc, 3, "2.5 Listado de equipos, materiales y recursos")
@@ -75,62 +87,44 @@ def build_part1(doc):
     
     # 2.6 Actividades por desarrollar
     add_heading(doc, 3, "2.6 Actividades por desarrollar")
-    add_paragraph(doc, "La investigación experimental y el modelado analítico se articularon a través de ocho actividades metodológicas secuenciales y rigurosamente interconectadas:")
-    add_numbered(doc, 1, "Auditoría de integridad relacional, reconciliación de entidades y consolidación dimensional del Data Warehouse bancario Financial_ijs en esquema de estrella bajo principios de Ralph Kimball.", "Actividad 1:")
-    add_numbered(doc, 2, "Evaluación sistemática de la viabilidad técnica y matemática de las 20 combinaciones cruzadas posibles (5 familias de algoritmos de recomendación × 4 DataFrames analíticos).", "Actividad 2:")
-    add_numbered(doc, 3, "Implementación, cálculo paso a paso, validación cruzada 5-fold, pruebas de ranking Top-N y dictamen técnico de los modelos colaborativos y temporales sobre df_transacciones.", "Actividad 3:")
-    add_numbered(doc, 4, "Modelado de co-adquisición contractual, penalización de frecuencia inversa (ITF), análisis de correlación y dictamen técnico sobre df_ordenes.", "Actividad 4:")
-    add_numbered(doc, 5, "Vectorización semántica TF-IDF sobre cláusulas, mapeo geométrico de plazos y diseño del filtro de solvencia con función de utilidad financiera (regla del 30%) sobre df_prestamos.", "Actividad 5:")
-    add_numbered(doc, 6, "Segmentación demográfica por estereotipos (resolución de User Cold Start), filtrado colaborativo Usuario a Usuario (kNN) y análisis multivariante sobre df_cliente_consolidado.", "Actividad 6:")
-    add_numbered(doc, 7, "Demostración analítica y cuantitativa de las patologías matemáticas que justificaron el descarte empírico de la co-ocurrencia transaccional cruda.", "Actividad 7:")
-    add_numbered(doc, 8, "Síntesis comparativa global de los doce recomendadores, construcción de la frontera estratégica de cobertura frente a personalización y diseño de la arquitectura bancaria en dos fases.", "Actividad 8:")
+    add_paragraph(doc, "En estricto cumplimiento de la consigna establecida por el docente, la investigación experimental y el modelado analítico se articularon a través de los ocho puntos secuenciales solicitados:")
+    add_numbered(doc, 1, "Generación de uno o varios DataFrames a partir de un DataMart: Modelar y extraer los cuatro DataFrames canónicos desde el Data Warehouse bancario en esquema estrella de Ralph Kimball.", "Punto 1:")
+    add_numbered(doc, 2, "Organizar la información: Elevar el grano desde eventos atómicos a cuentas/titulares, auditar claves foráneas y evaluar la viabilidad técnica de las 20 combinaciones algoritmo × DataFrame.", "Punto 2:")
+    add_numbered(doc, 3, "Clasificar la información: Definir la taxonomía formal de servicios financieros transaccionales, tipologías de órdenes, arquetipos sociodemográficos y familias metodológicas de recomendadores.", "Punto 3:")
+    add_numbered(doc, 4, "Filtrar la información: Aplicar estabilización logarítmica de Pareto, escalamiento a rango [1, 5], filtrado de cuentas secundarias y compuertas prudenciales de solvencia crediticia.", "Punto 4:")
+    add_numbered(doc, 5, "Generar un sistema de recomendación Slope One: Implementar el algoritmo con cálculo de desviaciones medias, soportes, validación cruzada 5-fold, ranking Top-N y trazabilidad manual paso a paso con clientes reales.", "Punto 5:")
+    add_numbered(doc, 6, "Modele productos, comportamientos, perfiles: Modelar productos (espacio Z-Score y TF-IDF), comportamientos (dinámica mensual de tesorería y frecuencia inversa ITF) y perfiles (estereotipos demográficos y vecindarios kNN).", "Punto 6:")
+    add_numbered(doc, 7, "Sistema de recomendación item to item (similitud de cosenos y Pearson): Implementar Coseno Ajustado, Coseno Binario, ponderación ITF y correlación de Pearson sobre ratings y órdenes domiciliadas.", "Punto 7:")
+    add_numbered(doc, 8, "Sistema de recomendación basado en contenidos: Desarrollar vectorización léxica TF-IDF con validación Leave-One-Product-Out (LOPO) y reglas de scoring con función de utilidad financiera.", "Punto 8:")
     
     # =========================================================================
     # 2.7 RESULTADOS OBTENIDOS
     # =========================================================================
     add_heading(doc, 3, "2.7 Resultados obtenidos")
+    add_paragraph(doc, "Los resultados analíticos y computacionales obtenidos en la práctica de laboratorio se estructuran a continuación respondiendo con rigor científico a cada uno de los ocho requerimientos de la consigna docente:")
     
-    # 2.7.1 Marco conceptual aplicado y taxonomía
-    add_heading(doc, 4, "2.7.1 Marco conceptual aplicado y taxonomía de sistemas de recomendación en la banca comercial")
-    add_paragraph(doc, "En el ecosistema bancario contemporáneo, un sistema de recomendación (Recommender System, RS) constituye una herramienta analítica avanzada diseñada para estimar la propensión, interés o afinidad de un cliente hacia productos financieros específicos que no posee activamente. A diferencia del comercio electrónico generalista (donde prima la compra por impulso), los servicios bancarios involucran compromisos contractuales de largo plazo, riesgo de crédito, requerimientos de liquidez y normativas regulatorias estrictas. En consecuencia, un motor de recomendación financiero no solo debe identificar qué producto atrae al cliente, sino también si dicho producto es coherente con su capacidad de pago y si preserva la salud patrimonial de la institución.")
+    # -------------------------------------------------------------------------
+    # PUNTO 1: Uno o varios DataFrames a partir de un DataMart
+    # -------------------------------------------------------------------------
+    add_heading(doc, 4, "2.7.1 Uno o varios DataFrames a partir de un DataMart")
+    add_paragraph(doc, "Marco conceptual y origen de datos: Para el desarrollo experimental de la práctica se tomó como fuente la base de datos bancaria Financial_ijs (correspondiente al benchmark internacional PKDD'99 Financial Discovery Challenge), la cual contiene registros operacionales, cuentas, contratos y clientes de un banco comercial a lo largo de un período de seis años (1993 a 1998). A partir de este repositorio relacional transaccional, se construyó un Data Warehouse bajo la metodología dimensional de Ralph Kimball en esquema de estrella con dimensiones conformadas compartidas, desde el cual se extrajeron y consolidaron los cuatro DataFrames analíticos limpios utilizados en los modelos de recomendación: df_transacciones (1,056,320 movimientos contables y pagos), df_ordenes (6,471 órdenes de débito permanente domiciliadas en 3,758 cuentas), df_prestamos (682 contratos de crédito con sus plazos y cuotas) y df_cliente_consolidado (visión 360° sociodemográfica y financiera de 5,369 clientes).")
     
-    add_paragraph(doc, "Formulación matemática general del problema de recomendación: Sea U = {u_1, u_2, ..., u_M} el conjunto universal de clientes de la entidad financiera, y sea I = {i_1, i_2, ..., i_N} el catálogo de productos y servicios ofertados por la institución. El historial de interacciones se representa matricialmente mediante R en el espacio real R^(M x N), donde cada elemento escalar r_{u, i} cuantifica la intensidad de preferencia observada. En el ámbito bancario, la gran mayoría de las combinaciones cliente-producto carecen de interacción previa, dando lugar a una matriz con una densidad sumamente baja. La dispersión analítica se formula como:")
-    add_block_math(doc, r"S = 1 - \frac{|R_{\text{observados}}|}{|U| \times |I|}")
-    add_paragraph(doc, "donde |R_observados| es el recuento de contratos o movimientos existentes. En la banca comercial minorista, este índice de dispersión S supera típicamente el 85%, lo que impone restricciones severas a los algoritmos que requieren solapamiento denso. La meta algorítmica es aprender una función de correspondencia f: U x I -> R que estime las calificaciones implícitas latentes rhat_{u, j} para todos los productos j no pertenecientes a la cartera activa del cliente u, de modo que se minimice el error de predicción sobre las preferencias futuras y se maximice la precisión del ranking Top-N resultante.")
-    
-    add_paragraph(doc, "De acuerdo con la literatura científica clásica y las directrices curriculares de la asignatura Inteligencia de Negocios, los sistemas de recomendación se estructuran en tres familias metodológicas principales, enriquecidas por una cuarta categoría transversal de gobernanza financiera:")
-    
-    add_bullet(doc, "Se fundamenta en la premisa socioconductual de que clientes con hábitos de consumo o transaccionalidad similares en el pasado mantendrán preferencias convergentes en el futuro. No requiere conocer los atributos contractuales intrínsecos de los productos ni el perfil demográfico del usuario; opera exclusivamente sobre la matriz de interacciones usuario-producto. Dentro de esta familia coexisten dos grandes orientaciones: (a) Enfoques basados en usuarios (User-to-User), que localizan gemelos comportamentales para transferir recomendaciones; y (b) Enfoques basados en productos o ítems (Item-to-Item, como Slope One, Coseno Ajustado y Pearson sobre ratings), que calculan la proximidad o diferencias relativas entre pares de servicios sobre clientes comunes. En el ámbito académico (diapositivas de clase), los métodos colaborativos suelen agruparse bajo el término general 'filtrado basado en usuarios' en contraposición al de contenidos; cabe precisar pedagógicamente que aunque Slope One calcula desviaciones entre pares de ítems, opera formalmente dentro del filtrado colaborativo basado en usuarios, puesto que agrega las calificaciones conocidas del propio usuario evaluado.", "Familia de Filtrado Colaborativo (Collaborative Filtering):")
-    
-    add_bullet(doc, "Recomienda productos comparando las características técnicas, legales y funcionales del catálogo bancario con los antecedentes de consumo del cliente. Modela tanto el perfil del producto como las preferencias del usuario a través de representaciones vectoriales de atributos (plazos, cláusulas de amortización, coberturas de seguro, requisitos de colateral). Es el enfoque canónico para abordar el arranque en frío de productos (Item Cold Start): un crédito recién creado puede ser sugerido inmediatamente al mapear sus descriptores textuales mediante técnicas de Procesamiento de Lenguaje Natural como TF-IDF.", "Familia de Filtrado Basado en Contenidos (Content-Based Filtering):")
-    
-    add_bullet(doc, "Explota los atributos sociodemográficos del cliente (edad, sexo, macro-región geográfica, nivel salarial distrital) bajo el postulado de que usuarios pertenecientes al mismo estrato poblacional exhiben necesidades bancarias homogéneas. Basado en la teoría clásica de estereotipos (Rich, 1979), este enfoque resulta indispensable para ofrecer una solución heurística y robusta al arranque en frío de nuevos usuarios (User Cold Start): en el momento exacto en que un ciudadano abre su primera cuenta de ahorros y carece de historial transaccional, el banco puede asignarle ofertas personalizadas acordes al consumo promedio de su arquetipo demográfico.", "Familia de Filtrado Demográfico (Demographic Filtering):")
-    
-    add_bullet(doc, "A diferencia de los modelos puramente asociativos o estadísticos, estos sistemas incorporan conocimiento explícito del negocio crediticio, reglas de política monetaria y funciones matemáticas de utilidad. Evalúan de manera determinista si la contratación de un producto cumple con las compuertas de solvencia de la entidad (por ejemplo, verificando que la cuota de amortización no sobrepase el 30% del salario distrital promedio del cliente y bloqueando a usuarios con morosidad histórica). Actúan como una capa transversal de prudencia bancaria que previene activamente el sobreendeudamiento.", "Modelos Basados en el Conocimiento y en la Utilidad Financiera (Knowledge & Utility-Based):")
-    
-    add_paragraph(doc, "Naturaleza de los ratings implícitos y perfiles de usuario en banca: En la operativa bancaria real, los clientes no otorgan puntuaciones explícitas de 1 a 5 estrellas a sus transferencias o débitos automáticos. Por consiguiente, las calificaciones deben inferirse matemáticamente a partir de señales de comportamiento implícito: la recurrencia de movimientos contables, la contratación formal de órdenes domiciliadas y la tenencia de préstamos. Siguiendo a Hu, Koren y Volinsky (2008), la retroalimentación implícita presenta dos propiedades críticas: (1) Ausencia de señales negativas explícitas: que un cliente no mantenga un seguro no implica aversión, sino posiblemente falta de exposición o necesidad temporal; y (2) La frecuencia operacional x_{u, i} actúa como una medida monótona de confianza c_{u, i} en la preferencia, no como satisfacción hedónica directa.")
-    add_paragraph(doc, "Distinción entre Perfiles Explícitos e Implícitos y Limitación de Recency: En la literatura académica de recomendadores se distingue entre perfiles explícitos (cuestionarios directos de apetito de riesgo) y perfiles implícitos (derivados del comportamiento transaccional observado). En esta investigación, todos los perfiles son estrictamente implícitos. Asimismo, se reconoce como una limitación metodológica del diseño actual que las matrices analíticas procesan el acumulado histórico global sin aplicar un factor de atenuación o decaimiento temporal (recency decay, e^{-lambda*t}), aspecto propuesto formalmente como recomendación futura de ingeniería.")
-    
-    add_paragraph(doc, "Taxonomía del problema de arranque en frío (Cold Start) en la industria bancaria: El fenómeno de arranque en frío se manifiesta en tres vertientes operacionales: (a) Arranque en Frío de Usuario (User Cold Start), cuando un cliente abre cuenta por primera vez y carece de movimientos; (b) Arranque en Frío de Producto (Item Cold Start), cuando se diseña una nueva línea de crédito o seguro sin historial de clientes; y (c) Arranque en Frío del Sistema (System Cold Start), al inaugurar una nueva filial bancaria. Como sugiere la evidencia empírica analizada en este informe, una arquitectura híbrida donde el Filtrado Demográfico (Modelo 4A) y el Filtrado Basado en Contenidos con TF-IDF (Modelo 3A) operan como amortiguadores iniciales con cobertura total (100%), transfiere progresivamente los clientes a los modelos colaborativos (Slope One, ITF y kNN) conforme su huella transaccional madura.")
-    
-    add_paragraph(doc, "Matriz de Trazabilidad Metodológica de la Consigna: Para facilitar la verificación exhaustiva de los ocho requerimientos técnicos estipulados en la guía práctica académica, la Tabla 1-A establece el mapeo directo entre cada punto de la consigna y su sección de implementación detallada:")
+    add_paragraph(doc, "Matriz de Trazabilidad Metodológica de la Consigna: Para facilitar la verificación exhaustiva de los ocho requerimientos técnicos estipulados en la guía práctica académica, la Tabla 1-A establece el mapeo directo entre cada punto de la consigna y su sección de desarrollo detallada:")
     
     tbl1a_headers = ["Punto de la Consigna", "Requerimiento Técnico Evaluado", "Sección(es) del Informe", "Evidencia / Tablas y Figuras"]
     tbl1a_rows = [
-        ["1. DataFrames desde DataMart", "Derivar uno o varios DataFrames analíticos limpios a partir de un DataMart/DW relacional.", "Sección 2.7.2 (Origen de datos y arquitectura Kimball)", "Tabla 1-B (Inventario tablas originales) y scripts ETL (00)"],
-        ["2. Organizar la información", "Estructurar la información con diccionario de variables y matriz de viabilidad algoritmo × DataFrame.", "Sección 2.7.3 (Etapa 1: Organizar) y Matriz de Viabilidad", "Tabla 3 (Diccionario analítico), Tabla 4 (Matriz 5×4) y Figura 16"],
-        ["3. Clasificar la información", "Taxonomía formal de servicios financieros transaccionales y segmentación demográfica por arquetipos.", "Sección 2.7.3 (Etapa 2: Clasificar) y Sección 2.7.7 (Modelo 4A)", "Tabla 2 (Taxonomía 5 servicios), Tabla 14 (9 arquetipos) y Figura 10"],
-        ["4. Filtrar la información", "Conectar el filtrado con las familias de clase (demográfico, colaborativo, contenidos, utilidad/conocimiento).", "Sección 2.7.1 (Marco conceptual) y Sección 2.7.3 (Etapa 3: Filtrar)", "Formulación de escala [1, 5], compuertas de solvencia y deduplicación"],
-        ["5. Sistema Slope One completo", "Formulación formal f(x)=x+b, matriz antisimétrica con soportes y ejemplo numérico paso a paso con trazabilidad.", "Sección 2.7.4 (Modelo 1A: Slope One)", "Tabla 2 (Trazabilidad Clientes #2 y #45), Tabla 5 (Matriz 5×5) y Figura 1"],
-        ["6. Modelado de entidades", "Modelar productos (contenidos), comportamientos (transacciones/ratings) y perfiles (demográficos).", "Sección 2.7.3 (Etapa 4: Modelar) y desarrollo en ejes 1 a 4", "Productos: 2.7.6 (3A) | Comportamientos: 2.7.4 y 2.7.5 | Perfiles: 2.7.7"],
-        ["7. Ítem-a-ítem con Coseno y Pearson", "Sistema ítem-a-ítem con Coseno Ajustado / Binario y Pearson sobre ratings (matriz 5×5 y cálculo de clase).", "Sección 2.7.4 (Modelos 1B y 1C), Sección 2.7.5 (2A y 2C) y 2.7.9", "Tabla 6 (Coseno Ajustado), Tabla 7-A (Pearson ratings), Tabla 17 (Síntesis)"],
-        ["8. Sistema basado en contenidos", "Filtrado basado en contenidos con TF-IDF sobre cláusulas textuales con LOPO (declarando curaduría del corpus).", "Sección 2.7.6 (Modelo 3A: TF-IDF)", "Tabla 10 (Corpus 8 cláusulas curadas), Tabla 11 (TF-IDF) y Figura 7"]
+        ["1. DataFrames desde DataMart", "Derivar uno o varios DataFrames analíticos limpios a partir de un DataMart/DW relacional.", "Sección 2.7.1 (Punto 1)", "Tabla 1-B, Tabla 1-C y scripts ETL (00)"],
+        ["2. Organizar la información", "Estructurar la información con diccionario de variables y matriz de viabilidad algoritmo × DataFrame.", "Sección 2.7.2 (Punto 2)", "Tabla 3 (Diccionario), Tabla 4 (Matriz 5×4) y Figura 16"],
+        ["3. Clasificar la información", "Taxonomía formal de servicios financieros transaccionales y segmentación demográfica por arquetipos.", "Sección 2.7.3 (Punto 3)", "Taxonomías 5 servicios y 4 órdenes, 4 familias RS"],
+        ["4. Filtrar la información", "Conectar el filtrado con escala [1, 5], mitigación de Pareto y compuertas de solvencia.", "Sección 2.7.4 (Punto 4)", "Filtro Pareto, escala [1, 5], exclusión disponentes y regla 30%"],
+        ["5. Sistema Slope One completo", "Formulación formal f(x)=x+b, matriz antisimétrica con soportes y ejemplo numérico paso a paso con trazabilidad.", "Sección 2.7.5 (Punto 5)", "Tabla 2 (Trazabilidad Clientes #2 y #45), Tabla 5 (Matriz 5×5) y Figura 1"],
+        ["6. Modelado de entidades", "Modelar productos (contenidos), comportamientos (transacciones/ratings) y perfiles (demográficos).", "Sección 2.7.6 (Punto 6)", "Productos: 3B/3A | Comportamientos: 1B/1C/2B | Perfiles: 4A/4B/4C"],
+        ["7. Ítem-a-ítem con Coseno y Pearson", "Sistema ítem-a-ítem con Coseno Ajustado / Binario y Pearson sobre ratings (matriz 5×5 y cálculo de clase).", "Sección 2.7.7 (Punto 7)", "Tabla 6 (Coseno Ajustado), Tabla 7-A (Pearson ratings), Tablas 8, 9, 10"],
+        ["8. Sistema basado en contenidos", "Filtrado basado en contenidos con TF-IDF sobre cláusulas textuales con LOPO y reglas de utilidad.", "Sección 2.7.8 (Punto 8)", "Tabla 11 (TF-IDF LOPO 8/8), Tabla 13 (Mora y Utilidad) y Figuras 7 y 9"]
     ]
     add_table(doc, "Tabla 1-A: Matriz de Trazabilidad Metodológica: Puntos de la Consigna de la Guía Práctica → Secciones del Informe.", tbl1a_headers, tbl1a_rows, [Inches(1.3), Inches(2.0), Inches(1.5), Inches(1.31)])
     
-    # 2.7.2 Origen de los datos (PÁRRAFO ÚNICO CONCISO)
-    add_heading(doc, 4, "2.7.2 Origen de los datos y arquitectura del Data Warehouse Bancario (Financial_ijs)")
-    add_paragraph(doc, "Para el desarrollo experimental de la práctica se tomó como fuente la base de datos bancaria Financial_ijs (correspondiente al benchmark internacional PKDD'99 Financial Discovery Challenge), la cual contiene registros operacionales, cuentas, contratos y clientes de un banco comercial a lo largo de un período de seis años (1993 a 1998). A partir de este repositorio relacional transaccional, se construyó un Data Warehouse bajo la metodología dimensional de Ralph Kimball en esquema de estrella con dimensiones conformadas compartidas, desde el cual se extrajeron y consolidaron los cuatro DataFrames analíticos limpios utilizados en los modelos de recomendación: df_transacciones (1,056,320 movimientos contables y pagos), df_ordenes (6,471 órdenes de débito permanente domiciliadas en 3,758 cuentas), df_prestamos (682 contratos de crédito con sus plazos y cuotas) y df_cliente_consolidado (visión 360° sociodemográfica y financiera de 5,369 clientes). Las características de las entidades originales se detallan en la Tabla 1-B.")
+    add_paragraph(doc, "Las características de las entidades originales del Data Warehouse transaccional se detallan en la Tabla 1-B:")
     
     tbl1_headers = ["Tabla Origen", "Tipo de Entidad", "Grano de la Información", "Registros", "Claves Primarias / Foráneas"]
     tbl1_rows = [
@@ -144,52 +138,30 @@ def build_part1(doc):
     ]
     add_table(doc, "Tabla 1-B: Inventario de Objetos del Sistema Transaccional Bancario (Financial_ijs).", tbl1_headers, tbl1_rows)
     
-    # 2.7.3 Metodología de preparación de datos
-    add_heading(doc, 4, "2.7.3 Metodología de preparación de datos: Organizar, Clasificar, Filtrar y Modelar")
-    add_paragraph(doc, "A partir del DataMart dimensional de Ralph Kimball, se llevó a cabo un proceso sistemático y estructurado de ingeniería analítica para transformar los registros transaccionales en conjuntos aptos para la inferencia de preferencias. Este procedimiento comprendió cuatro etapas deterministas:")
+    add_paragraph(doc, "A partir de estas tablas de hechos y dimensiones conformadas, el script ETL de extracción (00_generar_4_dataframes.py) produjo los cuatro DataFrames analíticos limpios y consolidados que constituyen la base de todos los experimentos. La Tabla 1-C sintetiza sus características dimensionales:")
     
-    add_paragraph(doc, "1. Organizar la información a partir del DataMart: La tabla de hechos atómica registra eventos puntuales ('retiro en cajero automático'). Para alimentar modelos de recomendación comercial, la información se reorganizó agregando los eventos en función de entidades de decisión de negocio: el Cliente Titular (client_id con rol 'OWNER') y la Cuenta Bancaria (account_id). Esta agregación elevó el grano de análisis desde movimientos microscópicos hacia vectores consolidados de tenencia y frecuencia de servicios financieros.")
-    
-    add_paragraph(doc, "2. Clasificar la información: Se estableció una taxonomía rigurosa de los servicios bancarios para superar la ambigüedad de los códigos operacionales crudos. Las transacciones se clasificaron en cinco categorías de servicio: Tarjeta de Débito (retiros con tarjeta), Servicios del Hogar (gastos corrientes domésticos), Préstamo (pagos de amortización), Seguro (coberturas patrimoniales y médicas) y Transferencias Externas (remesas interbancarias). En las órdenes domiciliadas se tipificaron cuatro conceptos de pago (Hogar, Seguro, Préstamo y Leasing). Adicionalmente, los clientes se clasificaron sociodemográficamente mediante la interacción cruzada entre rango etario y macro-región geográfica, definiendo arquetipos poblacionales homogéneos.")
-    
-    add_paragraph(doc, "3. Filtrar la información: El filtrado de datos abordó tres problemáticas críticas de sesgo y calidad: (a) Se filtraron cuentas secundarias ('DISPONENT') para no duplicar el consumo familiar; (b) Se aplicó un filtro de Pareto para mitigar el sesgo por hiperactividad y antigüedad; y (c) Se implementaron compuertas de solvencia crediticia para descartar clientes en mora histórica. En Financial_ijs, las frecuencias transaccionales siguen una distribución asimétrica de ley de potencias (asimetría g_1 > 3.5). Para estabilizar esta varianza extrema y comprimir la escala sin alterar el orden relativo, se aplicó la transformación logarítmica monótona cóncava:")
-    add_block_math(doc, r"y_{u, i} = \ln(1 + x_{u, i})")
-    add_paragraph(doc, "donde x_{u, i} representa el recuento bruto de operaciones del cliente u en el producto i. Con y_min = ln(1 + 1) = ln(2) ≈ 0.6931 e y_max = ln(1 + 257) = ln(258) ≈ 5.5530 observados en la muestra, los valores se escalaron linealmente al rango continuo [1.0, 5.0]:")
-    add_block_math(doc, r"r_{u, i} = 1.0 + 4.0 \cdot \left(\frac{y_{u, i} - y_{\min}}{y_{\max} - y_{\min}}\right) = 1.0 + 0.8231 \cdot (y_{u, i} - 0.6931) \approx 0.4295 + 0.8231 \cdot \ln(1 + x_{u, i})")
-    
-    add_paragraph(doc, "4. Modelar productos, comportamientos y perfiles: Con los DataFrames organizados, clasificados y filtrados, se parametrizaron las tres entidades del ecosistema bancario: (a) Modelado de Productos: Atributos contractuales de plazo, tasa y cláusulas legales vectorizadas mediante TF-IDF; (b) Modelado de Comportamientos: Matrices implícitas de co-ocurrencia transaccional, hábitos de débito automático y series temporales mensuales diferenciadas (Δx_t, 72 meses); y (c) Modelado de Perfiles: Arquetipos sociodemográficos distritales y espacios de características para localización de gemelos comportamentales (kNN).")
-    
-    add_paragraph(doc, "Trazabilidad de dos clientes reales (#2 y #45): La Tabla 2 ilustra el recorrido completo a través de las etapas de transformación matemática, permitiendo auditar el cálculo exacto de ratings implícitos y predicciones de Slope One:")
-    
-    tbl2_headers = ["Cliente ID", "Producto Financiero", "Frecuencia Bruta (x)", "Tras log(1+x)", "Rating Escalado r_{u,i} [1, 5]", "Desviaciones Slope One (b_{j,i})", "Predicción Final / Estado"]
-    tbl2_rows = [
-        ["Cliente #2", "TARJETA_DEBITO", "172 retiros", "5.1533", "4.67", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #2", "SERVICIOS_HOGAR", "65 pagos", "4.1897", "3.88", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #2", "PRESTAMO", "24 cuotas", "3.2189", "3.08", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #2", "SEGURO", "0 transacciones", "0.0000", "No observado", "+0.5687 / -0.0024 / -0.4546", "4.01 (Recomendado Prioritario)"],
-        ["Cliente #2", "TRANSF_EXTERNA", "0 transacciones", "0.0000", "No observado", "+0.6370 / -0.0844 / -0.3550", "4.03 (Sugerido Complementario)"],
-        ["Cliente #45", "TRANSF_EXTERNA", "84 envíos", "4.4427", "4.09", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #45", "TARJETA_DEBITO", "52 retiros", "3.9703", "3.70", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #45", "PRESTAMO", "36 cuotas", "3.6109", "3.40", "— (Posee el producto)", "Activo recurrente"],
-        ["Cliente #45", "SERVICIOS_HOGAR", "0 transacciones", "0.0000", "No observado", "+0.5006 / -0.4522 / +0.0844", "3.53 (Sugerido Secundario)"],
-        ["Cliente #45", "SEGURO", "0 transacciones", "0.0000", "No observado", "+0.5687 / -0.4546 / +0.1876", "3.78 (Recomendado Prioritario)"]
+    tbl1c_headers = ["DataFrame Generado", "Grano Operacional", "Registros", "Entidades Únicas", "Variables Clave Extraídas"]
+    tbl1c_rows = [
+        ["df_transacciones", "Mensual por Servicio Transaccional", "1,056,320", "4,500 cuentas / 3,653 activas", "account_id, k_symbol, anio_mes, monto, balance, freq"],
+        ["df_ordenes", "Contrato de Débito Domiciliado", "6,471", "3,758 cuentas bancarias", "account_id, k_symbol, amount, bank_to, account_to"],
+        ["df_prestamos", "Operación Formal de Crédito", "682", "682 cuentas con préstamo único", "loan_id, account_id, amount, duration, payments, status"],
+        ["df_cliente_consolidado", "Perfil Dimensional 360°", "5,369", "5,369 clientes (4,500 titulares)", "client_id, age, gender, district, salary, balance_avg, tx_count"]
     ]
-    add_table(doc, "Tabla 2: Recorrido de Dos Clientes Reales a través de la Preparación y Predicción Matricial.", tbl2_headers, tbl2_rows, [Inches(0.8), Inches(1.1), Inches(0.8), Inches(0.7), Inches(0.8), Inches(1.0), Inches(0.91)])
+    add_table(doc, "Tabla 1-C: Resumen de Dimensiones y Características de los Cuatro DataFrames Analíticos Limpios.", tbl1c_headers, tbl1c_rows)
     
-    add_paragraph(doc, "Auditoría matemática detallada de los cálculos en la Tabla 2:")
-    add_bullet(doc, "Para Cliente #2, las calificaciones implícitas conocidas son: Tarjeta = 4.67 (x = 172 retiros), Hogar = 3.88 (x = 65 débitos) y Préstamo = 3.08 (x = 24 amortizaciones). Al predecir SEGURO a partir de las desviaciones canónicas de la Tabla 5 (b(Seguro, Préstamo) = +0.5687 con S = 114; b(Seguro, Hogar) = -0.0024 con S = 532; b(Seguro, Tarjeta) = -0.4546 con S = 532):", "Cliente #2 (Cálculo de Seguro):")
-    add_block_math(doc, r"\hat{r}_{2, \text{Seguro}} = \frac{114(3.08 + 0.5687) + 532(3.88 - 0.0024) + 532(4.67 - 0.4546)}{114 + 532 + 532} = \frac{415.9318 + 2062.9232 + 2242.5768}{1178} = \frac{4721.4318}{1178} = \mathbf{4.0080} \approx \mathbf{4.01}")
-    add_bullet(doc, "Para Cliente #2, al predecir TRANSF_EXTERNA utilizando las desviaciones correspondientes (b(Transf, Préstamo) = +0.6370 con S = 233; b(Transf, Hogar) = -0.0844 con S = 1197; b(Transf, Tarjeta) = -0.3550 con S = 1197):", "Cliente #2 (Cálculo de Transferencia Externa):")
-    add_block_math(doc, r"\hat{r}_{2, \text{Transf}} = \frac{233(3.08 + 0.6370) + 1197(3.88 - 0.0844) + 1197(4.67 - 0.3550)}{233 + 1197 + 1197} = \frac{866.0610 + 4543.3332 + 5165.0550}{2627} = \frac{10574.4492}{2627} = \mathbf{4.0253} \approx \mathbf{4.03}")
-    add_paragraph(doc, "Interpretación de Cliente #2: Ambos productos presentan una afinidad estimada favorable (4.01 y 4.03). Aunque Transferencia Externa arroja un score aritmético marginalmente superior (4.03 vs 4.01), el comité de producto prioriza comercialmente SEGURO (4.01) debido a que representa un producto de cobertura patrimonial con un margen de contribución financiera sustancialmente más elevado para la institución bancaria.")
+    # -------------------------------------------------------------------------
+    # PUNTO 2: Organizar la información
+    # -------------------------------------------------------------------------
+    add_heading(doc, 4, "2.7.2 Organizar la información")
+    add_paragraph(doc, "Elevación del grano operacional: Una tabla transaccional pura registra eventos atómicos ('retiro de 400 CZK en cajero automático a las 10:15'). Sugerir un retiro individual carece de valor comercial; el cliente contrata el servicio de Tarjeta de Débito o domicilia Pagos del Hogar. Por tanto, para alimentar los modelos de recomendación comercial, la información se reorganizó agregando los eventos microscópicos en función de entidades de decisión de negocio: el Cliente Titular (client_id con rol 'OWNER') y la Cuenta Bancaria (account_id). Esta agregación elevó el grano de análisis desde movimientos puntuales hacia vectores consolidados de tenencia y frecuencia de servicios financieros.")
     
-    add_bullet(doc, "Para Cliente #45, los ratings implícitos escalados calculados con la fórmula lineal unificada (0.4295 + 0.8231 * ln(1+x)) resultan en: Préstamo = 3.40 (x = 36 cuotas, y = 3.6109), Tarjeta = 3.70 (x = 52 retiros, y = 3.9703) y Transferencia = 4.09 (x = 84 envíos, y = 4.4427). Evaluando la predicción para SERVICIOS_HOGAR tomando los signos rigurosos de la Tabla 5 (b(Hogar, Préstamo) = +0.5006 con S = 468; b(Hogar, Tarjeta) = -0.4522 con S = 3365; b(Hogar, Transf) = +0.0844 con S = 1197):", "Cliente #45 (Cálculo de Servicios del Hogar):")
-    add_block_math(doc, r"\hat{r}_{45, \text{Hogar}} = \frac{468(3.40 + 0.5006) + 3365(3.70 - 0.4522) + 1197(4.09 + 0.0844)}{468 + 3365 + 1197} = \frac{1825.5208 + 10928.8970 + 4996.7728}{5030} = \frac{17751.1906}{5030} = \mathbf{3.5291} \approx \mathbf{3.53}")
-    add_bullet(doc, "Evaluando ahora la predicción para SEGURO para Cliente #45 con los valores de la Tabla 5 (b(Seguro, Préstamo) = +0.5687 con S = 114; b(Seguro, Tarjeta) = -0.4546 con S = 532; b(Seguro, Transf) = +0.1876 con S = 531):", "Cliente #45 (Cálculo de Seguro):")
-    add_block_math(doc, r"\hat{r}_{45, \text{Seguro}} = \frac{114(3.40 + 0.5687) + 532(3.70 - 0.4546) + 531(4.09 + 0.1876)}{114 + 532 + 531} = \frac{452.4118 + 1726.5528 + 2271.4356}{1177} = \frac{4450.4002}{1177} = \mathbf{3.7811} \approx \mathbf{3.78}")
-    add_paragraph(doc, "Demostración de la inversión del orden en Cliente #45: En modelos aditivos simples no ponderados por soporte o que arrastran signos incorrectos, Servicios del Hogar parecía predominar. Sin embargo, al aplicar rigurosamente las desviaciones con soporte de la Tabla 5, la predicción de SEGURO (3.78) supera de manera concluyente a la de SERVICIOS_HOGAR (3.53). Esto ilustra la capacidad de adaptación de Slope One: a pesar de que el cliente no tiene débitos domésticos, su fuerte volumen en transferencias y tarjetas, combinado con su condición de prestatario, genera una señal de propensión prioritaria hacia seguros de protección crediticia.")
+    add_paragraph(doc, "Auditoría de claves foráneas y tabla puente disp: La relación entre clientes y cuentas no es 1:1, sino que involucra clientes autorizados ('DISPONENT'). Para evitar duplicar artificialmente el consumo de un mismo hogar, se aislaron formalmente los 4,500 clientes titulares independientes (OWNER), auditando la integridad referencial de todas las claves primarias y foráneas (account_id, client_id, district_id).")
     
-    add_paragraph(doc, "Las variables operacionales y transformadas se resumen en el diccionario analítico de la Tabla 3:")
+    add_paragraph(doc, "Estructuración de la matriz Usuario-Ítem y dispersión analítica: Sea U = {u_1, u_2, ..., u_M} el conjunto universal de clientes y sea I = {i_1, i_2, ..., i_N} el catálogo de servicios. El historial de interacciones se organizó matricialmente mediante R en R^(M x N), donde cada escalar r_{u, i} cuantifica la intensidad de preferencia observada. En el entorno bancario, la dispersión analítica se cuantifica como:")
+    add_block_math(doc, r"S = 1 - \frac{|R_{\text{observados}}|}{|U| \times |I|}")
+    add_paragraph(doc, "donde |R_observados| es el recuento de contratos o movimientos existentes. En Financial_ijs, este índice de dispersión S supera el 68% en transacciones y el 83% en órdenes, imponiendo restricciones severas a los algoritmos que requieren solapamiento denso.")
+    
+    add_paragraph(doc, "Diccionario de variables analíticas organizadas: Las variables operacionales y transformadas se resumen en el diccionario analítico de la Tabla 3:")
     
     tbl3_headers = ["Variable Analítica", "Fuente Base", "Grano / Entidad", "Definición de Negocio", "Método de Cálculo"]
     tbl3_rows = [
@@ -202,7 +174,7 @@ def build_part1(doc):
     ]
     add_table(doc, "Tabla 3: Diccionario de Variables Analíticas Utilizadas en los Motores de Recomendación.", tbl3_headers, tbl3_rows)
     
-    add_paragraph(doc, "Evaluación de viabilidad técnica (5 Algoritmos × 4 DataFrames): No todos los algoritmos son aplicables de forma válida sobre todos los conjuntos. La viabilidad técnica depende directamente de la granularidad y la naturaleza de las variables. La Tabla 4 documenta la matriz de viabilidad sobre las 20 combinaciones posibles:")
+    add_paragraph(doc, "Evaluación de viabilidad técnica (Matriz 5 Algoritmos × 4 DataFrames): No todos los algoritmos son aplicables de forma válida sobre todos los conjuntos. La viabilidad técnica depende directamente de la granularidad y la naturaleza de las variables. La Tabla 4 documenta la matriz de viabilidad sobre las 20 combinaciones posibles:")
     
     tbl4_headers = ["DataFrame Base", "1. Slope One", "2. Similitud Coseno", "3. Correlación Pearson", "4. TF-IDF (Contenidos)", "5. Demográfico (Estereotipos)"]
     tbl4_rows = [
@@ -212,3 +184,36 @@ def build_part1(doc):
         ["df_cliente_consolidado\n(5,369 clientes)", "NO APLICABLE\nVariables estáticas de usuario; no representa matriz de ítems.", "SELECCIONADO (4B)\nSimilitud Coseno Usuario a Usuario (gemelos financieros).", "COMPLEMENTARIO (4C)\nCorrelación multivariante de perfil (edad, saldo, salario).", "NO APLICABLE\nAtributos numéricos y discretos; no posee corpus textual.", "SELECCIONADO (4A)\nDimensión maestra para construir arquetipos de negocio."]
     ]
     add_table(doc, "Tabla 4: Matriz Cruzada de Viabilidad Técnica (5 Algoritmos × 4 DataFrames).", tbl4_headers, tbl4_rows, [Inches(1.2), Inches(1.0), Inches(1.0), Inches(1.0), Inches(1.0), Inches(0.91)])
+    
+    # -------------------------------------------------------------------------
+    # PUNTO 3: Clasificar la información
+    # -------------------------------------------------------------------------
+    add_heading(doc, 4, "2.7.3 Clasificar la información")
+    add_paragraph(doc, "La clasificación de la información se ejecutó en tres niveles complementarios: clasificación taxonómica de servicios bancarios, clasificación sociodemográfica de clientes y clasificación metodológica de las familias de recomendación revisadas en clases:")
+    
+    add_paragraph(doc, "1. Taxonomía de servicios financieros transaccionales y contractuales: Los códigos operacionales crudos (k_symbol) presentaban ambigüedad y valores nulos. Para superarlo, se estableció una taxonomía formal de cinco categorías funcionales en transacciones: (1) TARJETA_DEBITO (retiros en cajeros y pagos POS con tarjeta); (2) SERVICIOS_HOGAR (débitos recurrentes de servicios domésticos); (3) PRESTAMO (cuotas de amortización crediticia); (4) SEGURO (primas de cobertura patrimonial o de vida); y (5) TRANSF_EXTERNA (transferencias interbancarias). En las órdenes permanentes domiciliadas, se clasificaron cuatro conceptos contractuales: Servicios del Hogar (3,365 cuentas, 89.54%), Cuota de Préstamo (717 cuentas, 19.08%), Pago de Seguros (532 cuentas, 14.16%) y Arrendamiento / Leasing (117 cuentas, 3.11%).")
+    
+    add_paragraph(doc, "2. Clasificación sociodemográfica de clientes: En el DataFrame dimensional df_cliente_consolidado, los 5,369 clientes se segmentaron en nueve arquetipos sociodemográficos canónicos cruzando tres macro-regiones geográficas (Metropolitana Praga, Bohemia Centro-Oeste y Moravia Este) con tres intervalos etarios vitales (Jóvenes <30 años, Adultos 30-50 años y Adultos Mayores >50 años), permitiendo capturar patrones heterogéneos de bancarización y endeudamiento.")
+    
+    add_paragraph(doc, "3. Clasificación de las cuatro familias de algoritmos revisadas en clases: Siguiendo el marco curricular de la asignatura Inteligencia de Negocios, los sistemas desarrollados se clasifican en cuatro familias analíticas fundamentales:")
+    add_bullet(doc, "Explota la matriz de interacciones usuario-producto sin requerir atributos intrínsecos. Se subdivide en: (a) Métodos Ítem a Ítem (Slope One, Coseno Ajustado, Coseno Binario, Ponderación ITF, Pearson sobre ratings); y (b) Métodos Usuario a Usuario (kNN sobre perfiles transaccionales).", "Familia de Filtrado Colaborativo (Collaborative Filtering):")
+    add_bullet(doc, "Recomienda productos comparando sus descriptores técnicos y cláusulas contractuales con las preferencias del usuario mediante Procesamiento de Lenguaje Natural (TF-IDF sobre cláusulas legales), resolviendo el Item Cold Start.", "Familia de Filtrado Basado en Contenidos (Content-Based Filtering):")
+    add_bullet(doc, "Asocia a los usuarios con estereotipos poblacionales basados en edad, ubicación geográfica y estrato económico, otorgando una solución determinista al User Cold Start en apertura de cuenta.", "Familia de Filtrado Demográfico (Demographic Filtering):")
+    add_bullet(doc, "Incorpora reglas de política bancaria, compuertas de solvencia (cuota ≤ 30% del salario distrital) y restricciones prudenciales de riesgo de impago, gobernando transversalmente las recomendaciones comerciales.", "Modelos Basados en el Conocimiento y en la Utilidad Financiera (Knowledge & Utility-Based):")
+    
+    # -------------------------------------------------------------------------
+    # PUNTO 4: Filtrar la información
+    # -------------------------------------------------------------------------
+    add_heading(doc, 4, "2.7.4 Filtrar la información")
+    add_paragraph(doc, "El filtrado analítico de la información abordó cuatro problemáticas críticas de sesgo poblacional, dispersión matemática y prudencia financiera:")
+    
+    add_paragraph(doc, "1. Filtro de Pareto y estabilización monótona logarítmica: En Financial_ijs, las frecuencias transaccionales brutas siguen una distribución de ley de potencias (coeficiente de asimetría g_1 > 3.5), donde una minoría hiperactiva acumula cientos de transacciones al mes mientras la mayoría mantiene baja actividad. Asimismo, las cuentas abiertas en 1993 acumulan mecánicamente seis veces más operaciones que las de 1997. Computar promedios aritméticos brutos sobre estas frecuencias provocaría que los clientes hiperactivos sesgaran las distancias euclidianas. Para resolver este sesgo estructural, se aplicó la transformación logarítmica monótona cóncava:")
+    add_block_math(doc, r"y_{u, i} = \ln(1 + x_{u, i})")
+    add_paragraph(doc, "donde x_{u, i} es el recuento bruto de transacciones. Con y_min = ln(1 + 1) = ln(2) ≈ 0.6931 e y_max = ln(1 + 257) = ln(258) ≈ 5.5530 observados en la muestra, los valores se escalaron linealmente al rango continuo [1.0, 5.0]:")
+    add_block_math(doc, r"r_{u, i} = 1.0 + 4.0 \cdot \left(\frac{y_{u, i} - y_{\min}}{y_{\max} - y_{\min}}\right) = 1.0 + 0.8231 \cdot (y_{u, i} - 0.6931) \approx 0.4295 + 0.8231 \cdot \ln(1 + x_{u, i})")
+    
+    add_paragraph(doc, "2. Filtro de clientes disponentes y artefacto de similitud unitaria: En el modelado colaborativo Usuario a Usuario (Modelo 4B), se descubrió que incluir clientes autorizados ('DISPONENT') provocaba que 869 registros colapsaran en una similitud perfecta cos = 1.0000 con otros usuarios. Esto ocurría porque al no tener transacciones propias, sus vectores brutos eran cero y al estandarizar Z-score colapsaban en el mismo punto (-mu / sigma). El filtro aplicado restringió el espacio vectorial exclusivamente a los 4,500 titulares independientes, eliminando este artefacto espurio.")
+    
+    add_paragraph(doc, "3. Filtro prudencial de morosidad histórica (Regla de Negocio 1): Como compuerta obligatoria de control de riesgo, se aplicó un filtro determinista que bloquea automáticamente a cualquier cliente con antecedentes de incumplimiento en préstamos (estados 'B' de contrato no pagado y 'D' de deuda en mora judicial), excluyendo al 11.15% de prestatarios históricos de recibir cualquier oferta de nuevo endeudamiento.")
+    
+    add_paragraph(doc, "4. Filtro de capacidad de pago y solvencia crediticia (Regla del 30%): Se filtraron las recomendaciones crediticias condicionándolas a que la cuota de amortización no supere el 30% del salario distrital promedio estimado del cliente. La validez de este filtro se sustenta en la evidencia empírica transversal: los créditos en el rango prudencial (≤ 30%) registran una tasa de morosidad de apenas 6.57% (14 de 213), mientras que en clientes con endeudamiento crítico (> 50%) la mora se triplica al 16.86% (44 de 261), diferencia estadísticamente significativa confirmada con Chi-cuadrado (χ² = 10.62, p = 0.0011) y Test Exacto de Fisher (p = 0.0007).")

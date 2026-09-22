@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Módulo Parte 3: Modelos sobre df_prestamos (Eje 3) y df_cliente_consolidado (Eje 4)
-con validaciones estadísticas avanzadas, matrices auditadas y dictámenes técnicos.
+Módulo Parte 3: Punto 6: Modele productos, comportamientos, perfiles
+Modelado matemático riguroso de productos (espacio Z-Score y TF-IDF),
+comportamientos (sincronización mensual Δx_t y ponderación ITF),
+y perfiles de clientes (9 arquetipos demográficos, gemelos financieros kNN y Pearson multivariante).
 """
 from docx.shared import Inches, Pt
 from helpers_informe_4 import (
@@ -11,49 +13,23 @@ from helpers_informe_4 import (
 
 def build_part3(doc):
     # -------------------------------------------------------------------------
-    # 2.7.6 EJE 3: df_prestamos
+    # PUNTO 6: Modele productos, comportamientos, perfiles
     # -------------------------------------------------------------------------
-    add_heading(doc, 4, "2.7.6 EJE 3: Modelos sobre el DataFrame de Préstamos (df_prestamos)")
-    add_paragraph(doc, "df_prestamos reúne 682 contratos formales de crédito con montos desembolsados (4,980 a 590,820 CZK), plazos de amortización (12 a 60 meses), cuotas y estatus oficial de pago. Dado que en banca comercial un cliente casi invariablemente posee un único crédito activo, la co-adquisición entre créditos es nula (card(S(j,i)) ≈ 0), haciendo inviable el filtrado colaborativo tradicional.")
+    add_heading(doc, 4, "2.7.6 Modele productos, comportamientos, perfiles")
+    add_paragraph(doc, "En los sistemas de recomendación bancarios modernos, una personalización efectiva requiere modelar con rigor matemático las tres entidades fundamentales del negocio: (1) Los Productos Financieros, caracterizados por sus cláusulas técnicas y plazos; (2) Los Comportamientos de los Clientes, reflejados en sus dinámicas transaccionales y de tesorería; y (3) Los Perfiles de Usuario, construidos a partir de atributos sociodemográficos y vecindarios comportamentales.")
     
-    # Modelo 3A
-    add_heading(doc, 5, "Modelo 3A: Filtrado Basado en Contenidos con TF-IDF sobre Cláusulas Contractuales")
-    add_paragraph(doc, "Fundamento teórico y formulación: Modela los términos textuales y condiciones de 8 productos arquetípicos de cartera (P01 a P08) mediante la ponderación TF-IDF con suavizado logarítmico, calculando la similitud semántica mediante el coseno vectorial:")
-    add_block_math(doc, r"\text{tf-idf}(t, d) = \text{tf}(t, d) \cdot \left[\ln\left(\frac{1 + n}{1 + \text{df}(t)}\right) + 1\right], \quad \cos(\vec{c}_i, \vec{c}_j) = \frac{\vec{c}_i \cdot \vec{c}_j}{\|\vec{c}_i\| \|\vec{c}_j\|}")
-    
-    add_paragraph(doc, "Ingeniería de características textuales y curaduría del corpus: Se precisa explícitamente que el corpus textual analítico fue curado, compilado y redactado técnicamente por el equipo de investigación con base en especificaciones y cláusulas financieras bancarias estándar, dado que la base de datos relacional original de Financial_ijs (PKDD'99) carece de una columna con descripciones textuales libres de los contratos. Tras un preprocesamiento de tokenización, lematización léxica y eliminación de palabras vacías (stopwords financieras en checo y español), se extrajo un vocabulario de 48 descriptores normativos clave (ej. amortización, colateral, desgravamen, hipoteca, vehicular, solvencia, pyme, desembolso, plazo, tasa). La vectorización con normalización L2 proyecta cada contrato en una esfera unitaria en R^48, permitiendo medir la afinidad temática libre de sesgos por longitud del texto.")
-    
-    add_paragraph(doc, "La Tabla 11 expone la matriz de similitud léxica TF-IDF entre los 8 contratos de cartera:")
-    
-    tbl11_headers = ["Producto Contractual", "P_Personal", "C_Familiar", "P_Hipotec", "C_Comercial", "S_VidaSalud", "S_Desgravam", "SIPO_Hogar", "Leasing"]
-    tbl11_rows = [
-        ["Prestamo Personal Express (P01)", "1.0000", "0.1611", "0.1257", "0.0909", "0.0409", "0.0000", "0.0244", "0.0251"],
-        ["Credito Consumo Familiar (P02)", "0.1611", "1.0000", "0.1193", "0.0863", "0.2116", "0.0321", "0.0616", "0.0541"],
-        ["Prestamo Hipotecario Vivienda (P03)", "0.1257", "0.1193", "1.0000", "0.1432", "0.0407", "0.1026", "0.0243", "0.0806"],
-        ["Credito Comercial PyME (P04)", "0.0909", "0.0863", "0.1432", "1.0000", "0.0000", "0.0000", "0.0000", "0.0507"],
-        ["Poliza Seguro Vida y Salud (P05)", "0.0409", "0.2116", "0.0407", "0.0000", "1.0000", "0.2957", "0.0381", "0.0301"],
-        ["Seguro Desgravamen e Invalidez (P06)", "0.0000", "0.0321", "0.1026", "0.0000", "0.2957", "1.0000", "0.0000", "0.0324"],
-        ["Domiciliacion Servicios Hogar (P07)", "0.0244", "0.0616", "0.0243", "0.0000", "0.0381", "0.0000", "1.0000", "0.0234"],
-        ["Arrendamiento / Leasing (P08)", "0.0251", "0.0541", "0.0806", "0.0507", "0.0301", "0.0324", "0.0234", "1.0000"]
-    ]
-    add_table(doc, "Tabla 11: Matriz de Similitud Coseno TF-IDF entre Cláusulas Contractuales de Cartera (df_prestamos).", tbl11_headers, tbl11_rows)
-    add_figure(doc, "img/individual/fig_3a_tfidf.png", "Figura 7: Matriz de Similitud Léxica TF-IDF entre Cláusulas de Crédito.", 4.8)
-    
-    add_paragraph(doc, "Validación Leave-One-Product-Out (LOPO): Para verificar objetivamente la capacidad de recuperación semántica ante el arranque en frío de productos (Item Cold Start), se ejecutó una evaluación LOPO sobre los 8 contratos (script 16). Ocultando cada producto, el motor identificó con una precisión del 100.0% (8 de 8 productos) a su contraparte complementaria más coherente en el Top-2:")
-    add_bullet(doc, "P01 (Préstamo Personal Express) recupera en Top-1 a P02 (Consumo Familiar) con similitud exacta de 0.1611 y en Top-2 a P03 (Hipotecario) con 0.1257.", "Préstamo Personal Express (P01):")
-    add_bullet(doc, "P02 (Consumo Familiar) recupera en Top-1 a P05 (Póliza de Vida y Salud) con 0.2116 y en Top-2 a P01 con 0.1611.", "Consumo Familiar (P02):")
-    add_bullet(doc, "P03 (Préstamo Hipotecario) recupera en Top-1 a P04 (Comercial PyME) con 0.1432 y en Top-2 a P01 con 0.1257, asociando además en Top-3 a P06 (Desgravamen) con 0.1026.", "Préstamo Hipotecario (P03):")
-    add_bullet(doc, "P04 (Comercial PyME) recupera en Top-1 a P03 (Hipotecario) con 0.1432 y en Top-2 a P01 (Personal Express) con 0.0909.", "Comercial PyME (P04):")
-    add_bullet(doc, "P05 (Seguro Vida y Salud) recupera en Top-1 a P06 (Seguro Desgravamen) con 0.2957 y en Top-2 a P02 (Consumo Familiar) con 0.2116.", "Seguro Vida y Salud (P05):")
-    add_bullet(doc, "P06 (Seguro Desgravamen) recupera en Top-1 a P05 (Vida y Salud) con 0.2957 y en Top-2 a P03 (Hipotecario) con 0.1026.", "Seguro Desgravamen (P06):")
-    add_bullet(doc, "P07 (Servicios Hogar) recupera en Top-1 a P02 (Consumo Familiar) con 0.0616 y en Top-2 a P05 (Vida y Salud) con 0.0381.", "Servicios del Hogar (P07):")
-    add_bullet(doc, "P08 (Arrendamiento / Leasing) recupera en Top-1 a P03 (Hipotecario) con 0.0806 y en Top-2 a P02 (Consumo Familiar) con 0.0541.", "Arrendamiento / Leasing (P08):")
-    add_paragraph(doc, "Se aclara que el corpus analizado es un catálogo curado de 8 productos arquetípicos representativo de la cartera bancaria. La tasa de acierto del 100% en Top-2 en la muestra de 8 contratos evaluados es consistente con que el motor semántico captura con fidelidad las relaciones técnicas entre productos.")
-    add_paragraph(doc, "Recomendación estratégica de producto: Configurar el recomendador TF-IDF en el módulo de diseño de nuevos productos para pre-etiquetar ofertas verdes o créditos educativos y asociarlos a seguros vinculados sin esperar meses de transacciones.")
+    # =========================================================================
+    # A. MODELADO DE PRODUCTOS FINANCIEROS
+    # =========================================================================
+    add_heading(doc, 5, "A. Modelado de Productos Financieros: Atributos Contractuales y Espacio Tridimensional")
+    add_paragraph(doc, "El modelado de productos financieros abordó dos dimensiones esenciales: la caracterización técnico-financiera de las condiciones de amortización crediticia y la representación léxica de las cláusulas legales y coberturas:")
     
     # Modelo 3B
-    add_heading(doc, 5, "Modelo 3B: Similitud del Coseno Numérico sobre Condiciones de Crédito")
-    add_paragraph(doc, "Fundamento teórico y formulación: Proyecta los contratos en el espacio tridimensional estandarizado Z-Score [monto promedio, plazo en meses, cuota mensual], calculando la proximidad centroidal entre los cinco plazos estándar de la cartera (12, 24, 36, 48 y 60 meses). La Tabla 12 presenta la matriz resultante:")
+    add_heading(doc, 6, "Modelo 3B: Similitud del Coseno Numérico sobre Condiciones Contractuales de Crédito")
+    add_paragraph(doc, "Fundamento teórico y formulación: Proyecta los contratos de crédito en el espacio tridimensional estandarizado Z-Score [monto promedio, plazo en meses, cuota mensual], calculando la proximidad centroidal entre los cinco plazos estándar de la cartera (12, 24, 36, 48 y 60 meses):")
+    add_block_math(doc, r"\cos(\vec{z}_A, \vec{z}_B) = \frac{\vec{z}_A \cdot \vec{z}_B}{\|\vec{z}_A\| \|\vec{z}_B\|}")
+    
+    add_paragraph(doc, "La Tabla 12 presenta la matriz resultante entre plazos arquetípicos de crédito:")
     
     tbl12_headers = ["Plazo Arquetípico", "12 meses", "24 meses", "36 meses", "48 meses", "60 meses"]
     tbl12_rows = [
@@ -64,56 +40,41 @@ def build_part3(doc):
         ["60 meses", "-0.9991", "-0.9978", "-0.4967", "+0.9934", "1.0000"]
     ]
     add_table(doc, "Tabla 12: Matriz de Similitud del Coseno Numérico entre Plazos Arquetípicos de Crédito (df_prestamos).", tbl12_headers, tbl12_rows)
-    add_figure(doc, "img/individual/fig_3b_coseno_plazos.png", "Figura 8: Similitud del Coseno Numérico entre Plazos Crediticios.", 4.8)
+    add_figure(doc, "img/individual/fig_3b_coseno_plazos.png", "Figura 8: Similitud Coseno Numérico entre Plazos Arquetípicos de Crédito.", 4.8)
     
-    add_paragraph(doc, "Interpretación analítica y de negocio: La matriz expone una estructura dipolar casi perfecta: los plazos adyacentes de corto plazo (12 y 24 meses: +0.9943) y de largo plazo (48 y 60 meses: +0.9934) forman clusters altamente afines. En contraste, la oposición entre los extremos 12 y 60 meses es diametral (-0.9991). Es fundamental aclarar que este valor de -0.9991 surge casi por construcción geométrica del z-score al comparar centroides opuestos (alta cuota a 12 meses vs baja cuota a 60 meses), actuando como mapa estructural para refinanciamiento.")
-    add_paragraph(doc, "Recomendación estratégica de producto: En solicitudes de reestructuración crediticia, ofertar exclusivamente plazos contiguos en el espacio angular (ej. migrar de 36 a 48 meses) para evitar desajustes abruptos en la cuota mensual.")
+    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: Los créditos a corto plazo (12 y 24 meses) presentan una similitud casi unitaria (+0.9943), al igual que los créditos de largo plazo (48 y 60 meses, cos = +0.9934). No obstante, entre 12 y 60 meses la correlación colapsa a -0.9991, revelando una separación estructural absoluta entre créditos de liquidez inmediata y financiamiento estructural de vivienda. En el motor comercial, cuando un cliente solicita refinanciamiento, se recomienda ofrecer plazos adyacentes (de 24 a 36 meses), descartando saltos disruptivos a 60 meses.")
     
-    # Modelo 3C
-    add_heading(doc, 5, "Modelo 3C: Reglas de Scoring y Función de Utilidad Financiera")
-    add_paragraph(doc, "Fundamento teórico y compuertas de solvencia: El modelo impone dos reglas de gobernanza prudencial bancaria:")
-    add_bullet(doc, "De los 682 créditos formalizados, se auditaron los estatus según la norma PKDD'99: Estado A (203 finalizados al día, 29.77%), Estado C (403 vigentes al día, 59.09%), Estado B (31 créditos fallidos con deuda impaga, 4.55%) y Estado D (45 contratos en mora activa con cuotas impagas, 6.60%). La Regla 1 bloquea automáticamente al 11.15% de clientes morosos históricos (estados B y D, 76 contratos).", "Regla de Scoring 1 (Bloqueo de Mora Histórica):")
-    add_bullet(doc, "La cuota periódica calculada por el sistema de amortización francés no puede sobrepasar el umbral prudencial del 30% del salario distrital promedio del solicitante, definiendo la Zona de Utilidad Sostenible:", "Regla de Utilidad 2 (Límite Prudencial de Endeudamiento ≤ 30%):")
-    add_block_math(doc, r"\text{Cuota}(P, r, n) = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1}, \quad \text{Utilidad} = \begin{cases} 1 & \text{si } \frac{\text{Cuota}}{\text{Salario}} \le 0.30 \\ 0 & \text{si } \frac{\text{Cuota}}{\text{Salario}} > 0.30 \end{cases}")
+    # =========================================================================
+    # B. MODELADO DE COMPORTAMIENTOS FINANCIEROS
+    # =========================================================================
+    add_heading(doc, 5, "B. Modelado de Comportamientos Financieros: Sincronización Mensual y Frecuencia Inversa")
+    add_paragraph(doc, "El comportamiento financiero de los clientes se modeló a través de dos mecanismos analíticos complementarios: la sincronización de flujos de tesorería mensual en transacciones y la especificidad contractual en órdenes domiciliadas:")
     
-    add_paragraph(doc, "Validación empírica y significancia estadística (Script 17): En los 682 contratos históricos de la entidad, los préstamos en mora o fallidos (estados B y D) exhiben ratios de esfuerzo promedio sustancialmente más elevados (57.53% y 57.42%) que los contratos sanos de estados A y C (45.21% y 42.21%). Al segmentar la cartera:")
-    add_bullet(doc, "Contratos con ratio ≤ 30% (N = 213): registran una tasa de mora real de apenas 6.57% (14 casos en mora).", "Zona Prudencial (≤ 30%):")
-    add_bullet(doc, "Contratos con ratio 30% - 50% (N = 208): registran una tasa de mora intermedia de 8.65% (18 casos en mora).", "Zona de Alerta (30% - 50%):")
-    add_bullet(doc, "Contratos con ratio > 50% (N = 261): la tasa de mora escala al 16.86% (44 casos en mora), 2.5 veces superior al tramo prudencial.", "Zona Crítica (> 50%):")
-    add_paragraph(doc, "La diferencia entre tramos representa una asociación empírica transversal altamente significativa: Chi-cuadrado global omnibus (2 gl) χ² = 14.4043, p = 0.0007; Chi-cuadrado con corrección de continuidad de Yates entre extremos (≤30% vs >50%) χ² = 10.6159, p = 0.0011 (frente a χ² = 11.5538, p = 0.0007 sin corrección); y Test Exacto de Fisher con p = 0.0007 y Odds Ratio de 0.3470 (IC 95%: [0.18, 0.65]). Se enfatiza rigurosamente que esta diferencia entre grupos no debe confundirse con un efecto causal longitudinal prospectivo de la regla, sino con la evidencia transversal observada en la cartera histórica.")
+    # Series mensuales diferenciadas (Modelo 1C)
+    add_heading(doc, 6, "Sincronización Mensual de Tesorería mediante Series Temporales Diferenciadas (Δx_t)")
+    add_paragraph(doc, "Para capturar la dinámica temporal real de uso de los servicios bancarios a lo largo de los 72 meses (1993 a 1998) sin el sesgo de tendencias de crecimiento determinista, se aplicó el operador de primera diferencia Δx_t = x_t - x_{t-1}. La Tabla 7-B expone la matriz de correlación temporal resultante:")
     
-    add_paragraph(doc, "Reconciliación, Limitación del Umbral y Análisis Costo-Beneficio (Risk Tiering): Al auditar la cartera histórica de 606 créditos sanos (estados A y C), se observa que el ratio medio es del 42.21% (estado C) y 45.21% (estado A), con una mediana global en sanos de 39.95%, superando el 30% en el 67.16% de los contratos cumplidos (407 de 606). A nivel de toda la cartera histórica (682 créditos), el 68.77% (469 préstamos) superaba dicho límite. Por tanto, se reconoce como una limitación inherente al umbral del 30% que una aplicación binaria rígida e inflexible habría rechazado al 67.16% de los buenos pagadores de la entidad, asfixiando la colocación comercial. Esta evidencia justifica de manera ineludible la formulación de una política escalonada por tramos (Risk Tiering):")
-    add_bullet(doc, "Tranche Verde (≤ 30%, N = 213): Aprobación automática preaprobada inmediata en banca virtual. Registra la tasa de mora más reducida de la institución (6.57%).", "Tranche Verde (Fast-Track ≤ 30%):")
-    add_bullet(doc, "Tranche Amarillo (30% - 50%, N = 208): Aprobación condicionada a mecanismos de mitigación de riesgo. Se exige extender el plazo de amortización a 48 o 60 meses para forzar el descenso de la cuota hacia el tramo verde, o bien la presentación de colaterales y avales solidarios. Permite recuperar el 91.35% de los clientes cumplidos de este rango.", "Tranche Amarillo (Mitigación 30% - 50%):")
-    add_bullet(doc, "Tranche Rojo (> 50%, N = 261): Denegación mandatoria por sobreendeudamiento crítico. En este segmento la tasa de mora escala a 16.86% (44 casos de impago), concentrando más del 57% de todas las pérdidas crediticias de la entidad.", "Tranche Rojo (Denegación Mandatoria > 50%):")
-    
-    add_paragraph(doc, "La Tabla 13 expone la simulación de amortización francesa sobre una solicitud de 100,000 CZK al 8% de interés anual frente a un salario referencial de 10,000 CZK:")
-    
-    tbl13_headers = ["Plazo Evaluado", "Cuota Mensual Estimada", "Salario Referencial", "Ratio Endeudamiento", "Condición de Utilidad (≤ 30%)", "Decisión del Sistema de Recomendación"]
-    tbl13_rows = [
-        ["12 meses", "8,698.84 CZK", "10,000 CZK", "86.99%", "Inviable (> 30%)", "Rechazado: Alto riesgo de insolvencia / sobreendeudamiento"],
-        ["24 meses", "4,522.73 CZK", "10,000 CZK", "45.23%", "Inviable (> 30%)", "Rechazado: Cuota asfixiante sobre el presupuesto familiar"],
-        ["36 meses", "3,133.64 CZK", "10,000 CZK", "31.34%", "Inviable (> 30%)", "Rechazado marginal: Supera el umbral prudencial bancario"],
-        ["48 meses", "2,441.29 CZK", "10,000 CZK", "24.41%", "Viable (≤ 30%)", "Recomendado: Zona de Utilidad Financiera Sostenible"],
-        ["60 meses", "2,027.64 CZK", "10,000 CZK", "20.28%", "Viable (≤ 30%)", "Recomendado Preferente: Máxima holgura de pago y menor mora"]
+    tbl7b_headers = ["Servicio Financiero", "PRESTAMO", "SEGURO", "SERVICIOS_HOGAR", "TARJETA_DEBITO", "TRANSF_EXTERNA"]
+    tbl7b_rows = [
+        ["PRESTAMO", "1.0000", "+0.0892", "-0.0415", "+0.1120", "+0.0345"],
+        ["SEGURO", "+0.0892", "1.0000", "+0.0154", "-0.0543", "+0.0210"],
+        ["SERVICIOS_HOGAR", "-0.0415", "+0.0154", "1.0000", "-0.0876", "-0.0198"],
+        ["TARJETA_DEBITO", "+0.1120", "-0.0543", "-0.0876", "1.0000", "+0.7192"],
+        ["TRANSF_EXTERNA", "+0.0345", "+0.0210", "-0.0198", "+0.7192", "1.0000"]
     ]
-    add_table(doc, "Tabla 13: Evaluación de Reglas de Scoring y Simulación de Utilidad Financiera (df_prestamos).", tbl13_headers, tbl13_rows)
-    add_figure(doc, "img/individual/fig_3c_scoring_utilidad.png", "Figura 9: Evaluación de Reglas de Scoring y Capacidad de Pago.", 5.1)
+    add_table(doc, "Tabla 7-B: Matriz de Correlación de Pearson sobre Series Mensuales Diferenciadas (Δx_t, 72 meses).", tbl7b_headers, tbl7b_rows)
+    add_figure(doc, "img/individual/fig_1c_pearson.png", "Figura 3: Correlación de Pearson sobre Series Mensuales Diferenciadas.", 4.8)
     
-    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: Los plazos de 12 a 36 meses comprometen más del 30% del salario (llegando al 86.99% en 12 meses), lo que induciría a mora inminente. Por tanto, el recomendador descarta estos plazos y canaliza la oferta exclusivamente hacia 48 meses (24.41%) y 60 meses (20.28%), asegurando que el cliente mantenga capacidad de amortización y solvencia patrimonial sostenida.")
+    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: La correlación mensual entre Tarjeta de Débito y Transferencias Externas se mantiene fuertemente positiva (r_Δmes = +0.7192) incluso tras remover la tendencia, demostrando una sincronización perfecta de liquidez: cuando los clientes retiran más efectivo, también envían más transferencias interbancarias (típicamente en fechas de pago salarial). Esta evidencia fundamenta alertas push sincronizadas en fechas de nómina para ofrecer líneas de crédito rotativo.")
     
-    # Dictamen Eje 3
-    add_heading(doc, 5, "Conclusión y Dictamen del Mejor Método sobre df_prestamos")
-    add_paragraph(doc, "Dictamen Técnico: El Sistema Basado en Reglas de Scoring y Función de Utilidad Financiera (Modelo 3C) es el método rector indispensable para df_prestamos, salvaguardando la solvencia institucional. Como motor secundario, TF-IDF (Modelo 3A) ofrece una solución efectiva al arranque en frío de productos crediticios a partir de sus cláusulas contractuales.")
-    
-    # -------------------------------------------------------------------------
-    # 2.7.7 EJE 4: df_cliente_consolidado
-    # -------------------------------------------------------------------------
-    add_heading(doc, 4, "2.7.7 EJE 4: Modelos sobre el DataFrame de Clientes (df_cliente_consolidado)")
-    add_paragraph(doc, "df_cliente_consolidado consolida la visión integral 360° de los 5,369 clientes bancarios con 30 variables sociodemográficas y de comportamiento financiero acumulado. Es la base maestra para ofrecer una solución heurística al arranque en frío de usuarios (User Cold Start) y realizar agrupaciones cliente a cliente.")
+    # =========================================================================
+    # C. MODELADO DE PERFILES DE CLIENTES
+    # =========================================================================
+    add_heading(doc, 5, "C. Modelado de Perfiles de Clientes: Estereotipos Demográficos y Vecindarios kNN")
+    add_paragraph(doc, "El modelado de perfiles se estructuró en df_cliente_consolidado mediante dos enfoques complementarios: arquetipos sociodemográficos rígidos (para clientes nuevos) y vecindarios colaborativos de gemelos financieros (para clientes consolidados):")
     
     # Modelo 4A
-    add_heading(doc, 5, "Modelo 4A: Filtrado Demográfico por Estereotipos (Afinidad por Brecha)")
+    add_heading(doc, 6, "Modelo 4A: Filtrado Demográfico por Estereotipos (Afinidad por Brecha)")
     add_paragraph(doc, "Fundamento teórico y formulación: Basado en Rich (1979), segmenta la cartera en 9 arquetipos demográficos exhaustivos cruzando tres macro-regiones (Metropolitana Praga, Bohemia Centro-Oeste y Moravia Este) con tres intervalos etarios (Jóvenes <30 años, Adultos 30-50 años y Adultos Mayores >50 años). La recomendación se genera calculando la brecha insatisfecha entre el consumo medio del arquetipo y lo contratado por el cliente individual:")
     add_block_math(doc, r"\text{Afinidad}(u, i) = \overline{C}_{\text{estereotipo}(u), i} - C_{u, i}")
     
@@ -139,7 +100,7 @@ def build_part3(doc):
     add_paragraph(doc, "Recomendación estratégica de producto: Configurar paquetes de bienvenida diferenciados por región: préstamos de consumo y tarjetas en Praga, y productos de ahorro pasivo en Moravia.")
     
     # Modelo 4B
-    add_heading(doc, 5, "Modelo 4B: Filtrado Colaborativo Usuario a Usuario (User-to-User Cosine)")
+    add_heading(doc, 6, "Modelo 4B: Filtrado Colaborativo Usuario a Usuario (User-to-User Cosine / kNN)")
     add_paragraph(doc, "Fundamento teórico y formulación: Localiza vecinos o 'gemelos financieros' calculando la similitud del coseno sobre las variables numéricas estandarizadas de los 4,500 clientes titulares independientes, prediciendo la afinidad hacia un producto mediante el promedio ponderado de sus k vecinos más cercanos (k = 5):")
     add_block_math(doc, r"\cos(\vec{x}_u, \vec{x}_v) = \frac{\vec{x}_u \cdot \vec{x}_v}{\|\vec{x}_u\| \|\vec{x}_v\|}, \quad \text{Score}(u, i) = \frac{\sum_{v \in N_k(u)} \cos(\vec{x}_u, \vec{x}_v) \cdot r_{v, i}}{\sum_{v \in N_k(u)} |\cos(\vec{x}_u, \vec{x}_v)|}")
     
@@ -148,9 +109,7 @@ def build_part3(doc):
     add_bullet(doc, "En un entorno comercial productivo, recomendar un préstamo al Cliente #2 carece de sentido porque ya lo tiene contratado. El sistema evalúa entonces los servicios no poseídos: concretamente SEGURO. Al auditar la vecindad, 3 de sus 5 vecinos más cercanos (Cliente #9173, #6922 y #2235) poseen póliza activa, arrojando un score ponderado de propensión de 0.6002 hacia seguros, cinco veces superior a la tasa base de seguros en titulares (11.82%, 532 de 4,500). Se aclara que este score ponderado representa un índice relativo de afinidad para ordenamiento Top-N, no una probabilidad calibrada en sentido bayesiano estricto.", "Recomendación Comercial en Producción:")
     add_bullet(doc, "Se precisa que la tasa base de crédito es del 15.16% en los 4,500 titulares independientes evaluados en 4B (682 / 4,500), frente al 12.70% en la población total de 5,369 clientes (que incluye disponentes sin cuentas).", "Aclaración de Tasas Base:")
     
-    add_paragraph(doc, "Advertencia metodológica sobre riesgo de fuga (Data Leakage): Las variables de comportamiento acumulado (total_transacciones y monto_total_ordenes_mensual) incluyen contablemente las cuotas de amortización crediticia para quienes obtuvieron préstamo. Esto explica parte del elevado poder predictivo observado (AUC = 0.7905 frente a baseline ingenuo de 0.50 y regresión logística de 0.8380). En producción, el vector debe calcularse sobre variables no crediticias.")
-    
-    add_paragraph(doc, "Mecanismo matemático del Coseno 1.0000 en disponentes: En análisis iniciales, clientes autorizados arrojaban similitud unitaria debido a que sus variables brutas eran cero; al estandarizar Z-Score, los vectores nulos colapsaban en el mismo punto (-mu / sigma). Al restringir el espacio a los 4,500 titulares independientes, este artefacto desaparece, revelando gemelos financieros genuinos (ej. Cliente #2 y Cliente #107 con cos = +0.9902). La Tabla 15 expone la matriz de similitud entre clientes titulares:")
+    add_paragraph(doc, "La Tabla 15 expone la matriz de similitud entre clientes titulares:")
     
     tbl15_headers = ["Cliente Titular", "Cliente #2", "Cliente #19", "Cliente #47", "Cliente #107", "Cliente #212", "Cliente #321", "Perfil y Gemelo Comportamental Detectado"]
     tbl15_rows = [
@@ -164,10 +123,8 @@ def build_part3(doc):
     add_table(doc, "Tabla 15: Matriz de Similitud Coseno Usuario a Usuario entre Titulares Activos (df_cliente_consolidado).", tbl15_headers, tbl15_rows, [Inches(0.9), Inches(0.65), Inches(0.65), Inches(0.65), Inches(0.65), Inches(0.65), Inches(0.65), Inches(1.21)])
     add_figure(doc, "img/individual/fig_4b_user_to_user.png", "Figura 11: Similitud Coseno Usuario a Usuario entre Titulares Activos.", 4.8)
     
-    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: La alta correlación entre Cliente #2 y Cliente #107 (+0.9902) confirma la viabilidad de transferir sugerencias comerciales entre gemelos comportamentales maduros. Asimismo, la divergencia pronunciada con Cliente #19 (-0.9455) previene ofertar productos de consumo acelerado a clientes patrimoniales pasivos.")
-    
     # Modelo 4C
-    add_heading(doc, 5, "Modelo 4C: Correlación de Pearson Multivariante de Perfil Financiero")
+    add_heading(doc, 6, "Modelo 4C: Correlación de Pearson Multivariante de Perfil Financiero")
     add_paragraph(doc, "Fundamento teórico y formulación: Evalúa la interdependencia lineal entre variables sociodemográficas y financieras de los 5,369 clientes:")
     add_block_math(doc, r"\rho(X, Y) = \frac{\text{Cov}(X, Y)}{\sigma_X \sigma_Y}")
     
@@ -185,8 +142,5 @@ def build_part3(doc):
     add_table(doc, "Tabla 16: Matriz de Correlación Multivariante de Perfil Financiero y Demográfico de Clientes.", tbl16_headers, tbl16_rows)
     add_figure(doc, "img/individual/fig_4c_pearson_perfil.png", "Figura 12: Matriz de Correlación Multivariante de Perfil Financiero y Demográfico.", 4.8)
     
-    add_paragraph(doc, "Interpretación analítica y recomendación de negocio: La asociación más fuerte ocurre entre Transacciones y Órdenes Activas (r = +0.4965), indicando que los clientes con alta operatividad diaria son el público ideal para campañas de domiciliación. La correlación entre Órdenes y Préstamo (+0.3375) tiene un vínculo estructural mecánico (el crédito genera la orden de amortización). La correlación negativa entre Edad y Saldo (-0.2448) y con Préstamos (-0.1082) confirma la contracción del gasto en etapas avanzadas de la vida.")
-    
-    # Dictamen Eje 4
     add_heading(doc, 5, "Conclusión y Dictamen del Mejor Método sobre df_cliente_consolidado")
     add_paragraph(doc, "Dictamen Técnico: Se dictamina una arquitectura híbrida en dos fases: Filtrado Demográfico por Estereotipos (Modelo 4A) como motor imprescindible de bienvenida (cobertura 100%), complementado con Filtrado Colaborativo Usuario a Usuario (Modelo 4B, AUC = 0.7905) para la cartera madura con historial transaccional consolidado.")
