@@ -50,7 +50,7 @@ Tomando como base los cuatro DataFrames analíticos limpios y consolidados de la
 ### 2.5 Listado de equipos, materiales y recursos
 
 #### Equipos y materiales generales:
-* **Hardware:** Computador personal con arquitectura x86_64, 16 GB de memoria RAM, procesador multi-núcleo de alta velocidad y sistema operativo Microsoft Windows 11.
+* **Hardware:** Computador personal ASUS ROG Zephyrus G16 (GU605CR) con arquitectura x86_64, 32 GB de memoria RAM, procesador Intel Core Ultra 9 285H (16 núcleos a 2.90 GHz), GPU dedicada NVIDIA GeForce RTX 5070 Ti Laptop y sistema operativo Microsoft Windows 11 Pro de 64 bits.
 * **Software y Entorno Científico:** Entorno de desarrollo integrado VS Code, terminal PowerShell y distribución científica Python 3.12 con librerías analíticas especializadas: Pandas (manipulación de datos), NumPy (álgebra matricial), Scikit-Learn (vectorización y métricas de evaluación), SciPy (tests estadísticos y distribuciones), Matplotlib y Seaborn (renderizado gráfico en alta resolución a 300 DPI).
 * **Conjuntos de Datos:** Los cuatro DataFrames analíticos limpios y consolidados de la entidad bancaria Financial_ijs (PKDD'99 Financial Discovery Challenge) en formatos CSV estructurados y comprimidos.
 * **Herramientas de Auditoría:** Microsoft Excel para la auditoría manual independiente, verificación cruzada de sumas y comprobación de productos matriciales.

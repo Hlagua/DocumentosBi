@@ -71,7 +71,7 @@ def build_part1(doc):
     # 2.5 Equipos y Materiales
     add_heading(doc, 3, "2.5 Listado de equipos, materiales y recursos")
     add_heading(doc, 4, "Listado de equipos y materiales generales empleados en la guía práctica:")
-    add_bullet(doc, "Computador personal con arquitectura x86_64, 16 GB de memoria RAM, procesador multi-núcleo de alta velocidad y sistema operativo Microsoft Windows 11.", "Hardware:")
+    add_bullet(doc, "Computador personal ASUS ROG Zephyrus G16 (GU605CR) con arquitectura x86_64, 32 GB de memoria RAM, procesador Intel Core Ultra 9 285H (16 núcleos a 2.90 GHz), GPU dedicada NVIDIA GeForce RTX 5070 Ti Laptop y sistema operativo Microsoft Windows 11 Pro de 64 bits.", "Hardware:")
     add_bullet(doc, "Entorno de desarrollo integrado VS Code, terminal PowerShell y distribución científica Python 3.12 con librerías analíticas especializadas: Pandas (manipulación de datos), NumPy (álgebra matricial), Scikit-Learn (vectorización y métricas de evaluación), SciPy (tests estadísticos y distribuciones), Matplotlib y Seaborn (renderizado gráfico en alta resolución a 300 DPI).", "Software y Entorno Científico:")
     add_bullet(doc, "Los cuatro DataFrames analíticos limpios y consolidados de la entidad bancaria Financial_ijs (PKDD'99 Financial Discovery Challenge) en formatos CSV estructurados y comprimidos.", "Conjuntos de Datos:")
     add_bullet(doc, "Microsoft Excel para la auditoría manual independiente, verificación cruzada de sumas y comprobación de productos matriciales.", "Herramientas de Auditoría:")
