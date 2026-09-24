@@ -151,6 +151,7 @@ def enriquecer_dim_cliente(cnxn):
         ("tiene_prestamo", "BIT NOT NULL DEFAULT 0"),
         ("total_ordenes_activas", "INT NOT NULL DEFAULT 0"),
         ("saldo_promedio", "DECIMAL(12,2) NULL"),
+        ("calificacion_pago_desc", "VARCHAR(20) NOT NULL DEFAULT 'Sin evaluar'"),
         ("fecha_enriquecimiento", "DATETIME NULL")
     ]
     for col_name, col_type in columnas_cli:
@@ -240,6 +241,11 @@ def enriquecer_dim_cliente(cnxn):
         c.tiene_prestamo = s.tiene_prestamo,
         c.total_ordenes_activas = s.total_ordenes_activas,
         c.saldo_promedio = s.saldo_promedio,
+        c.calificacion_pago_desc = CASE 
+            WHEN c.etiqueta_buen_pagador = 1 THEN 'Buen Pagador'
+            WHEN c.etiqueta_buen_pagador = 0 THEN 'Mal Pagador'
+            ELSE 'Sin evaluar'
+        END,
         c.fecha_enriquecimiento = GETDATE()
     FROM Dim_Cliente c
     INNER JOIN #StagingClienteEnriquecido s ON c.id_cliente_bk = s.id_cliente_bk;

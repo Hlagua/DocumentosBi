@@ -57,8 +57,18 @@ BEGIN
     ALTER TABLE Dim_Cliente ADD tiene_prestamo BIT NOT NULL DEFAULT 0;
     ALTER TABLE Dim_Cliente ADD total_ordenes_activas INT NOT NULL DEFAULT 0;
     ALTER TABLE Dim_Cliente ADD saldo_promedio DECIMAL(12,2) NULL;
+    ALTER TABLE Dim_Cliente ADD calificacion_pago_desc VARCHAR(20) NOT NULL DEFAULT 'Sin evaluar';
     ALTER TABLE Dim_Cliente ADD fecha_enriquecimiento DATETIME NULL;
 END
+GO
+
+-- Homologar calificacion_pago_desc segun etiqueta_buen_pagador
+UPDATE Dim_Cliente
+SET calificacion_pago_desc = CASE 
+    WHEN etiqueta_buen_pagador = 1 THEN 'Buen Pagador'
+    WHEN etiqueta_buen_pagador = 0 THEN 'Mal Pagador'
+    ELSE 'Sin evaluar'
+END;
 GO
 
 PRINT 'Estructura dimensional preparada y enriquecida para Closed-Loop BI.';
