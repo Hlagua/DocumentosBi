@@ -1,0 +1,69 @@
+{
+  "name": "Dashboard_Financial_Mongo_Model",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "es-EC",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "es-EC",
+    "tables": [
+      {
+        "name": "_Medidas",
+        "description": "Tabla de Medidas DAX Centralizadas para Auditor\u00eda Bancaria",
+        "columns": [
+          {
+            "name": "M\u00e9trica",
+            "dataType": "string",
+            "isCalculated": true,
+            "expression": "\"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\""
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Cartera Colocada",
+            "expression": "CALCULATE(SUM(Fact_Prestamos[monto]))",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "description": "Total de cartera colocado en 682 contratos: $103,261,740.00"
+          },
+          {
+            "name": "Total Dep\u00f3sitos Captados",
+            "expression": "CALCULATE(SUM(vw_PBI_Saldo_Final_Cuenta[saldo_cierre_1998]))",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "description": "Saldo final al 31/12/1998 de las 4,500 cuentas: $197,140,434.00"
+          },
+          {
+            "name": "Ratio Absorci\u00f3n Crediticia",
+            "expression": "DIVIDE([Total Cartera Colocada], [Total Dep\u00f3sitos Captados], 0)",
+            "formatString": "0.00%",
+            "description": "Ratio de absorci\u00f3n nacional: 52.38%"
+          },
+          {
+            "name": "Tasa Morosidad Activa Vigente",
+            "expression": "VAR NumMoraD = CALCULATE(COUNTROWS(Fact_Prestamos), Fact_Prestamos[estado] = \"D\") VAR DenVigentes = CALCULATE(COUNTROWS(Fact_Prestamos), Fact_Prestamos[estado] IN {\"C\", \"D\"}) RETURN DIVIDE(NumMoraD, DenVigentes, 0)",
+            "formatString": "0.00%",
+            "description": "Tasa de morosidad sobre pr\u00e9stamos vigentes (C+D): 10.04%"
+          },
+          {
+            "name": "Total Transaccionado",
+            "expression": "CALCULATE(SUM(vw_PBI_Trans_Anual_Cuenta[monto_total]))",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "description": "Monto acumulado en 1,056,320 operaciones: $6,257,862,197.00"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"_Medidas\"]"
+      },
+      {
+        "name": "PersistenciaPoliglota",
+        "value": "MongoDB NoSQL (Financial)"
+      }
+    ]
+  }
+}
