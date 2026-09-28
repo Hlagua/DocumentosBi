@@ -206,7 +206,7 @@ def tabla_medidas(lista_medidas):
 def modelo_base(nombre, tablas, relaciones, expresiones):
     return {
         "name": nombre,
-        "compatibilityLevel": 1550,
+        "compatibilityLevel": 1606,
         "model": {
             "culture": "es-ES",
             "dataAccessOptions": {"legacyRedirects": True, "returnErrorValuesAsNull": True},
