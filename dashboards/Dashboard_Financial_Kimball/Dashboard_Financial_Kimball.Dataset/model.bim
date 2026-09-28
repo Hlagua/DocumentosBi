@@ -1,86 +1,1195 @@
 {
-  "name": "Dashboard_Financial_Kimball_Model",
+  "name": "Dashboard_Financial_Kimball",
   "compatibilityLevel": 1550,
   "model": {
-    "culture": "es-EC",
+    "culture": "es-ES",
     "dataAccessOptions": {
       "legacyRedirects": true,
       "returnErrorValuesAsNull": true
     },
     "defaultPowerBIDataSourceVersion": "powerBI_V3",
-    "sourceQueryCulture": "es-EC",
+    "sourceQueryCulture": "es-ES",
     "tables": [
       {
+        "name": "Dim_Tiempo",
+        "columns": [
+          {
+            "name": "sk_tiempo",
+            "dataType": "int64",
+            "sourceColumn": "sk_tiempo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "fecha",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "mes",
+            "dataType": "int64",
+            "sourceColumn": "mes",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nombre_mes",
+            "dataType": "string",
+            "sourceColumn": "nombre_mes",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Tiempo",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Tiempo\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_tiempo\", \"fecha\", \"anio\", \"mes\", \"nombre_mes\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_tiempo\", Int64.Type}, {\"fecha\", type datetime}, {\"anio\", Int64.Type}, {\"mes\", Int64.Type}, {\"nombre_mes\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Anio",
+        "columns": [
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Anio",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tiempo = Origen{[Schema=\"dbo\", Item=\"Dim_Tiempo\"]}[Data],",
+                "    Anios = Table.Distinct(Table.SelectColumns(Tiempo, {\"anio\"})),",
+                "    Tipos = Table.TransformColumnTypes(Anios, {{\"anio\", Int64.Type}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Distrito",
+        "columns": [
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_distrito_bk",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito_bk",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nombre_distrito",
+            "dataType": "string",
+            "sourceColumn": "nombre_distrito",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "region",
+            "dataType": "string",
+            "sourceColumn": "region",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "poblacion",
+            "dataType": "int64",
+            "sourceColumn": "poblacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "salario_promedio",
+            "dataType": "double",
+            "sourceColumn": "salario_promedio",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "tasa_desempleo",
+            "dataType": "double",
+            "sourceColumn": "tasa_desempleo",
+            "summarizeBy": "none",
+            "formatString": "0.00"
+          },
+          {
+            "name": "tasa_criminalidad",
+            "dataType": "double",
+            "sourceColumn": "tasa_criminalidad",
+            "summarizeBy": "none",
+            "formatString": "#,0"
+          },
+          {
+            "type": "calculated",
+            "name": "Macro Region",
+            "dataType": "string",
+            "expression": "SWITCH(TRUE(), Dim_Distrito[region] = \"Prague\", \"Praga\", CONTAINSSTRING(Dim_Distrito[region], \"Moravia\"), \"Moravia\", \"Bohemia\")",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Distrito",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Distrito\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_distrito\", \"id_distrito_bk\", \"nombre_distrito\", \"region\", \"poblacion\", \"salario_promedio\", \"tasa_desempleo\", \"tasa_criminalidad\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_distrito\", Int64.Type}, {\"id_distrito_bk\", Int64.Type}, {\"nombre_distrito\", type text}, {\"region\", type text}, {\"poblacion\", Int64.Type}, {\"salario_promedio\", type number}, {\"tasa_desempleo\", type number}, {\"tasa_criminalidad\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Cliente",
+        "columns": [
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_cliente_bk",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente_bk",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "sexo",
+            "dataType": "string",
+            "sourceColumn": "sexo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "edad_corte",
+            "dataType": "int64",
+            "sourceColumn": "edad_corte",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tipo_disposicion",
+            "dataType": "string",
+            "sourceColumn": "tipo_disposicion",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Cliente",
+            "dataType": "string",
+            "expression": "\"Cliente \" & Dim_Cliente[id_cliente_bk]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Segmento Edad",
+            "dataType": "string",
+            "expression": "SWITCH(TRUE(), Dim_Cliente[edad_corte] <= 25, \"Joven (<=25)\", Dim_Cliente[edad_corte] <= 40, \"Adulto joven (26-40)\", Dim_Cliente[edad_corte] <= 60, \"Adulto (41-60)\", \"Mayor (>60)\")",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Cliente",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Cliente\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cliente\", \"id_cliente_bk\", \"sexo\", \"edad_corte\", \"tipo_disposicion\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cliente\", Int64.Type}, {\"id_cliente_bk\", Int64.Type}, {\"sexo\", type text}, {\"edad_corte\", Int64.Type}, {\"tipo_disposicion\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Cuenta",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_cuenta_bk",
+            "dataType": "int64",
+            "sourceColumn": "id_cuenta_bk",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "frecuencia_emision_estado",
+            "dataType": "string",
+            "sourceColumn": "frecuencia_emision_estado",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Cuenta",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Cuenta\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"id_cuenta_bk\", \"frecuencia_emision_estado\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"id_cuenta_bk\", Int64.Type}, {\"frecuencia_emision_estado\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Estado_Prestamo",
+        "columns": [
+          {
+            "name": "sk_estado_prestamo",
+            "dataType": "int64",
+            "sourceColumn": "sk_estado_prestamo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "codigo_estado",
+            "dataType": "string",
+            "sourceColumn": "codigo_estado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "condicion",
+            "dataType": "string",
+            "sourceColumn": "condicion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "descripcion",
+            "dataType": "string",
+            "sourceColumn": "descripcion",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Estado_Prestamo",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Estado_Prestamo\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_estado_prestamo\", \"codigo_estado\", \"condicion\", \"descripcion\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_estado_prestamo\", Int64.Type}, {\"codigo_estado\", type text}, {\"condicion\", type text}, {\"descripcion\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Operacion",
+        "columns": [
+          {
+            "name": "sk_operacion",
+            "dataType": "int64",
+            "sourceColumn": "sk_operacion",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "tipo_operacion_original",
+            "dataType": "string",
+            "sourceColumn": "tipo_operacion_original",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tipo_operacion_traducido",
+            "dataType": "string",
+            "sourceColumn": "tipo_operacion_traducido",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "canal",
+            "dataType": "string",
+            "sourceColumn": "canal",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Operacion",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Operacion\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_operacion\", \"tipo_operacion_original\", \"tipo_operacion_traducido\", \"canal\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_operacion\", Int64.Type}, {\"tipo_operacion_original\", type text}, {\"tipo_operacion_traducido\", type text}, {\"canal\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Orden",
+        "columns": [
+          {
+            "name": "sk_orden_tipo",
+            "dataType": "int64",
+            "sourceColumn": "sk_orden_tipo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "k_symbol_original",
+            "dataType": "string",
+            "sourceColumn": "k_symbol_original",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "categoria_orden_traducida",
+            "dataType": "string",
+            "sourceColumn": "categoria_orden_traducida",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Orden",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Orden\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_orden_tipo\", \"k_symbol_original\", \"categoria_orden_traducida\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_orden_tipo\", Int64.Type}, {\"k_symbol_original\", type text}, {\"categoria_orden_traducida\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fact_Prestamos",
+        "columns": [
+          {
+            "name": "sk_prestamo",
+            "dataType": "int64",
+            "sourceColumn": "sk_prestamo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_tiempo",
+            "dataType": "int64",
+            "sourceColumn": "sk_tiempo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_estado_prestamo",
+            "dataType": "int64",
+            "sourceColumn": "sk_estado_prestamo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_prestamo_bk",
+            "dataType": "int64",
+            "sourceColumn": "id_prestamo_bk",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_prestamo",
+            "dataType": "double",
+            "sourceColumn": "monto_prestamo",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "plazo_meses",
+            "dataType": "int64",
+            "sourceColumn": "plazo_meses",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "pago_mensual",
+            "dataType": "double",
+            "sourceColumn": "pago_mensual",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "saldo_pendiente_estimado",
+            "dataType": "double",
+            "sourceColumn": "saldo_pendiente_estimado",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Fact_Prestamos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Fact_Prestamos\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_prestamo\", \"sk_tiempo\", \"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"sk_estado_prestamo\", \"id_prestamo_bk\", \"monto_prestamo\", \"plazo_meses\", \"pago_mensual\", \"saldo_pendiente_estimado\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_prestamo\", Int64.Type}, {\"sk_tiempo\", Int64.Type}, {\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"sk_estado_prestamo\", Int64.Type}, {\"id_prestamo_bk\", Int64.Type}, {\"monto_prestamo\", type number}, {\"plazo_meses\", Int64.Type}, {\"pago_mensual\", type number}, {\"saldo_pendiente_estimado\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fact_Ordenes",
+        "columns": [
+          {
+            "name": "sk_orden",
+            "dataType": "int64",
+            "sourceColumn": "sk_orden",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_tiempo",
+            "dataType": "int64",
+            "sourceColumn": "sk_tiempo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_orden_tipo",
+            "dataType": "int64",
+            "sourceColumn": "sk_orden_tipo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_orden_bk",
+            "dataType": "int64",
+            "sourceColumn": "id_orden_bk",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_orden",
+            "dataType": "double",
+            "sourceColumn": "monto_orden",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Fact_Ordenes",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Fact_Ordenes\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_orden\", \"sk_tiempo\", \"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"sk_orden_tipo\", \"id_orden_bk\", \"monto_orden\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_orden\", Int64.Type}, {\"sk_tiempo\", Int64.Type}, {\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"sk_orden_tipo\", Int64.Type}, {\"id_orden_bk\", Int64.Type}, {\"monto_orden\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "vw_PBI_Trans_Anual_Cuenta",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_operacion",
+            "dataType": "int64",
+            "sourceColumn": "sk_operacion",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "num_transacciones",
+            "dataType": "int64",
+            "sourceColumn": "num_transacciones",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_total",
+            "dataType": "double",
+            "sourceColumn": "monto_total",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "suma_cuadrados",
+            "dataType": "double",
+            "sourceColumn": "suma_cuadrados",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "saldo_promedio",
+            "dataType": "double",
+            "sourceColumn": "saldo_promedio",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_PBI_Trans_Anual_Cuenta",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"vw_PBI_Trans_Anual_Cuenta\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"sk_operacion\", \"anio\", \"num_transacciones\", \"monto_total\", \"suma_cuadrados\", \"saldo_promedio\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"sk_operacion\", Int64.Type}, {\"anio\", Int64.Type}, {\"num_transacciones\", Int64.Type}, {\"monto_total\", type number}, {\"suma_cuadrados\", type number}, {\"saldo_promedio\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "vw_PBI_Saldo_Final_Cuenta",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "fecha_ultimo_movimiento",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha_ultimo_movimiento",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "saldo_final",
+            "dataType": "double",
+            "sourceColumn": "saldo_final",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_PBI_Saldo_Final_Cuenta",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"vw_PBI_Saldo_Final_Cuenta\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"fecha_ultimo_movimiento\", \"saldo_final\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"fecha_ultimo_movimiento\", type datetime}, {\"saldo_final\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
         "name": "_Medidas",
-        "lineageTag": "640bb767-455b-4295-9877-c96bfed8089a",
+        "columns": [
+          {
+            "name": "Medidas",
+            "dataType": "string",
+            "isHidden": true,
+            "sourceColumn": "Medidas",
+            "summarizeBy": "none"
+          }
+        ],
         "partitions": [
           {
             "name": "_Medidas",
             "mode": "import",
             "source": {
-              "type": "calculated",
-              "expression": "Row(\"Info\", \"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\")"
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = #table(type table [Medidas = text], {{\"Guía 07\"}})",
+                "in",
+                "    Origen"
+              ]
             }
-          }
-        ],
-        "columns": [
-          {
-            "name": "Info",
-            "dataType": "string",
-            "isNameInferred": true,
-            "isDataTypeInferred": true,
-            "sourceColumn": "[Info]",
-            "lineageTag": "ce2114d4-abb5-40cc-a88e-ead7893945cf",
-            "summarizeBy": "none"
           }
         ],
         "measures": [
           {
-            "name": "Total Cartera Colocada",
-            "expression": "103261740.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "7d2f8cf6-01af-48fd-98bd-178b391dcca9",
-            "description": "Total cartera: $103,261,740.00 (682 cr\u00e9ditos)"
+            "name": "Cartera Total",
+            "expression": "SUM(Fact_Prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
           },
           {
-            "name": "Total Dep\u00f3sitos Captados",
-            "expression": "197140434.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "81f41264-1062-4843-bccd-334ff5b73202",
-            "description": "Saldo final al corte 31/12/1998: $197,140,434.00 (4,500 cuentas)"
+            "name": "Num Prestamos",
+            "expression": "COUNTROWS(Fact_Prestamos)",
+            "formatString": "#,0"
           },
           {
-            "name": "Ratio Absorci\u00f3n Crediticia",
-            "expression": "DIVIDE([Total Cartera Colocada], [Total Dep\u00f3sitos Captados], 0)",
-            "formatString": "0.00%",
-            "lineageTag": "f5d172d4-a5a7-429b-b087-59dae4f7db9e",
-            "description": "Ratio de absorci\u00f3n nacional: 52.38%"
+            "name": "Prestamos en Mora",
+            "expression": "CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = \"D\")",
+            "formatString": "#,0"
           },
           {
-            "name": "Tasa Morosidad Activa Vigente",
-            "expression": "0.100446",
-            "formatString": "0.00%",
-            "lineageTag": "65aea2f9-3519-4b8c-9233-e12696dd07fb",
-            "description": "Tasa de mora sobre cr\u00e9ditos vigentes (45 D / 448 C+D): 10.04%"
+            "name": "Prestamos Vigentes",
+            "expression": "CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {\"C\", \"D\"})",
+            "formatString": "#,0"
           },
           {
-            "name": "Total Transaccionado",
-            "expression": "6257862197.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "feb7b35a-8107-40ca-aa80-01bc7a872f31",
-            "description": "Volumen en 1,056,320 operaciones: $6,257,862,197.00"
+            "name": "Prestamos Incumplidos",
+            "expression": "CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = \"B\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Prestamos Cerrados",
+            "expression": "CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {\"A\", \"B\"})",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Tasa Mora Vigente",
+            "expression": "DIVIDE([Prestamos en Mora], [Prestamos Vigentes])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Tasa Incumplimiento",
+            "expression": "DIVIDE([Prestamos Incumplidos], [Prestamos Cerrados])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Monto en Riesgo",
+            "expression": "CALCULATE(SUM(Fact_Prestamos[saldo_pendiente_estimado]), Dim_Estado_Prestamo[codigo_estado] IN {\"B\", \"D\"})",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto Incumplido",
+            "expression": "CALCULATE([Cartera Total], Dim_Estado_Prestamo[codigo_estado] = \"B\")",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto Promedio Prestamo",
+            "expression": "AVERAGE(Fact_Prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Desv Est Prestamo",
+            "expression": "STDEV.S(Fact_Prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Prestamo Limite Superior",
+            "expression": "[Monto Promedio Prestamo] + [Desv Est Prestamo]",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Prestamo Limite Inferior",
+            "expression": "[Monto Promedio Prestamo] - [Desv Est Prestamo]",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "EE Prestamo",
+            "expression": "DIVIDE([Desv Est Prestamo], SQRT([Num Prestamos]))",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Cuota Mensual",
+            "expression": "SUM(Fact_Prestamos[pago_mensual])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Plazo Meses",
+            "expression": "MAX(Fact_Prestamos[plazo_meses])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Saldo Pendiente",
+            "expression": "SUM(Fact_Prestamos[saldo_pendiente_estimado])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Distritos con Prestamos",
+            "expression": "DISTINCTCOUNT(Fact_Prestamos[sk_distrito])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Clientes con Impago",
+            "expression": "CALCULATE(DISTINCTCOUNT(Fact_Prestamos[sk_cliente]), Dim_Estado_Prestamo[codigo_estado] = \"B\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Saldo Depositos",
+            "expression": "SUM(vw_PBI_Saldo_Final_Cuenta[saldo_final])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Ratio Absorcion",
+            "expression": "DIVIDE(CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo)), [Saldo Depositos])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Liquidez Libre",
+            "expression": "[Saldo Depositos] - CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo))",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Volumen Transaccionado",
+            "expression": "SUM(vw_PBI_Trans_Anual_Cuenta[monto_total])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Num Transacciones",
+            "expression": "SUM(vw_PBI_Trans_Anual_Cuenta[num_transacciones])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Ticket Promedio Transaccion",
+            "expression": "DIVIDE([Volumen Transaccionado], [Num Transacciones])",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Desv Est Transaccion",
+            "expression": "VAR n = [Num Transacciones] VAR s = [Volumen Transaccionado] VAR sq = SUM(vw_PBI_Trans_Anual_Cuenta[suma_cuadrados]) RETURN SQRT(DIVIDE(sq - s * s / n, n - 1))",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Transaccion Limite Superior",
+            "expression": "[Ticket Promedio Transaccion] + [Desv Est Transaccion]",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Transaccion Limite Inferior",
+            "expression": "[Ticket Promedio Transaccion] - [Desv Est Transaccion]",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "EE Transaccion",
+            "expression": "DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Saldo Promedio Historico",
+            "expression": "DIVIDE(SUMX(vw_PBI_Trans_Anual_Cuenta, vw_PBI_Trans_Anual_Cuenta[saldo_promedio] * vw_PBI_Trans_Anual_Cuenta[num_transacciones]), [Num Transacciones])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Compromiso Ordenes",
+            "expression": "SUM(Fact_Ordenes[monto_orden])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Num Ordenes",
+            "expression": "COUNTROWS(Fact_Ordenes)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Indice Saturacion",
+            "expression": "DIVIDE([Compromiso Ordenes], CALCULATE([Saldo Promedio Historico], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo), REMOVEFILTERS(Dim_Operacion)))",
+            "formatString": "0.00"
+          },
+          {
+            "name": "Indice Saturacion Alerta",
+            "expression": "VAR i = [Indice Saturacion] RETURN IF(i > 0.5, i)",
+            "formatString": "0.00"
+          },
+          {
+            "name": "Compromiso Alerta",
+            "expression": "IF([Indice Saturacion] > 0.5, [Compromiso Ordenes])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Saldo Promedio Alerta",
+            "expression": "IF([Indice Saturacion] > 0.5, [Saldo Promedio Historico])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Clientes Saturados",
+            "expression": "COUNTROWS(FILTER(VALUES(Dim_Cliente[sk_cliente]), [Indice Saturacion] > 0.5))",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Clientes Totales",
+            "expression": "COUNTROWS(Dim_Cliente)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "EE Mora",
+            "expression": "SQRT(DIVIDE([Tasa Mora Vigente] * (1 - [Tasa Mora Vigente]), [Prestamos Vigentes]))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Mora Limite Superior",
+            "expression": "[Tasa Mora Vigente] + [EE Mora]",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Mora Limite Inferior",
+            "expression": "MAX(0, [Tasa Mora Vigente] - [EE Mora])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "EE Incumplimiento",
+            "expression": "SQRT(DIVIDE([Tasa Incumplimiento] * (1 - [Tasa Incumplimiento]), [Prestamos Cerrados]))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Incumplimiento Limite Superior",
+            "expression": "[Tasa Incumplimiento] + [EE Incumplimiento]",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Incumplimiento Limite Inferior",
+            "expression": "MAX(0, [Tasa Incumplimiento] - [EE Incumplimiento])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Ordenes",
+            "expression": "DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS(Dim_Orden)))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Volumen",
+            "expression": "DIVIDE([Volumen Transaccionado], CALCULATE([Volumen Transaccionado], REMOVEFILTERS(Dim_Operacion)))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Cartera",
+            "expression": "DIVIDE([Cartera Total], CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Distrito)))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Region Mayor Mora",
+            "expression": "VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Tasa Mora Vigente], DESC) RETURN MAXX(t, Dim_Distrito[region]) & \" · \" & FORMAT(MAXX(t, [Tasa Mora Vigente]), \"0.00%\")"
+          },
+          {
+            "name": "Region Mayor Cartera",
+            "expression": "VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Cartera Total], DESC) RETURN MAXX(t, Dim_Distrito[region]) & \" · \" & FORMAT(MAXX(t, [Pct Cartera]), \"0.0%\")"
+          },
+          {
+            "name": "Region Mayor Absorcion",
+            "expression": "VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Ratio Absorcion], DESC) RETURN MAXX(t, Dim_Distrito[region]) & \" · \" & FORMAT(MAXX(t, [Ratio Absorcion]), \"0.00%\")"
+          },
+          {
+            "name": "Operacion Mayor Volumen",
+            "expression": "VAR t = TOPN(1, VALUES(Dim_Operacion[tipo_operacion_traducido]), [Volumen Transaccionado], DESC) RETURN MAXX(t, Dim_Operacion[tipo_operacion_traducido]) & \" · \" & FORMAT(MAXX(t, [Pct Volumen]), \"0.00%\")"
+          },
+          {
+            "name": "Categoria Principal Orden",
+            "expression": "VAR t = TOPN(1, VALUES(Dim_Orden[categoria_orden_traducida]), [Num Ordenes], DESC) RETURN MAXX(t, Dim_Orden[categoria_orden_traducida]) & \" · \" & FORMAT(MAXX(t, [Pct Ordenes]), \"0.00%\")"
+          },
+          {
+            "name": "Titulo Distrito",
+            "expression": "\"Detalle del distrito: \" & SELECTEDVALUE(Dim_Distrito[nombre_distrito], \"(varios)\")"
+          },
+          {
+            "name": "Titulo Cliente",
+            "expression": "\"Ficha 360 · \" & SELECTEDVALUE(Dim_Cliente[Cliente], \"(varios clientes)\")"
           }
         ]
       }
     ],
-    "annotations": [
+    "relationships": [
       {
-        "name": "PBI_QueryOrder",
-        "value": "[\"_Medidas\"]"
+        "name": "bd0e598c-9e1f-5df2-b4a9-dece4bf6c23b",
+        "fromTable": "Fact_Prestamos",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
       },
       {
-        "name": "PersistenciaPoliglota",
-        "value": "SQL Server (DM_Financial_Kimball_v2)"
+        "name": "248c2716-0a4f-59f4-ac42-5cd36102328e",
+        "fromTable": "Fact_Prestamos",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "d4634a3d-ad2f-5c75-ba04-b8329906b9bd",
+        "fromTable": "Fact_Prestamos",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "976e6415-a353-5311-8f4e-0d3274455753",
+        "fromTable": "Fact_Ordenes",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "17d8c796-1a9e-5615-b22f-365cb1bf31f7",
+        "fromTable": "Fact_Ordenes",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "818da0c2-49e4-5838-bee1-0f9701dca364",
+        "fromTable": "Fact_Ordenes",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "9d1a745d-41a6-539a-9d04-ddee5340ad48",
+        "fromTable": "vw_PBI_Trans_Anual_Cuenta",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "61c12dba-d7e2-59ad-83b3-d10201b57c7b",
+        "fromTable": "vw_PBI_Trans_Anual_Cuenta",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "388c4909-4bac-5693-bc17-8515aee8c2af",
+        "fromTable": "vw_PBI_Trans_Anual_Cuenta",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "2e7a5c08-4fa9-5f6c-9cb1-539f1c36a662",
+        "fromTable": "vw_PBI_Saldo_Final_Cuenta",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "52fa2aa7-e864-56b8-8684-609f37ccf791",
+        "fromTable": "vw_PBI_Saldo_Final_Cuenta",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "105abb39-c6ee-5b5e-a0b6-dcd478c54a60",
+        "fromTable": "vw_PBI_Saldo_Final_Cuenta",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "89ab726f-0338-52ff-903c-cdc3e1f90e66",
+        "fromTable": "Fact_Prestamos",
+        "fromColumn": "sk_estado_prestamo",
+        "toTable": "Dim_Estado_Prestamo",
+        "toColumn": "sk_estado_prestamo"
+      },
+      {
+        "name": "49fc8930-84cf-532f-977b-1ab6a60a7d49",
+        "fromTable": "Fact_Ordenes",
+        "fromColumn": "sk_orden_tipo",
+        "toTable": "Dim_Orden",
+        "toColumn": "sk_orden_tipo"
+      },
+      {
+        "name": "1151cab2-84a7-54ea-b8c9-f7bf3b9627bd",
+        "fromTable": "vw_PBI_Trans_Anual_Cuenta",
+        "fromColumn": "sk_operacion",
+        "toTable": "Dim_Operacion",
+        "toColumn": "sk_operacion"
+      },
+      {
+        "name": "83a841cf-ce39-5887-b353-71bad3eba2b7",
+        "fromTable": "Fact_Prestamos",
+        "fromColumn": "sk_tiempo",
+        "toTable": "Dim_Tiempo",
+        "toColumn": "sk_tiempo"
+      },
+      {
+        "name": "c97c80c2-ba39-508f-a2ce-6de901c7bc27",
+        "fromTable": "Fact_Ordenes",
+        "fromColumn": "sk_tiempo",
+        "toTable": "Dim_Tiempo",
+        "toColumn": "sk_tiempo",
+        "isActive": false
+      },
+      {
+        "name": "51358d23-2ba7-5154-b878-d71cb5a2f711",
+        "fromTable": "Dim_Tiempo",
+        "fromColumn": "anio",
+        "toTable": "Dim_Anio",
+        "toColumn": "anio"
+      },
+      {
+        "name": "7ca0d207-d191-5342-9736-1cdc48b7467a",
+        "fromTable": "vw_PBI_Trans_Anual_Cuenta",
+        "fromColumn": "anio",
+        "toTable": "Dim_Anio",
+        "toColumn": "anio"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "ServidorSQL",
+        "kind": "m",
+        "expression": "\"(localdb)\\MSSQLLocalDB\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      },
+      {
+        "name": "BaseDatosSQL",
+        "kind": "m",
+        "expression": "\"DM_Financial_Kimball_v2\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
       }
     ]
   }

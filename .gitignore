@@ -3,3 +3,7 @@ __pycache__/
 *$py.class
 .DS_Store
 Thumbs.db
+
+# Power BI Desktop (cache local de los proyectos .pbip)
+**/.pbi/localSettings.json
+**/.pbi/cache.abf

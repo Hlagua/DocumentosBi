@@ -1,0 +1,19 @@
+{
+  "name": "Financial_ijs Guia 07",
+  "dataColors": [
+    "#1565C0",
+    "#00897B",
+    "#F9A825",
+    "#5E35B1",
+    "#EF6C00",
+    "#8E1B1B",
+    "#2E7D32",
+    "#90A4AE"
+  ],
+  "background": "#F3F4F6",
+  "foreground": "#0F2A4A",
+  "tableAccent": "#1565C0",
+  "good": "#2E7D32",
+  "neutral": "#F9A825",
+  "bad": "#EF6C00"
+}

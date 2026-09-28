@@ -1,86 +1,887 @@
 {
-  "name": "Dashboard_Financial_Mongo_Model",
+  "name": "Dashboard_Financial_Mongo",
   "compatibilityLevel": 1550,
   "model": {
-    "culture": "es-EC",
+    "culture": "es-ES",
     "dataAccessOptions": {
       "legacyRedirects": true,
       "returnErrorValuesAsNull": true
     },
     "defaultPowerBIDataSourceVersion": "powerBI_V3",
-    "sourceQueryCulture": "es-EC",
+    "sourceQueryCulture": "es-ES",
     "tables": [
       {
+        "name": "m_distritos",
+        "columns": [
+          {
+            "name": "id_distrito",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nombre_distrito",
+            "dataType": "string",
+            "sourceColumn": "nombre_distrito",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "region",
+            "dataType": "string",
+            "sourceColumn": "region",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "poblacion",
+            "dataType": "int64",
+            "sourceColumn": "poblacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "salario_promedio",
+            "dataType": "double",
+            "sourceColumn": "salario_promedio",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "tasa_desempleo",
+            "dataType": "double",
+            "sourceColumn": "tasa_desempleo",
+            "summarizeBy": "none",
+            "formatString": "0.00"
+          },
+          {
+            "name": "tasa_criminalidad",
+            "dataType": "double",
+            "sourceColumn": "tasa_criminalidad",
+            "summarizeBy": "none",
+            "formatString": "#,0"
+          },
+          {
+            "name": "macro_region",
+            "dataType": "string",
+            "sourceColumn": "macro_region",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_distritos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_distritos\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_distrito\", \"nombre_distrito\", \"region\", \"poblacion\", \"salario_promedio\", \"tasa_desempleo\", \"tasa_criminalidad\", \"macro_region\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_distrito\", Int64.Type}, {\"nombre_distrito\", type text}, {\"region\", type text}, {\"poblacion\", Int64.Type}, {\"salario_promedio\", type number}, {\"tasa_desempleo\", type number}, {\"tasa_criminalidad\", type number}, {\"macro_region\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_clientes",
+        "columns": [
+          {
+            "name": "id_cliente",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "cliente",
+            "dataType": "string",
+            "sourceColumn": "cliente",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "sexo",
+            "dataType": "string",
+            "sourceColumn": "sexo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "edad_corte",
+            "dataType": "int64",
+            "sourceColumn": "edad_corte",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "segmento_edad",
+            "dataType": "string",
+            "sourceColumn": "segmento_edad",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tipo_disposicion",
+            "dataType": "string",
+            "sourceColumn": "tipo_disposicion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "calificacion_pago",
+            "dataType": "string",
+            "sourceColumn": "calificacion_pago",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_clientes",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_clientes\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_cliente\", \"cliente\", \"sexo\", \"edad_corte\", \"segmento_edad\", \"tipo_disposicion\", \"calificacion_pago\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cliente\", Int64.Type}, {\"cliente\", type text}, {\"sexo\", type text}, {\"edad_corte\", Int64.Type}, {\"segmento_edad\", type text}, {\"tipo_disposicion\", type text}, {\"calificacion_pago\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_anios",
+        "columns": [
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_anios",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_anios\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"anio\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"anio\", Int64.Type}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_prestamos",
+        "columns": [
+          {
+            "name": "id_prestamo",
+            "dataType": "int64",
+            "sourceColumn": "id_prestamo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "id_cuenta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cliente",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_distrito",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "fecha_otorgamiento",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha_otorgamiento",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_prestamo",
+            "dataType": "double",
+            "sourceColumn": "monto_prestamo",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "plazo_meses",
+            "dataType": "int64",
+            "sourceColumn": "plazo_meses",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "pago_mensual",
+            "dataType": "double",
+            "sourceColumn": "pago_mensual",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "saldo_pendiente_estimado",
+            "dataType": "double",
+            "sourceColumn": "saldo_pendiente_estimado",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "codigo_estado",
+            "dataType": "string",
+            "sourceColumn": "codigo_estado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "condicion",
+            "dataType": "string",
+            "sourceColumn": "condicion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "descripcion_estado",
+            "dataType": "string",
+            "sourceColumn": "descripcion_estado",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_prestamos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_prestamos\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_prestamo\", \"id_cuenta\", \"id_cliente\", \"id_distrito\", \"fecha_otorgamiento\", \"anio\", \"monto_prestamo\", \"plazo_meses\", \"pago_mensual\", \"saldo_pendiente_estimado\", \"codigo_estado\", \"condicion\", \"descripcion_estado\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_prestamo\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"fecha_otorgamiento\", type datetime}, {\"anio\", Int64.Type}, {\"monto_prestamo\", type number}, {\"plazo_meses\", Int64.Type}, {\"pago_mensual\", type number}, {\"saldo_pendiente_estimado\", type number}, {\"codigo_estado\", type text}, {\"condicion\", type text}, {\"descripcion_estado\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_ordenes",
+        "columns": [
+          {
+            "name": "id_orden",
+            "dataType": "int64",
+            "sourceColumn": "id_orden",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "id_cuenta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cliente",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_distrito",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "k_symbol",
+            "dataType": "string",
+            "sourceColumn": "k_symbol",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "categoria_orden",
+            "dataType": "string",
+            "sourceColumn": "categoria_orden",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_orden",
+            "dataType": "double",
+            "sourceColumn": "monto_orden",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_ordenes",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_ordenes\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_orden\", \"id_cuenta\", \"id_cliente\", \"id_distrito\", \"k_symbol\", \"categoria_orden\", \"monto_orden\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_orden\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"k_symbol\", type text}, {\"categoria_orden\", type text}, {\"monto_orden\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_trans_anual",
+        "columns": [
+          {
+            "name": "id_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "id_cuenta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cliente",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_distrito",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tipo_operacion",
+            "dataType": "string",
+            "sourceColumn": "tipo_operacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "canal",
+            "dataType": "string",
+            "sourceColumn": "canal",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "num_transacciones",
+            "dataType": "int64",
+            "sourceColumn": "num_transacciones",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "monto_total",
+            "dataType": "double",
+            "sourceColumn": "monto_total",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "suma_cuadrados",
+            "dataType": "double",
+            "sourceColumn": "suma_cuadrados",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "saldo_promedio",
+            "dataType": "double",
+            "sourceColumn": "saldo_promedio",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_trans_anual",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_trans_anual\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"id_cliente\", \"id_distrito\", \"anio\", \"tipo_operacion\", \"canal\", \"num_transacciones\", \"monto_total\", \"suma_cuadrados\", \"saldo_promedio\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"anio\", Int64.Type}, {\"tipo_operacion\", type text}, {\"canal\", type text}, {\"num_transacciones\", Int64.Type}, {\"monto_total\", type number}, {\"suma_cuadrados\", type number}, {\"saldo_promedio\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "m_saldo_cuenta",
+        "columns": [
+          {
+            "name": "id_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "id_cuenta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "id_cliente",
+            "dataType": "int64",
+            "sourceColumn": "id_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "id_distrito",
+            "dataType": "int64",
+            "sourceColumn": "id_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "fecha_ultimo_movimiento",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha_ultimo_movimiento",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "saldo_final",
+            "dataType": "double",
+            "sourceColumn": "saldo_final",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "m_saldo_cuenta",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = MongoFinancial,",
+                "    Tabla = Origen{[Name=\"m_saldo_cuenta\"]}[Value],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"id_cliente\", \"id_distrito\", \"fecha_ultimo_movimiento\", \"saldo_final\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"fecha_ultimo_movimiento\", type datetime}, {\"saldo_final\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
         "name": "_Medidas",
-        "lineageTag": "1451cccf-f579-437c-aaf2-31af855b3619",
+        "columns": [
+          {
+            "name": "Medidas",
+            "dataType": "string",
+            "isHidden": true,
+            "sourceColumn": "Medidas",
+            "summarizeBy": "none"
+          }
+        ],
         "partitions": [
           {
             "name": "_Medidas",
             "mode": "import",
             "source": {
-              "type": "calculated",
-              "expression": "Row(\"Info\", \"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\")"
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = #table(type table [Medidas = text], {{\"Guía 07\"}})",
+                "in",
+                "    Origen"
+              ]
             }
-          }
-        ],
-        "columns": [
-          {
-            "name": "Info",
-            "dataType": "string",
-            "isNameInferred": true,
-            "isDataTypeInferred": true,
-            "sourceColumn": "[Info]",
-            "lineageTag": "3b32c4f9-f082-489a-8302-ec2842337795",
-            "summarizeBy": "none"
           }
         ],
         "measures": [
           {
-            "name": "Total Cartera Colocada",
-            "expression": "103261740.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "b449b43d-0a5f-47a8-a28a-050b91126903",
-            "description": "Total cartera: $103,261,740.00 (682 cr\u00e9ditos)"
+            "name": "Cartera Total",
+            "expression": "SUM(m_prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
           },
           {
-            "name": "Total Dep\u00f3sitos Captados",
-            "expression": "197140434.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "7fdade71-94d1-4ad1-998e-617ee5ea46b0",
-            "description": "Saldo final al corte 31/12/1998: $197,140,434.00 (4,500 cuentas)"
+            "name": "Num Prestamos",
+            "expression": "COUNTROWS(m_prestamos)",
+            "formatString": "#,0"
           },
           {
-            "name": "Ratio Absorci\u00f3n Crediticia",
-            "expression": "DIVIDE([Total Cartera Colocada], [Total Dep\u00f3sitos Captados], 0)",
-            "formatString": "0.00%",
-            "lineageTag": "043619d2-005e-4337-a1bb-a4afaaf9d83a",
-            "description": "Ratio de absorci\u00f3n nacional: 52.38%"
+            "name": "Prestamos en Mora",
+            "expression": "CALCULATE([Num Prestamos], m_prestamos[codigo_estado] = \"D\")",
+            "formatString": "#,0"
           },
           {
-            "name": "Tasa Morosidad Activa Vigente",
-            "expression": "0.100446",
-            "formatString": "0.00%",
-            "lineageTag": "f30f39cd-9434-48fb-b8fb-93e740e02f06",
-            "description": "Tasa de mora sobre cr\u00e9ditos vigentes (45 D / 448 C+D): 10.04%"
+            "name": "Prestamos Vigentes",
+            "expression": "CALCULATE([Num Prestamos], m_prestamos[codigo_estado] IN {\"C\", \"D\"})",
+            "formatString": "#,0"
           },
           {
-            "name": "Total Transaccionado",
-            "expression": "6257862197.00",
-            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "lineageTag": "52a16845-368c-4094-9c11-547125cb9000",
-            "description": "Volumen en 1,056,320 operaciones: $6,257,862,197.00"
+            "name": "Prestamos Incumplidos",
+            "expression": "CALCULATE([Num Prestamos], m_prestamos[codigo_estado] = \"B\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Prestamos Cerrados",
+            "expression": "CALCULATE([Num Prestamos], m_prestamos[codigo_estado] IN {\"A\", \"B\"})",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Tasa Mora Vigente",
+            "expression": "DIVIDE([Prestamos en Mora], [Prestamos Vigentes])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Tasa Incumplimiento",
+            "expression": "DIVIDE([Prestamos Incumplidos], [Prestamos Cerrados])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Monto en Riesgo",
+            "expression": "CALCULATE(SUM(m_prestamos[saldo_pendiente_estimado]), m_prestamos[codigo_estado] IN {\"B\", \"D\"})",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto Incumplido",
+            "expression": "CALCULATE([Cartera Total], m_prestamos[codigo_estado] = \"B\")",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto Promedio Prestamo",
+            "expression": "AVERAGE(m_prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Desv Est Prestamo",
+            "expression": "STDEV.S(m_prestamos[monto_prestamo])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Prestamo Limite Superior",
+            "expression": "[Monto Promedio Prestamo] + [Desv Est Prestamo]",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Prestamo Limite Inferior",
+            "expression": "[Monto Promedio Prestamo] - [Desv Est Prestamo]",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "EE Prestamo",
+            "expression": "DIVIDE([Desv Est Prestamo], SQRT([Num Prestamos]))",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Cuota Mensual",
+            "expression": "SUM(m_prestamos[pago_mensual])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Plazo Meses",
+            "expression": "MAX(m_prestamos[plazo_meses])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Saldo Pendiente",
+            "expression": "SUM(m_prestamos[saldo_pendiente_estimado])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Distritos con Prestamos",
+            "expression": "DISTINCTCOUNT(m_prestamos[id_distrito])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Clientes con Impago",
+            "expression": "CALCULATE(DISTINCTCOUNT(m_prestamos[id_cliente]), m_prestamos[codigo_estado] = \"B\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Saldo Depositos",
+            "expression": "SUM(m_saldo_cuenta[saldo_final])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Ratio Absorcion",
+            "expression": "DIVIDE(CALCULATE([Cartera Total], REMOVEFILTERS(m_anios)), [Saldo Depositos])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Liquidez Libre",
+            "expression": "[Saldo Depositos] - CALCULATE([Cartera Total], REMOVEFILTERS(m_anios))",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Volumen Transaccionado",
+            "expression": "SUM(m_trans_anual[monto_total])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Num Transacciones",
+            "expression": "SUM(m_trans_anual[num_transacciones])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Ticket Promedio Transaccion",
+            "expression": "DIVIDE([Volumen Transaccionado], [Num Transacciones])",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Desv Est Transaccion",
+            "expression": "VAR n = [Num Transacciones] VAR s = [Volumen Transaccionado] VAR sq = SUM(m_trans_anual[suma_cuadrados]) RETURN SQRT(DIVIDE(sq - s * s / n, n - 1))",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Transaccion Limite Superior",
+            "expression": "[Ticket Promedio Transaccion] + [Desv Est Transaccion]",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Transaccion Limite Inferior",
+            "expression": "[Ticket Promedio Transaccion] - [Desv Est Transaccion]",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "EE Transaccion",
+            "expression": "DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Saldo Promedio Historico",
+            "expression": "DIVIDE(SUMX(m_trans_anual, m_trans_anual[saldo_promedio] * m_trans_anual[num_transacciones]), [Num Transacciones])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Compromiso Ordenes",
+            "expression": "SUM(m_ordenes[monto_orden])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Num Ordenes",
+            "expression": "COUNTROWS(m_ordenes)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Indice Saturacion",
+            "expression": "DIVIDE([Compromiso Ordenes], CALCULATE([Saldo Promedio Historico], REMOVEFILTERS(m_anios), REMOVEFILTERS(m_trans_anual[tipo_operacion])))",
+            "formatString": "0.00"
+          },
+          {
+            "name": "Indice Saturacion Alerta",
+            "expression": "VAR i = [Indice Saturacion] RETURN IF(i > 0.5, i)",
+            "formatString": "0.00"
+          },
+          {
+            "name": "Compromiso Alerta",
+            "expression": "IF([Indice Saturacion] > 0.5, [Compromiso Ordenes])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Saldo Promedio Alerta",
+            "expression": "IF([Indice Saturacion] > 0.5, [Saldo Promedio Historico])",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Clientes Saturados",
+            "expression": "COUNTROWS(FILTER(VALUES(m_clientes[id_cliente]), [Indice Saturacion] > 0.5))",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Clientes Totales",
+            "expression": "COUNTROWS(m_clientes)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "EE Mora",
+            "expression": "SQRT(DIVIDE([Tasa Mora Vigente] * (1 - [Tasa Mora Vigente]), [Prestamos Vigentes]))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Mora Limite Superior",
+            "expression": "[Tasa Mora Vigente] + [EE Mora]",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Mora Limite Inferior",
+            "expression": "MAX(0, [Tasa Mora Vigente] - [EE Mora])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "EE Incumplimiento",
+            "expression": "SQRT(DIVIDE([Tasa Incumplimiento] * (1 - [Tasa Incumplimiento]), [Prestamos Cerrados]))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Incumplimiento Limite Superior",
+            "expression": "[Tasa Incumplimiento] + [EE Incumplimiento]",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Incumplimiento Limite Inferior",
+            "expression": "MAX(0, [Tasa Incumplimiento] - [EE Incumplimiento])",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Ordenes",
+            "expression": "DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS(m_ordenes[categoria_orden])))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Volumen",
+            "expression": "DIVIDE([Volumen Transaccionado], CALCULATE([Volumen Transaccionado], REMOVEFILTERS(m_trans_anual[tipo_operacion])))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Pct Cartera",
+            "expression": "DIVIDE([Cartera Total], CALCULATE([Cartera Total], REMOVEFILTERS(m_distritos)))",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Region Mayor Mora",
+            "expression": "VAR t = TOPN(1, VALUES(m_distritos[region]), [Tasa Mora Vigente], DESC) RETURN MAXX(t, m_distritos[region]) & \" · \" & FORMAT(MAXX(t, [Tasa Mora Vigente]), \"0.00%\")"
+          },
+          {
+            "name": "Region Mayor Cartera",
+            "expression": "VAR t = TOPN(1, VALUES(m_distritos[region]), [Cartera Total], DESC) RETURN MAXX(t, m_distritos[region]) & \" · \" & FORMAT(MAXX(t, [Pct Cartera]), \"0.0%\")"
+          },
+          {
+            "name": "Region Mayor Absorcion",
+            "expression": "VAR t = TOPN(1, VALUES(m_distritos[region]), [Ratio Absorcion], DESC) RETURN MAXX(t, m_distritos[region]) & \" · \" & FORMAT(MAXX(t, [Ratio Absorcion]), \"0.00%\")"
+          },
+          {
+            "name": "Operacion Mayor Volumen",
+            "expression": "VAR t = TOPN(1, VALUES(m_trans_anual[tipo_operacion]), [Volumen Transaccionado], DESC) RETURN MAXX(t, m_trans_anual[tipo_operacion]) & \" · \" & FORMAT(MAXX(t, [Pct Volumen]), \"0.00%\")"
+          },
+          {
+            "name": "Categoria Principal Orden",
+            "expression": "VAR t = TOPN(1, VALUES(m_ordenes[categoria_orden]), [Num Ordenes], DESC) RETURN MAXX(t, m_ordenes[categoria_orden]) & \" · \" & FORMAT(MAXX(t, [Pct Ordenes]), \"0.00%\")"
+          },
+          {
+            "name": "Titulo Distrito",
+            "expression": "\"Detalle del distrito: \" & SELECTEDVALUE(m_distritos[nombre_distrito], \"(varios)\")"
+          },
+          {
+            "name": "Titulo Cliente",
+            "expression": "\"Ficha 360 · \" & SELECTEDVALUE(m_clientes[cliente], \"(varios clientes)\")"
           }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "ccfd1686-3f3d-54ff-92c3-909777769fb4",
+        "fromTable": "m_prestamos",
+        "fromColumn": "id_distrito",
+        "toTable": "m_distritos",
+        "toColumn": "id_distrito"
+      },
+      {
+        "name": "dc395a79-c617-57dd-9974-7fe68c0212e8",
+        "fromTable": "m_prestamos",
+        "fromColumn": "id_cliente",
+        "toTable": "m_clientes",
+        "toColumn": "id_cliente"
+      },
+      {
+        "name": "b5db8dde-0944-5db4-bb17-d1363237647c",
+        "fromTable": "m_ordenes",
+        "fromColumn": "id_distrito",
+        "toTable": "m_distritos",
+        "toColumn": "id_distrito"
+      },
+      {
+        "name": "89407216-f1b9-5356-b36a-b25e2766f75e",
+        "fromTable": "m_ordenes",
+        "fromColumn": "id_cliente",
+        "toTable": "m_clientes",
+        "toColumn": "id_cliente"
+      },
+      {
+        "name": "acbc0c28-7838-51c5-ad2d-c28a2b5c3788",
+        "fromTable": "m_trans_anual",
+        "fromColumn": "id_distrito",
+        "toTable": "m_distritos",
+        "toColumn": "id_distrito"
+      },
+      {
+        "name": "59e4f306-68b4-5338-b1db-dde585c17cef",
+        "fromTable": "m_trans_anual",
+        "fromColumn": "id_cliente",
+        "toTable": "m_clientes",
+        "toColumn": "id_cliente"
+      },
+      {
+        "name": "f3cc2d44-ca37-5567-9eee-4fd838f78e8a",
+        "fromTable": "m_saldo_cuenta",
+        "fromColumn": "id_distrito",
+        "toTable": "m_distritos",
+        "toColumn": "id_distrito"
+      },
+      {
+        "name": "1eb7428d-0a10-5160-a7f7-ba01f4d0b2d8",
+        "fromTable": "m_saldo_cuenta",
+        "fromColumn": "id_cliente",
+        "toTable": "m_clientes",
+        "toColumn": "id_cliente"
+      },
+      {
+        "name": "3134aef8-9ae9-58bd-b3d0-322762c06c56",
+        "fromTable": "m_prestamos",
+        "fromColumn": "anio",
+        "toTable": "m_anios",
+        "toColumn": "anio"
+      },
+      {
+        "name": "08e82454-92f8-512a-a7ed-4b560d010664",
+        "fromTable": "m_trans_anual",
+        "fromColumn": "anio",
+        "toTable": "m_anios",
+        "toColumn": "anio"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "MongoFinancial",
+        "kind": "m",
+        "expression": [
+          "let",
+          "    Origen = Python.Execute(\"\"\"\"\"\"\"#(lf)==============================================================================#(lf)UNIVERSIDAD TÉCNICA DE AMBATO - Inteligencia de Negocios#(lf)AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores#(lf)==============================================================================#(lf)ARCHIVO: 26_powerbi_mongo_dashboard.py#(lf)USO EN POWER BI: Obtener datos -> Más... -> Script de Python -> pegar TODO#(lf)                 este archivo -> Aceptar -> marcar las 7 tablas m_*.#(lf)#(lf)Construye el modelo estrella del Dashboard_Financial_Mongo.pbix a partir de#(lf)la base documental 'Financial' (MongoDB). Las transacciones y el saldo final#(lf)se calculan DENTRO de MongoDB con Aggregation Pipelines ($group), de modo que#(lf)Power BI recibe ~54 mil filas en lugar de 1,056,320.#(lf)#(lf)Funciona con los dos esquemas de carga del proyecto:#(lf)  * Esquema documental anidado (script 22 / Financial_mongo_dump.gz)#(lf)  * Esquema plano (script 23, restauración desde CSV)#(lf)#(lf)Tablas resultantes (mismas claves y nombres de columnas que el modelo Kimball#(lf)para reutilizar las medidas DAX de la guía 07):#(lf)  m_distritos        77 filas     (dimensión)#(lf)  m_clientes      5,369 filas     (dimensión, Cliente 360)#(lf)  m_anios             6 filas     (dimensión de tiempo anual 1993-1998)#(lf)  m_prestamos       682 filas     (hecho)#(lf)  m_ordenes       6,471 filas     (hecho)#(lf)  m_trans_anual  ~54,298 filas    (hecho agregado cuenta-año-operación)#(lf)  m_saldo_cuenta  4,500 filas     (hecho semiaditivo: último saldo)#(lf)==============================================================================#(lf)\"\"\"\"\"\"#(lf)import pandas as pd#(lf)import pymongo#(lf)#(lf)MONGO_URI = \"\"mongodb://localhost:27017/\"\"#(lf)DB_NAME = \"\"Financial\"\"#(lf)#(lf)client = pymongo.MongoClient(MONGO_URI)#(lf)db = client[DB_NAME]#(lf)#(lf)#(lf)def campo(doc, *rutas, defecto=None):#(lf)    \"\"\"\"\"\"Devuelve el primer valor existente entre varias rutas 'a.b.c'.\"\"\"\"\"\"#(lf)    for ruta in rutas:#(lf)        valor = doc#(lf)        for parte in ruta.split(\"\".\"\"):#(lf)            if isinstance(valor, dict) and parte in valor:#(lf)                valor = valor[parte]#(lf)            else:#(lf)                valor = None#(lf)                break#(lf)        if valor is not None and not (isinstance(valor, float) and pd.isna(valor)):#(lf)            return valor#(lf)    return defecto#(lf)#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 1. DIMENSIÓN DISTRITO#(lf)# ------------------------------------------------------------------------------#(lf)m_distritos = pd.DataFrame([{#(lf)    \"\"id_distrito\"\": int(campo(d, \"\"id_distrito\"\", \"\"_id\"\")),#(lf)    \"\"nombre_distrito\"\": campo(d, \"\"nombre\"\", \"\"nombre_distrito\"\"),#(lf)    \"\"region\"\": campo(d, \"\"region\"\"),#(lf)    \"\"poblacion\"\": campo(d, \"\"poblacion\"\"),#(lf)    \"\"salario_promedio\"\": campo(d, \"\"salario_promedio\"\"),#(lf)    \"\"tasa_desempleo\"\": campo(d, \"\"tasa_desempleo\"\"),#(lf)    \"\"tasa_criminalidad\"\": campo(d, \"\"tasa_criminalidad\"\"),#(lf)    \"\"es_imputado\"\": bool(campo(d, \"\"auditoria.es_imputado\"\", \"\"es_imputado\"\", defecto=False)),#(lf)} for d in db.distritos.find({})])#(lf)#(lf)MACRO = {\"\"Prague\"\": \"\"Praga\"\"}#(lf)m_distritos[\"\"macro_region\"\"] = m_distritos[\"\"region\"\"].map(#(lf)    lambda r: MACRO.get(r, \"\"Moravia\"\" if \"\"Moravia\"\" in str(r) else \"\"Bohemia\"\"))#(lf)region_de = m_distritos.set_index(\"\"id_distrito\"\")[\"\"region\"\"].to_dict()#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 2. DIMENSIÓN CLIENTE 360 (colección FinancialMongo)#(lf)# ------------------------------------------------------------------------------#(lf)m_clientes = pd.DataFrame([{#(lf)    \"\"id_cliente\"\": int(campo(c, \"\"id_cliente\"\", \"\"_id\"\")),#(lf)    \"\"sexo\"\": campo(c, \"\"datos_personales.sexo\"\", \"\"sexo\"\"),#(lf)    \"\"edad_corte\"\": campo(c, \"\"datos_personales.edad_al_corte_1998\"\", \"\"edad_corte\"\"),#(lf)    \"\"tipo_disposicion\"\": campo(c, \"\"datos_personales.tipo_disposicion\"\", \"\"tipo_disposicion\"\"),#(lf)    \"\"calificacion_pago\"\": str(campo(c, \"\"evaluacion_crediticia.calificacion\"\",#(lf)                                   \"\"etiqueta_buen_pagador\"\", defecto=\"\"Sin evaluar\"\")),#(lf)    \"\"tiene_prestamo\"\": bool(campo(c, \"\"evaluacion_crediticia.tiene_prestamo\"\",#(lf)                                 \"\"tiene_prestamo\"\", defecto=False)),#(lf)    \"\"id_distrito_residencia\"\": campo(c, \"\"distrito.id_distrito\"\", \"\"id_distrito\"\"),#(lf)    \"\"total_ordenes_activas\"\": campo(c, \"\"perfil_analitico.total_ordenes_activas\"\",#(lf)                                   \"\"total_ordenes_activas\"\", defecto=0),#(lf)} for c in db.FinancialMongo.find({}, {\"\"ordenes_recurrentes\"\": 0, \"\"prestamo_asociado\"\": 0})])#(lf)#(lf)m_clientes[\"\"calificacion_pago\"\"] = m_clientes[\"\"calificacion_pago\"\"].replace(#(lf)    {\"\"True\"\": \"\"Buen pagador\"\", \"\"False\"\": \"\"Moroso historico\"\", \"\"1\"\": \"\"Buen pagador\"\", \"\"0\"\": \"\"Moroso historico\"\"})#(lf)m_clientes[\"\"cliente\"\"] = \"\"Cliente \"\" + m_clientes[\"\"id_cliente\"\"].astype(str)#(lf)m_clientes[\"\"segmento_edad\"\"] = pd.cut(#(lf)    m_clientes[\"\"edad_corte\"\"], bins=[0, 25, 40, 60, 200],#(lf)    labels=[\"\"Joven (<=25)\"\", \"\"Adulto joven (26-40)\"\", \"\"Adulto (41-60)\"\", \"\"Mayor (>60)\"\"]#(lf)).astype(str)#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 3. HECHO PRÉSTAMOS#(lf)# ------------------------------------------------------------------------------#(lf)m_prestamos = pd.DataFrame([{#(lf)    \"\"id_prestamo\"\": int(campo(p, \"\"id_prestamo\"\", \"\"_id\"\")),#(lf)    \"\"id_cuenta\"\": int(campo(p, \"\"id_cuenta\"\")),#(lf)    \"\"id_cliente\"\": int(campo(p, \"\"id_cliente\"\")),#(lf)    \"\"id_distrito\"\": int(campo(p, \"\"distrito.id_distrito\"\", \"\"id_distrito\"\")),#(lf)    \"\"fecha_otorgamiento\"\": campo(p, \"\"condiciones.fecha_otorgamiento\"\", \"\"fecha_otorgamiento\"\"),#(lf)    \"\"monto_prestamo\"\": float(campo(p, \"\"condiciones.monto\"\", \"\"monto_prestamo\"\")),#(lf)    \"\"plazo_meses\"\": int(campo(p, \"\"condiciones.plazo_meses\"\", \"\"plazo_meses\"\")),#(lf)    \"\"pago_mensual\"\": float(campo(p, \"\"condiciones.cuota_mensual\"\", \"\"pago_mensual\"\")),#(lf)    \"\"saldo_pendiente_estimado\"\": float(campo(p, \"\"condiciones.saldo_pendiente\"\",#(lf)                                            \"\"saldo_pendiente_estimado\"\", defecto=0)),#(lf)    \"\"codigo_estado\"\": campo(p, \"\"evaluacion_riesgo.codigo_estado\"\", \"\"estado_prestamo\"\"),#(lf)    \"\"condicion\"\": campo(p, \"\"evaluacion_riesgo.condicion\"\", \"\"condicion_prestamo\"\"),#(lf)    \"\"descripcion_estado\"\": campo(p, \"\"evaluacion_riesgo.descripcion\"\", \"\"descripcion_estado\"\"),#(lf)} for p in db.prestamos.find({})])#(lf)#(lf)m_prestamos[\"\"fecha_otorgamiento\"\"] = pd.to_datetime(m_prestamos[\"\"fecha_otorgamiento\"\"])#(lf)m_prestamos[\"\"anio\"\"] = m_prestamos[\"\"fecha_otorgamiento\"\"].dt.year#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 4. HECHO ÓRDENES PERMANENTES#(lf)# ------------------------------------------------------------------------------#(lf)m_ordenes = pd.DataFrame([{#(lf)    \"\"id_orden\"\": int(campo(o, \"\"id_orden\"\", \"\"_id\"\")),#(lf)    \"\"id_cuenta\"\": int(campo(o, \"\"id_cuenta\"\")),#(lf)    \"\"id_cliente\"\": int(campo(o, \"\"id_cliente\"\")),#(lf)    \"\"id_distrito\"\": campo(o, \"\"id_distrito\"\"),#(lf)    \"\"k_symbol\"\": campo(o, \"\"categoria_pago.codigo\"\", \"\"k_symbol\"\"),#(lf)    \"\"categoria_orden\"\": campo(o, \"\"categoria_pago.descripcion\"\", \"\"categoria_orden\"\"),#(lf)    \"\"monto_orden\"\": float(campo(o, \"\"monto_mensual\"\", \"\"monto_orden\"\")),#(lf)} for o in db.ordenes.find({})])#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 5. HECHOS DE TRANSACCIONES (agregados en MongoDB)#(lf)# ------------------------------------------------------------------------------#(lf)pipeline_anual = [#(lf)    {\"\"$group\"\": {#(lf)        \"\"_id\"\": {\"\"id_cuenta\"\": \"\"$id_cuenta\"\", \"\"anio\"\": \"\"$anio\"\",#(lf)                \"\"tipo_operacion\"\": \"\"$tipo_operacion_traducido\"\"},#(lf)        \"\"id_cliente\"\": {\"\"$first\"\": \"\"$id_cliente\"\"},#(lf)        \"\"id_distrito\"\": {\"\"$first\"\": \"\"$id_distrito\"\"},#(lf)        \"\"canal\"\": {\"\"$first\"\": \"\"$canal\"\"},#(lf)        \"\"num_transacciones\"\": {\"\"$sum\"\": 1},#(lf)        \"\"monto_total\"\": {\"\"$sum\"\": \"\"$monto_transaccion\"\"},#(lf)        \"\"suma_cuadrados\"\": {\"\"$sum\"\": {\"\"$multiply\"\": [\"\"$monto_transaccion\"\", \"\"$monto_transaccion\"\"]}},#(lf)        \"\"saldo_promedio\"\": {\"\"$avg\"\": \"\"$saldo_cuenta\"\"},#(lf)    }},#(lf)]#(lf)m_trans_anual = pd.json_normalize(#(lf)    list(db.transacciones.aggregate(pipeline_anual, allowDiskUse=True)))#(lf)m_trans_anual.columns = [c.replace(\"\"_id.\"\", \"\"\"\") for c in m_trans_anual.columns]#(lf)#(lf)pipeline_saldo = [#(lf)    {\"\"$sort\"\": {\"\"id_cuenta\"\": 1, \"\"fecha\"\": -1, \"\"_id\"\": -1}},#(lf)    {\"\"$group\"\": {#(lf)        \"\"_id\"\": \"\"$id_cuenta\"\",#(lf)        \"\"id_cliente\"\": {\"\"$first\"\": \"\"$id_cliente\"\"},#(lf)        \"\"id_distrito\"\": {\"\"$first\"\": \"\"$id_distrito\"\"},#(lf)        \"\"fecha_ultimo_movimiento\"\": {\"\"$first\"\": \"\"$fecha\"\"},#(lf)        \"\"saldo_final\"\": {\"\"$first\"\": \"\"$saldo_cuenta\"\"},#(lf)    }},#(lf)]#(lf)m_saldo_cuenta = pd.DataFrame(#(lf)    list(db.transacciones.aggregate(pipeline_saldo, allowDiskUse=True))#(lf)).rename(columns={\"\"_id\"\": \"\"id_cuenta\"\"})#(lf)m_saldo_cuenta[\"\"fecha_ultimo_movimiento\"\"] = pd.to_datetime(m_saldo_cuenta[\"\"fecha_ultimo_movimiento\"\"])#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 6. DISTRITO DE LA CUENTA en cada hecho (si el documento no lo trae, se hereda#(lf)#    de la cuenta a través de préstamos/órdenes o, en último caso, del cliente).#(lf)#    Igual que en Kimball: el distrito del hecho es el de la CUENTA.#(lf)# ------------------------------------------------------------------------------#(lf)distrito_cuenta = (#(lf)    pd.concat([m_prestamos[[\"\"id_cuenta\"\", \"\"id_distrito\"\"]],#(lf)               m_ordenes[[\"\"id_cuenta\"\", \"\"id_distrito\"\"]],#(lf)               m_trans_anual[[\"\"id_cuenta\"\", \"\"id_distrito\"\"]] if \"\"id_distrito\"\" in m_trans_anual else None])#(lf)    .dropna().drop_duplicates(\"\"id_cuenta\"\").set_index(\"\"id_cuenta\"\")[\"\"id_distrito\"\"]#(lf))#(lf)distrito_cliente = m_clientes.set_index(\"\"id_cliente\"\")[\"\"id_distrito_residencia\"\"]#(lf)for df in (m_ordenes, m_trans_anual, m_saldo_cuenta):#(lf)    if \"\"id_distrito\"\" not in df:#(lf)        df[\"\"id_distrito\"\"] = None#(lf)    df[\"\"id_distrito\"\"] = (df[\"\"id_distrito\"\"]#(lf)                         .fillna(df[\"\"id_cuenta\"\"].map(distrito_cuenta))#(lf)                         .fillna(df[\"\"id_cliente\"\"].map(distrito_cliente))#(lf)                         .astype(int))#(lf)#(lf)# ------------------------------------------------------------------------------#(lf)# 7. DIMENSIÓN AÑO#(lf)# ------------------------------------------------------------------------------#(lf)m_anios = pd.DataFrame({\"\"anio\"\": range(1993, 1999)})#(lf)#(lf)# El puente Python de Power BI no reconoce el tipo StringDtype de pandas >= 3.#(lf)for df in (m_distritos, m_clientes, m_prestamos, m_ordenes, m_trans_anual, m_saldo_cuenta):#(lf)    for col in df.columns:#(lf)        if pd.api.types.is_string_dtype(df[col]) and not pd.api.types.is_object_dtype(df[col]):#(lf)            df[col] = df[col].astype(object)#(lf)#(lf)client.close()#(lf)#(lf)print(\"\"Tablas MongoDB listas para Power BI:\"\")#(lf)for nombre in [\"\"m_distritos\"\", \"\"m_clientes\"\", \"\"m_anios\"\", \"\"m_prestamos\"\",#(lf)               \"\"m_ordenes\"\", \"\"m_trans_anual\"\", \"\"m_saldo_cuenta\"\"]:#(lf)    print(f\"\"  - {nombre:<15} {len(globals()[nombre]):>8,} filas\"\")#(lf)\")",
+          "in",
+          "    Origen"
         ]
       }
     ],
     "annotations": [
       {
-        "name": "PBI_QueryOrder",
-        "value": "[\"_Medidas\"]"
-      },
-      {
-        "name": "PersistenciaPoliglota",
-        "value": "MongoDB NoSQL (Financial)"
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
       }
     ]
   }
