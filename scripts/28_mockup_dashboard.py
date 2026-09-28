@@ -284,7 +284,7 @@ def pg_inicio():
              ("P2 ¿Dónde?", "north Moravia: 12 de 45 morosos (15.79%)"),
              ("D1 Distrito", "Karvina: 3 en mora de 15 vigentes"),
              ("D2 Cliente", "2823: $541,200 a 60 meses, estado D"),
-             ("¿Qué más?", "4 órdenes = $14,286/mes; saldo −$2,803"),
+             ("¿Qué más?", "5 órdenes = $14,286/mes; saldo −$2,803"),
              ("P5 ¿Aislado?", "Índice saturación 2.14: único > 1 de 47")]
     for i, (a, b) in enumerate(pasos):
         yy = y + h - 0.09 - i * 0.078
@@ -652,7 +652,7 @@ def pg_d2():
     for i, (a, b) in enumerate(info):
         fig.text(x + 0.012, y + h - 0.075 - i * 0.075, a, fontsize=8, color=GRIS)
         fig.text(x + 0.012, y + h - 0.1 - i * 0.075, str(b), fontsize=10.5, color=TINTA, weight="bold")
-    ax = panel(fig, (0.245, 0.43, 0.36, 0.35), f"4 órdenes fijas suman ${oc.sum():,.0f} al mes", "R1")
+    ax = panel(fig, (0.245, 0.43, 0.36, 0.35), f"{int((o['id_cuenta'] == cta).sum())} órdenes fijas ({len(oc)} categorías) suman ${oc.sum():,.0f} al mes", "R1")
     b = ax.bar(range(len(oc)), oc.values, color=[ALERTA if "Prestamo" in c else BASE for c in oc.index], width=0.6)
     etiquetas(ax, b, lambda v: f"${v:,.0f}")
     ax.set_xticks(range(len(oc)))

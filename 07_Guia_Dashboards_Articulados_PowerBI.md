@@ -128,7 +128,7 @@ flowchart LR
     A["P1 ¿CUÁNDO?<br>23 morosos en 1997,<br>pero la tasa es estable<br>(χ² p = 0.93)"] --> B["P2 ¿DÓNDE?<br>north Moravia:<br>12 de 45 morosos,<br>tasa 15.79% ± 4.18"]
     B --> C["D1 DISTRITO<br>Karvina: 3 en mora<br>de 15 vigentes (20%)"]
     C --> D["D2 CLIENTE 2823<br>$541,200 a 60 meses,<br>cuota $9,020, estado D"]
-    D --> E["¿QUÉ MÁS TIENE?<br>4 órdenes = $14,286/mes<br>saldo final −$2,803"]
+    D --> E["¿QUÉ MÁS TIENE?<br>5 órdenes = $14,286/mes<br>saldo final −$2,803"]
     E --> F["P5 ¿ES AISLADO?<br>Índice de saturación 2.14:<br>el único > 1 de 47"]
 ```
 
@@ -138,7 +138,7 @@ flowchart LR
 | 2 | ¿En qué región? | **north Moravia** concentra 12 de los 45 morosos y tiene la tasa más alta (15.79% ± 4.18). Solo se distingue de forma significativa de north Bohemia (Fisher p = 0.008). En conjunto, la región no explica la mora (χ² p = 0.239). | Descriptivo + inferencial |
 | 3 | ¿En qué distrito de esa región? | **Karvina**: 3 de 15 préstamos vigentes en mora. Es el distrito con más morosos de north Moravia. | Descriptivo |
 | 4 | ¿Quién es el moroso? | Préstamos 5447, 6816 y 6959. El mayor es el del **cliente 2823**: $541,200 a 60 meses (el 3.er préstamo más grande del banco). | Descriptivo |
-| 5 | ¿Qué más tiene ese cliente? | 4 órdenes por **$14,286/mes** (cuota $9,020, sin especificar $2,745, hogar $2,036, seguro $485). Su saldo promedio bajó de $25,368 (1996) a $3,354 (1997) y $723 (1998). El saldo de cierre anual fue $12,867 → $1,162 → **−$2,803**, con un sobregiro mínimo de −$17,030. | Descriptivo |
+| 5 | ¿Qué más tiene ese cliente? | 5 órdenes en 4 categorías por **$14,286/mes** (cuota $9,020, sin especificar $2,745 en 2 órdenes, hogar $2,036, seguro $485). Su saldo promedio bajó de $25,368 (1996) a $3,354 (1997) y $723 (1998). El saldo de cierre anual fue $12,867 → $1,162 → **−$2,803**, con un sobregiro mínimo de −$17,030. | Descriptivo |
 | 6 | ¿Es un caso aislado? | Sus órdenes equivalen a **2.14 veces** su saldo promedio. Es el único con índice > 1 y encabeza la lista de 47 con índice > 0.5, que se usa como **alerta temprana**. | Descriptivo |
 
 **Frase para la exposición:** *"Los datos no dicen que 1997 fue un año más riesgoso: la tasa se mantuvo y lo que creció fue la colocación. La región tampoco explica la mora por sí sola. Lo que sí separa al caso crítico es la capacidad de pago: el cliente 2823 comprometía en órdenes fijas el doble de su saldo. Por eso proponemos el índice de saturación como alerta."*

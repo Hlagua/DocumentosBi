@@ -70,7 +70,7 @@ Para cumplir con la directriz del docente, se tradujo el ejemplo de compras (*"p
        │
        ├─► [P4 / D2] (Saldo promedio anual cayó de $25,368 en 1996 a $3,354 en 1997 y $723 en 1998; cierre: -$2,803.00)
        │
-       ├─► [P5 · ¿QUIÉN ESTÁ SATURADO?] (Tiene 4 órdenes de pago automáticas por $14,286/mes. Índice de saturación = 2.14)
+       ├─► [P5 · ¿QUIÉN ESTÁ SATURADO?] (Tiene 5 órdenes de pago automáticas en 4 categorías por $14,286/mes. Índice de saturación = 2.14)
        │
        ▼
 [P6 · POLÍTICA DE MITIGACIÓN] (31 clientes con impago histórico Estado B: denegación automática y listas de interdicción)
@@ -83,7 +83,7 @@ Para cumplir con la directriz del docente, se tradujo el ejemplo de compras (*"p
 | **2** | ¿En qué territorio se localiza el riesgo? | El monto promedio prestado entre macro-regiones se solapa totalmente en $\pm 1\sigma$ (\$153.9K en Praga vs \$149.3K en Bohemia y \$153.5K en Moravia; ANOVA $F=0.1210, p=0.8861$). Sin embargo, la tasa de mora se concentra en **north Moravia (15.79%)**, mientras north Bohemia tiene 0.00%. | **P2 (¿Dónde?):** Barras con error $\pm 1\sigma$ por macro-región y Scatter Plot de distritos ($X = \text{Cartera}$, $Y = \text{Tasa Mora}$, $\text{Size} = \text{Préstamos}$). Karvina destaca nítidamente en el cuadrante superior derecho. |
 | **3** | ¿Cuál es el distrito crítico de esa región? | **Karvina** (Distrito ID 73, north Moravia): Cartera de \$3,059,820 colocada en 24 préstamos; 3 créditos en mora activa sobre 15 vigentes (**20.00% de tasa distrital activa**). Depósitos captados: \$7,002,080 en 152 cuentas (**Ratio de Absorción Distrital = 43.70%**). | Clic derecho en Karvina en P2 $\rightarrow$ **Drill-through a D1 (Detalle Distrito)**. |
 | **4** | ¿Quiénes explican la morosidad de Karvina? | Préstamos 5447, 6816 y 6959. El caso más voluminoso de todo el banco es el **Cliente 2823** (Cuenta 2335): Préstamo de \$541,200 a 60 meses (\$9,020/mes), concedido el 12/11/1997. Titular mujer de **52 años** (nacida el 18/12/1946). | Tabla de créditos de D1 $\rightarrow$ Clic derecho en Cliente 2823 $\rightarrow$ **Drill-through a D2 (Ficha Cliente 360)**. |
-| **5** | ¿Cuál fue la causa de la insolvencia del cliente? | Posee **4 órdenes de débito permanente** por **\$14,286 mensuales** (\$9,020 préstamo, \$2,036 vivienda, \$2,745 varios, \$485 seguro). Su saldo bancario promedio se evaporó de \$25,368.17 (1996) a \$3,354.26 (1997) y \$722.56 (1998), cerrando al corte en saldo rojo: **-\$2,803.00** (con mínimo histórico en sobregiro de -\$17,030.00). | **D2 (Ficha Cliente 360):** Gráfico de líneas temporales de saldos de la cuenta y tabla de órdenes activas. |
+| **5** | ¿Cuál fue la causa de la insolvencia del cliente? | Posee **5 órdenes de débito permanente** (4 categorías) por **\$14,286 mensuales** (\$9,020 préstamo, \$2,036 vivienda, \$2,745 varios en 2 órdenes, \$485 seguro). Su saldo bancario promedio se evaporó de \$25,368.17 (1996) a \$3,354.26 (1997) y \$722.56 (1998), cerrando al corte en saldo rojo: **-\$2,803.00** (con mínimo histórico en sobregiro de -\$17,030.00). | **D2 (Ficha Cliente 360):** Gráfico de líneas temporales de saldos de la cuenta y tabla de órdenes activas. |
 | **6** | ¿Es un caso aislado o un patrón institucional? | El Cliente 2823 encabeza la institución con un **Índice de Saturación de 2.14** (sus débitos fijos superan el 214% de su saldo medio). Es el caso más extremo dentro de un universo de **47 clientes con índice $> 0.5$**. | **P5 (Saturación):** Gráfico de dona monovariable de órdenes por concepto (5 categorías) y ranking institucional de clientes saturados. |
 | **7** | ¿Qué acciones de contención se toman? | Se identifican **31 clientes en Estado B** (créditos cerrados con pérdidas no recuperadas por \$4.36M). Se establecen filtros de exclusión crediticia. | **P6 (Impago Histórico):** Gráficos de barras demográficas y tabla de interdicción crediticia con validación de Fisher exacto. |
 
@@ -274,7 +274,7 @@ Los dos archivos (`Dashboard_Financial_Kimball.pbix` y `Dashboard_Financial_Mong
     - Disposición: Titular única (`OWNER`).
   - **Tarjetas Crediticias:**
     - Préstamo Activo: ID 5447 por **\$541,200.00** a 60 meses (cuota mensual \$9,020.00, Estado D - Mora Activa irremediable).
-    - Débito mensual por órdenes automáticas: **\$14,286.00 / mes** (4 órdenes fijas).
+    - Débito mensual por órdenes automáticas: **\$14,286.00 / mes** (5 órdenes fijas en 4 categorías).
     - Índice de Saturación Financiera: **2.14x** (las órdenes mensuales superan en más del doble su saldo promedio global de \$6,678).
     - Saldo final de la cuenta al corte (31/12/1998): **-\$2,803.00** (quiebra técnica, con sobregiro histórico extremo de -\$17,030.00 alcanzado en 1997).
   - **Gráfico de Líneas de Saldos de la Cuenta 2335 (329 movimientos entre 1996 y 1998):**
@@ -282,7 +282,7 @@ Los dos archivos (`Dashboard_Financial_Kimball.pbix` y `Dashboard_Financial_Mong
       * **Año 1996 (66 tx):** Saldo Cierre = **\$12,867.00** | Saldo Promedio = **\$25,368.17**
       * **Año 1997 (128 tx):** Saldo Cierre = **\$1,162.00** | Saldo Promedio = **\$3,354.26** (Desembolso del crédito en nov-1997 detona el déficit)
       * **Año 1998 (135 tx):** Saldo Cierre = **-\$2,803.00** | Saldo Promedio = **\$722.56** (Insolvencia definitiva)
-  - **Tabla de Órdenes de Débito Automático:** Detalle de sus 4 órdenes que totalizan \$14,286 mensuales (\$9,020 cuota crédito, \$2,036 servicios hogar, \$2,745 conceptos sin especificar, \$485 seguro).
+  - **Tabla de Órdenes de Débito Automático:** Detalle de sus 5 órdenes (4 categorías) que totalizan \$14,286 mensuales (\$9,020 cuota crédito, \$2,036 servicios hogar, \$2,745 conceptos sin especificar en 2 órdenes, \$485 seguro).
   - Diagnóstico Automático en Tarjeta: `"DICTAMEN DEL COMITÉ DE RIESGOS: Insolvencia severa. Cuota de préstamo + débitos fijos superan el flujo de ingresos. Ejecución coactiva de garantías."`
 * **Navegación:** Botón superior *"← Volver"*.
 
@@ -352,7 +352,7 @@ Por favor, como Inteligencia Artificial revisora y auditora, analiza a fondo tod
 
 ### Bloque 1: Coherencia y Storytelling del Hilo Conductor
 1. ¿Consideras que la cadena articulada de preguntas de negocio (P1 $\rightarrow$ P2 $\rightarrow$ D1 $\rightarrow$ D2 $\rightarrow$ P4 $\rightarrow$ P5 $\rightarrow$ P6) satisface con contundencia la exigencia del docente de evitar "dashboards dispersos por tabla"?
-2. ¿El caso forense seleccionado (Distrito Karvina $\rightarrow$ Cliente 2823 de 52 años $\rightarrow$ 4 órdenes por \$14.2K $\rightarrow$ saldo negativo $-\$2,803$ $\rightarrow$ índice de saturación 2.14) resulta natural, pedagógico y convincente para una presentación ejecutiva de 5 minutos?
+2. ¿El caso forense seleccionado (Distrito Karvina $\rightarrow$ Cliente 2823 de 52 años $\rightarrow$ 5 órdenes por \$14.3K $\rightarrow$ saldo negativo $-\$2,803$ $\rightarrow$ índice de saturación 2.14) resulta natural, pedagógico y convincente para una presentación ejecutiva de 5 minutos?
 
 ### Bloque 2: Selección Gráfica y Fundamentación Psico-Física
 3. Evalúa la idoneidad de sustituir el clásico Treemap en P2 por un Scatter/Bubble Plot de distritos ($X=\text{Cartera}$, $Y=\text{Tasa Mora}$, $\text{Size}=\text{Préstamos}$). ¿Es académicamente superior bajo los principios de Cleveland & McGill (1984) y Munzner (2014)?

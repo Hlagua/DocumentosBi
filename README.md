@@ -13,7 +13,7 @@
 > ### 📊 DOCUMENTO PRINCIPAL DESTACADO: GUÍA DASHBOARD
 > Para consultar la especificación completa del tablero de control gerencial, justificación teórica de cada gráfico, fundamentación psicofísica de percepción visual (Cleveland & McGill, Tufte, Few, Cumming, Wilson, Fisher, Cochran), datos exactos reconciliados, arquitectura de extracción Kimball SQL Server y MongoDB NoSQL, y maquetas visuales de las 9 pestañas:
 > 
-> 👉 **[GUÍA DEFINITIVA DEL DASHBOARD: IMPLEMENTACIÓN ARTICULADA EN POWER BI](Guia_Dashboard.md)** (Versión canónica: [`07_Guia_Dashboards_Articulados_PowerBI.md`](07_Guia_Dashboards_Articulados_PowerBI.md))
+> 👉 **[GUÍA 07 — DASHBOARDS ARTICULADOS EN POWER BI (versión canónica v3.1)](07_Guia_Dashboards_Articulados_PowerBI.md)** · Respaldo estadístico: [`08_Dossier_Auditoria_Externa_Dashboard.md`](08_Dossier_Auditoria_Externa_Dashboard.md)
 >
 > 🌐 **Demo Interactiva en Vivo (Sin requerir Power BI Desktop):** Abra directamente con doble clic [`demo_dashboard.html`](demo_dashboard.html) en cualquier navegador web para navegar interactivamente por las 9 pestañas, probar los filtros y ejecutar los *drill-throughs* forenses.
 
@@ -24,8 +24,8 @@
 Este repositorio contiene la documentación metodológica oficial, el modelado de arquitecturas de almacenamiento de datos corporativos (DW/BI y NoSQL), los scripts DDL, los DataFrames analíticos, las consultas M/DAX, los proyectos Power BI Desktop (`.pbip`), la demo interactiva web y las maquetas ejecutivas del Dashboard Gerencial para el caso de estudio `Financial_ijs`:
 
 #### 1. Documentación Metodológica y Guías Oficiales
-* 📘 **[Guía Dashboard: Implementación de Dashboards Articulados](Guia_Dashboard.md)** *(Acceso rápido)*  
-  *Manual maestro de construcción del dashboard de 9 pestañas interconectadas mediante barra de navegación superior, botones ejecutivos, filtros sincronizados y doble nivel de Drill-through forense: P1…P6 → D1 (Detalle Distrito Karvina) → D2 (Ficha Cliente 360).*
+* 📘 **[Guía Dashboard (acceso rápido)](Guia_Dashboard.md)** — *Redirige a la Guía 07.*  
+  *La versión 3.0 de esta guía quedó integrada en la Guía 07 v3.1 (unión Alison + Henry); se conserva solo como enlace para no romper referencias. La especificación vigente del dashboard de 9 pestañas (P1…P6 → D1 Karvina → D2 Cliente 360) está en la Guía 07.*
 * 📄 **[01. Carta de Diseño Oficial (v6 Definitiva)](01_Carta_de_Diseno_Financial_ijs.md)**  
   *Levantamiento formal de requisitos analíticos, diagnóstico de negocio (morosidad activa del 10.04%, ratio de absorción de depósitos del 52.38%), especificación de métricas, resolución de la relación cuenta-cliente (`OWNER`), estrategias de Slowly Changing Dimensions (SCD), calidad de datos en staging y plan de validación.*
 * 📄 **[02. Análisis y Modelado de Arquitecturas: Ralph Kimball vs. Bill Inmon](02_Analisis_Arquitecturas_Kimball_Inmon.md)**  
@@ -56,7 +56,7 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * 💾 **[`sql/02_DDL_Inmon_EDW_Financial.sql`](sql/02_DDL_Inmon_EDW_Financial.sql):** Script DDL para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`) en Tercera Forma Normal (3FN).
 * 💾 **[`sql/03_WriteBack_Enriquecimiento_Kimball.sql`](sql/03_WriteBack_Enriquecimiento_Kimball.sql):** Enriquecimiento de la dimensión cliente con arquetipos demográficos, solvencia y clusters.
 * 💾 **[`sql/04_Vistas_PowerBI_Kimball.sql`](sql/04_Vistas_PowerBI_Kimball.sql):** Vistas analíticas optimizadas para Power BI: `vw_PBI_Saldo_Final_Cuenta` (resuelve el saldo semiaditivo en $197,140,434.00) y `vw_PBI_Trans_Anual_Cuenta` (agrega 1.05M transacciones a 54k filas preservando suma y suma de cuadrados para cálculo muestral exacto).
-* 💾 **[`sql/05_Medidas_DAX_PowerBI.dax`](sql/05_Medidas_DAX_PowerBI.dax):** Catálogo formal de 25 medidas DAX optimizadas para ambos tableros con validaciones lógicas y formato de moneda.
+* 💾 **[`sql/05_Medidas_DAX_PowerBI.dax`](sql/05_Medidas_DAX_PowerBI.dax):** Catálogo de referencia con 42 medidas DAX comunes a ambos tableros. Los modelos `.pbip` cargan 55 medidas: estas 42 más 13 auxiliares de títulos y páginas generadas por `scripts/30_generar_powerbi_pbip.py`.
 
 #### 4. Pipelines ETL, Conectores NoSQL y Generadores (`scripts/`)
 * ⚙️ **[`scripts/etl_populate_kimball_v2.py`](scripts/etl_populate_kimball_v2.py):** Pipeline ETL de carga dimensional desde MySQL hacia SQL Server.
@@ -78,7 +78,7 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * 🖼️ **[`05_p5_ordenes.png`](img/mockup_dashboard/05_p5_ordenes.png):** Gráfico de dona monovariable (5 categorías de órdenes fijas) y top de clientes saturados (índice > 0.5).
 * 🖼️ **[`06_p6_impago.png`](img/mockup_dashboard/06_p6_impago.png):** Perfil de los 31 clientes con impago histórico (Estado B) y validación de Fisher exacto ($p > 0.35$).
 * 🖼️ **[`07_d1_distrito.png`](img/mockup_dashboard/07_d1_distrito.png):** Detalle forense de Karvina (20% de mora activa, 24 créditos) y destaque del crédito de $541,200.
-* 🖼️ **[`08_d2_cliente360.png`](img/mockup_dashboard/08_d2_cliente360.png):** Ficha 360 del Cliente 2823 (Cuenta 2335, cuota mensual de $14,286, saldo negativo de -$2,803 e índice de saturación de 2.14x).
+* 🖼️ **[`08_d2_cliente360.png`](img/mockup_dashboard/08_d2_cliente360.png):** Ficha 360 del Cliente 2823 (Cuenta 2335, cuota del préstamo de $9,020, 5 órdenes fijas en 4 categorías por $14,286/mes, saldo final de -$2,803 e índice de saturación de 2.14x).
 
 ---
 

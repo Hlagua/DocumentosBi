@@ -510,7 +510,7 @@ def construir_informe(F):
             "2. P2 ¿Dónde? north Moravia: 12 de 45 morosos (15.79%).\n"
             "3. D1 Distrito: Karvina, 3 en mora de 15 vigentes.\n"
             "4. D2 Cliente 2823: $541,200 a 60 meses, estado D.\n"
-            "5. ¿Qué más tiene? 4 órdenes = $14,286/mes; saldo final −$2,803.\n"
+            "5. ¿Qué más tiene? 5 órdenes = $14,286/mes; saldo final −$2,803.\n"
             "6. P5 ¿Es aislado? Índice de saturación 2.14: único > 1 de 47.", 11)
 
     # ---- P1
