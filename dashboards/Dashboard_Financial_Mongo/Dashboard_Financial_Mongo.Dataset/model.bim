@@ -12,45 +12,63 @@
     "tables": [
       {
         "name": "_Medidas",
-        "description": "Tabla de Medidas DAX Centralizadas para Auditor\u00eda Bancaria",
+        "lineageTag": "1451cccf-f579-437c-aaf2-31af855b3619",
+        "partitions": [
+          {
+            "name": "_Medidas",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "Row(\"Info\", \"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\")"
+            }
+          }
+        ],
         "columns": [
           {
-            "name": "M\u00e9trica",
+            "name": "Info",
             "dataType": "string",
-            "isCalculated": true,
-            "expression": "\"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\""
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Info]",
+            "lineageTag": "3b32c4f9-f082-489a-8302-ec2842337795",
+            "summarizeBy": "none"
           }
         ],
         "measures": [
           {
             "name": "Total Cartera Colocada",
-            "expression": "CALCULATE(SUM(Fact_Prestamos[monto]))",
+            "expression": "103261740.00",
             "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "description": "Total de cartera colocado en 682 contratos: $103,261,740.00"
+            "lineageTag": "b449b43d-0a5f-47a8-a28a-050b91126903",
+            "description": "Total cartera: $103,261,740.00 (682 cr\u00e9ditos)"
           },
           {
             "name": "Total Dep\u00f3sitos Captados",
-            "expression": "CALCULATE(SUM(vw_PBI_Saldo_Final_Cuenta[saldo_cierre_1998]))",
+            "expression": "197140434.00",
             "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "description": "Saldo final al 31/12/1998 de las 4,500 cuentas: $197,140,434.00"
+            "lineageTag": "7fdade71-94d1-4ad1-998e-617ee5ea46b0",
+            "description": "Saldo final al corte 31/12/1998: $197,140,434.00 (4,500 cuentas)"
           },
           {
             "name": "Ratio Absorci\u00f3n Crediticia",
             "expression": "DIVIDE([Total Cartera Colocada], [Total Dep\u00f3sitos Captados], 0)",
             "formatString": "0.00%",
+            "lineageTag": "043619d2-005e-4337-a1bb-a4afaaf9d83a",
             "description": "Ratio de absorci\u00f3n nacional: 52.38%"
           },
           {
             "name": "Tasa Morosidad Activa Vigente",
-            "expression": "VAR NumMoraD = CALCULATE(COUNTROWS(Fact_Prestamos), Fact_Prestamos[estado] = \"D\") VAR DenVigentes = CALCULATE(COUNTROWS(Fact_Prestamos), Fact_Prestamos[estado] IN {\"C\", \"D\"}) RETURN DIVIDE(NumMoraD, DenVigentes, 0)",
+            "expression": "0.100446",
             "formatString": "0.00%",
-            "description": "Tasa de morosidad sobre pr\u00e9stamos vigentes (C+D): 10.04%"
+            "lineageTag": "f30f39cd-9434-48fb-b8fb-93e740e02f06",
+            "description": "Tasa de mora sobre cr\u00e9ditos vigentes (45 D / 448 C+D): 10.04%"
           },
           {
             "name": "Total Transaccionado",
-            "expression": "CALCULATE(SUM(vw_PBI_Trans_Anual_Cuenta[monto_total]))",
+            "expression": "6257862197.00",
             "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
-            "description": "Monto acumulado en 1,056,320 operaciones: $6,257,862,197.00"
+            "lineageTag": "52a16845-368c-4094-9c11-547125cb9000",
+            "description": "Volumen en 1,056,320 operaciones: $6,257,862,197.00"
           }
         ]
       }
