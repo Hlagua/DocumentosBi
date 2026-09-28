@@ -742,7 +742,8 @@ incrustado en la consulta compartida `MongoFinancial`. Generado con `python scri
 
 ### Cómo abrirlo
 1. MongoDB en ejecución con la base `Financial` cargada (script 22/23 o `Financial_mongo_dump.gz`).
-2. *Archivo → Opciones → Scripts de Python*: selecciona el Python que tiene `pymongo` y `pandas`.
+2. *Archivo → Opciones → Scripts de Python*: el Python elegido debe tener `pandas`, `matplotlib` y `pymongo`
+   (Power BI siempre importa `matplotlib`). Si falta alguna: `python -m pip install pandas matplotlib pymongo`.
 3. Doble clic en `Dashboard_Financial_Mongo.pbip` → *Inicio → Actualizar*. Acepta el aviso de privacidad del script de Python.
 4. Comprueba las cifras de control de la guía 07 (sección 9.3): deben ser idénticas a las de Kimball.
 {PASOS_MANUALES.format(distrito="m_distritos[nombre_distrito]", cliente="m_clientes[cliente]")}""")
