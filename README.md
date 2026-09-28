@@ -23,12 +23,16 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
   *Guía práctica oficial de completitud de datos (enfoque híbrido OpenRefine + Python/Pandas/NumPy vectorizado), imputación causal vs. K-Means en distritos, resolución de contrapares bancarias, enriquecimiento semántico y validación de 0% nulos.*
 * 📄 **[04. Informe de Guía Práctica: Sistemas de Recomendación](04_Informe_Sistemas_de_Recomendacion.md)**  
   *Guía práctica oficial de Sistemas de Recomendación bancarios estructurados bajo los paradigmas Demográfico (K-Means), Colaborativo (Slope One, Correlación de Pearson y Similitud de Coseno) y Basado en Contenido (Item-to-Item de Amazon con Frecuencia Inversa ITF), con formato CERO CÓDIGO sustentado en evidencias visuales y métricas formales.*
+* 📄 **[07. Guía de Dashboards Articulados en Power BI (Kimball y MongoDB)](07_Guia_Dashboards_Articulados_PowerBI.md)**  
+  *Proyecto final: dos dashboards (SQL Server y MongoDB) con 9 pestañas enlazadas por navegación, drill-through Distrito → Cliente y segmentadores sincronizados, que responden en cadena las 6 preguntas de la Carta de Diseño. Incluye la base académica de cada tipo de gráfico, la matriz de trazabilidad pregunta → visual → evidencia, las medidas DAX para ambos modelos y los valores de control reconciliados.*
 
 #### 2. Scripts DDL de Implementación Física (SQL Server)
 * 💾 **[`sql/01_DDL_Kimball_DM_Financial.sql`](sql/01_DDL_Kimball_DM_Financial.sql)**  
   *Script DDL completo para la arquitectura dimensional de Ralph Kimball (`DM_Financial_Kimball_v2`). Define las 4 dimensiones conformadas (`Tiempo`, `Cuenta`, `Cliente`, `Distrito`), los catálogos específicos (`Estado_Prestamo`, `Operacion`, `Orden`) y las tablas de hechos atómicas (`Fact_Prestamos`, `Fact_Transacciones`, `Fact_Ordenes`) con tipos monetarios exactos `DECIMAL(12,2)`.*
 * 💾 **[`sql/02_DDL_Inmon_EDW_Financial.sql`](sql/02_DDL_Inmon_EDW_Financial.sql)**  
   *Script DDL documental para la arquitectura corporativa de Bill Inmon (`EDW_Financial_Inmon`). Modela el repositorio central en Tercera Forma Normal (3FN) organizado por áreas temáticas y las vistas analíticas departamentales derivadas.*
+* 💾 **[`sql/04_Vistas_PowerBI_Kimball.sql`](sql/04_Vistas_PowerBI_Kimball.sql)**  
+  *Vistas para el dashboard Kimball: saldo final por cuenta (medida semiaditiva, $197,140,434) y transacciones agregadas por cuenta-año-operación.*
 
 #### 3. Pipelines de Carga, Calidad y Recomendación (Python)
 * ⚙️ **[`scripts/etl_populate_kimball_v2.py`](scripts/etl_populate_kimball_v2.py):** Pipeline ETL para extraer datos desde MySQL (`Financial_ijs`), aplicar reglas de staging y poblar el modelo dimensional en SQL Server.
@@ -36,6 +40,9 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
 * ⚙️ **[`scripts/completar_transacciones.py`](scripts/completar_transacciones.py):** Pipeline vectorizado de completitud e imputación multicriterio sobre 1,056,320 transacciones (<24 s).
 * ⚙️ **[`scripts/clustering.py`](scripts/clustering.py) / [`scripts/imputar_final.py`](scripts/imputar_final.py):** Algoritmos de correlación, codo/silueta K-Means e imputación para `df_cliente_consolidado`.
 * ⚙️ **[`scripts/sistemas_recomendacion.py`](scripts/sistemas_recomendacion.py):** Pipeline analítico de recomendación que ejecuta los modelos Demográfico, Colaborativo (Slope One, Pearson, Coseno) e Item-to-Item con ITF, exportando las evidencias gráficas en alta definición.
+* ⚙️ **[`scripts/26_powerbi_mongo_dashboard.py`](scripts/26_powerbi_mongo_dashboard.py):** Conector de Power BI (Script de Python) que construye el modelo estrella del dashboard MongoDB con Aggregation Pipelines; compatible con el esquema anidado (dump) y el plano (CSV).
+* ⚙️ **[`scripts/27_evidencia_estadistica_dashboard.py`](scripts/27_evidencia_estadistica_dashboard.py):** Reproduce todas las cifras y pruebas estadísticas (χ², Fisher, ANOVA, Welch, error estándar) que citan los dashboards de la guía 07 y las guarda en `metricas_dashboard_07.json`.
+* ⚙️ **[`scripts/28_mockup_dashboard.py`](scripts/28_mockup_dashboard.py):** Genera las maquetas PNG de las 9 pestañas del dashboard con datos reales (`img/mockup_dashboard/`).
 
 #### 4. DataFrames Analíticos Originales y Limpios (`dataframes/`)
 * 📊 **[`dataframes/df_prestamos.csv`](dataframes/df_prestamos.csv):** 682 filas $\times$ 24 columnas (Cartera de créditos, 100% completo).

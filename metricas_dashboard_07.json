@@ -1,0 +1,383 @@
+{
+  "kpi": {
+    "cartera_total": 103261740.0,
+    "num_prestamos": 682,
+    "prestamos_mora_D": 45,
+    "tasa_mora_vigente": 0.1004,
+    "tasa_incumplimiento": 0.1325,
+    "saldo_depositos": 197140434.0,
+    "ratio_absorcion": 0.5238,
+    "volumen_transaccionado": 6257862197.0,
+    "num_transacciones": 1056320,
+    "ticket_promedio_transaccion": 5924.21,
+    "compromiso_ordenes": 21229041.0,
+    "num_ordenes": 6471,
+    "monto_en_riesgo_BD": 15580152.0,
+    "clientes_con_impago_B": 31,
+    "clientes_totales": 5369
+  },
+  "p1_estado_por_anio": {
+    "1993": {
+      "A": 16,
+      "B": 4,
+      "C": 0,
+      "D": 0
+    },
+    "1994": {
+      "A": 73,
+      "B": 12,
+      "C": 14,
+      "D": 2
+    },
+    "1995": {
+      "A": 45,
+      "B": 6,
+      "C": 33,
+      "D": 6
+    },
+    "1996": {
+      "A": 29,
+      "B": 6,
+      "C": 72,
+      "D": 10
+    },
+    "1997": {
+      "A": 40,
+      "B": 3,
+      "C": 130,
+      "D": 23
+    },
+    "1998": {
+      "A": 0,
+      "B": 0,
+      "C": 154,
+      "D": 4
+    }
+  },
+  "p1_tasa_mora_por_cosecha": {
+    "1994": {
+      "n": 16,
+      "casos": 2,
+      "tasa": 0.125,
+      "error_estandar": 0.0827
+    },
+    "1995": {
+      "n": 39,
+      "casos": 6,
+      "tasa": 0.1538,
+      "error_estandar": 0.0578
+    },
+    "1996": {
+      "n": 82,
+      "casos": 10,
+      "tasa": 0.122,
+      "error_estandar": 0.0361
+    },
+    "1997": {
+      "n": 153,
+      "casos": 23,
+      "tasa": 0.1503,
+      "error_estandar": 0.0289
+    },
+    "1998": {
+      "n": 158,
+      "casos": 4,
+      "tasa": 0.0253,
+      "error_estandar": 0.0125
+    }
+  },
+  "p1_chi2_mora_vs_cosecha_1994_1997": {
+    "chi2": 0.4412,
+    "gl": 3,
+    "p_valor": 0.9316,
+    "celdas_esperado_menor_5": 1,
+    "celdas": 8
+  },
+  "p2_tasa_mora_region": {
+    "Prague": {
+      "n": 47,
+      "casos": 4,
+      "tasa": 0.0851,
+      "error_estandar": 0.0407
+    },
+    "central Bohemia": {
+      "n": 59,
+      "casos": 5,
+      "tasa": 0.0847,
+      "error_estandar": 0.0363
+    },
+    "east Bohemia": {
+      "n": 65,
+      "casos": 9,
+      "tasa": 0.1385,
+      "error_estandar": 0.0428
+    },
+    "north Bohemia": {
+      "n": 41,
+      "casos": 0,
+      "tasa": 0.0,
+      "error_estandar": 0.0
+    },
+    "north Moravia": {
+      "n": 76,
+      "casos": 12,
+      "tasa": 0.1579,
+      "error_estandar": 0.0418
+    },
+    "south Bohemia": {
+      "n": 37,
+      "casos": 4,
+      "tasa": 0.1081,
+      "error_estandar": 0.051
+    },
+    "south Moravia": {
+      "n": 88,
+      "casos": 7,
+      "tasa": 0.0795,
+      "error_estandar": 0.0288
+    },
+    "west Bohemia": {
+      "n": 35,
+      "casos": 4,
+      "tasa": 0.1143,
+      "error_estandar": 0.0538
+    }
+  },
+  "p2_chi2_mora_vs_region": {
+    "chi2": 9.2007,
+    "gl": 7,
+    "p_valor": 0.2386,
+    "celdas_esperado_menor_5": 4,
+    "celdas": 16
+  },
+  "p2_chi2_mora_vs_macro_region": {
+    "chi2": 0.7055,
+    "gl": 2,
+    "p_valor": 0.7027,
+    "celdas_esperado_menor_5": 1,
+    "celdas": 6
+  },
+  "p2_fisher_north_moravia_vs": {
+    "north Bohemia": 0.0077,
+    "south Moravia": 0.1448,
+    "Prague": 0.2833,
+    "east Bohemia": 0.8154
+  },
+  "p2_monto_por_macro_region": {
+    "Bohemia": {
+      "n": 352,
+      "media": 149344.23,
+      "desv_est": 108115.52,
+      "error_estandar": 5762.58
+    },
+    "Moravia": {
+      "n": 246,
+      "media": 153496.59,
+      "desv_est": 117556.94,
+      "error_estandar": 7495.16
+    },
+    "Praga": {
+      "n": 84,
+      "media": 153957.29,
+      "desv_est": 123275.73,
+      "error_estandar": 13450.49
+    }
+  },
+  "p2_anova_monto_macro_region": {
+    "F": 0.121,
+    "p_valor": 0.8861,
+    "kruskal_p": 0.979
+  },
+  "p2_treemap_cartera_region": {
+    "south Moravia": 19678848.0,
+    "north Moravia": 18081312.0,
+    "central Bohemia": 13985304.0,
+    "east Bohemia": 13943724.0,
+    "Prague": 12932412.0,
+    "south Bohemia": 9374136.0,
+    "west Bohemia": 7779384.0,
+    "north Bohemia": 7486620.0
+  },
+  "p2_treemap_mayor_distrito": {
+    "distrito": "Hl.m. Praha",
+    "monto": 12932412.0
+  },
+  "p3_absorcion_region": {
+    "south Bohemia": {
+      "cartera": 9374136.0,
+      "saldo": 15481233.0,
+      "ratio_absorcion": 0.6055
+    },
+    "east Bohemia": {
+      "cartera": 13943724.0,
+      "saldo": 23660859.0,
+      "ratio_absorcion": 0.5893
+    },
+    "south Moravia": {
+      "cartera": 19678848.0,
+      "saldo": 34019639.0,
+      "ratio_absorcion": 0.5785
+    },
+    "central Bohemia": {
+      "cartera": 13985304.0,
+      "saldo": 25151592.0,
+      "ratio_absorcion": 0.556
+    },
+    "Prague": {
+      "cartera": 12932412.0,
+      "saldo": 24896682.0,
+      "ratio_absorcion": 0.5194
+    },
+    "north Moravia": {
+      "cartera": 18081312.0,
+      "saldo": 35000037.0,
+      "ratio_absorcion": 0.5166
+    },
+    "west Bohemia": {
+      "cartera": 7779384.0,
+      "saldo": 18763898.0,
+      "ratio_absorcion": 0.4146
+    },
+    "north Bohemia": {
+      "cartera": 7486620.0,
+      "saldo": 20166494.0,
+      "ratio_absorcion": 0.3712
+    }
+  },
+  "p4_ticket_por_operacion": {
+    "Egreso / Gasto": {
+      "n": 634571,
+      "volumen": 2821775775.0,
+      "media": 4446.7456,
+      "desv_est": 7375.4917,
+      "error_estandar": 9.2587,
+      "pct_volumen": 0.4509
+    },
+    "Ingreso / Deposito": {
+      "n": 221969,
+      "volumen": 3200002902.0,
+      "media": 14416.4406,
+      "desv_est": 12791.9221,
+      "error_estandar": 27.1512,
+      "pct_volumen": 0.5114
+    },
+    "Intereses Ganados / Abono Bancario": {
+      "n": 183114,
+      "volumen": 27479762.0,
+      "media": 150.0691,
+      "desv_est": 80.5107,
+      "error_estandar": 0.1881,
+      "pct_volumen": 0.0044
+    },
+    "Retiro en Efectivo": {
+      "n": 16666,
+      "volumen": 208603758.0,
+      "media": 12516.7261,
+      "desv_est": 6593.2865,
+      "error_estandar": 51.0724,
+      "pct_volumen": 0.0333
+    }
+  },
+  "p4_anova_ticket_operacion": {
+    "F": 119175.16,
+    "p_valor": 0.0,
+    "eta_cuadrado": 0.2529
+  },
+  "p4_welch_ingreso_vs_retiro": {
+    "t": 32.84,
+    "p_valor": 4.691754676997464e-232
+  },
+  "p4_volumen_operacion_por_anio": {
+    "1993": {
+      "Egreso / Gasto": 79099986.0,
+      "Ingreso / Deposito": 119631432.0,
+      "Intereses Ganados / Abono Bancario": 811185.0,
+      "Retiro en Efectivo": 4767384.0
+    },
+    "1994": {
+      "Egreso / Gasto": 242003434.0,
+      "Ingreso / Deposito": 276241813.0,
+      "Intereses Ganados / Abono Bancario": 2294400.0,
+      "Retiro en Efectivo": 18256999.0
+    },
+    "1995": {
+      "Egreso / Gasto": 345975206.0,
+      "Ingreso / Deposito": 392769385.0,
+      "Intereses Ganados / Abono Bancario": 3299184.0,
+      "Retiro en Efectivo": 25695422.0
+    },
+    "1996": {
+      "Egreso / Gasto": 521012208.0,
+      "Ingreso / Deposito": 601760796.0,
+      "Intereses Ganados / Abono Bancario": 5012134.0,
+      "Retiro en Efectivo": 36079111.0
+    },
+    "1997": {
+      "Egreso / Gasto": 767438794.0,
+      "Ingreso / Deposito": 857319729.0,
+      "Intereses Ganados / Abono Bancario": 7375283.0,
+      "Retiro en Efectivo": 56214084.0
+    },
+    "1998": {
+      "Egreso / Gasto": 866246147.0,
+      "Ingreso / Deposito": 952279747.0,
+      "Intereses Ganados / Abono Bancario": 8687576.0,
+      "Retiro en Efectivo": 67590758.0
+    }
+  },
+  "p5_ordenes_categoria_pct": {
+    "Servicios del Hogar": 0.5412,
+    "Sin Especificar": 0.2131,
+    "Cuota de Prestamo": 0.1108,
+    "Pago de Seguros": 0.0822,
+    "Arrendamiento / Leasing": 0.0527
+  },
+  "p5_compromiso_categoria": {
+    "Arrendamiento / Leasing": 759540.0,
+    "Cuota de Prestamo": 3035219.0,
+    "Pago de Seguros": 686927.0,
+    "Servicios del Hogar": 13965417.0,
+    "Sin Especificar": 2781938.0
+  },
+  "p5_indice_saturacion": {
+    "cuentas_mayor_0_5": 47,
+    "cuentas_mayor_1": 1,
+    "maximo": {
+      "id_cuenta": 2335,
+      "indice": 2.1353
+    }
+  },
+  "p6_incumplimiento_segmento_edad": {
+    "Adulto (41-60)": {
+      "n": 106,
+      "casos": 16,
+      "tasa": 0.1509,
+      "error_estandar": 0.0348
+    },
+    "Adulto joven (26-40)": {
+      "n": 83,
+      "casos": 8,
+      "tasa": 0.0964,
+      "error_estandar": 0.0324
+    },
+    "Joven (<=25)": {
+      "n": 35,
+      "casos": 5,
+      "tasa": 0.1429,
+      "error_estandar": 0.0591
+    },
+    "Mayor (>60)": {
+      "n": 10,
+      "casos": 2,
+      "tasa": 0.2,
+      "error_estandar": 0.1265
+    }
+  },
+  "p6_chi2_incumplimiento_vs_edad": {
+    "chi2": 1.6848,
+    "gl": 3,
+    "p_valor": 0.6403,
+    "celdas_esperado_menor_5": 2,
+    "celdas": 8
+  }
+}
