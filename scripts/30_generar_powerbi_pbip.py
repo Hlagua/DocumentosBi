@@ -433,12 +433,16 @@ class Pagina:
         self._contenedor(x, y, w, h, {
             "visualType": "actionButton", "drillFilterOtherVisuals": True,
             "objects": {
-                "icon": [{"properties": {"shapeType": lit("blank")}, "selector": {"id": "default"}}],
-                "text": [{"properties": {"show": lit(True), "text": lit(texto), "fontColor": color(col_texto),
-                                         "fontSize": lit(10)}, "selector": {"id": "default"}}],
-                "fill": [{"properties": {"show": lit(True), "fillColor": color(fondo), "transparency": lit(0)},
+                # "show" es una propiedad general (sin selector); texto, colores y relleno van por estado
+                "icon": [{"properties": {"show": lit(False)}},
+                         {"properties": {"shapeType": lit("blank")}, "selector": {"id": "default"}}],
+                "text": [{"properties": {"show": lit(True)}},
+                         {"properties": {"text": lit(texto), "fontColor": color(col_texto), "fontSize": lit(10),
+                                         "bold": lit(True)}, "selector": {"id": "default"}}],
+                "fill": [{"properties": {"show": lit(True)}},
+                         {"properties": {"fillColor": color(fondo), "transparency": lit(0)},
                           "selector": {"id": "default"}}],
-                "outline": [{"properties": {"show": lit(False)}, "selector": {"id": "default"}}],
+                "outline": [{"properties": {"show": lit(False)}}],
             },
             "vcObjects": {"visualLink": [{"properties": enlace}]}})
 
@@ -475,7 +479,8 @@ def construir_informe(F):
                     col_texto=TINTA if activa else "#FFFFFF")
             x += ancho + 4
         sync = lambda g: {"syncGroup": {"groupName": g, "fieldChanges": True, "filterChanges": True}}
-        modo = {"data": [{"properties": {"mode": lit("Dropdown")}}]}
+        modo = {"data": [{"properties": {"mode": lit("Dropdown")}}],
+                "header": [{"properties": {"show": lit(False)}}]}
         p.visual("slicer", 890, 8, 185, 58, {"Values": ["anio"]}, "Año", objetos=modo, extra=sync("anio"))
         p.visual("slicer", 1083, 8, 185, 58, {"Values": ["macro"]}, "Macro-región", objetos=modo, extra=sync("macro"))
 
