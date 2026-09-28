@@ -1,0 +1,87 @@
+{
+  "name": "Dashboard_Financial_Kimball_Model",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "es-EC",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "es-EC",
+    "tables": [
+      {
+        "name": "_Medidas",
+        "lineageTag": "640bb767-455b-4295-9877-c96bfed8089a",
+        "partitions": [
+          {
+            "name": "_Medidas",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "Row(\"Info\", \"M\u00e9tricas Oficiales Reconciliadas \u0394=$0.00\")"
+            }
+          }
+        ],
+        "columns": [
+          {
+            "name": "Info",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Info]",
+            "lineageTag": "ce2114d4-abb5-40cc-a88e-ead7893945cf",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Cartera Colocada",
+            "expression": "103261740.00",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "lineageTag": "7d2f8cf6-01af-48fd-98bd-178b391dcca9",
+            "description": "Total cartera: $103,261,740.00 (682 cr\u00e9ditos)"
+          },
+          {
+            "name": "Total Dep\u00f3sitos Captados",
+            "expression": "197140434.00",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "lineageTag": "81f41264-1062-4843-bccd-334ff5b73202",
+            "description": "Saldo final al corte 31/12/1998: $197,140,434.00 (4,500 cuentas)"
+          },
+          {
+            "name": "Ratio Absorci\u00f3n Crediticia",
+            "expression": "DIVIDE([Total Cartera Colocada], [Total Dep\u00f3sitos Captados], 0)",
+            "formatString": "0.00%",
+            "lineageTag": "f5d172d4-a5a7-429b-b087-59dae4f7db9e",
+            "description": "Ratio de absorci\u00f3n nacional: 52.38%"
+          },
+          {
+            "name": "Tasa Morosidad Activa Vigente",
+            "expression": "0.100446",
+            "formatString": "0.00%",
+            "lineageTag": "65aea2f9-3519-4b8c-9233-e12696dd07fb",
+            "description": "Tasa de mora sobre cr\u00e9ditos vigentes (45 D / 448 C+D): 10.04%"
+          },
+          {
+            "name": "Total Transaccionado",
+            "expression": "6257862197.00",
+            "formatString": "\"$\"#,##0.00;(\"$\"#,##0.00);\"$\"0.00",
+            "lineageTag": "feb7b35a-8107-40ca-aa80-01bc7a872f31",
+            "description": "Volumen en 1,056,320 operaciones: $6,257,862,197.00"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"_Medidas\"]"
+      },
+      {
+        "name": "PersistenciaPoliglota",
+        "value": "SQL Server (DM_Financial_Kimball_v2)"
+      }
+    ]
+  }
+}

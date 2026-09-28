@@ -5,12 +5,12 @@
 
 ---
 
-# GUÍA 07 — DASHBOARDS ARTICULADOS EN POWER BI: KIMBALL (SQL SERVER) Y MONGODB
+# GUÍA 07 — DASHBOARDS ARTICULADOS EN POWER BI: KIMBALL (SQL SERVER) Y MONGODB (NoSQL)
 
 **Autores:** Alison Marcela Cobos Taco / Henry Daniel Lagua Flores  
 **Docente:** Ing. Ruben Nogales, Mg.  
-**Caso de estudio:** `Financial_ijs` (PKDD'99)  
-**Versión:** 2.0 (base académica, trazabilidad y evidencia estadística)  
+**Caso de estudio:** `Financial_ijs` (PKDD'99 Financial Discovery Challenge / Czech Bank Benchmark)  
+**Versión:** 3.1 — Unión de las versiones de Alison (base académica, trazabilidad, evidencia estadística) y Henry (dossier 08, dashboard HTML, detalle forense D1/D2). Todas las cifras están verificadas con `scripts/27_evidencia_estadistica_dashboard.py`.  
 **Archivos a entregar:** `Dashboard_Financial_Kimball.pbix` y `Dashboard_Financial_Mongo.pbix`
 
 > Esta guía **reemplaza la maquetación de 2 páginas de la guía 06**. Las reglas de visualización del docente (sección 2 de la guía 06) se mantienen.
@@ -26,6 +26,8 @@
 | "Producto más vendido → su proveedor → lo de ese proveedor" | En banca, la cadena equivalente es **¿cuándo? → ¿dónde? → ¿qué distrito? → ¿qué cliente? → ¿qué más tiene ese cliente?** Cada paso se abre desde el anterior con *drill-through* (sección 5). |
 | Todos los datos | Se usan los 3 hechos (préstamos, órdenes, transacciones) y todas las dimensiones. |
 | Todo articulado, **no** "uno de ventas, otro de productos, otro de proveedores" | Las pestañas se organizan por **pregunta de negocio**, no por tabla. Todas comparten el modelo, los filtros sincronizados y los saltos de detalle. |
+| Persistencia políglota replicada | Los dos tableros tienen la misma apariencia, estructura y medidas. Solo cambia la fuente: `DM_Financial_Kimball_v2` (SQL Server) o `Financial` (MongoDB). |
+| Reconciliación matemática | Los totales de control coinciden al centavo en ambos motores (**Δ = $0.00**, sección 9.3). |
 | Pestañas linkeadas | Navegador de páginas, botones de pregunta, *drill-through* Distrito → Cliente con botón Atrás y segmentadores sincronizados. |
 | **Desviación estándar cuando la comparativa es grande** | Barras de error solo donde hay muchas observaciones: 682 préstamos (P2), 448 préstamos vigentes (P1, P2), 234 cerrados (P6) y 1,056,320 transacciones (P4). No se ponen en totales ni conteos, porque un total no tiene dispersión. |
 | **Pastel = una sola variable en porcentajes** | Solo 2 donas: categoría de orden (5 clases, P5) y estado del préstamo (4 clases, D1). Las etiquetas muestran **porcentaje del total**. |
@@ -51,6 +53,8 @@ Cada regla del docente coincide con un resultado publicado. Estas son las fuente
 | R7 | **KPIs arriba a la izquierda y detalle abajo** | Un dashboard se lee de un vistazo: primero el estado general y después el porqué. Las tarjetas de cabecera responden la pregunta en un número. | Few (2006) |
 | R8 | **Título que responde la pregunta** (p. ej. "north Moravia tiene la mayor tasa de mora: 15.79%") | El título dice qué debe concluir el lector en lugar de solo nombrar el gráfico. | Knaflic (2015) |
 | R9 | **Un color fijo por categoría en todas las pestañas** y solo un color de alerta | El color categórico solo ayuda si significa lo mismo en todas partes. Un único color de alerta dirige la atención preatentiva. | Ware (2012); Few (2012) |
+
+| R10 | **Pruebas distintas según el tipo de dato** | Medias continuas (montos) → ±1σ + ANOVA / t de Welch. Proporciones (tasas) → error estándar binomial; cuando p se acerca a 0, como north Bohemia con 0%, el intervalo de **Wilson** evita límites negativos. Tablas con frecuencias esperadas < 5 (**regla de Cochran**) → **prueba exacta de Fisher**. | Wilson (1927); Cochran (1954); Fisher (1922) |
 
 ### 2.1 Cómo interpretar las barras de error (lo que se dice en clase)
 
@@ -134,7 +138,7 @@ flowchart LR
 | 2 | ¿En qué región? | **north Moravia** concentra 12 de los 45 morosos y tiene la tasa más alta (15.79% ± 4.18). Solo se distingue de forma significativa de north Bohemia (Fisher p = 0.008). En conjunto, la región no explica la mora (χ² p = 0.239). | Descriptivo + inferencial |
 | 3 | ¿En qué distrito de esa región? | **Karvina**: 3 de 15 préstamos vigentes en mora. Es el distrito con más morosos de north Moravia. | Descriptivo |
 | 4 | ¿Quién es el moroso? | Préstamos 5447, 6816 y 6959. El mayor es el del **cliente 2823**: $541,200 a 60 meses (el 3.er préstamo más grande del banco). | Descriptivo |
-| 5 | ¿Qué más tiene ese cliente? | 4 órdenes por **$14,286/mes** (cuota $9,020, sin especificar $2,745, hogar $2,036, seguro $485). Su saldo promedio bajó de $25,368 (1996) a $3,354 (1997) y $723 (1998) y cerró en **−$2,803**. | Descriptivo |
+| 5 | ¿Qué más tiene ese cliente? | 4 órdenes por **$14,286/mes** (cuota $9,020, sin especificar $2,745, hogar $2,036, seguro $485). Su saldo promedio bajó de $25,368 (1996) a $3,354 (1997) y $723 (1998). El saldo de cierre anual fue $12,867 → $1,162 → **−$2,803**, con un sobregiro mínimo de −$17,030. | Descriptivo |
 | 6 | ¿Es un caso aislado? | Sus órdenes equivalen a **2.14 veces** su saldo promedio. Es el único con índice > 1 y encabeza la lista de 47 con índice > 0.5, que se usa como **alerta temprana**. | Descriptivo |
 
 **Frase para la exposición:** *"Los datos no dicen que 1997 fue un año más riesgoso: la tasa se mantuvo y lo que creció fue la colocación. La región tampoco explica la mora por sí sola. Lo que sí separa al caso crítico es la capacidad de pago: el cliente 2823 comprometía en órdenes fijas el doble de su saldo. Por eso proponemos el índice de saturación como alerta."*
@@ -187,6 +191,32 @@ flowchart TB
 3. En Power BI: *Obtener datos → SQL Server → `(localdb)\MSSQLLocalDB` → `DM_Financial_Kimball_v2` → Importar*. Selecciona:
    `Fact_Prestamos`, `Fact_Ordenes`, `vw_PBI_Trans_Anual_Cuenta`, `vw_PBI_Saldo_Final_Cuenta`, `Dim_Tiempo`, `Dim_Distrito`, `Dim_Cliente`, `Dim_Cuenta`, `Dim_Estado_Prestamo`, `Dim_Orden`, `Dim_Operacion`.
 
+```mermaid
+flowchart TD
+    subgraph "SQL Server: DM_Financial_Kimball_v2"
+        FP[Fact_Prestamos<br>682 filas]
+        FO[Fact_Ordenes<br>6,471 filas]
+        V_SALDO[vw_PBI_Saldo_Final_Cuenta<br>4,500 cuentas: $197.14M]
+        V_TRANS[vw_PBI_Trans_Anual_Cuenta<br>54,298 filas: $6,257.86M]
+        DD[Dim_Distrito]
+        DC[Dim_Cliente]
+        DCU[Dim_Cuenta]
+        DT[Dim_Tiempo]
+        DEP[Dim_Estado_Prestamo]
+        DO[Dim_Orden]
+        DOP[Dim_Operacion]
+    end
+    DD --- FP & FO & V_SALDO & V_TRANS
+    DC --- FP & FO & V_SALDO & V_TRANS
+    DCU --- FP & FO & V_SALDO & V_TRANS
+    DT --- FP
+    DEP --- FP
+    DO --- FO
+    DOP --- V_TRANS
+```
+
+Las medidas DAX de Kimball también están en un solo archivo listo para copiar: [`sql/05_Medidas_DAX_PowerBI.dax`](sql/05_Medidas_DAX_PowerBI.dax). Los proyectos de Power BI (`.pbip`) están en [`dashboards/`](dashboards/).
+
 > ⚠️ **Corrección respecto a la guía 06:** la medida `CALCULATE(SUM(saldo_cuenta), LASTDATE(...))` solo suma las cuentas que tuvieron movimiento el último día y no da $197.14M. Usa la vista `vw_PBI_Saldo_Final_Cuenta`.
 
 ### 7.2 Dashboard MongoDB
@@ -195,6 +225,30 @@ flowchart TB
 3. *Obtener datos → Más… → Script de Python* → pega **todo** `scripts/26_powerbi_mongo_dashboard.py` → marca las 7 tablas `m_*`.
    * Las transacciones y el saldo final se calculan **dentro de MongoDB** con *Aggregation Pipeline* (`$sort` + `$group`). Esto sirve como argumento técnico del lado NoSQL.
    * Probado: 7 tablas cargadas en ~10 s; los 5 totales de control cuadran con Kimball (**Δ = 0.00**).
+   * El conector funciona con los dos esquemas de carga: el documental anidado (script 22 / `Financial_mongo_dump.gz`) y el plano (script 23, desde CSV).
+   * La gobernanza del esquema se aplica con `$jsonSchema` (`scripts/25_aplicar_jsonschema_mongo.py`).
+
+```mermaid
+flowchart TD
+    subgraph "MongoDB: Financial"
+        M_DIST[distritos<br>77 documentos]
+        M_CLI[FinancialMongo<br>5,369 documentos Cliente 360]
+        M_PRES[prestamos<br>682 documentos]
+        M_ORD[ordenes<br>6,471 documentos]
+        M_TRANS[transacciones<br>1,056,320 documentos]
+    end
+    subgraph "Aggregation Pipelines (cómputo dentro de MongoDB)"
+        PIPE_SALDO["$sort fecha desc + $group $first<br>→ m_saldo_cuenta ($197.14M)"]
+        PIPE_TRANS["$group cuenta-año-operación<br>sum, sum(x²), count<br>→ m_trans_anual ($6.26B)"]
+    end
+    PBI["scripts/26_powerbi_mongo_dashboard.py<br>7 tablas m_* · Δ = $0.00"]
+    M_TRANS --> PIPE_SALDO --> PBI
+    M_TRANS --> PIPE_TRANS --> PBI
+    M_DIST --> PBI
+    M_CLI --> PBI
+    M_PRES --> PBI
+    M_ORD --> PBI
+```
 
 ---
 
@@ -345,19 +399,23 @@ Titulo Cliente = "Ficha 360 · " & SELECTEDVALUE ( m_clientes[cliente], "(varios
 
 ### 9.3 Valores de control (Año = Todos, sin filtros)
 
-| Medida | Valor esperado en ambos |
-| :--- | ---: |
-| Cartera Total | $103,261,740 |
-| Num Prestamos / Prestamos en Mora | 682 / 45 |
-| Tasa Mora Vigente | 10.04% |
-| Tasa Incumplimiento | 13.25% |
-| Saldo Depositos | $197,140,434 |
-| Ratio Absorcion | 52.38% |
-| Volumen Transaccionado / Num Transacciones | $6,257,862,197 / 1,056,320 |
-| Compromiso Ordenes / Num Ordenes | $21,229,041 / 6,471 |
-| Clientes Saturados (índice > 0.5) | 47 |
-| Clientes con Impago | 31 |
-| Clientes Totales | 5,369 |
+Cifras comprobadas en SQL Server (`DM_Financial_Kimball_v2`), MongoDB (`Financial`) y los DataFrames del repositorio. La diferencia entre motores es **Δ = $0.00**.
+
+| Métrica | Valor en ambos | Definición |
+| :--- | ---: | :--- |
+| Cartera Total | **$103,261,740.00** | 682 préstamos (1993–1998) |
+| Num Prestamos / Prestamos en Mora | **682 / 45** | 45 en estado D |
+| Prestamos Vigentes / Tasa Mora Vigente | **448 / 10.04%** | 45 / 448 |
+| Prestamos Cerrados / Tasa Incumplimiento | **234 / 13.25%** | 31 / 234 |
+| Monto en Riesgo (B + D) | **$15,580,152.00** | Saldo pendiente de los préstamos B y D |
+| Monto Promedio / Desv Est Prestamo | **$151,410.18 / $113,372.41** | Media y σ muestral |
+| Saldo Depositos | **$197,140,434.00** | Último saldo de las 4,500 cuentas al 31/12/1998 |
+| Ratio Absorcion / Liquidez Libre | **52.38% / $93,878,694.00** | Cartera / Depósitos · Depósitos − Cartera |
+| Volumen Transaccionado / Num Transacciones | **$6,257,862,197.00 / 1,056,320** | Ticket promedio $5,924.21 |
+| Compromiso Ordenes / Num Ordenes | **$21,229,041.00 / 6,471** | 5 categorías de `k_symbol` |
+| Clientes Saturados (índice > 0.5) | **47** | Órdenes > 50% del saldo promedio |
+| Clientes con Impago | **31** | Estado B |
+| Clientes Totales | **5,369** | 4,500 titulares (`OWNER`) + 869 autorizados (`DISPONENT`) |
 
 ### 9.4 Medidas adicionales para barras de error, porcentajes y cabeceras
 
@@ -424,6 +482,8 @@ Categoria Principal Orden =
 * **Cuerpo:** máximo 6 visuales, cada uno con un título que da la respuesta (R8).
 
 ### Pestaña 0 · Inicio: "¿Cómo está el banco?"
+
+![Maqueta 00_inicio](img/mockup_dashboard/00_inicio.png)
 | Cabecera (KPI) | Valor |
 | :--- | ---: |
 | Cartera total | $103,261,740 |
@@ -436,6 +496,8 @@ Categoria Principal Orden =
 Cuerpo: **6 botones**, uno por pregunta de la carta (texto = la pregunta; *Acción → Navegación de página → P1…P6*), y un cuadro de texto con la **ruta de análisis** de la sección 5.
 
 ### Pestaña P1 · "¿Cómo evoluciona la morosidad año a año?"
+
+![Maqueta 01_p1_cuando](img/mockup_dashboard/01_p1_cuando.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Préstamos otorgados | 682 |
@@ -464,6 +526,8 @@ Valores de V3 (control):
 | **Total** | **203** | **31** | **403** | **45** | **682** |
 
 ### Pestaña P2 · "¿Qué distritos concentran el mayor riesgo crediticio?"
+
+![Maqueta 02_p2_donde](img/mockup_dashboard/02_p2_donde.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Región con mayor mora (`Region Mayor Mora`) | north Moravia · 15.79% |
@@ -481,6 +545,8 @@ Valores de V3 (control):
 Al hacer clic en *north Moravia* (V2), el treemap y V4 se filtran y Karvina queda primero. Clic derecho sobre Karvina → **Obtener detalles → D1**.
 
 ### Pestaña P3 · "¿Qué porcentaje de los depósitos está comprometido en préstamos?"
+
+![Maqueta 03_p3_cuanto](img/mockup_dashboard/03_p3_cuanto.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Cartera total | $103,261,740 |
@@ -497,6 +563,8 @@ Al hacer clic en *north Moravia* (V2), el treemap y V4 se filtran y Karvina qued
 No lleva barras de error: el ratio es un **cociente de dos totales poblacionales** (cartera y saldo completos, no muestras), así que no tiene dispersión.
 
 ### Pestaña P4 · "¿Qué operaciones mueven más dinero y cómo varía el saldo?"
+
+![Maqueta 04_p4_flujo](img/mockup_dashboard/04_p4_flujo.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Volumen transaccionado | $6,257,862,197 |
@@ -514,6 +582,8 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | V6 | Tabla | Cliente, Volumen, Num Transacciones (Top 20) | → drill-through D2 |
 
 ### Pestaña P5 · "¿Qué cuentas tienen órdenes que saturan su saldo?"
+
+![Maqueta 05_p5_ordenes](img/mockup_dashboard/05_p5_ordenes.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Órdenes permanentes | 6,471 |
@@ -528,6 +598,8 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | V3 | **Tabla** | Cliente, distrito, Compromiso Ordenes, Saldo Promedio Historico, Indice Saturacion · Filtro de nivel visual: Indice > 0.5 · orden descendente · formato condicional: naranja si > 1 | "Un cliente compromete más del doble de su saldo" → drill-through D2 |
 
 ### Pestaña P6 · "¿A qué clientes no se les deben dar nuevos productos?"
+
+![Maqueta 06_p6_impago](img/mockup_dashboard/06_p6_impago.png)
 | Cabecera | Valor |
 | :--- | ---: |
 | Clientes con impago histórico (B) | 31 |
@@ -542,6 +614,8 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | V3 | **Columnas** | X: `region` · Y: Prestamos Incumplidos | "Los incumplidos se reparten entre regiones (5–6 en la mayoría)" |
 
 ### D1 · Detalle Distrito (drill-through, oculta)
+
+![Maqueta 07_d1_distrito](img/mockup_dashboard/07_d1_distrito.png)
 **Configuración:** *Obtener detalles* → `Dim_Distrito[nombre_distrito]` (Mongo: `m_distritos[nombre_distrito]`) · **Mantener todos los filtros** activado · *Ocultar página*.
 
 | Cabecera (dinámica) | Karvina |
@@ -549,7 +623,9 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | `Titulo Distrito` | Detalle del distrito: Karvina |
 | Préstamos / en mora | 24 / 3 |
 | Tasa de mora vigente | 20.00% |
-| Cartera | $3,059,820 |
+| Cartera total / vigente (C + D) | $3,059,820 / $2,313,996 |
+| Ratio de absorción del distrito | 43.70% ($3,059,820 / $7,002,080 en 152 cuentas) |
+| Estados | A = 9 ($745,824) · B = 0 · C = 12 ($1,613,124) · D = 3 ($700,872) |
 | Salario promedio · desempleo · criminalidad | De `Dim_Distrito` |
 
 | Visual | Tipo | Configuración |
@@ -559,6 +635,8 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | V3 | **Tabla** | Cliente, id_prestamo, monto, cuota, plazo, estado → clic derecho → **Obtener detalles → D2** |
 
 ### D2 · Ficha Cliente 360 (drill-through, oculta)
+
+![Maqueta 08_d2_cliente360](img/mockup_dashboard/08_d2_cliente360.png)
 **Configuración:** *Obtener detalles* → `Dim_Cliente[Cliente]` (Mongo: `m_clientes[cliente]`) · **Mantener todos los filtros** · *Ocultar página*.
 
 | Cabecera (dinámica) | Cliente 2823 |
@@ -567,12 +645,13 @@ No lleva barras de error: el ratio es un **cociente de dos totales poblacionales
 | Préstamo · cuota · plazo · estado | $541,200 · $9,020 · 60 meses · D |
 | Compromiso en órdenes | $14,286 / mes |
 | Índice de saturación | 2.14 (en naranja) |
-| Saldo final | −$2,803 |
+| Saldo final (31/12/1998) | −$2,803 (sobregiro mínimo −$17,030) |
+| Perfil | Mujer, 52 años (nacida el 18/12/1946), titular (`OWNER`), Karvina |
 
 | Visual | Tipo | Configuración |
 | :--- | :--- | :--- |
-| V1 | **Columnas** | X: categoría de orden · Y: Compromiso Ordenes |
-| V2 | **Líneas** | X: `anio` · Y: Saldo Promedio Historico ($25,368 → $3,354 → $723) |
+| V1 | **Columnas** | X: categoría de orden · Y: Compromiso Ordenes (cuota $9,020 · sin especificar $2,745 · hogar $2,036 · seguro $485) |
+| V2 | **Líneas** | X: `anio` · Y: Saldo Promedio Historico ($25,368 → $3,354 → $723) y saldo de cierre anual ($12,867 → $1,162 → −$2,803) |
 | V3 | **Columnas** | X: tipo de operación · Y: Volumen Transaccionado |
 | V4 | Tarjeta de varias filas | Sexo, edad, segmento, calificación de pago |
 
@@ -610,9 +689,27 @@ El script lee los DataFrames del repositorio, imprime el resumen y guarda todo e
 | El ticket promedio depende del tipo de operación (P4) | ANOVA de un factor, n = 1,056,320 | F = 119,175, p < 0.001, **η² = 0.253** | Significativa, efecto grande (η² > 0.14; Cohen, 1988) |
 | Ingreso vs. retiro en efectivo (±1σ solapadas) (P4) | t de Welch | t = 32.84, p < 0.001 | Significativa aunque las bandas σ se solapen (ver 2.1) |
 | La edad no predice el impago (P6) | χ² segmento de edad × estado (A/B) | χ² = 1.685, gl = 3, **p = 0.640** | No significativa |
+| El sexo no predice el impago (P6) | Fisher exacto 2×2 (sexo × B) | **p = 0.704** | No significativa |
+| La edad (≤ 40 vs. > 40) no predice el impago (P6) | Fisher exacto 2×2 (regla de Cochran: 2 de 8 celdas con esperado < 5) | **p = 0.340** | No significativa |
 | Cuentas saturadas (P5) | Índice = Σ órdenes mensuales / saldo promedio histórico | 47 con índice > 0.5; 1 con índice > 1 (cuenta 2335: 2.135) | Indicador descriptivo de alerta |
 
 **Criterio:** α = 0.05. Cuando más del 20% de las celdas de una tabla de contingencia tiene frecuencia esperada < 5, la conclusión se respalda con la prueba exacta de Fisher.
+
+---
+
+## 12.1 RECURSOS DEL PROYECTO EN EL REPOSITORIO
+
+| Componente | Ruta | Uso |
+| :--- | :--- | :--- |
+| Guía maestra | [`07_Guia_Dashboards_Articulados_PowerBI.md`](07_Guia_Dashboards_Articulados_PowerBI.md) | Este documento |
+| Dossier de auditoría | [`08_Dossier_Auditoria_Externa_Dashboard.md`](08_Dossier_Auditoria_Externa_Dashboard.md) | Revisión externa y tribunal |
+| Vistas SQL Kimball | [`sql/04_Vistas_PowerBI_Kimball.sql`](sql/04_Vistas_PowerBI_Kimball.sql) | Saldo semiaditivo y transacciones agregadas |
+| Medidas DAX | [`sql/05_Medidas_DAX_PowerBI.dax`](sql/05_Medidas_DAX_PowerBI.dax) | Medidas listas para copiar |
+| Conector MongoDB | [`scripts/26_powerbi_mongo_dashboard.py`](scripts/26_powerbi_mongo_dashboard.py) | Script de Python para Power BI |
+| Evidencia estadística | [`scripts/27_evidencia_estadistica_dashboard.py`](scripts/27_evidencia_estadistica_dashboard.py) → `metricas_dashboard_07.json` | Reproduce todas las cifras y pruebas |
+| Maquetas | [`scripts/28_mockup_dashboard.py`](scripts/28_mockup_dashboard.py) → [`img/mockup_dashboard/`](img/mockup_dashboard/) | 9 imágenes calculadas desde los datos |
+| Dashboard HTML | [`scripts/29_generar_dashboard_html.py`](scripts/29_generar_dashboard_html.py) → [`dashboards/dashboard_interactivo.html`](dashboards/dashboard_interactivo.html) | Demo interactiva en navegador |
+| Proyectos Power BI | [`scripts/30_generar_powerbi_pbip.py`](scripts/30_generar_powerbi_pbip.py) → [`dashboards/`](dashboards/) | `.pbip` Kimball y Mongo |
 
 ---
 
@@ -622,9 +719,9 @@ El script lee los DataFrames del repositorio, imprime el resumen y guarda todo e
 2. **P1:** "Los morosos suben de 2 a 23, pero en la matriz se ve que la colocación también se duplicó. La tasa por año, con sus barras de error estándar, se mantiene entre 12 y 15% (χ², p = 0.93). El problema es de volumen, no de más riesgo por préstamo." → botón **Ver dónde ocurre**.
 3. **P2:** "El treemap muestra que la mayor cartera está en south Moravia. El naranja más intenso está en north Moravia, que tiene la tasa más alta (15.79%). Sus barras solo se separan de las de north Bohemia (Fisher, p = 0.008). Y el monto promedio no cambia entre regiones: las bandas de ±1σ se solapan (ANOVA, p = 0.89)." Clic en north Moravia → Karvina → **drill-through**.
 4. **D1 Karvina:** "3 de 15 préstamos vigentes en mora. El más grande es del cliente 2823." → **drill-through**.
-5. **D2 Cliente 2823:** "$541,200 a 60 meses. Sus órdenes fijas suman $14,286 al mes, su saldo cayó de $25 mil a $723 y terminó en negativo."
+5. **D2 Cliente 2823:** "Una clienta de 52 años con saldo promedio de $25,368 en 1996. En noviembre de 1997 recibe $541,200 a 60 meses, con cuota de $9,020. Con sus otras órdenes fijas (sin especificar, hogar y seguro) paga $14,286 al mes. Su saldo promedio cae a $723 en 1998 y cierra en −$2,803."
 6. **P5:** "Su índice de saturación es 2.14: es el único mayor a 1 entre las 47 cuentas en alerta. Este indicador sí separa el caso crítico, cosa que ni la región ni el año logran."
-7. **P3, P4 y P6 (breve):** south Bohemia es la región más expuesta en liquidez (60.55%). Los depósitos mueven el 51% del dinero y el tipo de operación explica el 25% de la variación del ticket (η²). Los 31 clientes con impago son la lista de denegación, y la edad no predice el impago.
+7. **P3, P4 y P6 (breve):** south Bohemia es la región más expuesta en liquidez (60.55%). Los depósitos mueven el 51% del dinero y el tipo de operación explica el 25% de la variación del ticket (η²). Los 31 clientes con impago son la lista de denegación, y ni la edad ni el sexo predicen el impago (Fisher, p = 0.34 y 0.70).
 8. **Cambiar al .pbix de MongoDB** y repetir los pasos 3 a 5: los mismos números, pero obtenidos de documentos embebidos y *aggregation pipelines*.
 
 ---
@@ -668,4 +765,8 @@ El script lee los DataFrames del repositorio, imprime el resumen y guarda todo e
 * [11] C. N. Knaflic, *Storytelling with Data: A Data Visualization Guide for Business Professionals*. Hoboken, NJ, USA: Wiley, 2015.
 * [12] C. Ware, *Information Visualization: Perception for Design*, 3rd ed. Waltham, MA, USA: Morgan Kaufmann, 2012.
 * [13] J. Cohen, *Statistical Power Analysis for the Behavioral Sciences*, 2nd ed. Hillsdale, NJ, USA: Lawrence Erlbaum, 1988.
+* [15] E. B. Wilson, "Probable inference, the law of succession, and statistical inference," *Journal of the American Statistical Association*, vol. 22, no. 158, pp. 209–212, 1927.
+* [16] W. G. Cochran, "Some methods for strengthening the common χ² tests," *Biometrics*, vol. 10, no. 4, pp. 417–451, 1954.
+* [17] R. A. Fisher, "On the interpretation of χ² from contingency tables, and the calculation of P," *Journal of the Royal Statistical Society*, vol. 85, no. 1, pp. 87–94, 1922.
+* [18] T. Munzner, *Visualization Analysis and Design*. Boca Raton, FL, USA: CRC Press, 2014.
 * [14] R. Kimball and M. Ross, *The Data Warehouse Toolkit*, 3rd ed. Indianapolis, IN, USA: Wiley, 2013.

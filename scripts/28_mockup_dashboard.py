@@ -626,7 +626,7 @@ def pg_d1():
     tabla(fig, (0.305, 0.05, 0.68, 0.36), "Préstamos del distrito (morosos primero)",
           ["Cliente", "Préstamo", "Monto", "Cuota", "Plazo", "Estado"], filas, [0.2, 0.15, 0.2, 0.17, 0.13, 0.15],
           resaltar=lambda r, f: f[-1] == "D", regla="clic derecho en Cliente 2823 → Ficha Cliente 360")
-    guardar(fig, "07_d1_detalle_distrito.png")
+    guardar(fig, "07_d1_distrito.png")
 
 
 def pg_d2():
@@ -684,7 +684,7 @@ def pg_d2():
              "• Ni el año ni la región explicaban la mora;\n  la capacidad de pago sí.\n"
              "• Propuesta: alerta temprana por índice\n  de saturación antes de otorgar crédito.",
              fontsize=9.5, color=TINTA, va="top", linespacing=1.5)
-    guardar(fig, "08_d2_ficha_cliente.png")
+    guardar(fig, "08_d2_cliente360.png")
 
 
 if __name__ == "__main__":

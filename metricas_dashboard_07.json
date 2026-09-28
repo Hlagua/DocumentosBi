@@ -379,5 +379,38 @@
     "p_valor": 0.6403,
     "celdas_esperado_menor_5": 2,
     "celdas": 8
+  },
+  "p6_fisher_incumplimiento": {
+    "sexo_F_vs_M": 0.7036,
+    "edad_hasta40_vs_mayor40": 0.3398
+  },
+  "d1_karvina": {
+    "prestamos": 24,
+    "vigentes": 15,
+    "en_mora_D": 3,
+    "cartera": 3059820.0,
+    "cartera_vigente": 2313996.0,
+    "cuentas": 152,
+    "saldo_depositos": 7002080.0,
+    "ratio_absorcion": 0.437
+  },
+  "d2_cliente_2823": {
+    "saldo_promedio_anual": {
+      "1996": 25368.17,
+      "1997": 3354.26,
+      "1998": 722.56
+    },
+    "saldo_cierre_anual": {
+      "1996": 12867.0,
+      "1997": 1162.0,
+      "1998": -2803.0
+    },
+    "saldo_minimo": -17030.0,
+    "ordenes_mensuales": {
+      "Cuota de Prestamo": 9020.0,
+      "Pago de Seguros": 485.0,
+      "Servicios del Hogar": 2036.0,
+      "Sin Especificar": 2745.0
+    }
   }
 }

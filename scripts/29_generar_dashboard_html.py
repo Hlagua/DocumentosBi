@@ -1,0 +1,1759 @@
+"""
+Generador del Dashboard Interactivo Web en HTML5 / CSS3 / JavaScript (Chart.js)
+Caso de Estudio: Banco Comercial Checo (Financial_ijs)
+Persistencia Políglota: SQL Server Kimball vs MongoDB NoSQL (Δ = $0.00)
+"""
+
+import os
+
+HTML_CONTENT = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Gerencial Bancario - Financial_ijs | Persistencia Políglota</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-body: #0b1120;
+            --bg-nav: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #243247;
+            --border: #334155;
+            --border-highlight: #475569;
+            --text-title: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-dark: #0284c7;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --indigo: #6366f1;
+            --purple: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header {
+            background-color: var(--bg-nav);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-badge {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-title h1 {
+            font-size: 16px;
+            color: var(--text-title);
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .header-title span {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .engine-pill {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2px 4px;
+        }
+
+        .engine-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .engine-btn.active {
+            background-color: var(--primary-dark);
+            color: white;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+        }
+
+        .reconciliation-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--success);
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* Navigation Bar */
+        nav {
+            background-color: #0c1527;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            overflow-x: auto;
+            padding: 0 16px;
+            scrollbar-width: thin;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-title);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background-color: rgba(56, 189, 248, 0.05);
+        }
+
+        .tab-btn.drill {
+            color: var(--warning);
+        }
+
+        .tab-btn.drill.active {
+            color: #fbbf24;
+            border-bottom-color: #fbbf24;
+            background-color: rgba(251, 191, 36, 0.05);
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            padding: 20px 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tab Header */
+        .tab-intro {
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tab-title-block h2 {
+            font-size: 20px;
+            color: var(--text-title);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .tab-title-block p {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 900px;
+        }
+
+        .academic-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-highlight);
+        }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        }
+
+        .kpi-card.danger::before {
+            background: linear-gradient(90deg, #ef4444, #b91c1c);
+        }
+
+        .kpi-card.success::before {
+            background: linear-gradient(90deg, #10b981, #047857);
+        }
+
+        .kpi-card.warning::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .kpi-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-title);
+            margin-bottom: 4px;
+        }
+
+        .kpi-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Visuals Grid */
+        .visual-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-7 { grid-column: span 7; }
+        .col-6 { grid-column: span 6; }
+        .col-5 { grid-column: span 5; }
+        .col-4 { grid-column: span 4; }
+
+        @media (max-width: 1024px) {
+            .col-8, .col-7, .col-6, .col-5, .col-4 { grid-column: span 12; }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-title);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-rule-tag {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .chart-box {
+            position: relative;
+            flex: 1;
+            min-height: 280px;
+            width: 100%;
+        }
+
+        /* Action Buttons */
+        .action-banner {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.secondary {
+            background: #334155;
+            color: var(--text-title);
+        }
+
+        .action-btn.secondary:hover {
+            background: #475569;
+            box-shadow: none;
+        }
+
+        /* Data Tables */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: var(--text-body);
+        }
+
+        .styled-table th {
+            background-color: #0f172a;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 10px 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .styled-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .styled-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+        }
+
+        .styled-table tr.highlight-red {
+            background-color: rgba(239, 68, 68, 0.08);
+            border-left: 3px solid var(--danger);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .status-badge.d { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .status-badge.c { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .status-badge.a { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .status-badge.b { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+
+        /* Mockup Toggle */
+        .mockup-link {
+            font-size: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+
+        .mockup-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Forensic Flow Box in Inicio */
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .flow-step:hover {
+            background: rgba(56, 189, 248, 0.05);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .flow-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .flow-text h4 {
+            font-size: 13px;
+            color: var(--text-title);
+            margin-bottom: 2px;
+        }
+
+        .flow-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bg-nav);
+            border-top: 1px solid var(--border);
+            padding: 12px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <span class="header-badge">UTA · SOFTWARE · BI</span>
+            <div>
+                <h1>Dashboard Gerencial Bancario · Financial_ijs</h1>
+            </div>
+            <span>Caso de Estudio: Czech Bank Benchmark (PKDD'99)</span>
+        </div>
+        <div class="header-controls">
+            <div class="engine-pill">
+                <button class="engine-btn active" id="btn-engine-kimball" onclick="switchEngine('kimball')">SQL Server (Kimball)</button>
+                <button class="engine-btn" id="btn-engine-mongo" onclick="switchEngine('mongo')">MongoDB (NoSQL)</button>
+            </div>
+            <div class="reconciliation-badge" title="Discrepancia nula en todos los agregados">
+                <span>●</span> Reconciliación: Δ = $0.00
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav>
+        <button class="tab-btn active" onclick="openTab(0)">0. Inicio</button>
+        <button class="tab-btn" onclick="openTab(1)">P1. ¿Cuándo? (Evolución)</button>
+        <button class="tab-btn" onclick="openTab(2)">P2. ¿Dónde? (Territorio)</button>
+        <button class="tab-btn" onclick="openTab(3)">P3. ¿Cuánto? (Liquidez)</button>
+        <button class="tab-btn" onclick="openTab(4)">P4. ¿Cómo? (Flujo)</button>
+        <button class="tab-btn" onclick="openTab(5)">P5. ¿Quién? (Órdenes)</button>
+        <button class="tab-btn" onclick="openTab(6)">P6. ¿A quién no? (Impago)</button>
+        <button class="tab-btn drill" onclick="openTab(7)">D1. Detalle Distrito (Karvina)</button>
+        <button class="tab-btn drill" onclick="openTab(8)">D2. Ficha Cliente 360 (2823)</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+
+        <!-- TAB 0: INICIO -->
+        <div id="tab-0" class="tab-content active">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>0. Panorama General y Cadena Forense Articulada</h2>
+                    <p>Visión ejecutiva macrofinanciera y navegación estructurada por la cadena causal de resolución de riesgo crediticio.</p>
+                </div>
+                <div class="academic-pill">
+                    Arquitectura Ralph Kimball ↔ MongoDB NoSQL Replicada
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Cartera Total Colocada</div>
+                    <div class="kpi-value">$103.26M</div>
+                    <div class="kpi-subtitle">682 contratos de crédito (1993–1998)</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Saldo en Depósitos</div>
+                    <div class="kpi-value">$197.14M</div>
+                    <div class="kpi-subtitle">4,500 cuentas activas al 31/12/1998</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Ratio de Absorción</div>
+                    <div class="kpi-value">52.38%</div>
+                    <div class="kpi-subtitle">Cobertura libre: $93.88M (47.62%)</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Tasa de Morosidad Activa</div>
+                    <div class="kpi-value">10.04%</div>
+                    <div class="kpi-subtitle">45 créditos en Estado D (sobre 448 vigentes)</div>
+                </div>
+            </div>
+
+            <!-- Visual Grid -->
+            <div class="visual-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Hilo Conductor Analítico (6 Pasos Forenses)</h3>
+                        <span class="card-rule-tag">Navegación Articulada</span>
+                    </div>
+                    <div class="flow-step" onclick="openTab(1)">
+                        <div class="flow-num">1</div>
+                        <div class="flow-text">
+                            <h4>P1 · ¿Cuándo? — Shock Temporal de 1997</h4>
+                            <p>Detectar cuándo la cartera perdió calidad: 1997 concentra 23 casos D (51.1% del total).</p>
+                        </div>
+                    </div>
+                    <div class="flow-step" onclick="openTab(2)">
+                        <div class="flow-num">2</div>
+                        <div class="flow-text">
+                            <h4>P2 · ¿Dónde? — north Moravia y Karvina</h4>
+                            <p>north Moravia registra 15.79% de mora, con el outlier crítico en Karvina (20.00%).</p>
+                        </div>
+                    </div>
+                    <div class="flow-step" onclick="openTab(7)">
+                        <div class="flow-num">3</div>
+                        <div class="flow-text">
+                            <h4>D1 · Detalle Distrito — Radiografía de Karvina</h4>
+                            <p>24 créditos, $3.06M colocados, ratio 43.70% y el mayor crédito impago ($541.2K).</p>
+                        </div>
+                    </div>
+                    <div class="flow-step" onclick="openTab(8)">
+                        <div class="flow-num">4</div>
+                        <div class="flow-text">
+                            <h4>D2 · Ficha Cliente 360 — Causa Raíz Cliente 2823</h4>
+                            <p>Desembolso de $541.2K y cuota de $9,020 sumada a débitos fijos hunde su saldo a -$2,803.</p>
+                        </div>
+                    </div>
+                    <div class="flow-step" onclick="openTab(5)">
+                        <div class="flow-num">5</div>
+                        <div class="flow-text">
+                            <h4>P5 · ¿Quién? — Saturación Financiera Institucional</h4>
+                            <p>Identificar si es caso aislado: 47 clientes saturados con débitos > 50% del saldo medio.</p>
+                        </div>
+                    </div>
+                    <div class="flow-step" onclick="openTab(6)">
+                        <div class="flow-num">6</div>
+                        <div class="flow-text">
+                            <h4>P6 · ¿A quién no prestar? — Política de Interdicción</h4>
+                            <p>31 clientes con impago histórico (Estado B). Fisher exacto descarta sesgo demográfico.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Acceso Rápido a Preguntas Estratégicas</h3>
+                        <span class="card-rule-tag">Carta de Diseño v6</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+                        <button class="action-btn" onclick="openTab(1)" style="justify-content: center; padding: 14px;">P1 · ¿Cuándo se desestabiliza?</button>
+                        <button class="action-btn" onclick="openTab(2)" style="justify-content: center; padding: 14px;">P2 · ¿En qué territorio?</button>
+                        <button class="action-btn" onclick="openTab(3)" style="justify-content: center; padding: 14px;">P3 · ¿Cuánta liquidez absorbe?</button>
+                        <button class="action-btn" onclick="openTab(4)" style="justify-content: center; padding: 14px;">P4 · ¿Cómo se mueve el capital?</button>
+                        <button class="action-btn" onclick="openTab(5)" style="justify-content: center; padding: 14px;">P5 · ¿Quién está saturado?</button>
+                        <button class="action-btn" onclick="openTab(6)" style="justify-content: center; padding: 14px;">P6 · ¿A quién no prestar?</button>
+                    </div>
+
+                    <div style="margin-top: 24px; padding: 16px; background: rgba(56, 189, 248, 0.05); border: 1px dashed var(--primary); border-radius: 8px;">
+                        <h4 style="font-size: 13px; color: var(--primary); margin-bottom: 6px;">Auditoría de Persistencia Políglota</h4>
+                        <p style="font-size: 12px; color: var(--text-body); line-height: 1.5;">
+                            Este cuadro de mando cuenta con dos implementaciones gemelas: <code>Dashboard_Financial_Kimball.pbix</code> (SQL Server) y <code>Dashboard_Financial_Mongo.pbix</code> (MongoDB). Ambas arquitecturas garantizan idénticas métricas con concordancia absoluta:
+                            <strong>Δ = $0.00</strong> en cartera ($103,261,740.00), depósitos ($197,140,434.00) y transacciones ($6,257,862,197.00).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1: P1 CUANDO -->
+        <div id="tab-1" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P1 · ¿Cuándo? — Evolución Temporal de la Cartera y Morosidad</h2>
+                    <p>Carta de Diseño: <em>¿Cómo evoluciona la morosidad activa año a año y cuándo se produjo la pérdida de calidad crediticia?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Regla 2 Docente / Tufte (1983) & Few (2004) · Líneas Continuas Exclusivas
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Año Pico de Mora</div>
+                    <div class="kpi-value">1997</div>
+                    <div class="kpi-subtitle">23 créditos en Mora D (51.1% del total)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Casos en Mora Activa</div>
+                    <div class="kpi-value">45 créditos</div>
+                    <div class="kpi-subtitle">Sobre 448 créditos vigentes (10.04%)</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-title">Incremento 1996 → 1997</div>
+                    <div class="kpi-value">+130%</div>
+                    <div class="kpi-subtitle">De 10 a 23 casos en mora activa</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Próximo Paso Analítico</div>
+                    <div class="kpi-value">P2 Territorial</div>
+                    <div class="kpi-subtitle">Identificar dónde se concentra el impago</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-7">
+                    <div class="card-header">
+                        <h3>Evolución Anual de Créditos: Otorgados vs Morosos Activos (D)</h3>
+                        <span class="card-rule-tag">Regla 2: Serie Temporal Continua</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p1-line"></canvas>
+                    </div>
+                </div>
+                <div class="card col-5">
+                    <div class="card-header">
+                        <h3>Composición de Cartera Colocada: Sana vs En Riesgo ($M)</h3>
+                        <span class="card-rule-tag">Cleveland & McGill (1984)</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p1-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Hallazgo Clave:</strong> El shock macroeconómico checo de 1997 detonó la pérdida de calidad con 23 casos en mora D.
+                </div>
+                <button class="action-btn" onclick="openTab(2)">Ver dónde ocurre territorialmente → Pestaña P2</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: P2 DONDE -->
+        <div id="tab-2" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P2 · ¿Dónde? — Riesgo Geográfico y Comparativa Territorial</h2>
+                    <p>Carta de Diseño: <em>¿Qué macro-regiones y distritos geográficos concentran la mayor colocación y la mayor mora relativa?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Regla 5 Docente / Cumming et al. (2007) · Solapamiento de ±1σ | ANOVA p=0.8861
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Región de Mayor Riesgo</div>
+                    <div class="kpi-value">north Moravia</div>
+                    <div class="kpi-subtitle">Tasa de mora activa: 15.79% (12 casos D)</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Región Riesgo Cero</div>
+                    <div class="kpi-value">north Bohemia</div>
+                    <div class="kpi-subtitle">Tasa de mora activa: 0.00% (0 casos D)</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Distrito Crítico Outlier</div>
+                    <div class="kpi-value">Karvina (ID 73)</div>
+                    <div class="kpi-subtitle">Tasa de mora activa: 20.00% (3 D / 15 vigentes)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Acción de Trazabilidad</div>
+                    <div class="kpi-value">Drill-Through</div>
+                    <div class="kpi-subtitle">Inspección forense en Pestaña D1</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Monto Promedio por Macro-Región con Barras de Error (±1σ)</h3>
+                        <span class="card-rule-tag">Regla 5: Solapamiento Muestral Total</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p2-error"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        <strong>Dictamen Estadístico:</strong> ANOVA Paramétrico <em>F = 0.1210, p = 0.8861</em>. Las barras de ±1σ se solapan completamente; el tamaño del crédito no varía por región.
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Matriz de Riesgo Distrital: Cartera vs Tasa de Mora Activa</h3>
+                        <span class="card-rule-tag">Scatter Plot / Cleveland & McGill</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p2-scatter"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        <strong>Anomalía:</strong> Karvina ($3.06M, 20% mora) supera la media nacional (10.04%) y se aísla como el principal foco de riesgo.
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Trazabilidad:</strong> Haga clic en la burbuja de Karvina o use el botón directo para auditar sus préstamos.
+                </div>
+                <button class="action-btn" onclick="openTab(7)">Explorar Distrito Karvina (Drill-Through D1) →</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: P3 CUANTO -->
+        <div id="tab-3" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P3 · ¿Cuánto? — Liquidez, Absorción Crediticia y Capacidad de Fondeo</h2>
+                    <p>Carta de Diseño: <em>¿Qué porcentaje de los depósitos de los clientes está absorbido por la cartera de crédito y cuál es la cobertura de liquidez?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Medida Semiaditiva de Saldos al 31/12/1998: $197,140,434.00
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Cartera Total Colocada</div>
+                    <div class="kpi-value">$103.26M</div>
+                    <div class="kpi-subtitle">Activo crediticio global</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Saldo en Depósitos</div>
+                    <div class="kpi-value">$197.14M</div>
+                    <div class="kpi-subtitle">Medida semiaditiva de 4,500 cuentas</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Ratio de Absorción Nacional</div>
+                    <div class="kpi-value">52.38%</div>
+                    <div class="kpi-subtitle">Créditos / Depósitos bancarios</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Cobertura de Liquidez Libre</div>
+                    <div class="kpi-value">$93.88M</div>
+                    <div class="kpi-subtitle">47.62% de fondos no comprometidos</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-7">
+                    <div class="card-header">
+                        <h3>Comparativa Cartera vs Depósitos por Macro-Región ($M)</h3>
+                        <span class="card-rule-tag">Cleveland & McGill (1984)</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p3-bar"></canvas>
+                    </div>
+                </div>
+                <div class="card col-5">
+                    <div class="card-header">
+                        <h3>Ratio de Absorción en Distritos Críticos (%)</h3>
+                        <span class="card-rule-tag">Few (2013) / Línea de Corte 52.38%</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p3-absorption"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Diagnóstico de Liquidez:</strong> El banco mantiene solvencia holgada ($93.88M libres). En Karvina, la absorción es del 43.70% ($3.06M sobre $7.00M depósitos).
+                </div>
+                <button class="action-btn" onclick="openTab(4)">Ver cómo fluye el capital → Pestaña P4</button>
+            </div>
+        </div>
+
+        <!-- TAB 4: P4 COMO -->
+        <div id="tab-4" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P4 · ¿Cómo se mueve el capital? — Flujo Transaccional y Dispersión</h2>
+                    <p>Carta de Diseño: <em>¿Qué canales operativos concentran el mayor flujo monetario y cómo varía el ticket promedio y su dispersión?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Regla 2 Docente (Sin Áreas Apiladas) | 1,056,320 Transacciones ($6,257,862,197.00)
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Volumen Total Transaccionado</div>
+                    <div class="kpi-value">$6,257.86M</div>
+                    <div class="kpi-subtitle">En 1,056,320 transacciones bancarias</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Ticket Promedio Global</div>
+                    <div class="kpi-value">$5,924.21</div>
+                    <div class="kpi-subtitle">Monto promedio por operación</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Operación Mayoritaria</div>
+                    <div class="kpi-value">Egreso (VYDAJ)</div>
+                    <div class="kpi-subtitle">634,571 operaciones (60.07%)</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-title">Operación Mayor Ticket</div>
+                    <div class="kpi-value">Retiro (VYBER)</div>
+                    <div class="kpi-subtitle">$12,516.73 ± $6,593.29 (Efectivo)</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Ticket Promedio por Tipo de Operación con Desviación Estándar (±1σ)</h3>
+                        <span class="card-rule-tag">Regla 5: Barras de Error σ</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p4-ticket"></canvas>
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Evolución Anual del Volumen Transaccional por Operación ($M)</h3>
+                        <span class="card-rule-tag">Regla 2: Líneas Múltiples Continuas</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p4-line"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Acatamiento Regla 2:</strong> Se eliminaron gráficos de área apilada, reemplazándolos por líneas continuas independientes (1993 a 1998).
+                </div>
+                <button class="action-btn" onclick="openTab(5)">Analizar órdenes fijas y saturación → Pestaña P5</button>
+            </div>
+        </div>
+
+        <!-- TAB 5: P5 QUIEN -->
+        <div id="tab-5" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P5 · ¿Quién está saturado? — Compromiso de Órdenes y Capacidad de Pago</h2>
+                    <p>Carta de Diseño: <em>¿Qué clientes presentan órdenes de débito permanente que comprometen críticamente su saldo bancario promedio?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Regla 3 Docente / Few (2007) · Dona Monovariable con 5 Categorías Homologadas
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Compromiso Mensual de Órdenes</div>
+                    <div class="kpi-value">$21.23M / mes</div>
+                    <div class="kpi-subtitle">6,471 órdenes permanentes domiciliadas</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Clientes Saturados (Índice > 0.5)</div>
+                    <div class="kpi-value">47 clientes</div>
+                    <div class="kpi-subtitle">Débitos fijos superan el 50% de saldo medio</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Cliente Más Saturado</div>
+                    <div class="kpi-value">Cliente 2823</div>
+                    <div class="kpi-subtitle">Índice: 2.14x ($14,286 débito vs $6,678 saldo)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Acción Forense</div>
+                    <div class="kpi-value">Drill-Through</div>
+                    <div class="kpi-subtitle">Ficha Cliente 360 en Pestaña D2</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-5">
+                    <div class="card-header">
+                        <h3>Distribución de Órdenes por Categoría k_symbol</h3>
+                        <span class="card-rule-tag">Regla 3: Dona Monovariable (5 Clases)</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p5-donut"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        <code>SIPO</code> domina (54.12% conteo / 65.78% monto), seguido de <code>SIN_ESPECIFICAR</code> (21.31%), <code>UVER</code> (11.08%), <code>POJISTNE</code> (8.22%) y <code>LEASING</code> (5.27%).
+                    </div>
+                </div>
+                <div class="card col-7">
+                    <div class="card-header">
+                        <h3>Top Clientes con Mayor Estrés Financiero (Índice de Saturación)</h3>
+                        <span class="card-rule-tag">Cleveland & McGill / Umbrales 0.5 y 1.0</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p5-ranking"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Causa Raíz Revelada:</strong> El Cliente 2823 presenta saturación de 2.14x: sus compromisos de pago duplican su saldo bancario medio.
+                </div>
+                <button class="action-btn" onclick="openTab(8)">Auditar Caso Cliente 2823 (Drill-Through D2) →</button>
+            </div>
+        </div>
+
+        <!-- TAB 6: P6 A QUIEN NO -->
+        <div id="tab-6" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>P6 · ¿A quién no prestar? — Clientes en Quiebra Histórica (Estado B)</h2>
+                    <p>Carta de Diseño: <em>¿Quiénes son los clientes con antecedentes de impago histórico para denegarles nuevo crédito?</em></p>
+                </div>
+                <div class="academic-pill">
+                    Regla de Cochran (1954) & Test Exacto de Fisher (1922) · p = 0.7156 (Sexo) / p = 0.3581 (Edad)
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Clientes en Quiebra Histórica</div>
+                    <div class="kpi-value">31 clientes</div>
+                    <div class="kpi-subtitle">Contratos cerrados en Estado B (Impago)</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Pérdida Total Defraudada</div>
+                    <div class="kpi-value">$4.36M</div>
+                    <div class="kpi-subtitle">Capital irrecuperable en préstamos B</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Tasa de Incumplimiento Cerrada</div>
+                    <div class="kpi-value">13.25%</div>
+                    <div class="kpi-subtitle">31 préstamos B sobre 234 cerrados</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-title">Política de Riesgo</div>
+                    <div class="kpi-value">Interdicción</div>
+                    <div class="kpi-subtitle">Bloqueo crediticio total en core bancario</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Distribución de Quiebras B por Segmento de Edad y Género</h3>
+                        <span class="card-rule-tag">Validación Cochran & Fisher</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-p6-demo"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        <strong>Conclusión Científica:</strong> El test de Fisher (<em>p > 0.35</em>) descarta discriminación por edad o sexo; el impago responde exclusivamente a insolvencia y sobreendeudamiento.
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-header">
+                        <h3>Lista Negra de Clientes en Estado B (Muestra Destacada)</h3>
+                        <span class="card-rule-tag">Interdicción Normativa</span>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 280px;">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Préstamo</th>
+                                    <th>ID Cuenta</th>
+                                    <th>Monto B ($)</th>
+                                    <th>Duración</th>
+                                    <th>Distrito</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="highlight-red"><td>5314</td><td>2246</td><td>$96,396</td><td>12 meses</td><td>Praha</td><td><span class="status-badge b">B</span></td></tr>
+                                <tr class="highlight-red"><td>5447</td><td>2335</td><td>$541,200</td><td>60 meses</td><td>Karvina</td><td><span class="status-badge d">D (Mora)</span></td></tr>
+                                <tr><td>5745</td><td>2530</td><td>$187,380</td><td>36 meses</td><td>Ostrava</td><td><span class="status-badge b">B</span></td></tr>
+                                <tr><td>6034</td><td>2762</td><td>$201,144</td><td>24 meses</td><td>Brno</td><td><span class="status-badge b">B</span></td></tr>
+                                <tr><td>6312</td><td>3144</td><td>$84,000</td><td>12 meses</td><td>Pilsen</td><td><span class="status-badge b">B</span></td></tr>
+                                <tr><td>6710</td><td>3611</td><td>$312,480</td><td>48 meses</td><td>Olomouc</td><td><span class="status-badge b">B</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 7: D1 DETALLE DISTRITO -->
+        <div id="tab-7" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>D1 · Detalle Forense: Distrito Karvina (ID 73 · north Moravia)</h2>
+                    <p>Pantalla de Drill-Through desde P2 / P3: Radiografía territorial del mayor foco de morosidad activa.</p>
+                </div>
+                <button class="action-btn secondary" onclick="openTab(2)">← Volver a P2 Territorial</button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Cartera Total Distrital</div>
+                    <div class="kpi-value">$3,059,820.00</div>
+                    <div class="kpi-subtitle">24 contratos de préstamo colocados</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Cartera Activa Vigente</div>
+                    <div class="kpi-value">$2,313,996.00</div>
+                    <div class="kpi-subtitle">15 préstamos vigentes (12 C + 3 D)</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Tasa de Mora Activa Distrital</div>
+                    <div class="kpi-value">20.00%</div>
+                    <div class="kpi-subtitle">3 créditos D sobre 15 vigentes (12.5% global)</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-title">Ratio Absorción Local</div>
+                    <div class="kpi-value">43.70%</div>
+                    <div class="kpi-subtitle">$3.06M créditos vs $7.00M depósitos (152 cuentas)</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-4">
+                    <div class="card-header">
+                        <h3>Distribución de Préstamos en Karvina por Estado</h3>
+                        <span class="card-rule-tag">Desglose Canónico</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-d1-status"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        Estado A = 9 ($745.8K), Estado B = 0 ($0), Estado C = 12 ($1.61M), Estado D = 3 ($700.8K). Tasa incumplimiento cerrado: 0.00%.
+                    </div>
+                </div>
+
+                <div class="card col-8">
+                    <div class="card-header">
+                        <h3>Contratos de Préstamo de Karvina (Clic en Cliente 2823 para Ficha 360)</h3>
+                        <span class="card-rule-tag">Drill-Through Forense</span>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 280px;">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Préstamo</th>
+                                    <th>ID Cuenta</th>
+                                    <th>ID Cliente</th>
+                                    <th>Monto ($)</th>
+                                    <th>Cuota Mensual</th>
+                                    <th>Plazo</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="highlight-red" onclick="openTab(8)">
+                                    <td><strong>5447</strong></td>
+                                    <td>2335</td>
+                                    <td><strong>2823</strong></td>
+                                    <td><strong>$541,200.00</strong></td>
+                                    <td>$9,020.00</td>
+                                    <td>60 meses</td>
+                                    <td><span class="status-badge d">D (Mora)</span></td>
+                                    <td><button class="action-btn" style="padding: 3px 8px; font-size: 10px;">Ficha 360 →</button></td>
+                                </tr>
+                                <tr><td>5872</td><td>2601</td><td>3145</td><td>$84,000.00</td><td>$7,000.00</td><td>12 meses</td><td><span class="status-badge d">D (Mora)</span></td><td>-</td></tr>
+                                <tr><td>6190</td><td>2954</td><td>3570</td><td>$75,600.00</td><td>$3,150.00</td><td>24 meses</td><td><span class="status-badge d">D (Mora)</span></td><td>-</td></tr>
+                                <tr><td>5122</td><td>1840</td><td>2210</td><td>$142,560.00</td><td>$2,376.00</td><td>60 meses</td><td><span class="status-badge c">C</span></td><td>-</td></tr>
+                                <tr><td>5398</td><td>2300</td><td>2780</td><td>$218,400.00</td><td>$4,550.00</td><td>48 meses</td><td><span class="status-badge c">C</span></td><td>-</td></tr>
+                                <tr><td>6520</td><td>3210</td><td>3890</td><td>$198,000.00</td><td>$5,500.00</td><td>36 meses</td><td><span class="status-badge a">A (Pagado)</span></td><td>-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <strong>Evidencia Documentada:</strong> El Préstamo 5447 ($541,200) del Cliente 2823 explica el 77.2% de toda la cartera en mora de Karvina.
+                </div>
+                <button class="action-btn" onclick="openTab(8)">Investigar a la titular: Ficha Cliente 360 (D2) →</button>
+            </div>
+        </div>
+
+        <!-- TAB 8: D2 CLIENTE 360 -->
+        <div id="tab-8" class="tab-content">
+            <div class="tab-intro">
+                <div class="tab-title-block">
+                    <h2>D2 · Ficha Cliente 360: Cliente 2823 (Cuenta 2335 · Karvina)</h2>
+                    <p>Pantalla de Drill-Through desde D1 / P5: Causa raíz de la insolvencia y quiebra técnica.</p>
+                </div>
+                <button class="action-btn secondary" onclick="openTab(7)">← Volver a Detalle Distrito Karvina</button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Préstamo Concedido (ID 5447)</div>
+                    <div class="kpi-value">$541,200.00</div>
+                    <div class="kpi-subtitle">Cuota mensual: $9,020.00 (60 meses) · Estado D</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Compromiso Mensual Órdenes</div>
+                    <div class="kpi-value">$14,286.00 / mes</div>
+                    <div class="kpi-subtitle">4 órdenes domiciliadas permanentes</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Índice de Saturación</div>
+                    <div class="kpi-value">2.14x (Extremo)</div>
+                    <div class="kpi-subtitle">Débitos fijos duplican su saldo medio ($6,678)</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-title">Saldo Cierre al 31/12/1998</div>
+                    <div class="kpi-value">-$2,803.00</div>
+                    <div class="kpi-subtitle">Sobregiro histórico mínimo en -$17,030.00</div>
+                </div>
+            </div>
+
+            <div class="visual-grid">
+                <div class="card col-7">
+                    <div class="card-header">
+                        <h3>Evolución de Saldo en Cuenta 2335 (1996 a 1998 · 329 Transacciones)</h3>
+                        <span class="card-rule-tag">Regla 2: Serie Temporal de Quiebra</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-d2-balance"></canvas>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        <strong>Trayectoria:</strong> Saldo promedio 1996: $25,368.17 (sana) → Saldo promedio 1997: $3,354.26 (colapso tras crédito) → Saldo promedio 1998: $722.56 (cierre en déficit -$2,803.00).
+                    </div>
+                </div>
+
+                <div class="card col-5">
+                    <div class="card-header">
+                        <h3>Desglose de Órdenes Permanentes Mensuales ($14,286/mes)</h3>
+                        <span class="card-rule-tag">Compromiso Fijo</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chart-d2-orders"></canvas>
+                    </div>
+                    <div style="margin-top: 14px; padding: 12px; background: rgba(239, 68, 68, 0.08); border-left: 3px solid var(--danger); border-radius: 4px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 2px;">Perfil y Dictamen del Comité de Riesgos:</div>
+                        <div style="font-size: 11px; color: var(--text-body);">
+                            Mujer de <strong>52 años</strong> (nacida 18/12/1946), titular <code>OWNER</code> en Karvina. Cuota de préstamo + débitos fijos superan sus ingresos reales. Se dictamina <strong>ejecución coactiva de garantías</strong>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        Universidad Técnica de Ambato · Carrera de Software · Asignatura: Inteligencia de Negocios · Ciclo: Agosto – Diciembre 2026<br>
+        Autores: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores · Docente: Ing. Ruben Nogales, Mg. · Motor: Ralph Kimball DW (SQL Server) ↔ MongoDB NoSQL (Δ = $0.00)
+    </footer>
+
+    <!-- JavaScript Charts & Logic -->
+    <script>
+        // Tab switching
+        function openTab(tabIndex) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const btns = document.querySelectorAll('.tab-btn');
+            
+            tabs.forEach((tab, idx) => {
+                tab.classList.toggle('active', idx === tabIndex);
+            });
+
+            btns.forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === tabIndex);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Trigger chart resize
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 50);
+        }
+
+        // Engine switching
+        function switchEngine(engine) {
+            const btnK = document.getElementById('btn-engine-kimball');
+            const btnM = document.getElementById('btn-engine-mongo');
+            if (engine === 'kimball') {
+                btnK.classList.add('active');
+                btnM.classList.remove('active');
+            } else {
+                btnM.classList.add('active');
+                btnK.classList.remove('active');
+            }
+        }
+
+        // Initialize Charts on DOM Ready
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Global Chart Defaults
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.borderColor = '#334155';
+            Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+            // P1: Line Chart
+            new Chart(document.getElementById('chart-p1-line'), {
+                type: 'line',
+                data: {
+                    labels: ['1993', '1994', '1995', '1996', '1997', '1998'],
+                    datasets: [
+                        {
+                            label: 'Préstamos Otorgados',
+                            data: [20, 80, 95, 126, 218, 143],
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.2,
+                            fill: false,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Mora Activa (Estado D)',
+                            data: [0, 2, 6, 10, 23, 4],
+                            borderColor: '#ef4444',
+                            backgroundColor: '#ef4444',
+                            borderWidth: 3,
+                            tension: 0.2,
+                            fill: false,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => ctx.datasetIndex === 1 && ctx.dataIndex === 4 ? '⚠️ PICO CRÍTICO: 51.1% de mora total' : ''
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Cantidad de Operaciones' } }
+                    }
+                }
+            });
+
+            // P1: Bar Chart
+            new Chart(document.getElementById('chart-p1-bar'), {
+                type: 'bar',
+                data: {
+                    labels: ['1993', '1994', '1995', '1996', '1997', '1998'],
+                    datasets: [
+                        {
+                            label: 'Cartera Sana (A+C) $M',
+                            data: [1.77, 8.52, 11.83, 17.51, 34.02, 18.52],
+                            backgroundColor: '#0284c7'
+                        },
+                        {
+                            label: 'Cartera en Riesgo (B+D) $M',
+                            data: [0.00, 0.21, 0.94, 1.83, 5.86, 2.25],
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, title: { display: true, text: 'Monto Colocado ($M)' } }
+                    }
+                }
+            });
+
+            // P2: Error Bar (Simulated via Floating Bar + Points)
+            new Chart(document.getElementById('chart-p2-error'), {
+                type: 'bar',
+                data: {
+                    labels: ['Praga (n=84)', 'Bohemia (n=352)', 'Moravia (n=246)'],
+                    datasets: [
+                        {
+                            label: 'Rango Solapado ±1σ ($)',
+                            data: [
+                                [30681, 277233], // 153957 ± 123275
+                                [41228, 257459], // 149344 ± 108115
+                                [35939, 271053]  // 153496 ± 117556
+                            ],
+                            backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                            borderColor: '#38bdf8',
+                            borderWidth: 2,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'Franja ±1σ: $' + ctx.raw[0].toLocaleString() + ' a $' + ctx.raw[1].toLocaleString()
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Monto del Préstamo ($)' },
+                            min: 0,
+                            max: 300000
+                        }
+                    }
+                }
+            });
+
+            // P2: Scatter Plot
+            new Chart(document.getElementById('chart-p2-scatter'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Distritos Regulares',
+                            data: [
+                                {x: 1.2, y: 8.5}, {x: 1.5, y: 11.2}, {x: 0.9, y: 6.4}, {x: 1.8, y: 9.8},
+                                {x: 2.1, y: 12.0}, {x: 0.7, y: 4.5}, {x: 1.4, y: 10.1}, {x: 2.4, y: 7.9},
+                                {x: 1.1, y: 0.0}, {x: 1.6, y: 5.2}, {x: 0.8, y: 14.1}, {x: 1.9, y: 8.9}
+                            ],
+                            backgroundColor: '#38bdf8',
+                            pointRadius: 6
+                        },
+                        {
+                            label: 'Karvina (ID 73 · Outlier Crítico)',
+                            data: [{x: 3.06, y: 20.00}],
+                            backgroundColor: '#ef4444',
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                            pointRadius: 12,
+                            pointHoverRadius: 14
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.datasetIndex === 1 
+                                    ? '🚨 KARVINA: Cartera $3.06M | Mora Activa 20.00% (24 préstamos)' 
+                                    : 'Distrito: $' + ctx.raw.x + 'M cartera | ' + ctx.raw.y + '% mora'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Cartera Colocada por Distrito ($M)' }, min: 0, max: 3.5 },
+                        y: { title: { display: true, text: 'Tasa de Mora Activa (%)' }, min: 0, max: 25 }
+                    }
+                }
+            });
+
+            // P3: Cartera vs Depósitos
+            new Chart(document.getElementById('chart-p3-bar'), {
+                type: 'bar',
+                data: {
+                    labels: ['Praga', 'Bohemia', 'Moravia'],
+                    datasets: [
+                        {
+                            label: 'Cartera Colocada ($M)',
+                            data: [25.12, 52.60, 37.82],
+                            backgroundColor: '#0284c7'
+                        },
+                        {
+                            label: 'Depósitos Captados ($M)',
+                            data: [48.71, 98.24, 86.42],
+                            backgroundColor: '#10b981'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { title: { display: true, text: 'Monto en Millones ($M)' } }
+                    }
+                }
+            });
+
+            // P3: Absorción Horizontal
+            new Chart(document.getElementById('chart-p3-absorption'), {
+                type: 'bar',
+                data: {
+                    labels: ['Karvina', 'Brno', 'Ostrava', 'Plzen', 'Media Nacional'],
+                    datasets: [{
+                        label: 'Ratio de Absorción (%)',
+                        data: [43.70, 48.20, 56.40, 50.10, 52.38],
+                        backgroundColor: (ctx) => ctx.dataIndex === 4 ? '#f59e0b' : (ctx.dataIndex === 0 ? '#38bdf8' : '#0284c7')
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Ratio de Absorción (%)' }, min: 0, max: 70 }
+                    }
+                }
+            });
+
+            // P4: Ticket Promedio
+            new Chart(document.getElementById('chart-p4-ticket'), {
+                type: 'bar',
+                data: {
+                    labels: ['Retiro Efectivo (VYBER)', 'Depósito (PRIJEM)', 'Egreso / Débito (VYDAJ)'],
+                    datasets: [{
+                        label: 'Ticket Promedio ($)',
+                        data: [12516.73, 7967.46, 4446.75],
+                        backgroundColor: ['#f59e0b', '#10b981', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    const sigmas = ['± $6,593.29 (N=16,666)', '± $11,835.60 (N=405,083)', '± $7,375.49 (N=634,571)'];
+                                    return 'Desviación: ' + sigmas[ctx.dataIndex];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Ticket Promedio ($)' } }
+                    }
+                }
+            });
+
+            // P4: Multiple Continuous Lines
+            new Chart(document.getElementById('chart-p4-line'), {
+                type: 'line',
+                data: {
+                    labels: ['1993', '1994', '1995', '1996', '1997', '1998'],
+                    datasets: [
+                        {
+                            label: 'PRIJEM (Depósitos) $M',
+                            data: [82.4, 284.1, 492.3, 715.4, 891.2, 762.1],
+                            borderColor: '#10b981',
+                            tension: 0.2,
+                            fill: false
+                        },
+                        {
+                            label: 'VYDAJ (Egresos) $M',
+                            data: [61.2, 238.9, 421.5, 629.8, 804.3, 666.1],
+                            borderColor: '#ef4444',
+                            tension: 0.2,
+                            fill: false
+                        },
+                        {
+                            label: 'VYBER (Retiros) $M',
+                            data: [4.1, 15.2, 31.8, 48.9, 59.4, 49.2],
+                            borderColor: '#f59e0b',
+                            tension: 0.2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { title: { display: true, text: 'Volumen Transaccionado ($M)' } }
+                    }
+                }
+            });
+
+            // P5: Donut
+            new Chart(document.getElementById('chart-p5-donut'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['SIPO (54.12%)', 'SIN_ESPECIFICAR (21.31%)', 'UVER (11.08%)', 'POJISTNE (8.22%)', 'LEASING (5.27%)'],
+                    datasets: [{
+                        data: [3502, 1379, 717, 532, 341],
+                        backgroundColor: ['#0284c7', '#64748b', '#ef4444', '#10b981', '#a855f7']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.label + ': ' + ctx.raw.toLocaleString() + ' órdenes'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // P5: Ranking
+            new Chart(document.getElementById('chart-p5-ranking'), {
+                type: 'bar',
+                data: {
+                    labels: ['Cliente 2823 (Karvina)', 'Cliente 1845 (Praha)', 'Cliente 3112 (Brno)', 'Cliente 0941 (Ostrava)', 'Cliente 4219 (Plzen)'],
+                    datasets: [{
+                        label: 'Índice de Saturación (Órdenes / Saldo Medio)',
+                        data: [2.14, 0.92, 0.88, 0.79, 0.74],
+                        backgroundColor: (ctx) => ctx.dataIndex === 0 ? '#ef4444' : '#f59e0b'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => ctx.dataIndex === 0 ? '🚨 ALERTA ROJA: Pagos superan 2.14 veces el saldo disponible' : 'Alerta: Saturación > 0.5'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Índice de Saturación' }, min: 0, max: 2.5 }
+                    }
+                }
+            });
+
+            // P6: Demographic
+            new Chart(document.getElementById('chart-p6-demo'), {
+                type: 'bar',
+                data: {
+                    labels: ['Joven (<=25)', 'Adulto Joven (26-40)', 'Adulto (41-60)', 'Mayor (>60)'],
+                    datasets: [
+                        {
+                            label: 'Femenino (B)',
+                            data: [3, 4, 10, 0],
+                            backgroundColor: '#ec4899'
+                        },
+                        {
+                            label: 'Masculino (B)',
+                            data: [2, 4, 6, 2],
+                            backgroundColor: '#0284c7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { title: { display: true, text: 'Cantidad de Clientes en Quiebra B' } }
+                    }
+                }
+            });
+
+            // D1: Status Karvina
+            new Chart(document.getElementById('chart-d1-status'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Estado A (9 pagados)', 'Estado B (0 impago histórico)', 'Estado C (12 al día)', 'Estado D (3 en mora activa)'],
+                    datasets: [{
+                        data: [9, 0, 12, 3],
+                        backgroundColor: ['#10b981', '#a855f7', '#0284c7', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // D2: Balance Timeline
+            new Chart(document.getElementById('chart-d2-balance'), {
+                type: 'line',
+                data: {
+                    labels: ['1996 (Cierre)', '1996 (Promedio)', '1997 (Cierre)', '1997 (Promedio)', '1998 (Cierre)', '1998 (Promedio)'],
+                    datasets: [{
+                        label: 'Saldo en Cuenta ($)',
+                        data: [12867, 25368, 1162, 3354, -2803, 722],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        tension: 0.2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => ctx.dataIndex === 4 ? '🚨 QUIEBRA: Saldo negativo -$2,803 (mínimo histórico -$17,030)' : ''
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Saldo en Cuenta ($)' } }
+                    }
+                }
+            });
+
+            // D2: Orders breakdown
+            new Chart(document.getElementById('chart-d2-orders'), {
+                type: 'bar',
+                data: {
+                    labels: ['UVER (Préstamo)', 'SIPO (Hogar)', 'Sin Especificar', 'POJISTNE (Seguro)'],
+                    datasets: [{
+                        label: 'Monto Mensual ($)',
+                        data: [9020, 2036, 2745, 485],
+                        backgroundColor: ['#ef4444', '#0284c7', '#64748b', '#10b981']
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Monto Débito ($)' } }
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
+"""
+
+def main():
+    target_path = os.path.join("dashboards", "dashboard_interactivo.html")
+    root_path = "demo_dashboard.html"
+
+    with open(target_path, "w", encoding="utf-8") as f:
+        f.write(HTML_CONTENT)
+    print(f"[OK] Creado: {target_path}")
+
+    with open(root_path, "w", encoding="utf-8") as f:
+        f.write(HTML_CONTENT)
+    print(f"[OK] Creado: {root_path}")
+
+if __name__ == "__main__":
+    main()

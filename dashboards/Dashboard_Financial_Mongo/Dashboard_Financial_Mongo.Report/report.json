@@ -1,0 +1,96 @@
+{
+  "config": "{\"version\":\"5.50\",\"themeCollection\":{\"baseTheme\":{\"name\":\"CY24SU08\",\"version\":\"5.55\",\"type\":2}},\"activeSectionIndex\":0,\"defaultDrillFilterOtherVisuals\":true}",
+  "layoutOptimization": 0,
+  "sections": [
+    {
+      "config": "{}",
+      "displayName": "0. Inicio",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section0",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P1. Cu\u00e1ndo (Evoluci\u00f3n)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section1",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P2. D\u00f3nde (Territorio)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section2",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P3. Cu\u00e1nto (Liquidez)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section3",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P4. C\u00f3mo (Flujo)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section4",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P5. Qui\u00e9n (\u00d3rdenes)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section5",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "P6. A qui\u00e9n no (Impago)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section6",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "D1. Detalle Distrito (Karvina)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section7",
+      "visualContainers": [],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "D2. Ficha Cliente 360 (2823)",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "Section8",
+      "visualContainers": [],
+      "width": 1280.0
+    }
+  ]
+}

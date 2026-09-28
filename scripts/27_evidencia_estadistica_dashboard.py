@@ -171,6 +171,28 @@ def main():
     r["p6_incumplimiento_segmento_edad"] = tasa_con_error(p, "segmento_edad", "B", ["A", "B"]).round(4).to_dict(orient="index")
     q = p[p["estado_prestamo"].isin(["A", "B"])]
     r["p6_chi2_incumplimiento_vs_edad"] = chi2(pd.crosstab(q["segmento_edad"], q["estado_prestamo"]))
+    # Regla de Cochran: con celdas esperadas < 5 se confirma con Fisher exacto en tablas 2x2
+    _, p_sexo = stats.fisher_exact(pd.crosstab(q["sexo_cliente"], q["estado_prestamo"] == "B").values)
+    _, p_edad = stats.fisher_exact(pd.crosstab(q["edad_cliente"] > 40, q["estado_prestamo"] == "B").values)
+    r["p6_fisher_incumplimiento"] = {"sexo_F_vs_M": round(float(p_sexo), 4),
+                                     "edad_hasta40_vs_mayor40": round(float(p_edad), 4)}
+
+    # ---------------- D1 / D2: caso Karvina y cliente 2823 ----------------
+    ult_k = ult[ult["id_cuenta"].isin(
+        pd.read_csv(os.path.join(DF, "df_transacciones_completado.csv.gz"), usecols=["id_cuenta", "nombre_distrito"])
+        .query("nombre_distrito == 'Karvina'")["id_cuenta"].unique())]
+    k = p[p["nombre_distrito"] == "Karvina"]
+    r["d1_karvina"] = {"prestamos": int(len(k)), "vigentes": int(k["estado_prestamo"].isin(["C", "D"]).sum()),
+                       "en_mora_D": int((k["estado_prestamo"] == "D").sum()),
+                       "cartera": float(k["monto_prestamo"].sum()),
+                       "cartera_vigente": float(k.loc[k["estado_prestamo"].isin(["C", "D"]), "monto_prestamo"].sum()),
+                       "cuentas": int(len(ult_k)), "saldo_depositos": float(ult_k["saldo_cuenta"].sum()),
+                       "ratio_absorcion": round(float(k["monto_prestamo"].sum() / ult_k["saldo_cuenta"].sum()), 4)}
+    tc = t[t["id_cuenta"] == 2335].sort_values(["fecha", "id_transaccion"])
+    r["d2_cliente_2823"] = {"saldo_promedio_anual": tc.groupby("anio")["saldo_cuenta"].mean().round(2).to_dict(),
+                            "saldo_cierre_anual": tc.groupby("anio")["saldo_cuenta"].last().to_dict(),
+                            "saldo_minimo": float(tc["saldo_cuenta"].min()),
+                            "ordenes_mensuales": o[o["id_cuenta"] == 2335].groupby("categoria_orden")["monto_orden"].sum().to_dict()}
 
     with open(SALIDA, "w", encoding="utf-8") as f:
         json.dump(r, f, ensure_ascii=False, indent=2, default=float)
@@ -183,7 +205,8 @@ def main():
     print("\nPruebas:")
     for k in ["p1_chi2_mora_vs_cosecha_1994_1997", "p2_chi2_mora_vs_region", "p2_chi2_mora_vs_macro_region",
               "p2_fisher_north_moravia_vs", "p2_anova_monto_macro_region", "p4_anova_ticket_operacion",
-              "p4_welch_ingreso_vs_retiro", "p5_indice_saturacion", "p6_chi2_incumplimiento_vs_edad"]:
+              "p4_welch_ingreso_vs_retiro", "p5_indice_saturacion", "p6_chi2_incumplimiento_vs_edad",
+              "p6_fisher_incumplimiento", "d1_karvina", "d2_cliente_2823"]:
         print(f"  {k}: {r[k]}")
     print(f"\nJSON completo: {SALIDA}")
 
