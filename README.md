@@ -34,7 +34,8 @@
 > | 7 | Dashboard (Guía 07 v4): recomendaciones cargadas en los dos motores, vista por categoría, 85 medidas DAX, conector MongoDB alineado y los dos `.pbip` con 9 páginas y KPIs en todas. El modelo Kimball se abrió en Power BI Desktop y sus medidas se verificaron en el motor (Guía 07, sección 10.1). Quedan los ajustes manuales listados en el README de cada proyecto | ✅ (los dos verificados; Mongo requiere Python de python.org con las versiones del README del proyecto) | [`07`](07_Guia_Dashboards_Articulados_PowerBI.md), [`sql/04`](sql/04_Vistas_PowerBI_Kimball.sql), [`sql/05`](sql/05_Medidas_DAX_PowerBI.dax), [`scripts/26`](scripts/26_powerbi_mongo_dashboard.py), [`scripts/30`](scripts/30_generar_powerbi_pbip.py), [`scripts/42`](scripts/42_cargar_recomendaciones.py), `dashboards/` |
 > | 7b | Dashboard v5 para el gerente: panel de filtros globales sincronizados (año, zona, segmento), drill-through a las fichas que conserva los filtros, y tres páginas de recomendación (R1 qué ofrecer, R2 préstamo prudente, R3 venta cruzada) con los sistemas que ganaron cada tarea en el Informe 04 | ✅ | [`scripts/43`](scripts/43_recomendadores_dashboard.py), [`07`](07_Guia_Dashboards_Articulados_PowerBI.md) (sección 5) |
 > | 8 | Evidencia estadística de los títulos del dashboard (Carta v8) | ✅ | [`scripts/27`](scripts/27_evidencia_estadistica_dashboard.py), `metricas_dashboard_07.json` |
-> | 9 | Guía 06, dossier 08 y demo HTML | ⏳ | `06_*`, `08_*`, `demo_dashboard.html` |
+> | 9 | Guía 06 v2 de uso e interpretación del dashboard: conexión, medidas de cada gráfico, qué muestra, por qué se eligió, cómo usarlo e interpretarlo, página por página | ✅ | [`06`](06_Guia_Uso_Interpretacion_Dashboard.md) |
+> | 9b | Dossier 08 y demo HTML | ⏳ | `08_*`, `demo_dashboard.html` |
 > | 10 | Este README (resto de secciones) | ⏳ | — |
 >
 > **Cambios que aún no se reflejan en las etapas ⏳:**
@@ -76,8 +77,8 @@ Este repositorio contiene la documentación metodológica oficial, el modelado d
   *Guía práctica oficial de Sistemas de Recomendación bancarios estructurados bajo los paradigmas Demográfico (K-Means), Colaborativo (Slope One, Correlación de Pearson y Similitud de Coseno) y Basado en Contenido (Item-to-Item de Amazon con Frecuencia Inversa ITF), con formato CERO CÓDIGO sustentado en evidencias visuales y métricas formales.*
 * 📄 **[05. Especificación Técnica: Modelo Dimensional Kimball (SQL Server) y Derivación Documental NoSQL (MongoDB)](05_Especificacion_Tecnica_Kimball_MongoDB.md)**  
   *Justificación arquitectónica de persistencia políglota, mapeo formal Kimball → MongoDB (Cliente 360 Agregado), gobernanza mediante `$jsonSchema` validator, y reconciliación cuantitativa rigurosa con delta de concordancia de $0.00.*
-* 📄 **[06. Guía de Implementación del Dashboard en Power BI (Preliminar)](06_Guia_Implementacion_Dashboard_PowerBI_Kimball_Mongo.md)**  
-  *Reglas de visualización del docente (Eje X categórico, Eje Y numérico, líneas continuas para series temporales, barras de error ±1σ para evaluar solapamiento muestral, gráficos de dona estrictamente monovariables con ≤ 5 clases, y prohibición total de 3D).*
+* 📄 **[06. Guía de Uso e Interpretación del Dashboard (v2)](06_Guia_Uso_Interpretacion_Dashboard.md)**  
+  *Cómo se conectan los dos tableros, qué medida alimenta cada gráfico, qué muestra, por qué se eligió, cómo usarlo e interpretarlo, en las 12 páginas; recorridos de decisión para el gerente.*
 * 📄 **[07. Guía Definitiva: Dashboards Articulados en Power BI (Kimball ↔ MongoDB)](07_Guia_Dashboards_Articulados_PowerBI.md)**  
   *Especificación canónica v3.1 (unión Alison + Henry): matriz de trazabilidad pregunta → visual → evidencia, base académica de cada gráfico (incluido el treemap), pruebas estadísticas reproducibles, maquetas calculadas desde los datos, obtención en SQL Server y MongoDB, y guion de defensa.*
 * 📄 **[08. Dossier de Auditoría Externa y Blindaje Estadístico del Dashboard](08_Dossier_Auditoria_Externa_Dashboard.md)**  

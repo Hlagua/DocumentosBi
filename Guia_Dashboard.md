@@ -6,6 +6,7 @@ Esta guía (v3.0) quedó **integrada en la versión canónica**:
 
 Material complementario:
 
+* [06_Guia_Uso_Interpretacion_Dashboard.md](06_Guia_Uso_Interpretacion_Dashboard.md) — **guía de uso del tablero**: conexión, medidas y lectura de cada gráfico, página por página.
 * [08_Dossier_Auditoria_Externa_Dashboard.md](08_Dossier_Auditoria_Externa_Dashboard.md) — reconciliación y blindaje estadístico.
 * [demo_dashboard.html](demo_dashboard.html) — demo web interactiva de las 9 pestañas.
 * [dashboards/](dashboards/) — proyectos Power BI Desktop (`.pbip`) Kimball y MongoDB.
