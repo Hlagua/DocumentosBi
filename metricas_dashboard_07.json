@@ -261,7 +261,7 @@
       "error_estandar": 27.1512,
       "pct_volumen": 0.5114
     },
-    "Intereses Ganados / Abono Bancario": {
+    "Intereses Ganados": {
       "n": 183114,
       "volumen": 27479762.0,
       "media": 150.0691,
@@ -291,37 +291,37 @@
     "1993": {
       "Egreso / Gasto": 79099986.0,
       "Ingreso / Deposito": 119631432.0,
-      "Intereses Ganados / Abono Bancario": 811185.0,
+      "Intereses Ganados": 811185.0,
       "Retiro en Efectivo": 4767384.0
     },
     "1994": {
       "Egreso / Gasto": 242003434.0,
       "Ingreso / Deposito": 276241813.0,
-      "Intereses Ganados / Abono Bancario": 2294400.0,
+      "Intereses Ganados": 2294400.0,
       "Retiro en Efectivo": 18256999.0
     },
     "1995": {
       "Egreso / Gasto": 345975206.0,
       "Ingreso / Deposito": 392769385.0,
-      "Intereses Ganados / Abono Bancario": 3299184.0,
+      "Intereses Ganados": 3299184.0,
       "Retiro en Efectivo": 25695422.0
     },
     "1996": {
       "Egreso / Gasto": 521012208.0,
       "Ingreso / Deposito": 601760796.0,
-      "Intereses Ganados / Abono Bancario": 5012134.0,
+      "Intereses Ganados": 5012134.0,
       "Retiro en Efectivo": 36079111.0
     },
     "1997": {
       "Egreso / Gasto": 767438794.0,
       "Ingreso / Deposito": 857319729.0,
-      "Intereses Ganados / Abono Bancario": 7375283.0,
+      "Intereses Ganados": 7375283.0,
       "Retiro en Efectivo": 56214084.0
     },
     "1998": {
       "Egreso / Gasto": 866246147.0,
       "Ingreso / Deposito": 952279747.0,
-      "Intereses Ganados / Abono Bancario": 8687576.0,
+      "Intereses Ganados": 8687576.0,
       "Retiro en Efectivo": 67590758.0
     }
   },

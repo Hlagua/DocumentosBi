@@ -1,0 +1,234 @@
+{
+  "id_ejecucion": "C20260928_181103",
+  "duracion_segundos": 48.1,
+  "pruebas_ok": 12,
+  "pruebas_total": 12,
+  "pruebas": [
+    {
+      "prueba": "Distrito 69 imputado (desempleo, criminalidad, marca)",
+      "esperado": "(5.83, 1326.0, True)",
+      "obtenido": "(5.83, 1326.0, True)",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Distritos sin nulos en desempleo/criminalidad 1995",
+      "esperado": "0",
+      "obtenido": "0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes con macro-región, segmento y arquetipo",
+      "esperado": "5369",
+      "obtenido": "5369",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes titulares de préstamo",
+      "esperado": "682",
+      "obtenido": "682",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Órdenes asignadas a clientes",
+      "esperado": "6471",
+      "obtenido": "6471",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Saldo promedio nulo solo en cotitulares",
+      "esperado": "869",
+      "obtenido": "869",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Calificación de pago (buen / mal / sin evaluar)",
+      "esperado": "{'Buen Pagador': 258, 'Mal Pagador': 31, 'Sin evaluar': 5080}",
+      "obtenido": "{'Buen Pagador': 258, 'Mal Pagador': 31, 'Sin evaluar': 5080}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Transacciones sin concepto asignado",
+      "esperado": "0",
+      "obtenido": "0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Transacciones por código de concepto",
+      "esperado": "{'DEPOSITO_EFECTIVO': 156743, 'DUCHOD': 30338, 'INGRESO_ORDINARIO': 34888, 'POJISTNE': 19309, 'RETIRO_EFECTIVO': 282657, 'SANKC. UROK': 1577, 'SIPO': 128168, 'SLUZBY': 155832, 'TRANSFERENCIA_EXTERNA': 50093, 'UROK': 183114, 'UVER': 13601}",
+      "obtenido": "{'DEPOSITO_EFECTIVO': 156743, 'DUCHOD': 30338, 'INGRESO_ORDINARIO': 34888, 'POJISTNE': 19309, 'RETIRO_EFECTIVO': 282657, 'SANKC. UROK': 1577, 'SIPO': 128168, 'SLUZBY': 155832, 'TRANSFERENCIA_EXTERNA': 50093, 'UROK': 183114, 'UVER': 13601}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Transacciones con concepto inferido",
+      "esperado": "535314",
+      "obtenido": "535314",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Monto de transacciones sin cambios",
+      "esperado": "6,257,862,197.00",
+      "obtenido": "6,257,862,197.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Saldo neto al corte sin cambios",
+      "esperado": "197,140,434.00",
+      "obtenido": "197,140,434.00",
+      "resultado": "OK"
+    }
+  ],
+  "dim_concepto_movimiento": [
+    {
+      "sk": 1,
+      "codigo": "DEPOSITO_EFECTIVO",
+      "concepto": "Deposito en Efectivo de Fondos Propios",
+      "metodo": "Regla de canal",
+      "contraparte": "Caja propia",
+      "transacciones": 156743
+    },
+    {
+      "sk": 2,
+      "codigo": "DUCHOD",
+      "concepto": "Abono de Pension / Jubilacion",
+      "metodo": "Fuente",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 30338
+    },
+    {
+      "sk": 3,
+      "codigo": "INGRESO_ORDINARIO",
+      "concepto": "Ingreso Bancario Ordinario",
+      "metodo": "Residual",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 34888
+    },
+    {
+      "sk": 4,
+      "codigo": "POJISTNE",
+      "concepto": "Pago de Poliza de Seguro",
+      "metodo": "Cruce con ordenes",
+      "contraparte": "Caja propia",
+      "transacciones": 7
+    },
+    {
+      "sk": 5,
+      "codigo": "POJISTNE",
+      "concepto": "Pago de Poliza de Seguro",
+      "metodo": "Cruce con ordenes",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 802
+    },
+    {
+      "sk": 6,
+      "codigo": "POJISTNE",
+      "concepto": "Pago de Poliza de Seguro",
+      "metodo": "Fuente",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 18500
+    },
+    {
+      "sk": 7,
+      "codigo": "RETIRO_EFECTIVO",
+      "concepto": "Retiro en Efectivo (Gastos Personales)",
+      "metodo": "Regla de canal",
+      "contraparte": "Caja propia",
+      "transacciones": 263626
+    },
+    {
+      "sk": 8,
+      "codigo": "RETIRO_EFECTIVO",
+      "concepto": "Retiro en Efectivo (Gastos Personales)",
+      "metodo": "Regla de canal",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 19031
+    },
+    {
+      "sk": 9,
+      "codigo": "SANKC. UROK",
+      "concepto": "Interes Moratorio por Sobregiro",
+      "metodo": "Fuente",
+      "contraparte": "Sistema central",
+      "transacciones": 1577
+    },
+    {
+      "sk": 10,
+      "codigo": "SIPO",
+      "concepto": "Servicios Basicos del Hogar",
+      "metodo": "Cruce con ordenes",
+      "contraparte": "Caja propia",
+      "transacciones": 24
+    },
+    {
+      "sk": 11,
+      "codigo": "SIPO",
+      "concepto": "Servicios Basicos del Hogar",
+      "metodo": "Cruce con ordenes",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 10079
+    },
+    {
+      "sk": 12,
+      "codigo": "SIPO",
+      "concepto": "Servicios Basicos del Hogar",
+      "metodo": "Fuente",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 118065
+    },
+    {
+      "sk": 13,
+      "codigo": "SLUZBY",
+      "concepto": "Comision por Mantenimiento / Servicios",
+      "metodo": "Fuente",
+      "contraparte": "Sistema central",
+      "transacciones": 155832
+    },
+    {
+      "sk": 14,
+      "codigo": "TRANSFERENCIA_EXTERNA",
+      "concepto": "Transferencia Bancaria Saliente",
+      "metodo": "Residual",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 50093
+    },
+    {
+      "sk": 15,
+      "codigo": "UROK",
+      "concepto": "Intereses Ganados en Cuenta",
+      "metodo": "Fuente",
+      "contraparte": "Sistema central",
+      "transacciones": 183114
+    },
+    {
+      "sk": 16,
+      "codigo": "UVER",
+      "concepto": "Amortizacion de Cuota de Prestamo",
+      "metodo": "Cruce con prestamos",
+      "contraparte": "Caja propia",
+      "transacciones": 7
+    },
+    {
+      "sk": 17,
+      "codigo": "UVER",
+      "concepto": "Amortizacion de Cuota de Prestamo",
+      "metodo": "Cruce con prestamos",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 14
+    },
+    {
+      "sk": 18,
+      "codigo": "UVER",
+      "concepto": "Amortizacion de Cuota de Prestamo",
+      "metodo": "Fuente",
+      "contraparte": "Entidad externa no registrada",
+      "transacciones": 1
+    },
+    {
+      "sk": 19,
+      "codigo": "UVER",
+      "concepto": "Amortizacion de Cuota de Prestamo",
+      "metodo": "Fuente",
+      "contraparte": "Entidad externa registrada",
+      "transacciones": 13579
+    }
+  ]
+}

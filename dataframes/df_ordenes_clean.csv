@@ -1,4 +1,4 @@
-id_orden,id_cuenta,id_cliente,sexo_cliente,edad_cliente,fecha_apertura_cuenta,id_distrito,nombre_distrito,region,bank_to,account_to,k_symbol,categoria_orden,monto_orden
+﻿id_orden,id_cuenta,id_cliente,sexo_cliente,edad_cliente,fecha_apertura_cuenta,id_distrito,nombre_distrito,region,bank_to,account_to,k_symbol,categoria_orden,monto_orden
 29401,1,1,F,28,1995-03-24,18,Pisek,south Bohemia,YZ,87144583,SIPO,Servicios del Hogar,2452.0
 29402,2,2,M,53,1993-02-26,1,Hl.m. Praha,Prague,ST,89597016,UVER,Cuota de Prestamo,3373.0
 29403,2,2,M,53,1993-02-26,1,Hl.m. Praha,Prague,QR,13943797,SIPO,Servicios del Hogar,7266.0

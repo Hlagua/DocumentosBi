@@ -38,7 +38,7 @@
 5124,1998-02-12,1998,2,939,M,46,OWNER,785,Extracto semanal,21,Tabor,south Bohemia,103347,9104.0,2.0,2299.0,C,Vigente,"En curso, al dia",156096.0,36,4336.0,112736.0,10,51641.73,0.084,Media-baja
 5125,1995-11-23,1995,11,944,M,28,OWNER,789,Extracto mensual,39,Most,north Bohemia,119895,10446.0,7.0,4947.0,C,Vigente,"En curso, al dia",73056.0,48,1522.0,16742.0,37,23255.25,0.0654,Media-baja
 5126,1994-07-24,1994,7,946,M,47,OWNER,790,Extracto mensual,54,Brno - mesto,south Moravia,387570,9897.0,2.0,18721.0,B,Cerrado,"Pagado, contrato terminado con deuda",208128.0,48,4336.0,0.0,53,36370.0,0.1192,Media-alta
-5128,1996-04-11,1996,4,968,M,41,OWNER,808,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,D,Vigente,"En curso, en mora",215616.0,48,4492.0,71872.0,32,21447.59,0.2094,Alta
+5128,1996-04-11,1996,4,968,M,41,OWNER,808,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,D,Vigente,"En curso, en mora",215616.0,48,4492.0,71872.0,32,21447.59,0.2094,Alta
 5130,1994-05-11,1994,5,976,F,43,OWNER,813,Extracto mensual,16,Jindrichuv Hradec,south Bohemia,93931,8427.0,1.0,1874.0,A,Cerrado,Pagado sin problemas,24312.0,12,2026.0,0.0,55,29380.88,0.069,Media-baja
 5131,1995-01-08,1995,1,980,M,37,OWNER,816,Extracto mensual,52,Usti nad Orlici,east Bohemia,139012,8363.0,3.0,2564.0,A,Cerrado,Pagado sin problemas,48624.0,24,2026.0,0.0,47,63857.3,0.0317,Baja
 5132,1995-02-17,1995,2,981,M,38,OWNER,817,Extracto mensual,5,Kolin,central Bohemia,95616,9307.0,4.0,2616.0,C,Vigente,"En curso, al dia",538500.0,60,8975.0,125650.0,46,33687.84,0.2664,Alta
@@ -79,8 +79,8 @@
 5265,1998-10-07,1998,10,1816,M,47,OWNER,1498,Extracto semanal,62,Uherske Hradiste,south Moravia,145688,8544.0,1.0,2719.0,C,Vigente,"En curso, al dia",165780.0,60,2763.0,160254.0,2,45342.29,0.0609,Media-baja
 5269,1994-11-19,1994,11,1851,F,23,OWNER,1527,Extracto despues de cada transaccion,31,Tachov,west Bohemia,51313,8930.0,4.0,1328.0,B,Cerrado,"Pagado, contrato terminado con deuda",164052.0,36,4557.0,0.0,49,41752.11,0.1091,Media-alta
 5270,1997-07-21,1997,7,1852,M,36,OWNER,1528,Extracto mensual,50,Svitavy,east Bohemia,102609,8187.0,5.0,2123.0,C,Vigente,"En curso, al dia",191088.0,48,3981.0,123411.0,17,32688.01,0.1218,Media-alta
-5281,1997-11-27,1997,11,1913,M,30,OWNER,1580,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,C,Vigente,"En curso, al dia",194256.0,24,8094.0,89034.0,13,51370.57,0.1576,Alta
-5282,1996-08-24,1996,8,1917,F,29,OWNER,1583,Extracto despues de cada transaccion,69,Jesenik,north Moravia,42821,8173.0,,,D,Vigente,"En curso, en mora",388512.0,48,8094.0,161880.0,28,21371.28,0.3787,Alta
+5281,1997-11-27,1997,11,1913,M,30,OWNER,1580,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,C,Vigente,"En curso, al dia",194256.0,24,8094.0,89034.0,13,51370.57,0.1576,Alta
+5282,1996-08-24,1996,8,1917,F,29,OWNER,1583,Extracto despues de cada transaccion,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,D,Vigente,"En curso, en mora",388512.0,48,8094.0,161880.0,28,21371.28,0.3787,Alta
 5285,1994-02-06,1994,2,1944,F,41,OWNER,1603,Extracto mensual,1,Hl.m. Praha,Prague,1204953,12541.0,0.0,85677.0,A,Cerrado,Pagado sin problemas,78936.0,12,6578.0,0.0,58,25900.31,0.254,Alta
 5287,1998-01-26,1998,1,1985,M,61,OWNER,1638,Extracto semanal,6,Kutna Hora,central Bohemia,77963,8546.0,3.0,2640.0,C,Vigente,"En curso, al dia",64224.0,24,2676.0,34788.0,11,45735.89,0.0585,Media-baja
 5293,1998-10-29,1998,10,2008,M,58,OWNER,1656,Extracto mensual,47,Pardubice,east Bohemia,162580,9538.0,2.0,6079.0,C,Vigente,"En curso, al dia",189792.0,48,3954.0,181884.0,2,34760.27,0.1138,Media-alta
@@ -243,7 +243,7 @@
 5861,1994-12-08,1994,12,5224,M,49,OWNER,4337,Extracto mensual,29,Rokycany,west Bohemia,45714,8843.0,3.0,818.0,A,Cerrado,Pagado sin problemas,51408.0,24,2142.0,0.0,48,52299.22,0.041,Baja
 5862,1997-12-09,1997,12,5232,F,50,OWNER,4342,Extracto mensual,74,Ostrava - mesto,north Moravia,323870,10673.0,5.0,18782.0,C,Vigente,"En curso, al dia",100128.0,24,4172.0,50064.0,12,56496.55,0.0738,Media-baja
 5865,1998-10-30,1998,10,5245,F,56,OWNER,4354,Extracto mensual,38,Louny,north Bohemia,85852,8965.0,7.0,2653.0,C,Vigente,"En curso, al dia",327660.0,60,5461.0,316738.0,2,49281.9,0.1108,Media-alta
-5868,1997-03-29,1997,3,5253,F,52,OWNER,4361,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,A,Cerrado,Pagado sin problemas,90156.0,12,7513.0,0.0,21,77525.17,0.0969,Media-alta
+5868,1997-03-29,1997,3,5253,F,52,OWNER,4361,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,A,Cerrado,Pagado sin problemas,90156.0,12,7513.0,0.0,21,77525.17,0.0969,Media-alta
 5876,1995-02-08,1995,2,5318,M,30,OWNER,4413,Extracto semanal,74,Ostrava - mesto,north Moravia,323870,10673.0,5.0,18782.0,C,Vigente,"En curso, al dia",221280.0,48,4610.0,9220.0,46,37597.0,0.1226,Media-alta
 5877,1995-02-23,1995,2,5320,F,47,OWNER,4414,Extracto mensual,24,Karlovy Vary,west Bohemia,122603,8991.0,1.0,5198.0,A,Cerrado,Pagado sin problemas,97224.0,24,4051.0,0.0,46,22360.56,0.1812,Alta
 5878,1997-04-01,1997,4,5322,F,42,OWNER,4415,Extracto mensual,73,Opava,north Moravia,182027,8746.0,3.0,4355.0,A,Cerrado,Pagado sin problemas,74040.0,12,6170.0,0.0,20,44234.81,0.1395,Alta
@@ -404,7 +404,7 @@
 6415,1997-02-12,1997,2,8392,F,32,OWNER,6950,Extracto mensual,36,Liberec,north Bohemia,159617,9198.0,3.0,5796.0,C,Vigente,"En curso, al dia",475680.0,48,9910.0,257660.0,22,40812.42,0.2428,Alta
 6421,1996-07-25,1996,7,8432,F,30,OWNER,6985,Extracto mensual,38,Louny,north Bohemia,85852,8965.0,7.0,2653.0,C,Vigente,"En curso, al dia",96768.0,36,2688.0,18816.0,29,51611.33,0.0521,Baja
 6435,1997-06-16,1997,6,8502,M,55,OWNER,7045,Extracto mensual,51,Trutnov,east Bohemia,121947,8541.0,3.0,3496.0,C,Vigente,"En curso, al dia",288720.0,48,6015.0,180450.0,18,54677.33,0.11,Media-alta
-6436,1998-05-22,1998,5,8506,F,19,OWNER,7049,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,C,Vigente,"En curso, al dia",495180.0,60,8253.0,437409.0,7,44813.32,0.1842,Alta
+6436,1998-05-22,1998,5,8506,F,19,OWNER,7049,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,C,Vigente,"En curso, al dia",495180.0,60,8253.0,437409.0,7,44813.32,0.1842,Alta
 6437,1997-11-09,1997,11,8510,M,51,OWNER,7052,Extracto despues de cada transaccion,55,Brno - venkov,south Moravia,157042,8743.0,2.0,3659.0,D,Vigente,"En curso, en mora",63972.0,36,1777.0,40871.0,13,21532.45,0.0825,Media-baja
 6442,1998-02-08,1998,2,8548,F,53,OWNER,7082,Extracto mensual,57,Hodonin,south Moravia,161954,8720.0,4.0,3729.0,C,Vigente,"En curso, al dia",194160.0,48,4045.0,153710.0,10,28548.45,0.1417,Alta
 6450,1998-06-10,1998,6,8568,F,27,OWNER,7099,Extracto mensual,1,Hl.m. Praha,Prague,1204953,12541.0,0.0,85677.0,C,Vigente,"En curso, al dia",234336.0,48,4882.0,205044.0,6,42818.54,0.114,Media-alta
@@ -459,7 +459,7 @@
 6605,1997-10-14,1997,10,9755,F,47,OWNER,7890,Extracto mensual,23,Cheb,west Bohemia,87419,8624.0,2.0,2879.0,C,Vigente,"En curso, al dia",79344.0,48,1653.0,56202.0,14,23918.51,0.0691,Media-baja
 6607,1997-10-21,1997,10,9760,M,29,OWNER,7894,Extracto mensual,27,Plzen - jih,west Bohemia,67298,8561.0,1.0,1029.0,C,Vigente,"En curso, al dia",153144.0,36,4254.0,93588.0,14,58553.77,0.0727,Media-baja
 6612,1997-08-31,1997,8,9775,M,38,OWNER,7907,Extracto mensual,70,Karvina,north Moravia,285387,10177.0,7.0,9878.0,A,Cerrado,Pagado sin problemas,97392.0,12,8116.0,0.0,16,36685.11,0.2212,Alta
-6613,1996-09-22,1996,9,9798,F,48,OWNER,7926,Extracto semanal,69,Jesenik,north Moravia,42821,8173.0,,,A,Cerrado,Pagado sin problemas,84120.0,24,3505.0,0.0,27,56910.79,0.0616,Media-baja
+6613,1996-09-22,1996,9,9798,F,48,OWNER,7926,Extracto semanal,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,A,Cerrado,Pagado sin problemas,84120.0,24,3505.0,0.0,27,56910.79,0.0616,Media-baja
 6621,1997-06-14,1997,6,9833,M,34,OWNER,7957,Extracto mensual,51,Trutnov,east Bohemia,121947,8541.0,3.0,3496.0,A,Cerrado,Pagado sin problemas,42900.0,12,3575.0,0.0,18,50590.62,0.0707,Media-baja
 6624,1994-09-30,1994,9,9844,M,53,OWNER,7965,Extracto mensual,55,Brno - venkov,south Moravia,157042,8743.0,2.0,3659.0,A,Cerrado,Pagado sin problemas,71460.0,12,5955.0,0.0,51,47991.47,0.1241,Alta
 6625,1997-09-07,1997,9,9846,F,31,OWNER,7966,Extracto mensual,54,Brno - mesto,south Moravia,387570,9897.0,2.0,18721.0,D,Vigente,"En curso, en mora",473280.0,60,7888.0,354960.0,15,52777.26,0.1495,Alta
@@ -541,7 +541,7 @@
 6861,1998-02-28,1998,2,11304,F,38,OWNER,9179,Extracto mensual,28,Plzen - sever,west Bohemia,72541,8594.0,2.0,1580.0,C,Vigente,"En curso, al dia",215040.0,60,3584.0,179200.0,10,37189.82,0.0964,Media-alta
 6863,1993-07-28,1993,7,11314,M,62,OWNER,9188,Extracto mensual,45,Jicin,east Bohemia,77917,8390.0,2.0,2080.0,A,Cerrado,Pagado sin problemas,127080.0,60,2118.0,0.0,65,30061.04,0.0705,Media-baja
 6865,1996-09-11,1996,9,11327,M,51,OWNER,9199,Extracto mensual,72,Olomouc,north Moravia,226122,8994.0,4.0,9672.0,B,Cerrado,"Pagado, contrato terminado con deuda",29448.0,12,2454.0,0.0,27,28977.45,0.0847,Media-baja
-6866,1998-02-05,1998,2,11329,F,37,OWNER,9201,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,C,Vigente,"En curso, al dia",122472.0,24,5103.0,71442.0,10,48396.01,0.1054,Media-alta
+6866,1998-02-05,1998,2,11329,F,37,OWNER,9201,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,C,Vigente,"En curso, al dia",122472.0,24,5103.0,71442.0,10,48396.01,0.1054,Media-alta
 6868,1998-10-12,1998,10,11337,M,29,OWNER,9208,Extracto mensual,29,Rokycany,west Bohemia,45714,8843.0,3.0,818.0,C,Vigente,"En curso, al dia",82128.0,24,3422.0,75284.0,2,33221.25,0.103,Media-alta
 6871,1997-04-13,1997,4,11359,M,26,OWNER,9225,Extracto mensual,11,Praha - zapad,central Bohemia,75637,9622.0,0.0,3475.0,C,Vigente,"En curso, al dia",164256.0,48,3422.0,95816.0,20,42341.7,0.0808,Media-baja
 6872,1998-04-29,1998,4,11362,F,32,OWNER,9227,Extracto mensual,51,Trutnov,east Bohemia,121947,8541.0,3.0,3496.0,C,Vigente,"En curso, al dia",191580.0,60,3193.0,166036.0,8,18241.53,0.175,Alta
@@ -611,7 +611,7 @@
 7091,1998-09-22,1998,9,12599,M,42,OWNER,10243,Extracto mensual,44,Chrudim,east Bohemia,105606,8254.0,3.0,2166.0,C,Vigente,"En curso, al dia",113436.0,36,3151.0,103983.0,3,68510.37,0.046,Baja
 7096,1998-09-02,1998,9,12616,F,33,OWNER,10257,Extracto mensual,27,Plzen - jih,west Bohemia,67298,8561.0,1.0,1029.0,C,Vigente,"En curso, al dia",37812.0,12,3151.0,28359.0,3,54062.13,0.0583,Media-baja
 7097,1993-12-23,1993,12,12625,M,40,OWNER,10266,Extracto mensual,54,Brno - mesto,south Moravia,387570,9897.0,2.0,18721.0,B,Cerrado,"Pagado, contrato terminado con deuda",75624.0,24,3151.0,0.0,60,50010.0,0.063,Media-baja
-7100,1997-12-31,1997,12,12643,F,36,OWNER,10280,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,,,C,Vigente,"En curso, al dia",348120.0,60,5802.0,278496.0,12,58819.6,0.0986,Media-alta
+7100,1997-12-31,1997,12,12643,F,36,OWNER,10280,Extracto mensual,69,Jesenik,north Moravia,42821,8173.0,5.83,1326.0,C,Vigente,"En curso, al dia",348120.0,60,5802.0,278496.0,12,58819.6,0.0986,Media-alta
 7101,1996-11-18,1996,11,12662,M,45,OWNER,10297,Extracto mensual,14,Ceske Budejovice,south Bohemia,177686,10045.0,1.0,6604.0,C,Vigente,"En curso, al dia",421008.0,48,8771.0,201733.0,25,37436.4,0.2343,Alta
 7104,1993-12-13,1993,12,12695,M,19,OWNER,10320,Extracto mensual,68,Frydek - Mistek,north Moravia,228848,9893.0,4.0,5623.0,A,Cerrado,Pagado sin problemas,259740.0,60,4329.0,0.0,60,45198.18,0.0958,Media-alta
 7110,1998-01-21,1998,1,12729,M,30,OWNER,10345,Extracto mensual,36,Liberec,north Bohemia,159617,9198.0,3.0,5796.0,C,Vigente,"En curso, al dia",31260.0,12,2605.0,2605.0,11,25084.43,0.1038,Media-alta

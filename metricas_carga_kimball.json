@@ -1,0 +1,180 @@
+{
+  "id_ejecucion": "20260928_174907",
+  "fuente": "relational.fel.cvut.cz/Financial_ijs",
+  "destino": "(localdb)\\MSSQLLocalDB/DM_Financial_Kimball_v2",
+  "duracion_segundos": 88.5,
+  "filas_extraidas": {
+    "districts": 77,
+    "accounts": 4500,
+    "clients": 5369,
+    "disps": 5369,
+    "loans": 682,
+    "orders": 6471,
+    "cards": 892,
+    "tkeys": 234,
+    "trans": 1056320
+  },
+  "filas_cargadas": {
+    "Dim_Tiempo": 2191,
+    "Dim_Distrito": 77,
+    "Dim_Cuenta": 4500,
+    "Dim_Cliente": 5369,
+    "Dim_Estado_Prestamo": 4,
+    "Dim_Operacion": 15,
+    "Dim_Orden": 5,
+    "Fact_Prestamos": 682,
+    "Fact_Transacciones": 1056320,
+    "Fact_Saldo_Cuenta_Mensual": 185615,
+    "Fact_Ordenes": 6471
+  },
+  "pruebas": [
+    {
+      "prueba": "1. Préstamos por estado",
+      "esperado": "{'A': 203, 'B': 31, 'C': 403, 'D': 45}",
+      "obtenido": "{'A': 203, 'B': 31, 'C': 403, 'D': 45}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo trans -> Fact_Transacciones",
+      "esperado": "1056320",
+      "obtenido": "1056320",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo orders -> Fact_Ordenes",
+      "esperado": "6471",
+      "obtenido": "6471",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo clients -> Dim_Cliente",
+      "esperado": "5369",
+      "obtenido": "5369",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo accounts -> Dim_Cuenta",
+      "esperado": "4500",
+      "obtenido": "4500",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo districts -> Dim_Distrito",
+      "esperado": "77",
+      "obtenido": "77",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "2. Monto de préstamos",
+      "esperado": "103,261,740.00",
+      "obtenido": "103,261,740.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "2. Monto de transacciones",
+      "esperado": "6,257,862,197.00",
+      "obtenido": "6,257,862,197.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "2. Monto de órdenes",
+      "esperado": "21,229,041.00",
+      "obtenido": "21,229,041.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "3. Saldo neto al corte (foto dic-1998)",
+      "esperado": "197,140,434.00",
+      "obtenido": "197,140,434.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "3. Cuentas en sobregiro al corte",
+      "esperado": "39",
+      "obtenido": "39",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "3. Filas de la foto mensual",
+      "esperado": "185615",
+      "obtenido": "185615",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "4. Claves nulas en hechos (FK declaradas)",
+      "esperado": "0",
+      "obtenido": "0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "5. Movimientos por categoría",
+      "esperado": "{'Egreso / Gasto': 634571, 'Ingreso / Deposito': 221969, 'Intereses Ganados': 183114, 'Retiro en Efectivo': 16666}",
+      "obtenido": "{'Egreso / Gasto': 634571, 'Ingreso / Deposito': 221969, 'Intereses Ganados': 183114, 'Retiro en Efectivo': 16666}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "5. Filas de Dim_Operacion",
+      "esperado": "15",
+      "obtenido": "15",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "6. Cartera por región",
+      "esperado": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "obtenido": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "6. Saldo al corte por región",
+      "esperado": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "obtenido": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "7. Bandas de capacidad (préstamos, impagos)",
+      "esperado": "{'Alta': (172, 40), 'Baja': (171, 5), 'Media-alta': (172, 15), 'Media-baja': (167, 16)}",
+      "obtenido": "{'Alta': (172, 40), 'Baja': (171, 5), 'Media-alta': (172, 15), 'Media-baja': (167, 16)}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "7. Cuentas con crédito externo",
+      "esperado": "35",
+      "obtenido": "35",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "7. Saldo por cobrar estimado C + D",
+      "esperado": "46,620,926.00",
+      "obtenido": "46,620,926.00",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "8. χ² mora × año 1994-1997 (p)",
+      "esperado": "0.93",
+      "obtenido": "0.93",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "8. χ² impago × cuartil de capacidad",
+      "esperado": "39.01",
+      "obtenido": "39.01",
+      "resultado": "OK"
+    }
+  ],
+  "pruebas_ok": 22,
+  "pruebas_total": 22,
+  "anomalias_fuente": [
+    {
+      "tabla": "districts",
+      "clave": "69",
+      "descripcion": "Jesenik: desempleo y/o criminalidad 1995 en NULL (1996: 7.0 y 1358)",
+      "tratamiento": "Se carga NULL; la imputación la aplica el write-back (script 20)"
+    },
+    {
+      "tabla": "clients",
+      "clave": "6275",
+      "descripcion": "tkey_id = 234 no existe en tkeys (ids 0-233)",
+      "tratamiento": "No se usa tkeys; la etiqueta se deriva de loans.status"
+    }
+  ]
+}

@@ -11,7 +11,7 @@
 
 | Campo | Detalle |
 | :--- | :--- |
-| **Tema:** | Diseño y Evaluación Comparativa de Arquitecturas de Almacenamiento de Datos Corporativos (DW/BI) bajo los enfoques de Ralph Kimball y Bill Inmon |
+| **Tema:** | Diseño y Evaluación Comparativa de Arquitecturas de Almacenamiento de Datos (DW/BI) bajo los enfoques de Ralph Kimball y Bill Inmon — versión 2, alineada con la Carta de Diseño v8 |
 | **Unidad de Organización Curricular:** | PROFESIONAL |
 | **Nivel y Paralelo:** | 6to Software "A" |
 | **Alumnos participantes:** | Cobos Taco Alison Marcela / Lagua Flores Henry Daniel |
@@ -25,12 +25,12 @@
 ### 2.1 Objetivos
 
 #### General:
-Diseñar, implementar y evaluar comparativamente soluciones de Inteligencia de Negocios bajo las metodologías de Ralph Kimball (Data Mart Bus Architecture) y Bill Inmon (Corporate Information Factory - CIF) para el procesamiento, modelado dimensional y estructuración normalizada (3FN) de la cartera de créditos, transacciones monetarias y órdenes recurrentes del banco `Financial_ijs`.
+Diseñar y evaluar comparativamente las arquitecturas de Ralph Kimball (Data Mart Bus Architecture) y Bill Inmon (Corporate Information Factory) para la base `Financial_ijs`, a partir de los tres problemas de negocio de la Carta de Diseño v8, verificando que ambas produzcan las mismas cifras de control.
 
 #### Específicos:
-* **Desarrollar el modelo dimensional Bottom-Up (Kimball):** Definir los procesos de negocio, grano atómico, tablas de hechos transaccionales (`Fact_Prestamos`, `Fact_Transacciones`, `Fact_Ordenes`) y dimensiones conformadas (`Dim_Tiempo`, `Dim_Cuenta`, `Dim_Cliente`, `Dim_Distrito`) para habilitar el análisis cruzado (*drill-across*) mediante la matriz de bus corporativa (*Enterprise Bus Matrix*).
-* **Construir el repositorio centralizado Top-Down (Inmon):** Modelar el Enterprise Data Warehouse (EDW) normalizado en Tercera Forma Normal (3FN), estructurando los dominios lógicos de negocio (*Subject Areas*), reglas de transformación y el mapeo de trazabilidad (*Source-to-Target*) para asegurar la única fuente de verdad corporativa.
-* **Derivar y evaluar data marts departamentales y vistas analíticas:** Establecer la comparación técnica y funcional entre ambas arquitecturas enfocadas en la gestión de riesgo crediticio (control de mora) y operaciones (liquidez institucional), determinando su impacto en el rendimiento de consulta para la toma de decisiones financieras.
+* **Desarrollar el modelo dimensional de Kimball:** procesos, grano declarado por hecho, cuatro tablas de hechos (incluida una foto periódica de saldos), dimensiones conformadas y Matriz de Bus que permita el análisis cruzado (*drill-across*) por cuenta.
+* **Construir el EDW de Inmon en 3FN estricta:** áreas temáticas, catálogos de referencia, trazabilidad fuente-destino (*Source-to-Target*) y data marts departamentales derivados como vistas.
+* **Validar y comparar ambas arquitecturas:** cargar los dos esquemas con los datos reales, contrastar sus resultados con los totales de control de la Carta y evaluar su idoneidad para las preguntas del negocio.
 
 ### 2.2 Modalidad
 Presencial
@@ -43,261 +43,318 @@ Presencial
 Seguir el formato oficial provisto por la cátedra e integrar los resultados del modelado dimensional y relacional corporativo desarrollados para el caso de estudio bancario `Financial_ijs`.
 
 ### 2.5 Listado de equipos, materiales y recursos
-* **Materiales generales:** Internet, Apuntes de clase, Computador, SQL Server Management Studio (SSMS), Python 3.12.
+* **Materiales generales:** Internet, Apuntes de clase, Computador, SQL Server (LocalDB) y SQL Server Management Studio, Python 3.12 (pandas, pyodbc, pymysql).
 * **TAC empleados:**
   * [x] Plataformas educativas
   * [ ] Simuladores y laboratorios virtuales
-  * [x] Aplicaciones educativas (SSIS, SSMS, Visual Studio)
+  * [x] Aplicaciones educativas (SQL Server, SSMS, Visual Studio Code)
   * [ ] Recursos audiovisuales
   * [ ] Gamificación
   * [x] Inteligencia Artificial
   * [ ] Otros
 
 ### 2.6 Actividades por desarrollar
-Detalladas en la guía práctica provista por el docente de la cátedra: diseño conceptual, lógico y físico de las arquitecturas Kimball e Inmon, especificación de la Matriz de Bus, Source-to-Target Mapping y análisis comparativo de rendimiento.
+Detalladas en la guía práctica provista por el docente de la cátedra: diseño conceptual, lógico y físico de las arquitecturas Kimball e Inmon, Matriz de Bus, Source-to-Target Mapping, validación y análisis comparativo.
 
 ---
 
 ### 2.7 Resultados obtenidos
 
-#### Modelo relacional de origen (OLTP — Financial_ijs)
-Antes de derivar cualquier arquitectura analítica, se presenta el esquema relacional original del sistema transaccional del banco (`Financial_ijs`). Este esquema se encuentra en Tercera Forma Normal (3FN) y comprende 9 tablas relacionales (`clients`, `districts`, `accounts`, `disps`, `cards`, `loans`, `tkeys`, `orders`, `trans`) vinculadas mediante claves foráneas íntegras. Este modelo constituye la única fuente de partida común para ambos enfoques:
-
-* `accounts` (4,500 cuentas bancarias).
-* `clients` (5,369 clientes registrados).
-* `disps` (5,369 disposiciones que vinculan clientes con cuentas: 4,500 `OWNER` y 869 `DISPONENT`).
-* `cards` (892 tarjetas de crédito/débito emitidas).
-* `districts` (77 distritos geográficos con datos socioeconómicos).
-* `loans` (682 créditos concedidos).
-* `orders` (6,471 órdenes de pago programadas).
-* `trans` (1,056,320 transacciones operativas).
-* `tkeys` (234 registros de evaluación de riesgo crediticio).
+> [!NOTE]
+> **Archivos y verificación.** Los modelos físicos están en `sql/01_DDL_Kimball_DM_Financial.sql` (Kimball) y `sql/02_DDL_Inmon_EDW_Financial.sql` (Inmon). El 28/09/2026 ambos scripts se ejecutaron sin errores en bases de prueba de SQL Server, y el EDW de Inmon se cargó con los datos reales del servidor remoto para validar sus vistas (sección 5). Todas las cifras provienen de consultas a la fuente `Financial_ijs`.
 
 ---
 
-#### Flujo Comparativo entre Arquitecturas
+#### 1. Punto de partida: problemas de negocio de la Carta de Diseño v8
+
+Ambas arquitecturas deben responder los mismos tres problemas:
+
+| Problema (Carta v8) | Evidencia principal | Qué exige al modelo |
+| :--- | :--- | :--- |
+| 1. Impago relevante; los casos en mora crecen con el volumen | Mora 10.04% (45/448); incumplimiento 13.25% (31/234); tasa por año estable (χ² p = 0.93) | Préstamo al nivel atómico, con estado y año de otorgamiento |
+| 2. El impago depende de la capacidad de pago | Impago de 2.9% a 23.4% entre cuartiles de cuota / saldo previo (χ² = 39.01, p < 0.001) | Combinar préstamo, movimientos previos y órdenes de la **misma cuenta** |
+| 3. La posición de saldos no tiene una medición única | $197,140,249 / $197,140,434 / $204,793,819 según la regla de desempate | Saldo semiaditivo con regla explícita y foto por fecha de corte |
+
+---
+
+#### 2. Modelo relacional de origen (OLTP — `Financial_ijs`)
+
+La fuente es una base MySQL en 3FN con 9 tablas. Estas son las cardinalidades **verificadas** que condicionan ambos diseños:
+
+```mermaid
+erDiagram
+    districts ||--o{ accounts : "district_id"
+    districts ||--o{ clients : "district_id (residencia)"
+    accounts ||--|{ disps : "1 OWNER + 0..1 DISPONENT"
+    clients ||--|| disps : "1 cuenta por cliente"
+    disps ||--o| cards : "0..1 tarjeta"
+    accounts ||--o| loans : "0..1 préstamo"
+    accounts ||--o{ orders : "0..5 órdenes"
+    accounts ||--o{ trans : "1..N movimientos"
+    tkeys |o--o{ clients : "tkey_id (289 clientes)"
+```
+
+| Tabla | Filas | Observación relevante para el diseño |
+| :--- | ---: | :--- |
+| `accounts` | 4,500 | `district_id` es el distrito de la cuenta; difiere de la residencia del titular en 409 casos |
+| `clients` | 5,369 | `birth_number` codifica fecha de nacimiento y sexo |
+| `disps` | 5,369 | 4,500 OWNER y 869 DISPONENT; exactamente 1 titular por cuenta |
+| `loans` | 682 | Un préstamo por cuenta como máximo; `amount = payments × duration` siempre |
+| `orders` | 6,471 | Sin fecha; 1,379 sin propósito (`k_symbol` vacío) |
+| `trans` | 1,056,320 | `balance` es el saldo después del movimiento (semiaditivo); 15 combinaciones de tipo, operación y concepto |
+| `cards` | 892 | Todas emitidas a titulares; fuera del alcance de esta iteración |
+| `districts` | 77 | Distrito 69 con `NULL` en indicadores de 1995 |
+| `tkeys` | 234 | `goodClient = 1` = préstamo B. **Clave rota:** `clients.tkey_id = 234` no existe en `tkeys` |
+
+---
+
+#### 3. Flujo comparativo entre arquitecturas
 
 ```mermaid
 flowchart TD
-    subgraph Fuente["Capa Fuente OLTP"]
-        OLTP["Base Transaccional 3FN<br>(Financial_ijs - 9 tablas)"]
+    subgraph Fuente["Capa fuente"]
+        OLTP["MySQL Financial_ijs (3FN, 9 tablas)<br>relational.fel.cvut.cz"]
     end
-
-    subgraph RutaInmon["Arquitectura Inmon (Top-Down)"]
-        ETL1["ETL Corporativo<br>(Limpieza, Hash PII, 3FN)"]
-        EDW["EDW Corporativo 3FN<br>(Esquemas: Cliente, Cuenta, Crédito)"]
-        ETL2["ETL Departamental<br>(Desnormalización a Vistas)"]
-        DM_Inmon["Data Marts Derivados<br>(Riesgo / Operaciones)"]
+    subgraph Staging["Staging común (Python / pandas)"]
+        STG["Nulos normalizados, homologación,<br>fecha de nacimiento y sexo, imputación distrito 69,<br>hash de cuentas externas, clave tkeys rota → NULL"]
     end
-
-    subgraph RutaKimball["Arquitectura Kimball (Bottom-Up)"]
-        ETL_K["ETL Directo Dimensional<br>(Homologación, Dim Conformadas)"]
-        DM_Kimball["Data Marts en Constelación<br>(Fact_Prestamos, Fact_Trans, Fact_Ordenes<br>+ 4 Dimensiones Conformadas)"]
+    subgraph RutaInmon["Inmon (Top-Down) — diseño de referencia"]
+        EDW["EDW 3FN<br>13 tablas en 6 áreas temáticas"]
+        DMI["Data marts departamentales<br>7 vistas"]
     end
-
-    subgraph Presentacion["Capa de Consumo / Presentación"]
-        PBI["Tableros de Control<br>(Power BI / DAX / Reportes)"]
+    subgraph RutaKimball["Kimball (Bottom-Up) — implementado"]
+        DMK["Data Mart en constelación<br>4 hechos + 8 dimensiones"]
     end
-
-    OLTP --> ETL1 --> EDW --> ETL2 --> DM_Inmon --> PBI
-    OLTP --> ETL_K --> DM_Kimball --> PBI
+    subgraph Consumo["Consumo"]
+        PBI["Power BI"]
+    end
+    OLTP --> STG
+    STG --> EDW --> DMI --> PBI
+    STG --> DMK --> PBI
 ```
 
 ---
 
-#### Arquitectura Tipo 1 — Ralph Kimball (Data Mart Bus Architecture)
+#### 4. Arquitectura Tipo 1 — Ralph Kimball (Data Mart Bus Architecture)
 
-Se desarrolla la solución dimensional *Bottom-Up*, en la cual cada proceso de negocio genera una tabla de hechos atómica integrada mediante dimensiones conformadas dentro de un bus corporativo de datos.
+##### 4.1 Procesos de negocio
 
-##### 1. Selección de Procesos de Negocio a Modelar
-* **Proceso 1: Concesión y seguimiento de créditos** (Tabla fuente `loans`). Responde a las preguntas de morosidad activa (10.04%), evolución anual de la mora y calidad de créditos cerrados (13.25% de pérdida en Estado B).
-* **Proceso 2: Ejecución transaccional monetaria** (Tabla fuente `trans`). Responde a las preguntas de liquidez institucional, flujo de depósitos y retiros, y balances operativos.
-* **Proceso 3: Procesamiento de órdenes de pago recurrentes** (Tabla fuente `orders`). Responde a las preguntas de compromisos automáticos periódicos (servicios `SIPO`, cuotas `UVER`, seguros `POJISTNE`, leasing).
-
-##### 2. Declaración Formal del Grano Atómico (El Contrato del Diseño)
-
-| Tabla de hechos | Declaración formal de grano atómico | Justificación de diseño |
-| :--- | :--- | :--- |
-| **`Fact_Prestamos`** | **Un registro por cada préstamo individual concedido a una cuenta.** | El grano es estrictamente atómico: un préstamo = una fila (682 filas). No se preagregan montos por cliente ni por período, permitiendo filtrar por cualquier atributo de las dimensiones enlazadas. |
-| **`Fact_Transacciones`** | **Un registro por cada transacción financiera individual asentada en cuenta.** | Grano atómico al nivel de movimiento contable (1,056,320 filas). Conserva la fecha, tipo de operación, monto y saldo resultante exactos en el instante de la transacción. |
-| **`Fact_Ordenes`** | **Un registro por cada orden de débito permanente programada en cuenta.** | Grano atómico por instrucción de débito automático (6,471 filas). Conserva el símbolo de concepto (`k_symbol`) y el monto comprometido. |
-
-##### 3. Identificación y Clasificación Rigurosa de Dimensiones
-
-* **Dimensiones Conformadas (Compartidas entre múltiples hechos para habilitar *Drill-Across*):**
-  1. `Dim_Tiempo`: Calendario continuo diario (1993-01-01 a 1998-12-31, 2,191 días). Jerarquía: Año > Semestre > Trimestre > Mes > Día.
-  2. `Dim_Cuenta`: 4,500 cuentas bancarias, frecuencia de extracto y fecha de apertura. Jerarquía: Frecuencia > Cuenta.
-  3. `Dim_Cliente`: 5,369 clientes, sexo, fecha de nacimiento, `edad_corte` (al 31/12/1998), `tipo_disposicion` y `etiqueta_buen_pagador`. Jerarquía: Región > Distrito > Cliente.
-  4. `Dim_Distrito`: 77 distritos geográficos con indicadores de población, salario, desempleo y criminalidad. Jerarquía: Región > Distrito.
-* **Dimensiones Específicas / Catálogos (Propias de un solo hecho):**
-  5. `Dim_Estado_Prestamo`: Catálogo fijo (SCD Tipo 0) de 4 estados (`A`, `B`, `C`, `D`) y condición (Vigente/Cerrado). Exclusiva de `Fact_Prestamos`.
-  6. `Dim_Operacion`: Tipología y canales de operación homologados al español. Exclusiva de `Fact_Transacciones`.
-  7. `Dim_Orden`: Propósito del débito recurrente homologado al español (`SIPO`, `UVER`, `POJISTNE`, `LEASING`). Exclusiva de `Fact_Ordenes`.
-
-##### 4. Matriz de Bus de Datos Corporativo (Enterprise DW Bus Matrix)
-
-| Proceso de Negocio / Fact Table | Dim_Tiempo | Dim_Cuenta | Dim_Cliente | Dim_Distrito | Dim_Estado_Prestamo | Dim_Operacion | Dim_Orden |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Fact_Prestamos** | **X** | **X** | **X** | **X** | **X** | — | — |
-| **Fact_Transacciones** | **X** | **X** | **X** | **X** | — | **X** | — |
-| **Fact_Ordenes** | **X** | **X** | **X** | **X** | — | — | **X** |
-
-> *Nota:* Las cuatro dimensiones marcadas con **X** en todos los procesos (`Dim_Tiempo`, `Dim_Cuenta`, `Dim_Cliente`, `Dim_Distrito`) son las **dimensiones conformadas**, lo que garantiza que los reportes de BI puedan cruzar colocación de cartera con saldos de liquidez y compromisos de órdenes permanentes sin discrepancias de granularidad.
-
-##### 5. Identificación de Hechos y Tipos de Métricas
-
-| Tabla de hechos | Métrica | Tipo de Métrica | Comportamiento Analítico |
+| Proceso | Fuente | Problemas que responde | Tabla de hechos |
 | :--- | :--- | :--- | :--- |
-| **`Fact_Prestamos`** | `monto_prestamo` | **Aditiva** | Se suma correctamente a través de todas las dimensiones (tiempo, distrito, estado, cliente). |
-| **`Fact_Prestamos`** | `pago_mensual` | **Aditiva** | Suma de cuotas mensuales de amortización. |
-| **`Fact_Prestamos`** | `plazo_meses` | **No Aditiva** | Atributo numérico del contrato; no se suma, se promedia o agrupa. |
-| **`Fact_Prestamos`** | `saldo_pendiente_estimado` | **Semiaditiva** | Medida calculada puntual; válida al sumar por corte de tiempo, no acumulativa a lo largo del tiempo. |
-| **`Fact_Transacciones`**| `monto_transaccion` | **Aditiva** | Flujo neto transaccionado; sumable a través de todas las dimensiones. |
-| **`Fact_Transacciones`**| `saldo_cuenta` | **Semiaditiva** | Balance contable resultante tras cada movimiento. **Nunca se suma en el tiempo;** se toma el último valor al corte. |
-| **`Fact_Ordenes`** | `monto_orden` | **Aditiva** | Monto comprometido en débitos periódicos programados. |
+| Colocación y seguimiento de cartera | `loans` | 1, 2 | `Fact_Prestamos` |
+| Movimientos de cuenta | `trans` | 3 | `Fact_Transacciones` |
+| Posición de saldos | `trans` (derivado) | 2, 3 | `Fact_Saldo_Cuenta_Mensual` |
+| Órdenes permanentes | `orders` | 2 | `Fact_Ordenes` |
 
-##### 6. Especificación Física del Esquema Constelación (Corrección de Tipos de Datos)
+##### 4.2 Declaración del grano
+
+| Tabla de hechos | Grano (una fila por…) | Tipo | Filas | Justificación |
+| :--- | :--- | :--- | ---: | :--- |
+| `Fact_Prestamos` | préstamo | Evento (otorgamiento) con estado al corte de 1998 | 682 | Nivel atómico de la fuente. Permite tasas por cualquier atributo y guarda la capacidad de pago calculada al otorgamiento |
+| `Fact_Transacciones` | movimiento en cuenta | Transaccional | 1,056,320 | Nivel atómico; conserva monto, saldo resultante e id para desempatar |
+| `Fact_Saldo_Cuenta_Mensual` | cuenta × mes | Foto periódica | 185,615 | Resuelve el saldo semiaditivo: un único saldo por cuenta y mes, sumable entre cuentas |
+| `Fact_Ordenes` | orden permanente vigente | Foto sin fecha de evento | 6,471 | La fuente no registra cuándo se emite o ejecuta una orden |
+
+##### 4.3 Dimensiones
+
+| Dimensión | Tipo | Filas | Atributos principales | SCD |
+| :--- | :--- | ---: | :--- | :--- |
+| `Dim_Tiempo` | Conformada | 2,191 | Fecha, año, semestre, trimestre, mes, día, fin de semana, **fin de mes** | Fija |
+| `Dim_Cuenta` | Conformada (eje de integración) | 4,500 | Fecha de apertura, frecuencia de extracto traducida, distrito de la cuenta, **`tiene_credito_externo`**, **`monto_credito_externo`** | 1 |
+| `Dim_Cliente` | Conformada | 5,369 | Sexo, fecha de nacimiento, edad al 31/12/1998, rol, etiqueta de buen pagador, distrito de residencia y atributos del *write-back* (segmento, arquetipo, calificación) | 1 |
+| `Dim_Distrito` | Conformada | 77 | Región, población, salario, desempleo y criminalidad **1995 y 1996**, marca de imputación | 0 |
+| `Dim_Estado_Prestamo` | Catálogo | 4 | Código, condición (vigente / cerrado), descripción | 0 |
+| `Dim_Operacion` | Catálogo | **15** | Tipo, operación y concepto originales y traducidos, **categoría analítica** (4 valores) | 0 |
+| `Dim_Orden` | Catálogo | 5 | Propósito de la orden | 0 |
+| `Dim_Concepto_Movimiento` | Catálogo derivado | 19 | Concepto de la transacción después de la completitud, método (fuente / inferido) y tipo de contraparte (Informe 10) | 0 |
+
+> *Nota sobre `Dim_Cliente`:* los atributos `tiene_prestamo`, `total_ordenes_activas` y `saldo_promedio` que agrega el *write-back* describen la **cuenta**. En los 869 cotitulares repiten los valores del titular, así que no deben sumarse por cliente: su uso correcto es filtrar o segmentar.
+
+##### 4.4 Matriz de Bus
+
+| Proceso / Hecho | Tiempo | Cuenta | Cliente | Distrito | Estado préstamo | Operación | Concepto | Orden |
+| :--- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `Fact_Prestamos` | X (otorgamiento) | X | X (titular) | X (de la cuenta) | X | — | — | — |
+| `Fact_Transacciones` | X (día) | X | X (titular) | X (de la cuenta) | — | X (fuente) | X (completado) | — |
+| `Fact_Saldo_Cuenta_Mensual` | X (fin de mes) | X | X (titular) | X (de la cuenta) | — | — | — | — |
+| `Fact_Ordenes` | X (rol: apertura de cuenta) | X | X (titular) | X (de la cuenta) | — | — | — | X |
+
+Las cuatro dimensiones presentes en todos los procesos (`Dim_Tiempo`, `Dim_Cuenta`, `Dim_Cliente`, `Dim_Distrito`) son las **conformadas**. Tienen el mismo significado en cada hecho gracias a dos reglas: el cliente es siempre el titular y el distrito es siempre el de la cuenta.
+
+##### 4.5 Medidas y su aditividad
+
+| Hecho | Medida | Tipo | Regla de uso |
+| :--- | :--- | :--- | :--- |
+| `Fact_Prestamos` | `monto_prestamo`, `pago_mensual` | Aditiva | Suma en cualquier dimensión ($103,261,740 y $2,858,033) |
+| `Fact_Prestamos` | `saldo_pendiente_estimado` | Aditiva | Se calcula a una única fecha de corte (31/12/1998), por lo que se suma entre préstamos (C + D: $46,620,926) |
+| `Fact_Prestamos` | `plazo_meses`, `meses_transcurridos_al_corte` | No aditiva | Se promedian o se usan para agrupar |
+| `Fact_Prestamos` | `saldo_promedio_previo`, `ratio_cuota_saldo_previo` | No aditiva | Se promedian o se usa la mediana; `banda_capacidad` agrupa |
+| `Fact_Transacciones` | `monto_transaccion` | Aditiva | $6,257,862,197 |
+| `Fact_Transacciones` | `saldo_cuenta` | Semiaditiva | Nunca se suma entre movimientos; el saldo al corte sale de la foto mensual |
+| `Fact_Saldo_Cuenta_Mensual` | `saldo_fin_mes`, `saldo_promedio_mes` | Semiaditiva | Se suma entre cuentas para un mes; entre meses se promedia o se toma el último |
+| `Fact_Saldo_Cuenta_Mensual` | `num_movimientos_mes` / `en_sobregiro` | Aditiva / indicador | Sobregiros se cuentan (39 cuentas en dic-1998) |
+| `Fact_Ordenes` | `monto_orden` | Aditiva | $21,229,041 |
+
+##### 4.6 Esquema en constelación
 
 ```mermaid
 erDiagram
-    Dim_Tiempo ||--o{ Fact_Prestamos : "sk_tiempo"
+    Dim_Tiempo ||--o{ Fact_Prestamos : "sk_tiempo (otorgamiento)"
     Dim_Tiempo ||--o{ Fact_Transacciones : "sk_tiempo"
-    Dim_Tiempo ||--o{ Fact_Ordenes : "sk_tiempo"
+    Dim_Tiempo ||--o{ Fact_Saldo_Cuenta_Mensual : "sk_mes"
+    Dim_Tiempo ||--o{ Fact_Ordenes : "sk_tiempo_apertura_cuenta"
     Dim_Cuenta ||--o{ Fact_Prestamos : "sk_cuenta"
     Dim_Cuenta ||--o{ Fact_Transacciones : "sk_cuenta"
+    Dim_Cuenta ||--o{ Fact_Saldo_Cuenta_Mensual : "sk_cuenta"
     Dim_Cuenta ||--o{ Fact_Ordenes : "sk_cuenta"
     Dim_Cliente ||--o{ Fact_Prestamos : "sk_cliente (OWNER)"
     Dim_Cliente ||--o{ Fact_Transacciones : "sk_cliente (OWNER)"
+    Dim_Cliente ||--o{ Fact_Saldo_Cuenta_Mensual : "sk_cliente (OWNER)"
     Dim_Cliente ||--o{ Fact_Ordenes : "sk_cliente (OWNER)"
-    Dim_Distrito ||--o{ Fact_Prestamos : "sk_distrito"
-    Dim_Distrito ||--o{ Fact_Transacciones : "sk_distrito"
-    Dim_Distrito ||--o{ Fact_Ordenes : "sk_distrito"
+    Dim_Distrito ||--o{ Fact_Prestamos : "sk_distrito (cuenta)"
+    Dim_Distrito ||--o{ Fact_Transacciones : "sk_distrito (cuenta)"
+    Dim_Distrito ||--o{ Fact_Saldo_Cuenta_Mensual : "sk_distrito (cuenta)"
+    Dim_Distrito ||--o{ Fact_Ordenes : "sk_distrito (cuenta)"
     Dim_Estado_Prestamo ||--o{ Fact_Prestamos : "sk_estado_prestamo"
     Dim_Operacion ||--o{ Fact_Transacciones : "sk_operacion"
     Dim_Orden ||--o{ Fact_Ordenes : "sk_orden_tipo"
 ```
 
-* **Tabla `Fact_Prestamos` (682 filas):**
-  * `sk_prestamo` INT (PK)
-  * `sk_tiempo` INT (FK)
-  * `sk_cuenta` INT (FK)
-  * `sk_cliente` INT (FK — titular `OWNER`)
-  * `sk_distrito` INT (FK)
-  * `sk_estado_prestamo` INT (FK)
-  * `id_prestamo_bk` INT (Clave de negocio del OLTP)
-  * `monto_prestamo` **DECIMAL(12,2)** (Preserva centavos, suma: \$103,261,740.00)
-  * `plazo_meses` INT
-  * `pago_mensual` **DECIMAL(12,2)** (Suma: \$2,858,033.00)
-  * `saldo_pendiente_estimado` **DECIMAL(12,2)**
-* **Tabla `Fact_Transacciones` (1,056,320 filas):**
-  * `sk_transaccion` INT (PK)
-  * `sk_tiempo` INT (FK)
-  * `sk_cuenta` INT (FK)
-  * `sk_cliente` INT (FK)
-  * `sk_distrito` INT (FK)
-  * `sk_operacion` INT (FK)
-  * `id_transaccion_bk` INT
-  * `monto_transaccion` **DECIMAL(12,2)** (Suma: \$6,257,862,197.00)
-  * `saldo_cuenta` **DECIMAL(12,2)** (Suma: \$40,687,734,247.00)
-* **Tabla `Fact_Ordenes` (6,471 filas):**
-  * `sk_orden` INT (PK)
-  * `sk_tiempo` INT (FK)
-  * `sk_cuenta` INT (FK)
-  * `sk_cliente` INT (FK)
-  * `sk_distrito` INT (FK)
-  * `sk_orden_tipo` INT (FK)
-  * `id_orden_bk` INT
-  * `monto_orden` **DECIMAL(12,2)** (Preserva centavos exactos: \$21,228,993.60, corrigiendo el desbalance de -\$47.40)
+Especificación física (resumen; detalle en `sql/01_DDL_Kimball_DM_Financial.sql`):
 
-##### 7. Tablas de Dimensiones
+* **`Fact_Prestamos`:** `sk_prestamo` (PK), `sk_tiempo`, `sk_cuenta`, `sk_cliente`, `sk_distrito`, `sk_estado_prestamo`, `id_prestamo_bk` (único), `monto_prestamo`, `plazo_meses`, `pago_mensual`, `meses_transcurridos_al_corte`, `saldo_pendiente_estimado`, `saldo_promedio_previo`, `ratio_cuota_saldo_previo`, `banda_capacidad` (con restricción `CHECK` a 4 valores).
+* **`Fact_Transacciones`:** `sk_transaccion` (BIGINT, PK), claves de tiempo, cuenta, cliente, distrito y operación, `id_transaccion_bk` (único, usado para desempatar), `monto_transaccion`, `saldo_cuenta`.
+* **`Fact_Saldo_Cuenta_Mensual`:** PK compuesta (`sk_cuenta`, `sk_mes`), `sk_cliente`, `sk_distrito`, `saldo_fin_mes`, `saldo_promedio_mes`, `num_movimientos_mes`, `en_sobregiro`.
+* **`Fact_Ordenes`:** `sk_orden` (PK), `sk_tiempo_apertura_cuenta`, `sk_cuenta`, `sk_cliente`, `sk_distrito`, `sk_orden_tipo`, `id_orden_bk` (único), `monto_orden`.
+* Todos los montos se almacenan como `DECIMAL(12,2)`. En la fuente son enteros, así que no hay pérdida ni ganancia de precisión: el tipo decimal es por consistencia entre capas.
 
-| Dimensión | Surrogate Key (PK) | Business Key (BK) | Atributos Descriptivos Principales | Tipo SCD |
+##### 4.7 Relaciones multivaluadas y cómo se resuelven
+
+| Relación | Resolución en Kimball |
+| :--- | :--- |
+| Cliente – Cuenta (869 cuentas mancomunadas) | Los hechos se unen **solo al titular**; `Dim_Cliente` conserva a los 5,369 clientes con su rol. Una tabla puente cuenta–cliente queda disponible si se analizan cotitulares |
+| Cuenta – Préstamo (0..1) | Sin riesgo de duplicación |
+| Cuenta – Órdenes (0..5) y Cuenta – Movimientos (1..N) | No se unen hechos entre sí fila a fila. Cada hecho se agrega por cuenta y los resultados se combinan (*drill-across*) sobre `Dim_Cuenta` |
+| Distrito de cuenta vs. residencia (409 titulares distintos) | `sk_distrito` de los hechos = distrito de la cuenta; la residencia queda en `Dim_Cliente` |
+| Cliente – `tkeys` (289 clientes, 1 clave rota) | La etiqueta se deriva al grano del préstamo desde el estado; la clave rota se carga como `NULL` |
+
+##### 4.8 Cómo responde el modelo a cada problema
+
+* **Problema 1:** `Fact_Prestamos` × `Dim_Estado_Prestamo` × `Dim_Tiempo` (año de otorgamiento) × `Dim_Distrito` (región). `meses_transcurridos_al_corte` permite excluir o marcar los préstamos recientes.
+* **Problema 2:** `banda_capacidad` y `ratio_cuota_saldo_previo` en `Fact_Prestamos` (calculados en el ETL con los movimientos anteriores al préstamo). El compromiso de órdenes se agrega por cuenta desde `Fact_Ordenes` y el saldo desde `Fact_Saldo_Cuenta_Mensual`, combinados por `Dim_Cuenta`; `Dim_Cuenta.tiene_credito_externo` añade la deuda con otros bancos.
+* **Problema 3:** `Fact_Saldo_Cuenta_Mensual` filtrado en diciembre de 1998 da el saldo neto único ($197,140,434), su evolución mensual y los sobregiros; dividido entre la cartera vigente de `Fact_Prestamos` da el ratio de absorción (40.73%).
+
+---
+
+#### 5. Arquitectura Tipo 2 — Bill Inmon (Corporate Information Factory)
+
+Solución *Top-Down*: un repositorio central en 3FN que integra toda la información del banco, del cual se derivan data marts departamentales. En este proyecto el EDW es **diseño de referencia**: la base `EDW_Financial_Inmon` de SQL Server contiene una versión anterior de la estructura, sin datos. La versión de este informe se validó cargándola completa en una base de prueba.
+
+##### 5.1 Áreas temáticas
+
+| Área temática | Tablas |
+| :--- | :--- |
+| Catálogos de referencia | `EDW_Frecuencia_Extracto`, `EDW_Estado_Prestamo`, `EDW_Tipo_Operacion`, `EDW_Proposito_Orden` |
+| Territorio | `EDW_Distrito` |
+| Sujetos | `EDW_Cliente`, `EDW_Evaluacion_Credito` |
+| Contratos | `EDW_Cuenta`, `EDW_Disposicion`, `EDW_Tarjeta` |
+| Crédito | `EDW_Prestamo` |
+| Movimientos y órdenes | `EDW_Transaccion`, `EDW_Orden` |
+
+##### 5.2 Modelo EDW en 3FN
+
+| Tabla | PK | FK | Cardinalidad | Atributos |
 | :--- | :--- | :--- | :--- | :--- |
-| `Dim_Tiempo` | `sk_tiempo` (INT) | `fecha` (DATE) | `dia`, `mes`, `nombre_mes`, `trimestre`, `anio`, `dia_semana`, `es_fin_de_semana`. | Fija |
-| `Dim_Cuenta` | `sk_cuenta` (INT) | `id_cuenta_bk` (INT) | `frecuencia_emision_estado`, `fecha_apertura`, `sk_distrito` (FK Outrigger). | SCD 1 |
-| `Dim_Cliente` | `sk_cliente` (INT) | `id_cliente_bk` (INT) | `sexo`, `fecha_nacimiento`, `edad_corte` (al 31/12/1998), `tipo_disposicion`, `etiqueta_buen_pagador`. | SCD 1 |
-| `Dim_Distrito` | `sk_distrito` (INT) | `id_distrito_bk` (INT)| `nombre_distrito`, `region`, `poblacion`, `salario_promedio`, `tasa_desempleo`, `tasa_criminalidad`. | SCD 0 |
-| `Dim_Estado_Prestamo`| `sk_estado_prestamo`| `codigo_estado` (CHAR) | `condicion` (Vigente/Cerrado), `descripcion` (Pagado sin problemas, En mora, etc.). | **SCD 0 (Catálogo Fijo)** |
-| `Dim_Operacion` | `sk_operacion` (INT) | `tipo_original` (CHAR)| `tipo_operacion_traducido`, `canal` (Ventanilla, ATM, Compensación). | SCD 0 |
-| `Dim_Orden` | `sk_orden_tipo` (INT)| `k_symbol_original` | `categoria_orden_traducida` (Servicios del Hogar, Cuota Préstamo, Seguro, Leasing). | SCD 0 |
+| `EDW_Distrito` | `id_distrito` | — | 1 : N con Cuenta y Cliente | Nombre, región, población, salario, desempleo y criminalidad 1995 y 1996 |
+| `EDW_Evaluacion_Credito` | `id_evaluacion` | — | 1 : 1..2 con Cliente | `good_client` tal como viene de `tkeys` |
+| `EDW_Cliente` | `id_cliente` | `id_distrito`, `id_evaluacion` (nullable) | 1 : 1 con Disposición | Fecha de nacimiento y sexo derivados de `birth_number` |
+| `EDW_Cuenta` | `id_cuenta` | `codigo_frecuencia`, `id_distrito` | 1 : 1..2 con Disposición | Fecha de apertura |
+| `EDW_Disposicion` | `id_disposicion` | `id_cliente` (único), `id_cuenta` | Resuelve M:N cliente–cuenta | Rol; índice único filtrado: 1 OWNER por cuenta |
+| `EDW_Tarjeta` | `id_tarjeta` | `id_disposicion` (único) | 0..1 por disposición | Tipo, fecha de emisión |
+| `EDW_Prestamo` | `id_prestamo` | `id_cuenta` (único), `codigo_estado` | 0..1 por cuenta | Fecha, monto, plazo, cuota |
+| `EDW_Transaccion` | `id_transaccion` | `id_cuenta`, `id_tipo_operacion` | N : 1 con Cuenta | Fecha, monto, saldo, banco contraparte, hash de cuenta contraparte |
+| `EDW_Orden` | `id_orden` | `id_cuenta`, `k_symbol` | N : 1 con Cuenta | Monto, banco destino, hash de cuenta destino |
+| Catálogos (4) | Código | — | 1 : N | Descripciones traducidas |
 
----
+##### 5.3 Decisiones de normalización
 
-#### Arquitectura Tipo 2 — Bill Inmon (Corporate Information Factory - CIF)
+* **Las traducciones dependen del código, no de la transacción.** Guardar "Depósito en efectivo" en cada una de 1,056,320 filas sería una dependencia transitiva. Por eso las 15 combinaciones de tipo, operación y concepto viven en `EDW_Tipo_Operacion`, y la transacción solo guarda su clave. Lo mismo aplica a propósito de orden, frecuencia y estado.
+* **No se almacenan atributos derivados.** La edad, la etiqueta de buen pagador y la categoría analítica se calculan en las vistas: guardarlas crearía datos que pueden contradecir a su origen.
+* **`tkeys` se conserva tal cual.** `good_client = 1` significa impago, como en la fuente; la inversión a "buen pagador" es una regla de presentación de los data marts.
+* **Las restricciones hacen visibles los errores de la fuente.** Al cargar, la clave foránea `EDW_Cliente → EDW_Evaluacion_Credito` rechazó el `tkey_id = 234` del cliente 6275, que no existe en `tkeys`. La regla de staging lo carga como `NULL` y lo registra.
 
-Se desarrolla la solución corporativa *Top-Down*: un repositorio central normalizado en Tercera Forma Normal (3FN) que integra toda la información del banco, del cual se derivan posteriormente los data marts departamentales.
+##### 5.4 Trazabilidad fuente-destino (*Source-to-Target Mapping*)
 
-##### 1. Dominios Lógicos de Negocio (Subject Areas)
-* **Sujetos / Clientes:** Identidad, perfil demográfico y roles (`clients`, `disps`, `tkeys`).
-* **Contratos / Cuentas:** Acuerdos contractuales pasivos y medios de pago (`accounts`, `cards`).
-* **Crédito / Cartera:** Instrumentos de crédito activo y control de mora (`loans`).
-* **Transaccionalidad Monetaria:** Movimientos de fondos y transferencias permanentes (`trans`, `orders`).
-* **Territorio / Geografía:** Contexto socioeconómico distrital (`districts`).
-
-##### 2. Modelo Relacional EDW Central (Tercera Forma Normal — 3FN)
-
-| Tabla EDW (3FN) | Primary Key | Foreign Keys | Cardinalidad | Atributos y Reglas de Normalización |
-| :--- | :--- | :--- | :--- | :--- |
-| `EDW_Distrito` | `id_distrito` | — | 1 : N con Cuenta y Cliente | Datos censales normalizados (`nombre`, `region`, `poblacion`, `salario_promedio`, `tasa_desempleo`, `tasa_criminalidad`). |
-| `EDW_Cliente` | `id_cliente` | `id_distrito` $\to$ `EDW_Distrito` | 1 : N con `EDW_Disposicion` | `fecha_nacimiento`, `sexo` (derivados de `birth_number`), `id_distrito`. |
-| `EDW_Cuenta` | `id_cuenta` | `id_distrito` $\to$ `EDW_Distrito` | 1 : N con Disposiciones y Hechos | `frecuencia`, `fecha_apertura`, `id_distrito`. |
-| `EDW_Disposicion` | `id_disposicion` | `id_cliente`, `id_cuenta` | N : 1 con Cliente y Cuenta | Resuelve la relación muchos-a-muchos; almacena `tipo_disposicion` (`OWNER`/`DISPONENT`). Elimina dependencias transitivas. |
-| `EDW_Tarjeta` | `id_tarjeta` | `id_disposicion` $\to$ `EDW_Disposicion` | 1 : 1 con Disposición | `tipo_tarjeta`, `fecha_emision`. |
-| `EDW_Prestamo` | `id_prestamo` | `id_cuenta` $\to$ `EDW_Cuenta` | N : 1 con Cuenta | `fecha`, `monto` (DECIMAL 12,2), `plazo`, `cuota`, `estado`. |
-| `EDW_Transaccion` | `id_transaccion` | `id_cuenta` $\to$ `EDW_Cuenta` | N : 1 con Cuenta | `fecha`, `tipo`, `operacion`, `monto`, `saldo`, `k_symbol`, `banco_destino_hash`, `cuenta_destino_hash`. |
-| `EDW_Orden` | `id_orden` | `id_cuenta` $\to$ `EDW_Cuenta` | N : 1 con Cuenta | `monto` (DECIMAL 12,2), `k_symbol`, `banco_destino_hash`, `cuenta_destino_hash`. |
-| `EDW_EtiquetaCliente` | `id_etiqueta` | `id_cliente` $\to$ `EDW_Cliente` | 1 : 1 con Cliente Evaluado | `buen_pagador` (1 = Estado A cumplido, 0 = Estado B moroso). |
-
----
-
-#### Trazabilidad, Integración y Validación de Datos (Source-to-Target Mapping)
-
-| Tabla/Columna Origen (`Financial_ijs`) | Regla de Validación y Calidad | Transformación y Limpieza en Staging | Tabla/Columna Destino (EDW 3FN) |
+| Origen (`Financial_ijs`) | Regla de validación | Transformación en staging | Destino (EDW 3FN) |
 | :--- | :--- | :--- | :--- |
-| `clients.birth_number` | Entero/cadena de **6 dígitos exactos** (`AAMMDD`). | Descomposición algorítmica: si `mes > 50` $\to$ Femenino y `mes = mes - 50`. Conversión a `DATE`. | `EDW_Cliente.fecha_nacimiento`, `EDW_Cliente.sexo` |
-| `clients.district_id` | Debe existir en `districts.id`. | Validación de integridad referencial contra `EDW_Distrito`. | `EDW_Cliente.id_distrito` |
-| `loans.date` | Formato fecha válido (1993–1998). | Estandarización a tipo `DATE` (`YYYY-MM-DD`). | `EDW_Prestamo.fecha` |
-| `loans.status` | Pertenecer al conjunto {A, B, C, D}. | Preservar valor de código; homologar descripciones en capas de consumo. | `EDW_Prestamo.estado` |
-| `trans.type` / `operation` | Catálogo de códigos checos (`PRIJEM`, `VYBER`, `VKLAD`). | Homologación mediante tabla de traducción al español y normalización de espacios. | `EDW_Transaccion.tipo`, `EDW_Transaccion.operacion` |
-| `orders.amount` | Preservar precisión monetaria decimal. | Tipo de dato estricto `DECIMAL(12,2)` para evitar truncamientos. | `EDW_Orden.monto` |
-| `orders.account_to` / `bank_to` | Protección de Datos Personales (PII). | Aplicación de hash irreversible `SHA2_256` antes de almacenar en el EDW. | `EDW_Orden.cuenta_destino_hash`, `EDW_Orden.banco_destino_hash` |
-| `districts.A12 / A15` | El distrito 69 (*Jesenik*) contiene `'?'`. | **Mapeo condicional:** Convertir `'?'` a `NULL` antes de la conversión a `DECIMAL(6,2)`. | `EDW_Distrito.tasa_desempleo`, `EDW_Distrito.tasa_criminalidad` |
-| `cards.issued` | Coherencia temporal con la cuenta. | Estandarización a tipo `DATE`. | `EDW_Tarjeta.fecha_emision` |
-| `tkeys.goodClient` | Variable binaria de riesgo donde 1 = default. | **Inversión lógica:** Asignar `1` a Estado A y `0` a Estado B. | `EDW_EtiquetaCliente.buen_pagador` |
+| `clients.birth_number` | Texto de 6 dígitos `AAMMDD` | Si el mes > 50: sexo F y mes − 50; conversión a `DATE` | `EDW_Cliente.fecha_nacimiento`, `sexo` |
+| `clients.tkey_id` | Debe existir en `tkeys.id` | Clave inexistente (234) → `NULL` y registro en auditoría | `EDW_Cliente.id_evaluacion` |
+| `clients.district_id`, `accounts.district_id` | Debe existir en `districts.id` | Integridad referencial | `id_distrito` |
+| `accounts.frequency` | 3 valores conocidos | Recorte de espacios; FK al catálogo | `EDW_Cuenta.codigo_frecuencia` |
+| `loans.date`, `trans.date`, `accounts.date`, `cards.issued` | Tipo `DATE` en la fuente | Carga directa | Columnas `fecha` |
+| `loans.status` | Conjunto {A, B, C, D} | FK al catálogo de estados | `EDW_Prestamo.codigo_estado` |
+| `trans.type`, `operation`, `k_symbol` | `operation` y `k_symbol` admiten `NULL` y `''` | `NULL` y `''` → `SIN_ESPECIFICAR`; búsqueda de la combinación en el catálogo | `EDW_Transaccion.id_tipo_operacion` |
+| `orders.k_symbol` | 1,379 valores vacíos | `''` → `SIN_ESPECIFICAR` | `EDW_Orden.k_symbol` |
+| `orders.account_to`, `trans.account` | Número de cuenta de un tercero | Hash `SHA2_256` | `cuenta_destino_hash`, `cuenta_contraparte_hash` |
+| `orders.amount`, `loans.amount`, `trans.amount` | Enteros (`decimal(10,0)`) | Carga como `DECIMAL(12,2)` | Columnas `monto` |
+| `districts.A12`, `A15` | `NULL` en el distrito 69 | Se conserva `NULL` en el EDW; la imputación se aplica en los data marts | `tasa_desempleo_1995`, `tasa_criminalidad_1995` |
+| `tkeys.goodClient` | 0 / 1 | Sin transformación | `EDW_Evaluacion_Credito.good_client` |
+
+##### 5.5 Data marts departamentales derivados (vistas)
+
+| Data mart | Vista | Qué entrega |
+| :--- | :--- | :--- |
+| Riesgo y cartera | `Vista_Mora_Distrito` | Préstamos vigentes, en mora, cartera vigente y tasa por distrito (con su *n*) |
+| Riesgo y cartera | `Vista_Calidad_Historica` | Incumplimiento de préstamos cerrados por región |
+| Riesgo y cartera | `Vista_Capacidad_Pago` | Cuota / saldo previo, banda de capacidad e impago por préstamo |
+| Saldos y liquidez | `Vista_Saldo_Final_Cuenta` | Último saldo por cuenta con desempate por `id_transaccion` |
+| Saldos y liquidez | `Vista_Absorcion_Region` | Cartera vigente, saldo neto, sobregiros y ratio por región |
+| Operaciones | `Vista_Volumen_Operaciones` | Movimientos, monto y ticket por año y categoría analítica |
+| Operaciones | `Vista_Ordenes_Recurrentes` | Órdenes, monto total y promedio por propósito |
 
 ---
 
-#### Data Marts Departamentales Derivados del EDW (Inmon)
+#### 6. Validación de las arquitecturas
 
-A partir del repositorio normalizado central (EDW 3FN), se construyen procesos ETL departamentales que desnormalizan y agregan la información en vistas analíticas:
+El EDW de Inmon se cargó con los 9 conjuntos de datos del servidor remoto (1,056,320 movimientos en 13 segundos) y se consultaron sus vistas. Las mismas cifras se contrastaron con el Data Mart Kimball en operación (`DM_Financial_Kimball_v2`) y con la Carta v8.
 
-##### 1. Data Mart Departamental de Riesgo y Cartera
-* `Vista_Mora_Distrito`: Agregación de préstamos vigentes por distrito y estado (`C`/`D`), con tasa de morosidad activa calculada:
-  $$\text{Tasa Mora Activa} = \frac{\text{Conteo(Estado D)}}{\text{Conteo(Estado C)} + \text{Conteo(Estado D)}} \times 100 = \mathbf{10.04\%}$$
-* `Vista_Exposicion_Anual`: Monto total de préstamos colocados frente al saldo de cuentas del mismo período (Ratio de absorción: **52.38%**).
-* `Vista_Calidad_Historica`: Tasa de incumplimiento sobre préstamos cerrados (Estado B: **13.25%**), segmentada por distrito y segmento etario.
+| Control | Carta v8 | Inmon (vistas) | Kimball (Data Mart) |
+| :--- | ---: | ---: | ---: |
+| Préstamos vigentes / en mora | 448 / 45 | 448 / 45 | 448 / 45 |
+| Préstamos cerrados / con deuda | 234 / 31 | 234 / 31 | 234 / 31 |
+| Saldo neto al corte (4,500 cuentas) | $197,140,434 | $197,140,434 | $197,140,434 |
+| Cartera vigente / ratio de absorción | $80,296,176 / 40.73% | $80,296,176 / 40.73% | $80,296,176 / 40.73% |
+| Cuentas en sobregiro al corte | 39 | 39 | 39 |
+| Órdenes / monto | 6,471 / $21,229,041 | 6,471 / $21,229,041 | 6,471 / $21,229,041 |
+| Movimientos: Ingreso / Intereses / Egreso / Retiro | 221,969 / 183,114 / 634,571 / 16,666 | 221,969 / 183,114 / 634,571 / 16,666 | **Pendiente:** el Data Mart en operación aún usa 3 categorías (405,083 / — / 634,571 / 16,666) |
+| Bandas de capacidad (préstamos / impagos) | 171/5 · 167/16 · 172/15 · 172/40 | 171/5 · 167/16 · 172/15 · 172/40 | **Pendiente:** columnas nuevas aún no cargadas |
+| Etiqueta derivada de `tkeys` vs. estado | 0 ↔ A, 1 ↔ B | 257 A con 0 · 31 B con 1 · 0 cruces | — |
 
-##### 2. Data Mart Departamental de Operaciones y Liquidez
-* `Vista_Volumen_Operaciones`: Conteo y monto total/promedio de transacciones agrupadas por tipo, operación y canal.
-* `Vista_Liquidez_Cuenta`: Último saldo disponible por cuenta agrupado por distrito al cierre de 1998 (\$197,140,434.00), empleado como indicador institucional de liquidez.
-* `Vista_Ordenes_Recurrentes`: Monto total y promedio de débitos permanentes programados agrupados por símbolo (`SIPO`, `UVER`, `POJISTNE`, `LEASING`).
+**Resultado:** el diseño Inmon reproduce todas las cifras de la Carta. El Data Mart Kimball coincide en todos los controles que ya implementa. Los dos pendientes (categorías de operación y medidas de capacidad) corresponden a la actualización del ETL a este DDL.
 
 ---
 
-#### Evaluación Comparativa: Ralph Kimball vs. Bill Inmon
+#### 7. Evaluación comparativa: Kimball vs. Inmon
 
-| Criterio de Comparación | Ralph Kimball (Data Mart Bus Architecture) | Bill Inmon (Corporate Information Factory) | Veredicto Técnico para el Caso Bancario |
+| Criterio | Kimball | Inmon | Veredicto para este caso |
 | :--- | :--- | :--- | :--- |
-| **Enfoque de Construcción** | **Bottom-Up:** Incremental por proceso de negocio mediante dimensiones conformadas. | **Top-Down:** Construcción corporativa centralizada previa en 3FN antes de derivar reportes. | **Kimball es superior en agilidad:** Permite entregar valor inmediato al negocio implementando primero el Data Mart de Cartera sin esperar a modelar toda la corporación. |
-| **Rendimiento OLAP / Consultas** | **Máximo rendimiento:** Consultas directas con 1 solo nivel de `JOIN` (estrella/constelación). Ideal para Power BI y DAX. | **Bajo para consulta directa:** Requiere navegar múltiples `JOIN`s en un modelo normalizado en 3FN. | **Kimball:** Optimizado para la velocidad analítica del usuario final. |
-| **Gobernanza y Redundancia** | Acepta redundancia controlada en dimensiones para optimizar la velocidad de lectura. | **Cero redundancia:** Elimina anomalías de actualización y dependencias transitivas en 3FN. | **Inmon:** Excelente para auditoría centralizada cuando existen múltiples fuentes heterogéneas. |
-| **Alineación con la Fuente de Datos** | Modela directamente la fuente hacia esquemas dimensionales optimizados para analítica. | Exige construir un EDW en 3FN a partir de una fuente que **ya está en 3FN** (`Financial_ijs`). | **Kimball:** Evita duplicar el esfuerzo de almacenamiento y ETL que causaría re-normalizar una base ya normalizada. |
+| **Construcción** | Bottom-up por proceso, integrado por dimensiones conformadas | Top-down: EDW corporativo antes de los data marts | **Kimball:** entrega primero el proceso de cartera, que concentra los problemas 1 y 2 |
+| **Estructura resultante** | 4 hechos + 8 dimensiones (12 tablas) | 13 tablas en 3FN + 7 vistas | Inmon necesita una capa adicional de vistas para llegar al mismo consumo |
+| **Consulta analítica** | Un nivel de `JOIN` desde el hecho a cada dimensión | Varias uniones por consulta (p. ej., la mora por región pasa por préstamo → cuenta → distrito) | **Kimball** para Power BI y DAX |
+| **Medidas semiaditivas** | La foto mensual materializa un saldo por cuenta y mes | Se recalcula con funciones de ventana sobre 1,056,320 movimientos en cada consulta | **Kimball:** el saldo queda calculado una vez y con una sola regla |
+| **Análisis de capacidad (problema 2)** | Calculado una vez en el ETL y guardado en el hecho; se combina por *drill-across* sobre `Dim_Cuenta` | Vista con subconsulta por préstamo sobre los movimientos previos | Ambas lo resuelven; Kimball lo precalcula |
+| **Integridad y calidad** | Claves sustitutas y FK en los hechos | Restricciones de negocio en la base (1 titular por cuenta, 0..1 préstamo, FK a catálogos) | **Inmon** detectó por sí mismo la clave `tkeys` rota |
+| **Redundancia** | Controlada en dimensiones (p. ej., región repetida por distrito) | Mínima: cada dato en un solo lugar | **Inmon** es preferible como repositorio maestro con varias fuentes |
+| **Alineación con la fuente** | Transforma una fuente 3FN directamente al modelo dimensional | Construye un EDW 3FN sobre una fuente que **ya está en 3FN** | **Kimball:** con una sola fuente, el EDW duplica la normalización sin aportar integración |
+| **Resultado numérico** | Coincide con la Carta en todos los controles implementados | Coincide con la Carta en todos los controles | Las dos arquitecturas son correctas; la diferencia es de costo y de consumo |
+
+**Decisión:** se adopta **Kimball** como arquitectura implementada. Inmon se mantiene como diseño de referencia validado, útil si el banco incorporara nuevas fuentes que requieran un repositorio integrado.
 
 ---
 
 ### 2.8 Habilidades blandas empleadas en la práctica
 * [ ] Liderazgo
-* [ ] Trabajo en equipo
+* [x] Trabajo en equipo
 * [ ] Comunicación asertiva
 * [ ] La empatía
 * [x] Pensamiento crítico
@@ -310,16 +367,18 @@ A partir del repositorio normalizado central (EDW 3FN), se construyen procesos E
 
 ### 2.9 Conclusiones
 
-* **El modelo dimensional Kimball (Bottom-Up) resuelve de forma directa y óptima las preguntas analíticas de negocio:** La estructuración del esquema en constelación con dimensiones conformadas (`Dim_Tiempo`, `Dim_Cuenta`, `Dim_Cliente`, `Dim_Distrito`) permite cruzar la cartera de crédito, las transacciones monetarias y las órdenes recurrentes mediante análisis cruzado (*drill-across*), respondiendo de forma ágil a la tasa de morosidad activa del 10.04% y a la absorción de liquidez del 52.38%.
-* **La arquitectura Inmon (Top-Down) proporciona el marco formal de gobernanza y normalización corporativa:** Mediante la descomposición en 3FN y la entidad asociativa `EDW_Disposicion`, el modelo elimina dependencias transitivas y centraliza las reglas de anonimización de PII, garantizando una única versión de la verdad apta para la derivación de data marts departamentales controlados.
-* **La rigurosidad en los tipos de datos y en la calidad en Staging es crítica para la exactitud contable:** Declarar las medidas monetarias como `DECIMAL(12,2)` en lugar de `DECIMAL(10,0)` y aplicar el mapeo de caracteres nulos (`'?'` $\to$ `NULL` en distritos) asegura una reconciliación perfecta al centavo (\$103,261,740.00 en créditos y \$21,228,993.60 en órdenes) sin pérdidas por redondeo.
+* **Kimball responde directamente a los tres problemas de la Carta.** El préstamo como grano atómico sostiene el análisis de mora; la capacidad de pago precalculada en `Fact_Prestamos` y el *drill-across* sobre `Dim_Cuenta` sostienen el problema 2; y la foto periódica `Fact_Saldo_Cuenta_Mensual` convierte el saldo semiaditivo en una cifra única ($197,140,434) y un ratio reproducible (40.73%).
+* **Inmon es correcto, pero no aporta integración en este caso.** Su EDW en 3FN reproduce todas las cifras de control y sus restricciones detectaron una clave rota en `tkeys`. Sin embargo, al partir de una única fuente que ya está en 3FN, añade 13 tablas y una capa de vistas sin integrar nada nuevo.
+* **La declaración de grano y de aditividad es lo que hace coincidir ambas arquitecturas.** Con las mismas reglas (titular de la cuenta, distrito de la cuenta, desempate por id, razones sobre agregados) los dos modelos dan exactamente las mismas cifras. Las versiones anteriores del informe tenían errores que venían justamente de no declararlas: un total de órdenes inexistente ($21,228,993.60), el ratio sobre préstamos ya cerrados (52.38%) y la suma de saldos entre movimientos.
 
 ---
 
 ### 2.10 Recomendaciones
 
-* **Adoptar un enfoque de Arquitectura Híbrida para la evolución analítica del banco:** Utilizar el repositorio central normalizado en 3FN de Inmon como capa de datos maestros gobernada y auditoría regulatoria, y alimentar sobre este los Data Marts dimensionales en constelación de Kimball para el consumo eficiente en Power BI.
-* **Preservar el grano atómico en todas las tablas de hechos:** Evitar la tentación de precargar agregaciones mensuales en las tablas de hechos transaccionales base; la agregación debe resolverse mediante vistas analíticas o medidas DAX para no sacrificar el detalle histórico de transacciones individuales.
+* **Actualizar el ETL y el Data Mart al DDL de este informe** (`Dim_Operacion` de 15 filas, columnas de capacidad, `Fact_Saldo_Cuenta_Mensual`, `Dim_Cuenta` con crédito externo) y repetir la validación de la sección 6 hasta que no queden pendientes.
+* **Recrear `EDW_Financial_Inmon` con el nuevo DDL** solo si se quiere conservar el diseño de referencia cargado. La base actual tiene una estructura anterior y está vacía.
+* **Mantener el grano atómico en los hechos transaccionales** y agregar solo en hechos de foto periódica declarados (como el saldo mensual) o en vistas, nunca sobrescribiendo el detalle.
+* **Conservar en staging las restricciones que en Inmon detectaron errores** (FK a `tkeys`, un titular por cuenta, un préstamo por cuenta), aunque el Data Mart Kimball no las exija.
 
 ---
 

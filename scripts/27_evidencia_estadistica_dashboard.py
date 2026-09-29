@@ -85,8 +85,8 @@ def main():
         "ticket_promedio_transaccion": round(float(t["monto_transaccion"].mean()), 2),
         "compromiso_ordenes": float(o["monto_orden"].sum()),
         "num_ordenes": int(len(o)),
-        "monto_en_riesgo_BD": float(p.loc[p["estado_prestamo"].isin(["B", "D"]),
-                                          "saldo_pendiente_estimado"].sum()),
+        # Monto Original en Riesgo (Carta v8): monto otorgado de los préstamos B y D
+        "monto_en_riesgo_BD": float(p.loc[p["estado_prestamo"].isin(["B", "D"]), "monto_prestamo"].sum()),
         "clientes_con_impago_B": int(p.loc[p["estado_prestamo"] == "B", "id_cliente"].nunique()),
         "clientes_totales": int(len(c)),
     }
