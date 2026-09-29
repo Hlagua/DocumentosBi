@@ -121,21 +121,35 @@ Reglas del modelo que el gerente debe conocer, porque cambian la lectura:
 
 | Elemento | Qué hace |
 | :--- | :--- |
-| Botones **Inicio, P1–P6, R1–R3** | Cambian de página. El botón azul es la página actual. |
+| Botones **Inicio, P1–P6, R1–R3** | Cambian de página (dos columnas). El botón azul es la página actual. |
 | Filtro **Año** | Filtra por año del hecho: otorgamiento del préstamo, año de las transacciones, mes del saldo. |
 | Filtro **Zona** | Jerárquico: macro-región (Bohemia, Moravia, Praga) › región › distrito. Se abre con la flecha y se puede elegir un nivel o varios elementos. |
 | Filtro **Edad** | Joven (< 30), Adulto (30–50), Adulto Mayor (50 o más). |
+| Filtro **Estado del préstamo** | El estado del préstamo del cliente: A, B, C, D o "Sin préstamo". |
+| Filtro **Banda de capacidad** | La banda de su préstamo: Baja, Media-baja, Media-alta, Alta o "Sin préstamo". |
+| Filtro **Alerta de saturación** | Normal, Alta (índice > 0.5), Crítica (índice > 1) o "Sin órdenes". |
+| Filtro **Primera oferta** | El primer producto que le recomienda R1. |
+| Filtro **Préstamo prudente** | "Sí" si R2 le recomienda préstamo; "No"; "Sin cuenta propia" (cotitulares). |
 
-**Los tres filtros están sincronizados:** lo que elija en una página sigue elegido en todas las demás. Así el gerente puede fijar, por ejemplo, *Moravia · Adulto Mayor* y recorrer P1 → P6 → R1–R3 viendo siempre el mismo grupo.
+**Los ocho filtros están sincronizados:** lo que elija en una página sigue elegido en **todas** las demás. Los cinco últimos son **atributos del cliente**, por eso filtran todo el proyecto y no solo la página que los muestra. Ejemplos verificados en el motor:
+
+* *Estado del préstamo = D · Vigente en mora* → P1: 45 préstamos; P3: esos clientes tienen $1.56M de saldo; P4: 7 están en sobregiro; P5: 6 saturados; R1: sus 135 ofertas.
+* *Banda de capacidad = Alta* → P6: 23.3% de impago; P5: 23 de las 47 cuentas saturadas son de esta banda.
+* *Alerta de saturación = Alta (> 0.5)* → P1/P2: su tasa de mora es 21.7%, el doble que el banco; R2: solo 10 tienen préstamo prudente.
+
+Así el gerente fija un grupo (por ejemplo *Moravia · Adulto Mayor · banda Alta*) y recorre P1 → P6 → R1–R3 viendo siempre a esos mismos clientes.
 
 ### 3.2 Clics dentro de una página
 
 * **Clic en una barra, un sector o una fila:** filtra los demás gráficos **de esa página** (filtro cruzado). Otro clic en el mismo elemento lo quita. Ctrl + clic selecciona varios.
 * **Pasar el mouse:** el *tooltip* muestra el detalle (intervalos, *n*, error estándar). En esta guía se indica qué trae cada tooltip.
-* El clic en un gráfico **no viaja** a otras páginas (así funciona Power BI). Para llevar una selección a otra página se usan el panel lateral o el *drill-through*.
+* El clic simple en un gráfico **no viaja** a otras páginas: Power BI guarda el filtro cruzado por página y no tiene ninguna opción para compartirlo. Para que una selección sirva en todo el proyecto hay dos caminos:
+  1. **Elegir el valor en el panel lateral** (un clic en el desplegable): queda activo en todas las páginas.
+  2. **Clic derecho → Obtener detalles** en el gráfico (sección 3.3): lleva la selección a la página que elija.
 
-### 3.3 Drill-through a las fichas (D1 y D2)
+### 3.3 Drill-through: llevar la selección a otra página
 
+* **Clic derecho en una región** de cualquier gráfico (P2, P3, R2, el árbol o el treemap) → *Obtener detalles* → **cualquier página P1–P6 o R1–R3**. La página destino se abre filtrada por esa región **y con todos los filtros y clics** de la página de origen; ese filtro se queda en la página destino (se ve en el panel *Filtros*) hasta que lo quite.
 * **Clic derecho en un distrito** (P2) → *Obtener detalles* → **D1 Distrito**.
 * **Clic derecho en un cliente** (P2, P5, P6, R1, R2, R3, D1) → *Obtener detalles* → **D2 Cliente 360**.
 * La ficha se abre **con todos los filtros** de la página de origen. El botón **◀ Atrás** regresa.

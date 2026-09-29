@@ -110,7 +110,7 @@ Estos valores se guardan en `tema_financial.json`, **incrustado en cada informe*
 
 Doce páginas: **Inicio**, seis de preguntas (**P1–P6**, una por pregunta de la Carta v8), tres de recomendación (**R1–R3**) y dos de detalle por *drill-through* (**D1** distrito, **D2** cliente, ocultas en las pestañas).
 
-**Panel lateral fijo (150 px, en todas las páginas):** navegación a las diez páginas visibles y tres filtros **sincronizados** —**Año**, **Zona** (jerarquía macro-región › región › distrito) y **Segmento de edad**—. Lo que el gerente elige en ese panel se mantiene al cambiar de página, de modo que puede recorrer P1 → P6 → R1–R3 con la misma zona o segmento y decidir con el mismo recorte. El área de gráficos se comprime proporcionalmente al ancho restante.
+**Panel lateral fijo (180 px, en todas las páginas):** navegación a las diez páginas visibles y ocho filtros **sincronizados** —**Año**, **Zona** (jerarquía macro-región › región › distrito), **Edad** y cinco atributos del cliente: **estado del préstamo, banda de capacidad, alerta de saturación, primera oferta (R1) y préstamo prudente (R2)**—. Los atributos del cliente son columnas calculadas de la dimensión cliente (no de los hechos), por lo que un filtro sobre ellos llega a todos los hechos del proyecto. Lo que el gerente elige en ese panel se mantiene al cambiar de página, de modo que puede recorrer P1 → P6 → R1–R3 con la misma zona o segmento y decidir con el mismo recorte. El área de gráficos se comprime proporcionalmente al ancho restante.
 
 ### Inicio — "¿Cómo está el banco?"
 
@@ -319,10 +319,10 @@ Errores que se evitan: filtrar la tabla de hechos completa con `FILTER` (lento);
 
 | Herramienta | Uso | Por qué |
 | :--- | :--- | :--- |
-| **Panel lateral de filtros globales** (Año, Zona jerárquica, Segmento de edad), sincronizados | Todas las páginas | El gerente filtra una vez y el filtro lo acompaña en P1–P6 y R1–R3; así compara problemas y oportunidades del mismo recorte |
+| **Panel lateral de filtros globales** (Año, Zona jerárquica, Edad, estado del préstamo, banda de capacidad, alerta de saturación, primera oferta, préstamo prudente), sincronizados | Todas las páginas | El gerente filtra una vez y el filtro lo acompaña en P1–P6 y R1–R3. Es la forma de que una selección valga para todo el proyecto: Power BI no comparte entre páginas el filtro de un clic en un gráfico |
 | Clic en un gráfico (filtro cruzado) | Dentro de cada página | Explorar sin cambiar de página. En Power BI el clic en un gráfico no viaja a otras páginas: para eso están el panel y el *drill-through* |
 | Árbol de descomposición | P2 | Recorrido "el mayor → dentro de ese → …" |
-| *Drill-through* (configurado en el código, **conserva todos los filtros**) | Clic derecho en un distrito → D1; en un cliente → D2 (desde P2, P5, P6, R1–R3 y D1); botón Atrás | El detalle hereda la zona, el segmento, el año y los clics de la página de origen |
+| *Drill-through* (configurado en el código, **conserva todos los filtros**) | Clic derecho en una región de cualquier gráfico → cualquier página P1–P6 o R1–R3; en un distrito → D1; en un cliente → D2; botón Atrás en las fichas | Lleva la selección del gráfico a otra página con todos los filtros y clics de la página de origen |
 | Tooltip de página | Distritos (P2, P3) | Detalle sin cambiar de página |
 | Marcador "Restablecer filtros" | Botón en la barra | Volver al estado inicial |
 | Formato condicional | Semáforo del índice de saturación; mapa de calor en matrices; barras de datos en tasas | Alertas legibles sin leer cada número |

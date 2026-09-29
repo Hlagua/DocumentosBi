@@ -20,10 +20,12 @@ Fuente: SQL Server `DM_Financial_Kimball_v2`. Diseño: Guía 07 v4. Generado con
 | Impago banda Baja · Alta | 2.92% · 23.26% |
 
 ### Cómo lo usa el gerente
-* **Panel izquierdo (en todas las páginas):** navegación a Inicio, P1–P6 y R1–R3, y los filtros **Año**, **Zona**
-  (macro-región › región › distrito) y **Segmento de edad**. Están sincronizados: lo que elija sigue activo al
-  cambiar de página.
-* **Clic en un gráfico:** filtra los demás gráficos de esa misma página (comportamiento estándar de Power BI).
+* **Panel izquierdo (en todas las páginas):** navegación a Inicio, P1–P6 y R1–R3 y 8 filtros sincronizados: Año,
+  Zona (macro-región › región › distrito), Edad, Estado del préstamo, Banda de capacidad, Alerta de saturación,
+  Primera oferta y Préstamo prudente. Lo que elija sigue activo en TODAS las páginas; los cinco últimos son
+  atributos del cliente y filtran todos los hechos (saldos, órdenes, transacciones, recomendaciones).
+* **Clic en un gráfico:** filtra los demás gráficos de esa misma página (Power BI no comparte ese filtro entre páginas).
+* **Clic derecho en una región → Obtener detalles:** lleva esa región y todos los filtros a cualquier página P1–P6 o R1–R3.
 * **Clic derecho en un cliente o distrito → Obtener detalles:** abre la ficha D2 (cliente) o D1 (distrito)
   **con todos los filtros aplicados**; el botón *Atrás* vuelve a la página de origen. D1 y D2 están ocultas en
   las pestañas porque solo tienen sentido para un cliente o distrito concreto.

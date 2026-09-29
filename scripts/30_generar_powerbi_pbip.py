@@ -455,6 +455,30 @@ MACRO_REGION = ('SWITCH(TRUE(), Dim_Distrito[region] = "Prague", "Praga", '
                 'CONTAINSSTRING(Dim_Distrito[region], "Moravia"), "Moravia", "Bohemia")')
 
 
+def columnas_filtro_cliente(cli, prest, estado_lbl, banda, orden_banda, recp, cap):
+    """Atributos del TITULAR calculados desde los hechos. Van en la dimensión cliente para que un filtro sobre
+    ellos llegue a TODOS los hechos (préstamos, saldos, órdenes, transacciones, recomendaciones): así la
+    selección del gerente vale para todo el proyecto y no solo para las páginas de préstamos."""
+    return [
+        col_calc("Estado del Prestamo",
+                 f'VAR e = CALCULATE(MAX({estado_lbl}), CALCULATETABLE({prest})) RETURN IF(ISBLANK(e), "Sin préstamo", e)'),
+        col_calc("Banda de Capacidad",
+                 f'VAR b = CALCULATE(MAX({banda}), CALCULATETABLE({prest})) RETURN IF(ISBLANK(b), "Sin préstamo", b)',
+                 orden_por="Orden Banda Cliente"),
+        col_calc("Orden Banda Cliente", f"VAR o = CALCULATE(MAX({orden_banda}), CALCULATETABLE({prest})) RETURN IF(ISBLANK(o), 5, o)",
+                 "int64", oculto=True),
+        col_calc("Alerta de Saturacion",
+                 'VAR i = [Indice Saturacion] RETURN SWITCH(TRUE(), ISBLANK(i), "Sin órdenes", i > 1, "Crítica (> 1)", '
+                 'i > 0.5, "Alta (> 0.5)", "Normal")'),
+        col_calc("Primera Oferta",
+                 f'VAR x = CALCULATE(MAX({recp}[producto]), {recp}[sistema] = "Demográfico", {recp}[posicion] = 1) '
+                 'RETURN IF(ISBLANK(x), "Sin recomendación", x)'),
+        col_calc("Prestamo Recomendado",
+                 f'IF(CALCULATE(COUNTROWS({cap})) = 0, "Sin cuenta propia", '
+                 f'IF(CALCULATE(COUNTROWS({cap}), {cap}[prestamo_recomendado] = TRUE()) > 0, "Sí", "No"))'),
+    ]
+
+
 def modelo_kimball():
     k, d, b = "int64", "double", "boolean"
     oc = lambda *nombres: [col(n, k, oculto=True) for n in nombres]
@@ -476,7 +500,10 @@ def modelo_kimball():
         tabla_sql("Dim_Cliente", oc("sk_cliente") + [
             col("id_cliente_bk", k), col("sexo"), col("edad_corte", k), col("tipo_disposicion"),
             col("segmento_edad", orden_por="Orden Segmento"), col("arquetipo_demografico"), col("calificacion_pago_desc")],
-            [col_calc("Cliente", '"Cliente " & Dim_Cliente[id_cliente_bk]')],
+            [col_calc("Cliente", '"Cliente " & Dim_Cliente[id_cliente_bk]')]
+            + columnas_filtro_cliente("Dim_Cliente", "Fact_Prestamos", "Dim_Estado_Prestamo[Estado]",
+                                      "Fact_Prestamos[banda_capacidad]", "Fact_Prestamos[Orden Banda]",
+                                      "Recomendacion_Producto", "Capacidad_Prestamo"),
             orden_m=("Orden Segmento", "segmento_edad", ORDEN_SEGMENTO)),
         tabla_sql("Dim_Cuenta", oc("sk_cuenta") + [
             col("id_cuenta_bk", k), col("frecuencia_emision_estado"), col("fecha_apertura", "dateTime", "dd/mm/yyyy"),
@@ -573,7 +600,9 @@ def modelo_mongo():
                                      col("tasa_criminalidad", d, "0.00"), col("es_imputado", b), col("macro_region")]),
         tabla_python("m_clientes", [col("id_cliente", k), col("cliente"), col("sexo"), col("edad_corte", k),
                                     col("tipo_disposicion"), col("segmento_edad", orden_por="orden_segmento"),
-                                    col("arquetipo_demografico"), col("calificacion_pago"), col("orden_segmento", k, oculto=True)]),
+                                    col("arquetipo_demografico"), col("calificacion_pago"), col("orden_segmento", k, oculto=True)],
+                     columnas_filtro_cliente("m_clientes", "m_prestamos", "m_prestamos[estado]", "m_prestamos[banda_capacidad]",
+                                             "m_prestamos[orden_banda]", "m_recomendacion_producto", "m_capacidad_prestamo")),
         tabla_python("m_cuentas", [col("id_cuenta", k), col("frecuencia_extracto"), col("fecha_apertura", "dateTime", "dd/mm/yyyy"),
                                    col("tiene_credito_externo", b), col("monto_credito_externo", d, MONEDA)],
                      [col_calc("cuenta", '"Cuenta " & m_cuentas[id_cuenta]')]),
@@ -672,7 +701,7 @@ def vid(*partes):
     return uuid.uuid5(uuid.NAMESPACE_URL, "/".join(map(str, partes))).hex[:20]
 
 
-X_CONTENIDO = 158                      # a la izquierda, panel fijo de navegación y filtros (150 px)
+X_CONTENIDO = 188                      # a la izquierda, panel fijo de navegación y filtros globales (180 px)
 ESCALA_X = (W - X_CONTENIDO - 8) / 1256  # las páginas se diseñan en 12..1268 y se comprimen al área de contenido
 
 
@@ -880,22 +909,24 @@ def construir_informe(F):
                    "header": [{"properties": {"show": lit(False)}}],
                    "items": [{"properties": {"fontSize": lit(9)}}]}
 
+    # Filtros globales: se sincronizan en todas las páginas (lo elegido sigue activo al cambiar de página).
+    # Los cinco últimos son atributos del cliente, por lo que filtran todos los hechos del proyecto.
+    FILTROS = [("anio", "Año"), ("zona", "Zona"), ("segmento", "Edad"),
+               ("estado_cli", "Estado del préstamo"), ("banda_cli", "Banda de capacidad"), ("alerta_cli", "Alerta de saturación"),
+               ("oferta_cli", "Primera oferta"), ("prestamo_cli", "Préstamo prudente")]
+
     def lateral(p):
-        """Panel fijo: navegación a las 10 páginas y filtros SINCRONIZADOS (mismo valor en todas las páginas)."""
+        """Panel fijo: navegación a las 10 páginas y 8 filtros SINCRONIZADOS (mismo valor en todas las páginas)."""
         p.crudo = True
-        p.texto(0, 0, 150, H, " ", 8, False, TINTA, "#EFEFEF")
-        p.texto(4, 0, 144, 50, "Financial_ijs\nPanel gerencial", 10, True)
+        p.texto(0, 0, 180, H, " ", 8, False, TINTA, "#EFEFEF")
+        p.texto(4, 2, 172, 34, "Financial_ijs", 11, True)
         for i, n in enumerate(nombres[:10]):
-            p.boton(6, 50 + i * 31, 138, 27, n, ids[n], fondo=EST_A if n == p.nombre else TINTA, tam=9)
-        p.texto(4, 356, 144, 32, "Filtros globales", 10, True)
-        p.visual("slicer", 6, 388, 138, 62, {"Values": ["anio"]}, "Año", objetos=desplegable, extra=sync("anio"))
-        p.visual("slicer", 6, 454, 138, 62, {"Values": ["macro", "region", "distrito"]}, "Zona", objetos=desplegable,
-                 extra=sync("zona"))
-        p.visual("slicer", 6, 520, 138, 62, {"Values": ["segmento"]}, "Edad", objetos=desplegable,
-                 extra=sync("segmento"))
-        p.texto(4, 586, 144, 132,
-                "• Estos filtros siguen en todas las páginas.\n• Clic en un gráfico: filtra la página.\n"
-                "• Clic derecho en cliente o distrito → Obtener detalles.", 8)
+            corto = {"R1 Qué ofrecer": "R1 Ofrecer", "R3 Venta cruzada": "R3 Cruzada"}.get(n, n)
+            p.boton(6 + (i % 2) * 86, 40 + (i // 2) * 30, 82, 26, corto, ids[n], fondo=EST_A if n == p.nombre else TINTA, tam=8)
+        p.texto(4, 192, 172, 28, "Filtros globales", 10, True)
+        for i, (clave, titulo) in enumerate(FILTROS):
+            campos = ["macro", "region", "distrito"] if clave == "zona" else [clave]
+            p.visual("slicer", 6, 220 + i * 60, 168, 56, {"Values": campos}, titulo, objetos=desplegable, extra=sync(clave))
         p.crudo = False
 
     def cabecera(p):
@@ -1013,7 +1044,7 @@ def construir_informe(F):
     # ================= P3 =================
     p = pags[3]
     cabecera(p)
-    kpis(p, [("Absorcion Vigente", "Absorción vigente (ref. total 52.38%)", False),
+    kpis(p, [("Absorcion Vigente", "Absorción vigente", False),
              ("Cartera Vigente Corte", "Cartera vigente", False), ("Saldo Neto Corte", "Saldo neto al cierre", False),
              ("Saldo por Cobrar Estimado", "Saldo por cobrar estimado (C + D)", False)])
     mitad = (ALTO - 8) // 2
@@ -1269,7 +1300,10 @@ def construir_informe(F):
                         "m:Cuota Maxima Prudente": "Cuota máx. préstamo",
                         "m:Monto Maximo Prudente": "Monto máx. (36 m)", "m:Descubrimiento kNN": "Además (kNN)"})
 
-    pods = [drill(pags[10], "distrito", "DrillDistrito"), drill(pags[11], "cliente", "DrillCliente")]
+    # Clic derecho sobre una región en cualquier gráfico -> Obtener detalles -> cualquier página P1–P6 / R1–R3,
+    # con esa región y TODOS los filtros de la página de origen (el filtro de drill-through queda en la página destino).
+    pods = [drill(pg, "region", "DrillRegion" + pg.nombre.split()[0]) for pg in pags[1:10]]
+    pods += [drill(pags[10], "distrito", "DrillDistrito"), drill(pags[11], "cliente", "DrillCliente")]
     secciones = [pg.seccion(oculta=pg.nombre.startswith("D")) for pg in pags]
     config = {"version": "5.50", "themeCollection": {"baseTheme": {"name": "CY24SU08", "version": "5.55", "type": 2},
                                                      "customTheme": {"name": TEMA_ARCHIVO, "version": "5.55", "type": 1}},
@@ -1292,6 +1326,9 @@ CAMPOS_KIMBALL = {
     "producto": ("Dim_Producto", "producto"), "modelo": ("Evaluacion_Recomendador", "modelo"),
     "regla": ("Regla_Capacidad", "regla"), "tramo_cap": ("Capacidad_Prestamo", "tramo_monto_36m"),
     "origen": ("Asociacion_Producto", "producto_origen"), "destino": ("Asociacion_Producto", "producto_destino"),
+    "estado_cli": ("Dim_Cliente", "Estado del Prestamo"), "banda_cli": ("Dim_Cliente", "Banda de Capacidad"),
+    "alerta_cli": ("Dim_Cliente", "Alerta de Saturacion"), "oferta_cli": ("Dim_Cliente", "Primera Oferta"),
+    "prestamo_cli": ("Dim_Cliente", "Prestamo Recomendado"),
 }
 CAMPOS_MONGO = {
     "anio": ("m_anios", "anio"), "macro": ("m_distritos", "macro_region"), "region": ("m_distritos", "region"),
@@ -1305,6 +1342,9 @@ CAMPOS_MONGO = {
     "producto": ("m_dim_producto", "producto"), "modelo": ("m_evaluacion_recomendador", "modelo"),
     "regla": ("m_regla_capacidad", "regla"), "tramo_cap": ("m_capacidad_prestamo", "tramo_monto_36m"),
     "origen": ("m_asociacion_producto", "producto_origen"), "destino": ("m_asociacion_producto", "producto_destino"),
+    "estado_cli": ("m_clientes", "Estado del Prestamo"), "banda_cli": ("m_clientes", "Banda de Capacidad"),
+    "alerta_cli": ("m_clientes", "Alerta de Saturacion"), "oferta_cli": ("m_clientes", "Primera Oferta"),
+    "prestamo_cli": ("m_clientes", "Prestamo Recomendado"),
 }
 
 # Tema (Guía 07 v4, sección 4): la primera serie es gris (las categorías ya están nombradas en el eje).
@@ -1441,10 +1481,12 @@ CONTROL = """
 
 PASOS_MANUALES = """
 ### Cómo lo usa el gerente
-* **Panel izquierdo (en todas las páginas):** navegación a Inicio, P1–P6 y R1–R3, y los filtros **Año**, **Zona**
-  (macro-región › región › distrito) y **Segmento de edad**. Están sincronizados: lo que elija sigue activo al
-  cambiar de página.
-* **Clic en un gráfico:** filtra los demás gráficos de esa misma página (comportamiento estándar de Power BI).
+* **Panel izquierdo (en todas las páginas):** navegación a Inicio, P1–P6 y R1–R3 y 8 filtros sincronizados: Año,
+  Zona (macro-región › región › distrito), Edad, Estado del préstamo, Banda de capacidad, Alerta de saturación,
+  Primera oferta y Préstamo prudente. Lo que elija sigue activo en TODAS las páginas; los cinco últimos son
+  atributos del cliente y filtran todos los hechos (saldos, órdenes, transacciones, recomendaciones).
+* **Clic en un gráfico:** filtra los demás gráficos de esa misma página (Power BI no comparte ese filtro entre páginas).
+* **Clic derecho en una región → Obtener detalles:** lleva esa región y todos los filtros a cualquier página P1–P6 o R1–R3.
 * **Clic derecho en un cliente o distrito → Obtener detalles:** abre la ficha D2 (cliente) o D1 (distrito)
   **con todos los filtros aplicados**; el botón *Atrás* vuelve a la página de origen. D1 y D2 están ocultas en
   las pestañas porque solo tienen sentido para un cliente o distrito concreto.

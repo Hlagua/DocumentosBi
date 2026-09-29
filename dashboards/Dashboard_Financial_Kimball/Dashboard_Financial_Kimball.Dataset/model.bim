@@ -254,6 +254,50 @@
             "dataType": "string",
             "expression": "\"Cliente \" & Dim_Cliente[id_cliente_bk]",
             "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Estado del Prestamo",
+            "dataType": "string",
+            "expression": "VAR e = CALCULATE(MAX(Dim_Estado_Prestamo[Estado]), CALCULATETABLE(Fact_Prestamos)) RETURN IF(ISBLANK(e), \"Sin préstamo\", e)",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Banda de Capacidad",
+            "dataType": "string",
+            "expression": "VAR b = CALCULATE(MAX(Fact_Prestamos[banda_capacidad]), CALCULATETABLE(Fact_Prestamos)) RETURN IF(ISBLANK(b), \"Sin préstamo\", b)",
+            "summarizeBy": "none",
+            "sortByColumn": "Orden Banda Cliente"
+          },
+          {
+            "type": "calculated",
+            "name": "Orden Banda Cliente",
+            "dataType": "int64",
+            "expression": "VAR o = CALCULATE(MAX(Fact_Prestamos[Orden Banda]), CALCULATETABLE(Fact_Prestamos)) RETURN IF(ISBLANK(o), 5, o)",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "type": "calculated",
+            "name": "Alerta de Saturacion",
+            "dataType": "string",
+            "expression": "VAR i = [Indice Saturacion] RETURN SWITCH(TRUE(), ISBLANK(i), \"Sin órdenes\", i > 1, \"Crítica (> 1)\", i > 0.5, \"Alta (> 0.5)\", \"Normal\")",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Primera Oferta",
+            "dataType": "string",
+            "expression": "VAR x = CALCULATE(MAX(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = \"Demográfico\", Recomendacion_Producto[posicion] = 1) RETURN IF(ISBLANK(x), \"Sin recomendación\", x)",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Prestamo Recomendado",
+            "dataType": "string",
+            "expression": "IF(CALCULATE(COUNTROWS(Capacidad_Prestamo)) = 0, \"Sin cuenta propia\", IF(CALCULATE(COUNTROWS(Capacidad_Prestamo), Capacidad_Prestamo[prestamo_recomendado] = TRUE()) > 0, \"Sí\", \"No\"))",
+            "summarizeBy": "none"
           }
         ],
         "partitions": [
