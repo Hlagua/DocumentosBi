@@ -272,6 +272,22 @@ CREATE TABLE Fact_Ordenes (
 );
 GO
 
+-- Recomendacion_Cuenta: top 3 del recomendador del Informe 04 por cuenta (script 42).
+-- Grano: una fila por cuenta (4,500). Se muestra en la ficha Cliente 360 del dashboard.
+CREATE TABLE Recomendacion_Cuenta (
+    sk_cuenta INT NOT NULL PRIMARY KEY,
+    sk_cliente INT NOT NULL,                         -- Titular
+    modelo VARCHAR(60) NOT NULL,
+    recomendacion_1 VARCHAR(40) NULL,
+    recomendacion_2 VARCHAR(40) NULL,
+    recomendacion_3 VARCHAR(40) NULL,
+    prestamo_cuota_maxima DECIMAL(12,2) NULL,        -- 5.7% del saldo promedio (banda Baja, Carta v8)
+    prestamo_monto_maximo_36m DECIMAL(12,2) NULL,
+    CONSTRAINT FK_Recomendacion_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+    CONSTRAINT FK_Recomendacion_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente)
+);
+GO
+
 -- ==============================================================================
 -- 4. AUDITORÍA DE CARGAS (Carta v8, sección 12.3)
 -- ==============================================================================

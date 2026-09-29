@@ -1,12 +1,18 @@
 {
   "kpi": {
     "cartera_total": 103261740.0,
+    "cartera_vigente": 80296176.0,
+    "saldo_por_cobrar_estimado": 46620926.0,
     "num_prestamos": 682,
     "prestamos_mora_D": 45,
     "tasa_mora_vigente": 0.1004,
     "tasa_incumplimiento": 0.1325,
-    "saldo_depositos": 197140434.0,
-    "ratio_absorcion": 0.5238,
+    "tasa_impago_BD": 0.1114,
+    "saldo_neto_corte": 197140434.0,
+    "absorcion_vigente": 0.4073,
+    "absorcion_cartera_total_referencia": 0.5238,
+    "liquidez_libre": 116844258.0,
+    "cuentas_sobregiro_dic1998": 39,
     "volumen_transaccionado": 6257862197.0,
     "num_transacciones": 1056320,
     "ticket_promedio_transaccion": 5924.21,
@@ -59,31 +65,36 @@
       "n": 16,
       "casos": 2,
       "tasa": 0.125,
-      "error_estandar": 0.0827
+      "wilson_inf": 0.0639,
+      "wilson_sup": 0.2302
     },
     "1995": {
       "n": 39,
       "casos": 6,
       "tasa": 0.1538,
-      "error_estandar": 0.0578
+      "wilson_inf": 0.1048,
+      "wilson_sup": 0.2202
     },
     "1996": {
       "n": 82,
       "casos": 10,
       "tasa": 0.122,
-      "error_estandar": 0.0361
+      "wilson_inf": 0.0903,
+      "wilson_sup": 0.1627
     },
     "1997": {
       "n": 153,
       "casos": 23,
       "tasa": 0.1503,
-      "error_estandar": 0.0289
+      "wilson_inf": 0.1237,
+      "wilson_sup": 0.1815
     },
     "1998": {
       "n": 158,
       "casos": 4,
       "tasa": 0.0253,
-      "error_estandar": 0.0125
+      "wilson_inf": 0.0155,
+      "wilson_sup": 0.0411
     }
   },
   "p1_chi2_mora_vs_cosecha_1994_1997": {
@@ -94,53 +105,71 @@
     "celdas": 8
   },
   "p2_tasa_mora_region": {
-    "Prague": {
-      "n": 47,
-      "casos": 4,
-      "tasa": 0.0851,
-      "error_estandar": 0.0407
-    },
-    "central Bohemia": {
-      "n": 59,
-      "casos": 5,
-      "tasa": 0.0847,
-      "error_estandar": 0.0363
+    "north Moravia": {
+      "n": 76,
+      "casos": 12,
+      "tasa": 0.1579,
+      "wilson_inf": 0.1205,
+      "wilson_sup": 0.2041
     },
     "east Bohemia": {
       "n": 65,
       "casos": 9,
       "tasa": 0.1385,
-      "error_estandar": 0.0428
-    },
-    "north Bohemia": {
-      "n": 41,
-      "casos": 0,
-      "tasa": 0.0,
-      "error_estandar": 0.0
-    },
-    "north Moravia": {
-      "n": 76,
-      "casos": 12,
-      "tasa": 0.1579,
-      "error_estandar": 0.0418
-    },
-    "south Bohemia": {
-      "n": 37,
-      "casos": 4,
-      "tasa": 0.1081,
-      "error_estandar": 0.051
-    },
-    "south Moravia": {
-      "n": 88,
-      "casos": 7,
-      "tasa": 0.0795,
-      "error_estandar": 0.0288
+      "wilson_inf": 0.1011,
+      "wilson_sup": 0.1868
     },
     "west Bohemia": {
       "n": 35,
       "casos": 4,
       "tasa": 0.1143,
-      "error_estandar": 0.0538
+      "wilson_inf": 0.0709,
+      "wilson_sup": 0.1791
+    },
+    "south Bohemia": {
+      "n": 37,
+      "casos": 4,
+      "tasa": 0.1081,
+      "wilson_inf": 0.067,
+      "wilson_sup": 0.1698
+    },
+    "Prague": {
+      "n": 47,
+      "casos": 4,
+      "tasa": 0.0851,
+      "wilson_inf": 0.0526,
+      "wilson_sup": 0.1349
+    },
+    "central Bohemia": {
+      "n": 59,
+      "casos": 5,
+      "tasa": 0.0847,
+      "wilson_inf": 0.0551,
+      "wilson_sup": 0.1283
+    },
+    "south Moravia": {
+      "n": 88,
+      "casos": 7,
+      "tasa": 0.0795,
+      "wilson_inf": 0.0552,
+      "wilson_sup": 0.1133
+    },
+    "north Bohemia": {
+      "n": 41,
+      "casos": 0,
+      "tasa": 0.0,
+      "wilson_inf": 0.0,
+      "wilson_sup": 0.0238
+    }
+  },
+  "p2_distritos": {
+    "con_vigentes": 76,
+    "con_menos_de_10_vigentes": 69,
+    "mas_morosos": {
+      "Hl.m. Praha": 4,
+      "Brno - mesto": 3,
+      "Karvina": 3,
+      "Svitavy": 3
     }
   },
   "p2_chi2_mora_vs_region": {
@@ -163,86 +192,69 @@
     "Prague": 0.2833,
     "east Bohemia": 0.8154
   },
-  "p2_monto_por_macro_region": {
-    "Bohemia": {
-      "n": 352,
-      "media": 149344.23,
-      "desv_est": 108115.52,
-      "error_estandar": 5762.58
-    },
-    "Moravia": {
-      "n": 246,
-      "media": 153496.59,
-      "desv_est": 117556.94,
-      "error_estandar": 7495.16
-    },
-    "Praga": {
-      "n": 84,
-      "media": 153957.29,
-      "desv_est": 123275.73,
-      "error_estandar": 13450.49
-    }
-  },
-  "p2_anova_monto_macro_region": {
-    "F": 0.121,
-    "p_valor": 0.8861,
-    "kruskal_p": 0.979
-  },
-  "p2_treemap_cartera_region": {
-    "south Moravia": 19678848.0,
-    "north Moravia": 18081312.0,
-    "central Bohemia": 13985304.0,
-    "east Bohemia": 13943724.0,
-    "Prague": 12932412.0,
-    "south Bohemia": 9374136.0,
-    "west Bohemia": 7779384.0,
-    "north Bohemia": 7486620.0
+  "p2_treemap_cartera_vigente_region": {
+    "south Moravia": 15776220.0,
+    "north Moravia": 14045388.0,
+    "east Bohemia": 12209484.0,
+    "central Bohemia": 10839696.0,
+    "Prague": 9291852.0,
+    "south Bohemia": 7067040.0,
+    "north Bohemia": 5694444.0,
+    "west Bohemia": 5372052.0
   },
   "p2_treemap_mayor_distrito": {
     "distrito": "Hl.m. Praha",
-    "monto": 12932412.0
+    "cartera_vigente": 9291852.0
   },
-  "p3_absorcion_region": {
-    "south Bohemia": {
-      "cartera": 9374136.0,
-      "saldo": 15481233.0,
-      "ratio_absorcion": 0.6055
-    },
+  "p3_absorcion_vigente_region": {
     "east Bohemia": {
-      "cartera": 13943724.0,
+      "cartera_vigente": 12209484.0,
       "saldo": 23660859.0,
-      "ratio_absorcion": 0.5893
+      "absorcion_vigente": 0.516
     },
     "south Moravia": {
-      "cartera": 19678848.0,
+      "cartera_vigente": 15776220.0,
       "saldo": 34019639.0,
-      "ratio_absorcion": 0.5785
+      "absorcion_vigente": 0.4637
+    },
+    "south Bohemia": {
+      "cartera_vigente": 7067040.0,
+      "saldo": 15481233.0,
+      "absorcion_vigente": 0.4565
     },
     "central Bohemia": {
-      "cartera": 13985304.0,
+      "cartera_vigente": 10839696.0,
       "saldo": 25151592.0,
-      "ratio_absorcion": 0.556
-    },
-    "Prague": {
-      "cartera": 12932412.0,
-      "saldo": 24896682.0,
-      "ratio_absorcion": 0.5194
+      "absorcion_vigente": 0.431
     },
     "north Moravia": {
-      "cartera": 18081312.0,
+      "cartera_vigente": 14045388.0,
       "saldo": 35000037.0,
-      "ratio_absorcion": 0.5166
+      "absorcion_vigente": 0.4013
+    },
+    "Prague": {
+      "cartera_vigente": 9291852.0,
+      "saldo": 24896682.0,
+      "absorcion_vigente": 0.3732
     },
     "west Bohemia": {
-      "cartera": 7779384.0,
+      "cartera_vigente": 5372052.0,
       "saldo": 18763898.0,
-      "ratio_absorcion": 0.4146
+      "absorcion_vigente": 0.2863
     },
     "north Bohemia": {
-      "cartera": 7486620.0,
+      "cartera_vigente": 5694444.0,
       "saldo": 20166494.0,
-      "ratio_absorcion": 0.3712
+      "absorcion_vigente": 0.2824
     }
+  },
+  "p3_saldo_mensual": {
+    "total_ene1993": 662559.0,
+    "total_dic1998": 197140434.0,
+    "cuentas_activas_ene1993": 96,
+    "cuentas_activas_dic1998": 4500,
+    "promedio_por_cuenta_ene1993": 6901.66,
+    "promedio_por_cuenta_dic1998": 43808.99
   },
   "p4_ticket_por_operacion": {
     "Egreso / Gasto": {
@@ -325,6 +337,14 @@
       "Retiro en Efectivo": 67590758.0
     }
   },
+  "p4_sobregiro_mensual": {
+    "cuentas_que_pasaron_por_sobregiro": 193,
+    "maximo": {
+      "mes": "1998-11",
+      "cuentas": 43
+    },
+    "dic1998": 39
+  },
   "p5_ordenes_categoria_pct": {
     "Servicios del Hogar": 0.5412,
     "Sin Especificar": 0.2131,
@@ -347,38 +367,73 @@
       "indice": 2.1353
     }
   },
-  "p6_incumplimiento_segmento_edad": {
-    "Adulto (41-60)": {
-      "n": 106,
-      "casos": 16,
-      "tasa": 0.1509,
-      "error_estandar": 0.0348
-    },
-    "Adulto joven (26-40)": {
-      "n": 83,
-      "casos": 8,
-      "tasa": 0.0964,
-      "error_estandar": 0.0324
-    },
-    "Joven (<=25)": {
-      "n": 35,
+  "p6_impago_por_banda": {
+    "Baja": {
+      "n": 171,
       "casos": 5,
-      "tasa": 0.1429,
-      "error_estandar": 0.0591
+      "tasa": 0.0292,
+      "wilson_inf": 0.0188,
+      "wilson_sup": 0.0451
     },
-    "Mayor (>60)": {
-      "n": 10,
-      "casos": 2,
-      "tasa": 0.2,
-      "error_estandar": 0.1265
+    "Media-baja": {
+      "n": 167,
+      "casos": 16,
+      "tasa": 0.0958,
+      "wilson_inf": 0.0754,
+      "wilson_sup": 0.121
+    },
+    "Media-alta": {
+      "n": 172,
+      "casos": 15,
+      "tasa": 0.0872,
+      "wilson_inf": 0.068,
+      "wilson_sup": 0.1112
+    },
+    "Alta": {
+      "n": 172,
+      "casos": 40,
+      "tasa": 0.2326,
+      "wilson_inf": 0.2019,
+      "wilson_sup": 0.2663
+    }
+  },
+  "p6_chi2_impago_vs_banda": {
+    "chi2": 38.5825,
+    "gl": 3,
+    "p_valor": 0.0,
+    "celdas_esperado_menor_5": 0,
+    "celdas": 8
+  },
+  "p6_auc_ratio_cuota_saldo": 0.7165,
+  "p6_incumplimiento_segmento_edad": {
+    "Adulto (30-50)": {
+      "n": 107,
+      "casos": 12,
+      "tasa": 0.1121,
+      "wilson_inf": 0.0852,
+      "wilson_sup": 0.1463
+    },
+    "Adulto Mayor (>50)": {
+      "n": 71,
+      "casos": 13,
+      "tasa": 0.1831,
+      "wilson_inf": 0.1417,
+      "wilson_sup": 0.2333
+    },
+    "Joven (<30)": {
+      "n": 56,
+      "casos": 6,
+      "tasa": 0.1071,
+      "wilson_inf": 0.0725,
+      "wilson_sup": 0.1556
     }
   },
   "p6_chi2_incumplimiento_vs_edad": {
-    "chi2": 1.6848,
-    "gl": 3,
-    "p_valor": 0.6403,
-    "celdas_esperado_menor_5": 2,
-    "celdas": 8
+    "chi2": 2.2805,
+    "gl": 2,
+    "p_valor": 0.3197,
+    "celdas_esperado_menor_5": 0,
+    "celdas": 6
   },
   "p6_fisher_incumplimiento": {
     "sexo_F_vs_M": 0.7036,
@@ -392,7 +447,7 @@
     "cartera_vigente": 2313996.0,
     "cuentas": 152,
     "saldo_depositos": 7002080.0,
-    "ratio_absorcion": 0.437
+    "absorcion_vigente": 0.3305
   },
   "d2_cliente_2823": {
     "saldo_promedio_anual": {

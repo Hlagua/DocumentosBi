@@ -1,19 +1,39 @@
 {
-  "name": "Financial_ijs Guia 07",
+  "name": "Financial_ijs Guia 07 v4 (Okabe-Ito)",
   "dataColors": [
-    "#1565C0",
-    "#00897B",
-    "#F9A825",
-    "#5E35B1",
-    "#EF6C00",
-    "#8E1B1B",
-    "#2E7D32",
-    "#90A4AE"
+    "#7F7F7F",
+    "#E69F00",
+    "#0072B2",
+    "#56B4E9",
+    "#D55E00",
+    "#009E73",
+    "#CC79A7",
+    "#F0E442"
   ],
-  "background": "#F3F4F6",
-  "foreground": "#0F2A4A",
-  "tableAccent": "#1565C0",
-  "good": "#2E7D32",
-  "neutral": "#F9A825",
-  "bad": "#EF6C00"
+  "background": "#FFFFFF",
+  "foreground": "#333333",
+  "tableAccent": "#0072B2",
+  "good": "#0072B2",
+  "neutral": "#E69F00",
+  "bad": "#D55E00",
+  "minimum": "#FFFFFF",
+  "center": "#F2B48C",
+  "maximum": "#D55E00",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#333333"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 10,
+      "color": "#333333"
+    },
+    "callout": {
+      "fontFace": "Segoe UI",
+      "fontSize": 18,
+      "color": "#333333"
+    }
+  }
 }

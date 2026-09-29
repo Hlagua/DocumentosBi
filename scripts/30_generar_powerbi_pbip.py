@@ -3,17 +3,21 @@
 UNIVERSIDAD TÉCNICA DE AMBATO - Inteligencia de Negocios
 AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 ==============================================================================
-ARCHIVO: 30_generar_powerbi_pbip.py
-DESCRIPCIÓN: Genera los dos proyectos de Power BI Desktop (.pbip) de la guía 07:
+ARCHIVO: 30_generar_powerbi_pbip.py   (Guía 07 v4)
+DESCRIPCIÓN: Genera los dos proyectos de Power BI Desktop (.pbip) de la Guía 07 v4:
                dashboards/Dashboard_Financial_Kimball/  (SQL Server)
-               dashboards/Dashboard_Financial_Mongo/    (MongoDB vía Python)
+               dashboards/Dashboard_Financial_Mongo/    (MongoDB vía el conector Python 26)
+             y el archivo sql/05_Medidas_DAX_PowerBI.dax con las mismas medidas.
              Cada proyecto incluye:
-               * Modelo semántico (model.bim) con consultas M reales, relaciones
-                 de la sección 8 de la guía, columnas calculadas y las medidas DAX
-                 de la sección 9 (mismos nombres en los dos modelos).
-               * Informe (report.json) con las 9 páginas, KPIs de cabecera,
-                 gráficos, segmentadores sincronizados y botones de navegación.
-               * Tema de colores (tema_financial.json) de la sección 3.
+               * Modelo semántico (model.bim): consultas M, relaciones (sección 6 de
+                 la guía) y las medidas DAX (secciones 6.3 y 7), con los mismos
+                 nombres en los dos modelos.
+               * Informe (report.json): 9 páginas (Inicio, P1–P6, D1, D2), cabecera
+                 de KPIs en todas, segmentadores sincronizados, navegación y la
+                 paleta de Okabe e Ito (sección 4).
+               * Tema (tema_financial.json) y README con los pasos manuales.
+             Una sola lista de medidas alimenta los dos modelos y el .dax: no pueden
+             quedar desalineados.
 USO:         python scripts/30_generar_powerbi_pbip.py
 ==============================================================================
 """
@@ -25,70 +29,103 @@ import uuid
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(BASE_DIR, "dashboards")
 CONECTOR_MONGO = os.path.join(BASE_DIR, "scripts", "26_powerbi_mongo_dashboard.py")
+ARCHIVO_DAX = os.path.join(BASE_DIR, "sql", "05_Medidas_DAX_PowerBI.dax")
 
 W, H = 1280, 720
-AZUL, NARANJA, TINTA, GRIS_CLARO = "#1565C0", "#EF6C00", "#0F2A4A", "#E8EEF6"
+
+# ---- Paleta de la Guía 07 v4, sección 4.1 (Okabe e Ito) ----
+EST_A, EST_C, EST_B, EST_D = "#0072B2", "#56B4E9", "#D55E00", "#E69F00"
+ALERTA, GRIS, TINTA, BLANCO = "#D55E00", "#7F7F7F", "#333333", "#FFFFFF"
+GRIS_BORDE, GRIS_FONDO = "#E0E0E0", "#F5F5F5"
+BANDAS = {"Baja": "#FBE3D3", "Media-baja": "#F2B48C", "Media-alta": "#E5813F", "Alta": "#D55E00"}
+ESTADOS = {"A · Cerrado al día": EST_A, "B · Cerrado con deuda": EST_B,
+           "C · Vigente al día": EST_C, "D · Vigente en mora": EST_D}
+ORDENES = {"Servicios del Hogar": "#009E73", "Cuota de Prestamo": "#CC79A7", "Pago de Seguros": "#F0E442",
+           "Arrendamiento / Leasing": "#000000", "Sin Especificar": "#C8C8C8"}
 
 MONEDA = '"$"#,0'
 MONEDA2 = '"$"#,0.00'
 PORC = "0.00%"
 ENTERO = "#,0"
+INDICE = "0.00"
 
 
 # ==========================================================================
 # 1. MODELO SEMÁNTICO
 # ==========================================================================
-def col(nombre, tipo="string", fmt=None, oculto=False):
+def col(nombre, tipo="string", fmt=None, oculto=False, orden_por=None):
     c = {"name": nombre, "dataType": tipo, "sourceColumn": nombre, "summarizeBy": "none"}
     if fmt:
         c["formatString"] = fmt
     if oculto:
         c["isHidden"] = True
+    if orden_por:
+        c["sortByColumn"] = orden_por
     return c
 
 
-def col_calc(nombre, expresion, tipo="string"):
-    return {"type": "calculated", "name": nombre, "dataType": tipo, "expression": expresion, "summarizeBy": "none"}
+def col_calc(nombre, expresion, tipo="string", oculto=False, orden_por=None):
+    c = {"type": "calculated", "name": nombre, "dataType": tipo, "expression": expresion, "summarizeBy": "none"}
+    if oculto:
+        c["isHidden"] = True
+    if orden_por:
+        c["sortByColumn"] = orden_por
+    return c
 
 
 M_TIPOS = {"string": "type text", "int64": "Int64.Type", "double": "type number", "dateTime": "type datetime",
            "boolean": "type logical"}
 
 
-def tabla_sql(nombre, columnas, calculadas=(), origen=None, oculta=False):
-    origen = origen or nombre
+def _particion(nombre, lineas):
+    return [{"name": nombre, "mode": "import", "source": {"type": "m", "expression": lineas}}]
+
+
+def tabla_sql(nombre, columnas, calculadas=(), orden_m=None):
+    """orden_m = (columna_nueva, columna_texto, {valor: posición}): columna de orden creada en Power Query.
+    Debe ser una columna de origen: ordenar por una columna calculada DAX que depende de la misma
+    columna produce una dependencia circular en el motor."""
     lista = ", ".join(f'"{c["name"]}"' for c in columnas)
     tipos = ", ".join(f'{{"{c["name"]}", {M_TIPOS[c["dataType"]]}}}' for c in columnas)
-    expr = [
-        "let",
-        '    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),',
-        f'    Tabla = Origen{{[Schema="dbo", Item="{origen}"]}}[Data],',
-        f"    Columnas = Table.SelectColumns(Tabla, {{{lista}}}),",
-        f"    Tipos = Table.TransformColumnTypes(Columnas, {{{tipos}}})",
-        "in",
-        "    Tipos",
-    ]
-    t = {"name": nombre, "columns": list(columnas) + list(calculadas),
-         "partitions": [{"name": nombre, "mode": "import", "source": {"type": "m", "expression": expr}}]}
-    if oculta:
-        t["isHidden"] = True
-    return t
+    pasos = ["let",
+             "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+             f'    Tabla = Origen{{[Schema="dbo", Item="{nombre}"]}}[Data],',
+             f"    Columnas = Table.SelectColumns(Tabla, {{{lista}}}),",
+             f"    Tipos = Table.TransformColumnTypes(Columnas, {{{tipos}}})"]
+    columnas = list(columnas)
+    if orden_m:
+        nueva, origen, mapa = orden_m
+        regla = " else ".join(f'if Text.Contains([{origen}], "{v}") then {i}' for v, i in mapa.items()) + " else 0"
+        pasos[-1] += ","
+        pasos.append(f'    Orden = Table.AddColumn(Tipos, "{nueva}", each {regla}, Int64.Type)')
+        columnas.append(col(nueva, "int64", oculto=True))
+    pasos += ["in", "    " + pasos[-1].split("=")[0].strip()]
+    return {"name": nombre, "columns": columnas + list(calculadas), "partitions": _particion(nombre, pasos)}
 
 
 def tabla_python(nombre, columnas, calculadas=()):
-    tipos = ", ".join(f'{{"{c["name"]}", {M_TIPOS[c["dataType"]]}}}' for c in columnas)
     lista = ", ".join(f'"{c["name"]}"' for c in columnas)
-    expr = [
+    tipos = ", ".join(f'{{"{c["name"]}", {M_TIPOS[c["dataType"]]}}}' for c in columnas)
+    return {"name": nombre, "columns": list(columnas) + list(calculadas), "partitions": _particion(nombre, [
         "let",
         "    Origen = MongoFinancial,",
         f'    Tabla = Origen{{[Name="{nombre}"]}}[Value],',
         f"    Columnas = Table.SelectColumns(Tabla, {{{lista}}}),",
         f"    Tipos = Table.TransformColumnTypes(Columnas, {{{tipos}}})",
         "in",
-        "    Tipos",
-    ]
-    return {"name": nombre, "columns": list(columnas) + list(calculadas),
-            "partitions": [{"name": nombre, "mode": "import", "source": {"type": "m", "expression": expr}}]}
+        "    Tipos"])}
+
+
+def tabla_composicion():
+    """Tabla estática de la cascada de P3: saldo neto -> (-) cartera vigente -> total = liquidez libre."""
+    return {"name": "Composicion_Liquidez",
+            "columns": [col("concepto", orden_por="orden"), col("orden", "int64", oculto=True)],
+            "partitions": _particion("Composicion_Liquidez", [
+                "let",
+                '    Origen = #table(type table [concepto = text, orden = Int64.Type], '
+                '{{"Saldo neto al corte", 1}, {"Cartera vigente", 2}})',
+                "in",
+                "    Origen"])}
 
 
 def rel(desde, col_desde, hacia, col_hacia, activa=True):
@@ -99,108 +136,203 @@ def rel(desde, col_desde, hacia, col_hacia, activa=True):
     return r
 
 
+def wilson(base, k, n):
+    """Límites de Wilson con z = 1 (Guía 07 v4, sección 6.3)."""
+    cuerpo = (f"VAR n = {n} VAR p = DIVIDE({k} + 0, n) "
+              "VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) "
+              "VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) ")
+    return [(f"{base} Wilson Inferior", cuerpo + "RETURN IF(n > 0, c - m)", PORC,
+             f"Límite inferior de Wilson (z = 1) de {base.lower()}"),
+            (f"{base} Wilson Superior", cuerpo + "RETURN IF(n > 0, c + m)", PORC,
+             f"Límite superior de Wilson (z = 1) de {base.lower()}")]
+
+
 def medidas(t):
-    """Medidas de la guía 07 (secciones 9.1, 9.2 y 9.4). `t` traduce nombres de tabla/columna."""
-    m = [
-        ("Cartera Total", f"SUM({t['prest']}[monto_prestamo])", MONEDA),
-        ("Num Prestamos", f"COUNTROWS({t['prest']})", ENTERO),
-        ("Prestamos en Mora", f"CALCULATE([Num Prestamos], {t['estado']} = \"D\")", ENTERO),
-        ("Prestamos Vigentes", f"CALCULATE([Num Prestamos], {t['estado']} IN {{\"C\", \"D\"}})", ENTERO),
-        ("Prestamos Incumplidos", f"CALCULATE([Num Prestamos], {t['estado']} = \"B\")", ENTERO),
-        ("Prestamos Cerrados", f"CALCULATE([Num Prestamos], {t['estado']} IN {{\"A\", \"B\"}})", ENTERO),
-        ("Tasa Mora Vigente", "DIVIDE([Prestamos en Mora], [Prestamos Vigentes])", PORC),
-        ("Tasa Incumplimiento", "DIVIDE([Prestamos Incumplidos], [Prestamos Cerrados])", PORC),
-        ("Monto en Riesgo", f"CALCULATE(SUM({t['prest']}[saldo_pendiente_estimado]), {t['estado']} IN {{\"B\", \"D\"}})", MONEDA),
-        ("Monto Incumplido", f"CALCULATE([Cartera Total], {t['estado']} = \"B\")", MONEDA),
-        ("Monto Promedio Prestamo", f"AVERAGE({t['prest']}[monto_prestamo])", MONEDA),
-        ("Desv Est Prestamo", f"STDEV.S({t['prest']}[monto_prestamo])", MONEDA),
-        ("Prestamo Limite Superior", "[Monto Promedio Prestamo] + [Desv Est Prestamo]", MONEDA),
-        ("Prestamo Limite Inferior", "[Monto Promedio Prestamo] - [Desv Est Prestamo]", MONEDA),
-        ("EE Prestamo", "DIVIDE([Desv Est Prestamo], SQRT([Num Prestamos]))", MONEDA),
-        ("Cuota Mensual", f"SUM({t['prest']}[pago_mensual])", MONEDA),
-        ("Plazo Meses", f"MAX({t['prest']}[plazo_meses])", ENTERO),
-        ("Saldo Pendiente", f"SUM({t['prest']}[saldo_pendiente_estimado])", MONEDA),
-        ("Distritos con Prestamos", f"DISTINCTCOUNT({t['prest']}[{t['prest_dist']}])", ENTERO),
-        ("Clientes con Impago", f"CALCULATE(DISTINCTCOUNT({t['prest']}[{t['prest_cli']}]), {t['estado']} = \"B\")", ENTERO),
-
-        ("Saldo Depositos", f"SUM({t['saldo']}[saldo_final])", MONEDA),
-        ("Ratio Absorcion", f"DIVIDE(CALCULATE([Cartera Total], {t['sin_tiempo']}), [Saldo Depositos])", PORC),
-        ("Liquidez Libre", f"[Saldo Depositos] - CALCULATE([Cartera Total], {t['sin_tiempo']})", MONEDA),
-
-        ("Volumen Transaccionado", f"SUM({t['trans']}[monto_total])", MONEDA),
-        ("Num Transacciones", f"SUM({t['trans']}[num_transacciones])", ENTERO),
-        ("Ticket Promedio Transaccion", "DIVIDE([Volumen Transaccionado], [Num Transacciones])", MONEDA2),
-        ("Desv Est Transaccion",
-         f"VAR n = [Num Transacciones] VAR s = [Volumen Transaccionado] "
-         f"VAR sq = SUM({t['trans']}[suma_cuadrados]) RETURN SQRT(DIVIDE(sq - s * s / n, n - 1))", MONEDA2),
-        ("Transaccion Limite Superior", "[Ticket Promedio Transaccion] + [Desv Est Transaccion]", MONEDA2),
-        ("Transaccion Limite Inferior", "[Ticket Promedio Transaccion] - [Desv Est Transaccion]", MONEDA2),
-        ("EE Transaccion", "DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))", MONEDA2),
-        ("Saldo Promedio Historico",
-         f"DIVIDE(SUMX({t['trans']}, {t['trans']}[saldo_promedio] * {t['trans']}[num_transacciones]), [Num Transacciones])",
-         MONEDA),
-
-        ("Compromiso Ordenes", f"SUM({t['ord']}[monto_orden])", MONEDA),
-        ("Num Ordenes", f"COUNTROWS({t['ord']})", ENTERO),
-        ("Indice Saturacion",
-         f"DIVIDE([Compromiso Ordenes], CALCULATE([Saldo Promedio Historico], {t['sin_tiempo']}, REMOVEFILTERS({t['op_rf']})))",
-         "0.00"),
-        ("Indice Saturacion Alerta", "VAR i = [Indice Saturacion] RETURN IF(i > 0.5, i)", "0.00"),
-        ("Compromiso Alerta", "IF([Indice Saturacion] > 0.5, [Compromiso Ordenes])", MONEDA),
-        ("Saldo Promedio Alerta", "IF([Indice Saturacion] > 0.5, [Saldo Promedio Historico])", MONEDA),
-        ("Clientes Saturados", f"COUNTROWS(FILTER(VALUES({t['cli_key']}), [Indice Saturacion] > 0.5))", ENTERO),
-        ("Clientes Totales", f"COUNTROWS({t['cli']})", ENTERO),
-
-        ("EE Mora", "SQRT(DIVIDE([Tasa Mora Vigente] * (1 - [Tasa Mora Vigente]), [Prestamos Vigentes]))", PORC),
-        ("Mora Limite Superior", "[Tasa Mora Vigente] + [EE Mora]", PORC),
-        ("Mora Limite Inferior", "MAX(0, [Tasa Mora Vigente] - [EE Mora])", PORC),
-        ("EE Incumplimiento", "SQRT(DIVIDE([Tasa Incumplimiento] * (1 - [Tasa Incumplimiento]), [Prestamos Cerrados]))", PORC),
-        ("Incumplimiento Limite Superior", "[Tasa Incumplimiento] + [EE Incumplimiento]", PORC),
-        ("Incumplimiento Limite Inferior", "MAX(0, [Tasa Incumplimiento] - [EE Incumplimiento])", PORC),
-
-        ("Pct Ordenes", f"DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS({t['cat_rf']})))", PORC),
-        ("Pct Volumen", f"DIVIDE([Volumen Transaccionado], CALCULATE([Volumen Transaccionado], REMOVEFILTERS({t['op_rf']})))", PORC),
-        ("Pct Cartera", f"DIVIDE([Cartera Total], CALCULATE([Cartera Total], REMOVEFILTERS({t['dist']})))", PORC),
-
-        ("Region Mayor Mora",
-         f"VAR t = TOPN(1, VALUES({t['region']}), [Tasa Mora Vigente], DESC) "
-         f"RETURN MAXX(t, {t['region']}) & \" · \" & FORMAT(MAXX(t, [Tasa Mora Vigente]), \"0.00%\")", None),
-        ("Region Mayor Cartera",
-         f"VAR t = TOPN(1, VALUES({t['region']}), [Cartera Total], DESC) "
-         f"RETURN MAXX(t, {t['region']}) & \" · \" & FORMAT(MAXX(t, [Pct Cartera]), \"0.0%\")", None),
-        ("Region Mayor Absorcion",
-         f"VAR t = TOPN(1, VALUES({t['region']}), [Ratio Absorcion], DESC) "
-         f"RETURN MAXX(t, {t['region']}) & \" · \" & FORMAT(MAXX(t, [Ratio Absorcion]), \"0.00%\")", None),
-        ("Operacion Mayor Volumen",
-         f"VAR t = TOPN(1, VALUES({t['op']}), [Volumen Transaccionado], DESC) "
-         f"RETURN MAXX(t, {t['op']}) & \" · \" & FORMAT(MAXX(t, [Pct Volumen]), \"0.00%\")", None),
-        ("Categoria Principal Orden",
-         f"VAR t = TOPN(1, VALUES({t['cat']}), [Num Ordenes], DESC) "
-         f"RETURN MAXX(t, {t['cat']}) & \" · \" & FORMAT(MAXX(t, [Pct Ordenes]), \"0.00%\")", None),
-
-        ("Titulo Distrito", f"\"Detalle del distrito: \" & SELECTEDVALUE({t['dist_nombre']}, \"(varios)\")", None),
-        ("Titulo Cliente", f"\"Ficha 360 · \" & SELECTEDVALUE({t['cli_nombre']}, \"(varios clientes)\")", None),
+    """Medidas de la Guía 07 v4. `t` traduce los nombres de tabla y columna de cada modelo.
+    Devuelve (sección, [(nombre, expresión, formato, comentario), ...])."""
+    E = t["estado"]
+    ultimo_mes = (f"VAR ultimoMes = CALCULATE(MAX({t['fecha']}), {t['saldo']}) "
+                  f"RETURN CALCULATE({{}}, FILTER(ALL({t['tiempo']}), {t['fecha']} = ultimoMes))")
+    ficha = lambda c: f"CALCULATE(SELECTEDVALUE({c}), {t['saldo']})"
+    return [
+        ("1. PRÉSTAMOS Y RIESGO (Inicio, P1, P2, P6, D1)", [
+            ("Num Prestamos", f"COUNTROWS({t['prest']})", ENTERO, "Préstamos otorgados (682)"),
+            ("Prestamos en Mora", f'CALCULATE([Num Prestamos], {E} = "D")', ENTERO, "Vigentes en mora, estado D (45)"),
+            ("Prestamos Vigentes", f'CALCULATE([Num Prestamos], {E} IN {{"C", "D"}})', ENTERO, "Estados C + D (448)"),
+            ("Prestamos Incumplidos", f'CALCULATE([Num Prestamos], {E} = "B")', ENTERO, "Cerrados con deuda, estado B (31)"),
+            ("Prestamos Cerrados", f'CALCULATE([Num Prestamos], {E} IN {{"A", "B"}})', ENTERO, "Estados A + B (234)"),
+            ("Prestamos con Impago", f'CALCULATE([Num Prestamos], {E} IN {{"B", "D"}})', ENTERO, "Estados B + D (76)"),
+            ("Tasa Mora Vigente", "IF([Prestamos Vigentes] > 0, DIVIDE([Prestamos en Mora] + 0, [Prestamos Vigentes]))", PORC,
+             "D / (C + D) = 10.04%; 0% (no vacío) si hay vigentes sin mora, p. ej. north Bohemia 0/41"),
+            ("Tasa Incumplimiento", "IF([Prestamos Cerrados] > 0, DIVIDE([Prestamos Incumplidos] + 0, [Prestamos Cerrados]))",
+             PORC, "B / (A + B) = 13.25%"),
+            ("Tasa Impago", "IF([Num Prestamos] > 0, DIVIDE([Prestamos con Impago] + 0, [Num Prestamos]))", PORC,
+             "(B + D) / total = 11.14%; es la tasa de P6 por banda de capacidad"),
+            *wilson("Mora", "[Prestamos en Mora]", "[Prestamos Vigentes]"),
+            *wilson("Incumplimiento", "[Prestamos Incumplidos]", "[Prestamos Cerrados]"),
+            *wilson("Impago", "[Prestamos con Impago]", "[Num Prestamos]"),
+            ("Tasa Mora Banco", f"CALCULATE([Tasa Mora Vigente], REMOVEFILTERS({t['dist']}))", PORC,
+             "Referencia de P2: la tasa del banco, sin el filtro de distrito"),
+            ("Tasa Impago Banco", f"CALCULATE([Tasa Impago], REMOVEFILTERS({t['banda']}, {t['orden_banda']}))", PORC,
+             "Referencia de P6: impago de todas las bandas"),
+            ("Tasa Incumplimiento Banco", f"CALCULATE([Tasa Incumplimiento], REMOVEFILTERS({t['cli']}))", PORC,
+             "Referencia de P6: incumplimiento de todos los segmentos de edad"),
+            ("Tasa Impago Banda Baja", f'CALCULATE([Tasa Impago], KEEPFILTERS({t["banda"]} = "Baja"))', PORC,
+             "Impago de la banda Baja (2.92%); KEEPFILTERS respeta los demás filtros"),
+            ("Tasa Impago Banda Alta", f'CALCULATE([Tasa Impago], KEEPFILTERS({t["banda"]} = "Alta"))', PORC,
+             "Impago de la banda Alta (23.26%)"),
+            ("Cartera Total", f"SUM({t['prest']}[monto_prestamo])", MONEDA, "Monto original de todos los préstamos ($103,261,740)"),
+            ("Cartera Vigente", f'CALCULATE([Cartera Total], {E} IN {{"C", "D"}})', MONEDA, "Monto original C + D ($80,296,176)"),
+            ("Saldo por Cobrar Estimado",
+             f'CALCULATE(SUM({t["prest"]}[saldo_pendiente_estimado]), {E} IN {{"C", "D"}})', MONEDA,
+             "Capital pendiente estimado de la cartera vigente ($46,620,926)"),
+            ("Monto Original en Riesgo", f'CALCULATE([Cartera Total], {E} IN {{"B", "D"}})', MONEDA,
+             "Monto original de los préstamos B + D ($15,580,152)"),
+            ("Monto Incumplido", f'CALCULATE([Cartera Total], {E} = "B")', MONEDA, "Monto original de los préstamos B"),
+            ("Cuota Mensual", f"SUM({t['prest']}[pago_mensual])", MONEDA, "Cuota mensual de los préstamos del contexto"),
+            ("Clientes con Impago", f'CALCULATE(DISTINCTCOUNT({t["prest_cli"]}), {E} = "B")', ENTERO,
+             "Titulares con préstamo B (31): lista de denegación"),
+            ("Cartera Distritos Sobre Mora Banco",
+             f"VAR moraBanco = CALCULATE([Tasa Mora Vigente], REMOVEFILTERS({t['dist']})) "
+             f"RETURN CALCULATE([Cartera Vigente], FILTER(VALUES({t['dist_nombre']}), [Tasa Mora Vigente] > moraBanco))",
+             MONEDA, "CALCULATE + FILTER: cartera vigente de los distritos con mora sobre la del banco"),
+            ("Distritos Sobre Mora Banco",
+             f"VAR moraBanco = CALCULATE([Tasa Mora Vigente], REMOVEFILTERS({t['dist']})) "
+             f"RETURN COUNTROWS(FILTER(VALUES({t['dist_nombre']}), [Tasa Mora Vigente] > moraBanco))",
+             ENTERO, "Distritos con tasa de mora vigente sobre la del banco"),
+            ("Region Mayor Mora",
+             f"VAR r = TOPN(1, FILTER(VALUES({t['region']}), [Prestamos Vigentes] > 0), [Tasa Mora Vigente], DESC) "
+             f'RETURN CONCATENATEX(r, {t["region"]} & " · " & FORMAT([Tasa Mora Vigente], "0.0%"), ", ")',
+             None, "north Moravia · 15.8%"),
+            ("Distrito Mayor Morosos",
+             f"VAR d = TOPN(1, FILTER(VALUES({t['dist_nombre']}), [Prestamos en Mora] > 0), [Prestamos en Mora], DESC) "
+             f'RETURN CONCATENATEX(d, {t["dist_nombre"]} & " · " & [Prestamos en Mora] & " en mora", ", ")',
+             None, "Hl.m. Praha · 4 en mora"),
+            ("Estado Prestamo",
+             f'IF([Num Prestamos] > 0, CALCULATE(CONCATENATEX(VALUES({t["estado_lbl"]}), {t["estado_lbl"]}, ", "), {t["prest"]}))',
+             None, "Estado del préstamo del cliente o de la cuenta (fichas)"),
+            ("Banda Capacidad",
+             f'IF([Num Prestamos] > 0, CONCATENATEX(VALUES({t["banda"]}), {t["banda"]}, ", "))', None,
+             "Banda de capacidad de pago (ratio cuota / saldo previo)"),
+            ("Distrito Prestamo",
+             f'IF([Num Prestamos] > 0, CALCULATE(CONCATENATEX(VALUES({t["dist_nombre"]}), {t["dist_nombre"]}, ", "), {t["prest"]}))',
+             None, "Distrito de la cuenta del préstamo"),
+            ("Banda Capacidad Impago", f'CALCULATE([Banda Capacidad], {E} = "B")', None, "Banda del préstamo B (lista de P6)"),
+            ("Distrito Impago", f'CALCULATE([Distrito Prestamo], {E} = "B")', None, "Distrito del préstamo B (lista de P6)"),
+        ]),
+        ("2. SALDOS: FOTO MENSUAL SEMIADITIVA (Inicio, P3, P4, D1, D2)", [
+            ("Saldo Neto Corte", ultimo_mes.format(f"SUM({t['saldo']}[saldo_fin_mes])"), MONEDA,
+             "Saldo al cierre del último mes del contexto ($197,140,434 en dic-1998)"),
+            ("Cuentas Activas Corte", ultimo_mes.format(f"COUNTROWS({t['saldo']})"), ENTERO,
+             "Cuentas con foto en el último mes del contexto (4,500 en dic-1998)"),
+            ("Cuentas en Sobregiro", ultimo_mes.format(f"CALCULATE(COUNTROWS({t['saldo']}), {t['saldo']}[en_sobregiro] = TRUE())"),
+             ENTERO, "Cuentas con saldo negativo al cierre del último mes (39 en dic-1998)"),
+            ("Saldo Promedio por Cuenta", "DIVIDE([Saldo Neto Corte], [Cuentas Activas Corte])", MONEDA,
+             "Saldo por cuenta activa: aísla el crecimiento por apertura de cuentas"),
+            ("Saldo Promedio Banco", f"CALCULATE([Saldo Promedio por Cuenta], REMOVEFILTERS({t['dist']}))", MONEDA,
+             "Referencia gris de D1"),
+            ("Umbral Sobregiro", "IF(NOT ISBLANK([Saldo Neto Corte]), 0)", MONEDA2, "Línea en 0 de la ficha D2"),
+            ("Saldo Neto Corte Total", f"CALCULATE([Saldo Neto Corte], {t['sin_tiempo']})", MONEDA,
+             "Saldo al corte dic-1998, sin importar el año elegido"),
+            ("Cartera Vigente Corte", f"CALCULATE([Cartera Vigente], {t['sin_tiempo']})", MONEDA,
+             "Cartera vigente al corte, sin importar el año elegido"),
+            ("Absorcion Vigente", "DIVIDE([Cartera Vigente Corte], [Saldo Neto Corte Total])", PORC,
+             "KPI de liquidez de la Carta v8: cartera vigente / saldo neto al corte (40.73%)"),
+            ("Absorcion Cartera Total", f"DIVIDE(CALCULATE([Cartera Total], {t['sin_tiempo']}), [Saldo Neto Corte Total])", PORC,
+             "Referencia histórica: cartera total / saldo neto (52.38%)"),
+            ("Absorcion Banco", f"CALCULATE([Absorcion Vigente], REMOVEFILTERS({t['dist']}))", PORC,
+             "Referencia de P3: absorción del banco"),
+            ("Liquidez Libre", "[Saldo Neto Corte Total] - [Cartera Vigente Corte]", MONEDA,
+             "Saldo que no respalda cartera vigente ($116,844,258)"),
+            ("Valor Composicion Liquidez",
+             'SWITCH(SELECTEDVALUE(Composicion_Liquidez[concepto]), "Saldo neto al corte", [Saldo Neto Corte Total], '
+             '"Cartera vigente", -[Cartera Vigente Corte])', MONEDA, "Cascada de P3; el total es la liquidez libre"),
+        ]),
+        ("3. TRANSACCIONES POR CATEGORÍA ANALÍTICA (P4, D2)", [
+            ("Volumen Transaccionado", f"SUM({t['trans']}[monto_total])", MONEDA, "$6,257,862,197"),
+            ("Num Transacciones", f"SUM({t['trans']}[num_transacciones])", ENTERO, "1,056,320"),
+            ("Ticket Promedio", "DIVIDE([Volumen Transaccionado], [Num Transacciones])", MONEDA2, "Monto promedio por movimiento"),
+            ("Desv Est Transaccion",
+             f"VAR n = [Num Transacciones] VAR s = [Volumen Transaccionado] VAR sq = SUM({t['trans']}[suma_cuadrados]) "
+             "RETURN IF(n > 1, SQRT(DIVIDE(sq - s * s / n, n - 1)))", MONEDA2,
+             "σ muestral exacta desde la suma y la suma de cuadrados"),
+            ("Ticket Limite Superior", "[Ticket Promedio] + [Desv Est Transaccion]", MONEDA2, "Promedio + 1σ"),
+            ("Ticket Limite Inferior", "MAX(0, [Ticket Promedio] - [Desv Est Transaccion])", MONEDA2, "Promedio − 1σ (no negativo)"),
+            ("EE Ticket", "DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))", MONEDA2, "Error estándar (tooltip)"),
+            ("Saldo Promedio Historico",
+             f"DIVIDE(SUMX({t['trans']}, {t['trans']}[saldo_promedio] * {t['trans']}[num_transacciones]), [Num Transacciones])",
+             MONEDA, "Saldo promedio de la cuenta ponderado por movimientos"),
+        ]),
+        ("4. ÓRDENES Y CAPACIDAD DE PAGO (P5, D2)", [
+            ("Compromiso Ordenes", f"SUM({t['ord']}[monto_orden])", MONEDA, "Órdenes fijas mensuales ($21,229,041)"),
+            ("Num Ordenes", f"COUNTROWS({t['ord']})", ENTERO, "6,471 órdenes"),
+            ("Pct Ordenes", f"DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS({t['cat_orden']})))", PORC,
+             "Participación de cada propósito"),
+            ("Indice Saturacion",
+             f"DIVIDE([Compromiso Ordenes], CALCULATE([Saldo Promedio Historico], {t['sin_tiempo']}, REMOVEFILTERS({t['cat_trans']})))",
+             INDICE, "Órdenes mensuales / saldo promedio histórico de la cuenta (cuenta 2335: 2.14)"),
+            ("Cuentas Saturadas", f"COUNTROWS(FILTER(VALUES({t['cuenta']}), [Indice Saturacion] > 0.5))", ENTERO,
+             "CALCULATE + FILTER: cuentas con índice > 0.5 (47)"),
+            ("Cuentas Sobre Saldo", f"COUNTROWS(FILTER(VALUES({t['cuenta']}), [Indice Saturacion] > 1))", ENTERO,
+             "Cuentas cuyas órdenes superan su saldo promedio (1)"),
+            ("Cuentas con Credito Externo", f"CALCULATE(DISTINCTCOUNT({t['ord_cta']}), {t['cred']} = TRUE())", ENTERO,
+             "Cuentas que pagan un préstamo a otra entidad (35)"),
+            ("Credito Externo Mensual", f'CALCULATE([Compromiso Ordenes], {t["cred"]} = TRUE(), {t["ks"]} = "UVER")', MONEDA,
+             "Cuotas mensuales a otras entidades ($177,154)"),
+            ("Indice Saturacion Alerta", "VAR i = [Indice Saturacion] RETURN IF(i > 0.5, i)", INDICE, "Solo cuentas en alerta"),
+            ("Compromiso Alerta", "IF([Indice Saturacion] > 0.5, [Compromiso Ordenes])", MONEDA, "Solo cuentas en alerta"),
+            ("Saldo Promedio Alerta",
+             f"IF([Indice Saturacion] > 0.5, CALCULATE([Saldo Promedio Historico], {t['sin_tiempo']}, REMOVEFILTERS({t['cat_trans']})))",
+             MONEDA, "Solo cuentas en alerta"),
+            ("Credito Externo Alerta", "IF([Indice Saturacion] > 0.5, [Credito Externo Mensual])", MONEDA, "Solo cuentas en alerta"),
+            ("Cliente Titular Alerta", f"IF([Indice Saturacion] > 0.5, {ficha(t['cli_nombre'])})", None, "Solo cuentas en alerta"),
+        ]),
+        ("5. FICHAS D1 Y D2, RECOMENDACIONES Y TÍTULOS DINÁMICOS", [
+            ("Titulo Distrito",
+             f'"Distrito: " & SELECTEDVALUE({t["dist_nombre"]}, "(varios)") & " (" & SELECTEDVALUE({t["region"]}, "varias regiones") & ")"',
+             None, "Título dinámico de D1"),
+            ("Poblacion Distrito", f"SELECTEDVALUE({t['dist']}[poblacion])", ENTERO, "Habitantes"),
+            ("Salario Promedio Distrito", f"SELECTEDVALUE({t['dist']}[salario_promedio])", MONEDA, "Salario promedio"),
+            ("Desempleo Distrito 1995", f"SELECTEDVALUE({t['dist']}[tasa_desempleo])", "0.00", "Tasa de desempleo 1995 (%)"),
+            ("Origen Indicadores",
+             f'IF(HASONEVALUE({t["dist"]}[es_imputado]), IF(VALUES({t["dist"]}[es_imputado]), "Imputado (Informe 10)", "Fuente original"))',
+             None, "Marca el distrito 69 con indicadores imputados"),
+            ("Cliente Ficha", ficha(t["cli_nombre"]), None, "Titular de la cuenta (vale si se llega por cliente o por cuenta)"),
+            ("Cuenta Ficha", ficha(t["cuenta_lbl"]), None, "Cuenta del titular"),
+            ("Titulo Cliente",
+             f'"Ficha 360 · " & COALESCE([Cliente Ficha], SELECTEDVALUE({t["cli_nombre"]}, "(varios clientes)")) & '
+             '" · " & COALESCE([Cuenta Ficha], "sin cuenta propia")', None, "Título dinámico de D2"),
+            ("Edad Cliente", ficha(f"{t['cli']}[edad_corte]"), ENTERO, "Edad al 31/12/1998"),
+            ("Segmento Cliente", ficha(t["segmento"]), None, "Segmento de edad (3 grupos del Data Mart)"),
+            ("Arquetipo Cliente", ficha(f"{t['cli']}[arquetipo_demografico]"), None, "Macro-región y segmento"),
+            ("Calificacion Cliente", ficha(t["calificacion"]), None, "Buen / Mal pagador / Sin evaluar"),
+            ("Distrito Cuenta", ficha(t["dist_nombre"]), None, "Distrito de la cuenta"),
+            ("Cuota Maxima Prudente", f"SUM({t['rec']}[prestamo_cuota_maxima])", MONEDA,
+             "Cuota que deja el ratio en la banda Baja (Informe 04)"),
+            ("Monto Maximo Prudente", f"SUM({t['rec']}[prestamo_monto_maximo_36m])", MONEDA,
+             "Monto a 36 meses con esa cuota (Informe 04)"),
+        ]),
     ]
+
+
+def lista_medidas(t):
     salida = []
-    for nombre, expr, fmt in m:
-        d = {"name": nombre, "expression": expr}
-        if fmt:
-            d["formatString"] = fmt
-        salida.append(d)
+    for _, grupo in medidas(t):
+        for nombre, expr, fmt, coment in grupo:
+            d = {"name": nombre, "expression": expr, "description": coment}
+            if fmt:
+                d["formatString"] = fmt
+            salida.append(d)
     return salida
 
 
-def tabla_medidas(lista_medidas):
+def tabla_medidas(t):
     return {"name": "_Medidas",
             "columns": [{"name": "Medidas", "dataType": "string", "isHidden": True, "sourceColumn": "Medidas",
                          "summarizeBy": "none"}],
-            "partitions": [{"name": "_Medidas", "mode": "import",
-                            "source": {"type": "m", "expression": [
-                                "let",
-                                '    Origen = #table(type table [Medidas = text], {{"Guía 07"}})',
-                                "in",
-                                "    Origen"]}}],
-            "measures": lista_medidas}
+            "partitions": _particion("_Medidas", ["let", '    Origen = #table(type table [Medidas = text], {{"Guía 07 v4"}})',
+                                                  "in", "    Origen"]),
+            "measures": lista_medidas(t)}
 
 
 def modelo_base(nombre, tablas, relaciones, expresiones):
@@ -220,126 +352,165 @@ def modelo_base(nombre, tablas, relaciones, expresiones):
     }
 
 
+def ESTADO_LBL(c):
+    return (f'SWITCH({c}, "A", "A · Cerrado al día", "B", "B · Cerrado con deuda", '
+            f'"C", "C · Vigente al día", "D", "D · Vigente en mora")')
+
+
+# Orden de las categorías ordinales (se evalúa en ese orden: "Media-baja" antes que "Baja")
+ORDEN_BANDA = {"Media-baja": 2, "Media-alta": 3, "Baja": 1, "Alta": 4}
+ORDEN_SEGMENTO = {"Joven": 1, "Mayor": 3, "Adulto": 2}
+
+
 MACRO_REGION = ('SWITCH(TRUE(), Dim_Distrito[region] = "Prague", "Praga", '
                 'CONTAINSSTRING(Dim_Distrito[region], "Moravia"), "Moravia", "Bohemia")')
-SEGMENTO_EDAD = ('SWITCH(TRUE(), Dim_Cliente[edad_corte] <= 25, "Joven (<=25)", '
-                 'Dim_Cliente[edad_corte] <= 40, "Adulto joven (26-40)", '
-                 'Dim_Cliente[edad_corte] <= 60, "Adulto (41-60)", "Mayor (>60)")')
 
 
 def modelo_kimball():
-    k = "int64"
+    k, d, b = "int64", "double", "boolean"
+    oc = lambda *nombres: [col(n, k, oculto=True) for n in nombres]
     tablas = [
-        tabla_sql("Dim_Tiempo", [col("sk_tiempo", k, oculto=True), col("fecha", "dateTime"), col("anio", k),
-                                 col("mes", k), col("nombre_mes")]),
-        {"name": "Dim_Anio", "columns": [col("anio", k)],
-         "partitions": [{"name": "Dim_Anio", "mode": "import", "source": {"type": "m", "expression": [
-             "let",
-             "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
-             '    Tiempo = Origen{[Schema="dbo", Item="Dim_Tiempo"]}[Data],',
-             '    Anios = Table.Distinct(Table.SelectColumns(Tiempo, {"anio"})),',
-             '    Tipos = Table.TransformColumnTypes(Anios, {{"anio", Int64.Type}})',
-             "in",
-             "    Tipos"]}}]},
-        tabla_sql("Dim_Distrito", [col("sk_distrito", k, oculto=True), col("id_distrito_bk", k), col("nombre_distrito"),
-                                   col("region"), col("poblacion", k), col("salario_promedio", "double", MONEDA),
-                                   col("tasa_desempleo", "double", "0.00"), col("tasa_criminalidad", "double", ENTERO)],
-                  [col_calc("Macro Region", MACRO_REGION)]),
-        tabla_sql("Dim_Cliente", [col("sk_cliente", k, oculto=True), col("id_cliente_bk", k), col("sexo"),
-                                  col("edad_corte", k), col("tipo_disposicion")],
-                  [col_calc("Cliente", '"Cliente " & Dim_Cliente[id_cliente_bk]'),
-                   col_calc("Segmento Edad", SEGMENTO_EDAD)]),
-        tabla_sql("Dim_Cuenta", [col("sk_cuenta", k, oculto=True), col("id_cuenta_bk", k), col("frecuencia_emision_estado")]),
-        tabla_sql("Dim_Estado_Prestamo", [col("sk_estado_prestamo", k, oculto=True), col("codigo_estado"),
-                                          col("condicion"), col("descripcion")]),
-        tabla_sql("Dim_Operacion", [col("sk_operacion", k, oculto=True), col("tipo_operacion_original"),
-                                    col("tipo_operacion_traducido"), col("canal")]),
-        tabla_sql("Dim_Orden", [col("sk_orden_tipo", k, oculto=True), col("k_symbol_original"),
-                                col("categoria_orden_traducida")]),
-        tabla_sql("Fact_Prestamos", [col(c, k, oculto=True) for c in
-                                     ("sk_prestamo", "sk_tiempo", "sk_cuenta", "sk_cliente", "sk_distrito", "sk_estado_prestamo")]
-                  + [col("id_prestamo_bk", k), col("monto_prestamo", "double", MONEDA), col("plazo_meses", k),
-                     col("pago_mensual", "double", MONEDA), col("saldo_pendiente_estimado", "double", MONEDA)]),
-        tabla_sql("Fact_Ordenes", [col(c, k, oculto=True) for c in
-                                   ("sk_orden", "sk_tiempo", "sk_cuenta", "sk_cliente", "sk_distrito", "sk_orden_tipo")]
-                  + [col("id_orden_bk", k), col("monto_orden", "double", MONEDA)]),
-        tabla_sql("vw_PBI_Trans_Anual_Cuenta", [col(c, k, oculto=True) for c in
-                                                ("sk_cuenta", "sk_cliente", "sk_distrito", "sk_operacion")]
-                  + [col("anio", k), col("num_transacciones", k), col("monto_total", "double", MONEDA),
-                     col("suma_cuadrados", "double", oculto=True), col("saldo_promedio", "double", MONEDA)]),
-        tabla_sql("vw_PBI_Saldo_Final_Cuenta", [col(c, k, oculto=True) for c in ("sk_cuenta", "sk_cliente", "sk_distrito")]
-                  + [col("fecha_ultimo_movimiento", "dateTime"), col("saldo_final", "double", MONEDA)]),
+        tabla_sql("Dim_Tiempo", oc("sk_tiempo") + [col("fecha", "dateTime", "dd/mm/yyyy"), col("anio", k), col("mes", k),
+                                                   col("nombre_mes"), col("es_fin_de_mes", b)]),
+        {"name": "Dim_Anio", "columns": [col("anio", k)], "partitions": _particion("Dim_Anio", [
+            "let",
+            "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+            '    Tiempo = Origen{[Schema="dbo", Item="Dim_Tiempo"]}[Data],',
+            '    Anios = Table.Distinct(Table.SelectColumns(Tiempo, {"anio"})),',
+            '    Tipos = Table.TransformColumnTypes(Anios, {{"anio", Int64.Type}})',
+            "in",
+            "    Tipos"])},
+        tabla_sql("Dim_Distrito", oc("sk_distrito") + [
+            col("id_distrito_bk", k), col("nombre_distrito"), col("region"), col("poblacion", k),
+            col("salario_promedio", d, MONEDA), col("tasa_desempleo", d, "0.00"), col("tasa_criminalidad", d, "0.00"),
+            col("es_imputado", b)], [col_calc("Macro Region", MACRO_REGION)]),
+        tabla_sql("Dim_Cliente", oc("sk_cliente") + [
+            col("id_cliente_bk", k), col("sexo"), col("edad_corte", k), col("tipo_disposicion"),
+            col("segmento_edad", orden_por="Orden Segmento"), col("arquetipo_demografico"), col("calificacion_pago_desc")],
+            [col_calc("Cliente", '"Cliente " & Dim_Cliente[id_cliente_bk]')],
+            orden_m=("Orden Segmento", "segmento_edad", ORDEN_SEGMENTO)),
+        tabla_sql("Dim_Cuenta", oc("sk_cuenta") + [
+            col("id_cuenta_bk", k), col("frecuencia_emision_estado"), col("fecha_apertura", "dateTime", "dd/mm/yyyy"),
+            col("tiene_credito_externo", b), col("monto_credito_externo", d, MONEDA)],
+            [col_calc("Cuenta", '"Cuenta " & Dim_Cuenta[id_cuenta_bk]')]),
+        tabla_sql("Dim_Estado_Prestamo", oc("sk_estado_prestamo") + [col("codigo_estado"), col("condicion"), col("descripcion")],
+                  [col_calc("Estado", ESTADO_LBL("Dim_Estado_Prestamo[codigo_estado]"))]),
+        tabla_sql("Dim_Orden", oc("sk_orden_tipo") + [col("k_symbol_original"), col("categoria_orden_traducida")]),
+        tabla_sql("Fact_Prestamos", oc("sk_prestamo", "sk_tiempo", "sk_cuenta", "sk_cliente", "sk_distrito", "sk_estado_prestamo") + [
+            col("id_prestamo_bk", k), col("monto_prestamo", d, MONEDA), col("plazo_meses", k), col("pago_mensual", d, MONEDA),
+            col("meses_transcurridos_al_corte", k), col("saldo_pendiente_estimado", d, MONEDA),
+            col("saldo_promedio_previo", d, MONEDA), col("ratio_cuota_saldo_previo", d, PORC),
+            col("banda_capacidad", orden_por="Orden Banda")],
+            orden_m=("Orden Banda", "banda_capacidad", ORDEN_BANDA)),
+        tabla_sql("Fact_Ordenes", oc("sk_orden", "sk_tiempo_apertura_cuenta", "sk_cuenta", "sk_cliente", "sk_distrito",
+                                     "sk_orden_tipo") + [col("id_orden_bk", k), col("monto_orden", d, MONEDA)]),
+        tabla_sql("Fact_Saldo_Cuenta_Mensual", oc("sk_cuenta", "sk_mes", "sk_cliente", "sk_distrito") + [
+            col("saldo_fin_mes", d, MONEDA), col("saldo_promedio_mes", d, MONEDA), col("num_movimientos_mes", k),
+            col("en_sobregiro", b)]),
+        tabla_sql("vw_PBI_Trans_Anual_Cuenta", oc("sk_cuenta", "sk_cliente", "sk_distrito") + [
+            col("categoria_analitica"), col("anio", k), col("num_transacciones", k), col("monto_total", d, MONEDA),
+            col("suma_cuadrados", d, oculto=True), col("saldo_promedio", d, MONEDA)]),
+        tabla_sql("Recomendacion_Cuenta", oc("sk_cuenta", "sk_cliente") + [
+            col("modelo"), col("recomendacion_1"), col("recomendacion_2"), col("recomendacion_3"),
+            col("prestamo_cuota_maxima", d, MONEDA), col("prestamo_monto_maximo_36m", d, MONEDA)]),
+        tabla_composicion(),
     ]
-    t = dict(prest="Fact_Prestamos", ord="Fact_Ordenes", trans="vw_PBI_Trans_Anual_Cuenta",
-             saldo="vw_PBI_Saldo_Final_Cuenta", cli="Dim_Cliente", dist="Dim_Distrito",
-             estado="Dim_Estado_Prestamo[codigo_estado]", prest_dist="sk_distrito", prest_cli="sk_cliente",
-             sin_tiempo="REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo)", op="Dim_Operacion[tipo_operacion_traducido]",
-             op_rf="Dim_Operacion", cat="Dim_Orden[categoria_orden_traducida]", cat_rf="Dim_Orden",
-             region="Dim_Distrito[region]", cli_key="Dim_Cliente[sk_cliente]",
-             dist_nombre="Dim_Distrito[nombre_distrito]", cli_nombre="Dim_Cliente[Cliente]")
-    tablas.append(tabla_medidas(medidas(t)))
-    hechos = ["Fact_Prestamos", "Fact_Ordenes", "vw_PBI_Trans_Anual_Cuenta", "vw_PBI_Saldo_Final_Cuenta"]
+    t = dict(prest="Fact_Prestamos", ord="Fact_Ordenes", trans="vw_PBI_Trans_Anual_Cuenta", saldo="Fact_Saldo_Cuenta_Mensual",
+             tiempo="Dim_Tiempo", fecha="Dim_Tiempo[fecha]", cli="Dim_Cliente", dist="Dim_Distrito", rec="Recomendacion_Cuenta",
+             estado="Dim_Estado_Prestamo[codigo_estado]", estado_lbl="Dim_Estado_Prestamo[Estado]",
+             banda="Fact_Prestamos[banda_capacidad]", orden_banda="Fact_Prestamos[Orden Banda]",
+             prest_cli="Fact_Prestamos[sk_cliente]", ord_cta="Fact_Ordenes[sk_cuenta]",
+             sin_tiempo="REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo)",
+             cat_trans="vw_PBI_Trans_Anual_Cuenta[categoria_analitica]", cat_orden="Dim_Orden[categoria_orden_traducida]",
+             ks="Dim_Orden[k_symbol_original]", cred="Dim_Cuenta[tiene_credito_externo]",
+             cuenta="Dim_Cuenta[id_cuenta_bk]", cuenta_lbl="Dim_Cuenta[Cuenta]", region="Dim_Distrito[region]",
+             dist_nombre="Dim_Distrito[nombre_distrito]", cli_nombre="Dim_Cliente[Cliente]",
+             segmento="Dim_Cliente[segmento_edad]", calificacion="Dim_Cliente[calificacion_pago_desc]")
+    tablas.append(tabla_medidas(t))
     rels = []
-    for f in hechos:
+    for f in ["Fact_Prestamos", "Fact_Ordenes", "Fact_Saldo_Cuenta_Mensual", "vw_PBI_Trans_Anual_Cuenta"]:
         rels += [rel(f, "sk_distrito", "Dim_Distrito", "sk_distrito"), rel(f, "sk_cliente", "Dim_Cliente", "sk_cliente"),
                  rel(f, "sk_cuenta", "Dim_Cuenta", "sk_cuenta")]
     rels += [rel("Fact_Prestamos", "sk_estado_prestamo", "Dim_Estado_Prestamo", "sk_estado_prestamo"),
-             rel("Fact_Ordenes", "sk_orden_tipo", "Dim_Orden", "sk_orden_tipo"),
-             rel("vw_PBI_Trans_Anual_Cuenta", "sk_operacion", "Dim_Operacion", "sk_operacion"),
              rel("Fact_Prestamos", "sk_tiempo", "Dim_Tiempo", "sk_tiempo"),
-             rel("Fact_Ordenes", "sk_tiempo", "Dim_Tiempo", "sk_tiempo", activa=False),
+             rel("Fact_Saldo_Cuenta_Mensual", "sk_mes", "Dim_Tiempo", "sk_tiempo"),
+             rel("Fact_Ordenes", "sk_orden_tipo", "Dim_Orden", "sk_orden_tipo"),
+             # Rol de Dim_Tiempo: la apertura de la cuenta NO es la fecha de la orden -> inactiva
+             rel("Fact_Ordenes", "sk_tiempo_apertura_cuenta", "Dim_Tiempo", "sk_tiempo", activa=False),
              rel("Dim_Tiempo", "anio", "Dim_Anio", "anio"),
-             rel("vw_PBI_Trans_Anual_Cuenta", "anio", "Dim_Anio", "anio")]
+             rel("vw_PBI_Trans_Anual_Cuenta", "anio", "Dim_Anio", "anio"),
+             rel("Recomendacion_Cuenta", "sk_cuenta", "Dim_Cuenta", "sk_cuenta"),
+             rel("Recomendacion_Cuenta", "sk_cliente", "Dim_Cliente", "sk_cliente")]
     expresiones = [
         {"name": "ServidorSQL", "kind": "m",
          "expression": '"(localdb)\\MSSQLLocalDB" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]'},
         {"name": "BaseDatosSQL", "kind": "m",
          "expression": '"DM_Financial_Kimball_v2" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]'},
     ]
-    return modelo_base("Dashboard_Financial_Kimball", tablas, rels, expresiones)
+    return modelo_base("Dashboard_Financial_Kimball", tablas, rels, expresiones), t
 
 
 def modelo_mongo():
-    k, d = "int64", "double"
+    k, d, b = "int64", "double", "boolean"
+    oc = lambda *nombres: [col(n, k, oculto=True) for n in nombres]
     tablas = [
         tabla_python("m_distritos", [col("id_distrito", k), col("nombre_distrito"), col("region"), col("poblacion", k),
                                      col("salario_promedio", d, MONEDA), col("tasa_desempleo", d, "0.00"),
-                                     col("tasa_criminalidad", d, ENTERO), col("macro_region")]),
+                                     col("tasa_criminalidad", d, "0.00"), col("es_imputado", b), col("macro_region")]),
         tabla_python("m_clientes", [col("id_cliente", k), col("cliente"), col("sexo"), col("edad_corte", k),
-                                    col("segmento_edad"), col("tipo_disposicion"), col("calificacion_pago")]),
+                                    col("tipo_disposicion"), col("segmento_edad", orden_por="orden_segmento"),
+                                    col("arquetipo_demografico"), col("calificacion_pago"), col("orden_segmento", k, oculto=True)]),
+        tabla_python("m_cuentas", [col("id_cuenta", k), col("frecuencia_extracto"), col("fecha_apertura", "dateTime", "dd/mm/yyyy"),
+                                   col("tiene_credito_externo", b), col("monto_credito_externo", d, MONEDA)],
+                     [col_calc("cuenta", '"Cuenta " & m_cuentas[id_cuenta]')]),
         tabla_python("m_anios", [col("anio", k)]),
-        tabla_python("m_prestamos", [col("id_prestamo", k), col("id_cuenta", k), col("id_cliente", k, oculto=True),
-                                     col("id_distrito", k, oculto=True), col("fecha_otorgamiento", "dateTime"),
-                                     col("anio", k), col("monto_prestamo", d, MONEDA), col("plazo_meses", k),
-                                     col("pago_mensual", d, MONEDA), col("saldo_pendiente_estimado", d, MONEDA),
-                                     col("codigo_estado"), col("condicion"), col("descripcion_estado")]),
-        tabla_python("m_ordenes", [col("id_orden", k), col("id_cuenta", k), col("id_cliente", k, oculto=True),
-                                   col("id_distrito", k, oculto=True), col("k_symbol"), col("categoria_orden"),
-                                   col("monto_orden", d, MONEDA)]),
-        tabla_python("m_trans_anual", [col("id_cuenta", k), col("id_cliente", k, oculto=True),
-                                       col("id_distrito", k, oculto=True), col("anio", k), col("tipo_operacion"),
-                                       col("canal"), col("num_transacciones", k), col("monto_total", d, MONEDA),
-                                       col("suma_cuadrados", d, oculto=True), col("saldo_promedio", d, MONEDA)]),
-        tabla_python("m_saldo_cuenta", [col("id_cuenta", k), col("id_cliente", k, oculto=True),
-                                        col("id_distrito", k, oculto=True), col("fecha_ultimo_movimiento", "dateTime"),
-                                        col("saldo_final", d, MONEDA)]),
+        tabla_python("m_meses", [col("fecha_mes", "dateTime", "dd/mm/yyyy"), col("anio", k), col("mes", k)]),
+        tabla_python("m_prestamos", [col("id_prestamo", k)] + oc("id_cuenta", "id_cliente", "id_distrito") + [
+            col("fecha_otorgamiento", "dateTime", "dd/mm/yyyy"), col("anio", k), col("monto_prestamo", d, MONEDA),
+            col("plazo_meses", k), col("pago_mensual", d, MONEDA), col("saldo_pendiente_estimado", d, MONEDA),
+            col("meses_transcurridos_al_corte", k), col("codigo_estado"), col("condicion"), col("descripcion_estado"),
+            col("saldo_promedio_previo", d, MONEDA), col("ratio_cuota_saldo_previo", d, PORC),
+            col("banda_capacidad", orden_por="orden_banda"), col("orden_banda", k, oculto=True)],
+            [col_calc("estado", ESTADO_LBL("m_prestamos[codigo_estado]"))]),
+        tabla_python("m_ordenes", [col("id_orden", k)] + oc("id_cuenta", "id_cliente", "id_distrito") + [
+            col("k_symbol"), col("categoria_orden"), col("monto_orden", d, MONEDA)]),
+        tabla_python("m_trans_anual", oc("id_cuenta", "id_cliente", "id_distrito") + [
+            col("anio", k), col("categoria_analitica"), col("num_transacciones", k), col("monto_total", d, MONEDA),
+            col("suma_cuadrados", d, oculto=True), col("saldo_promedio", d, MONEDA)]),
+        tabla_python("m_saldo_mensual", oc("id_cuenta", "id_cliente", "id_distrito", "anio", "mes") + [
+            col("fecha_mes", "dateTime", "dd/mm/yyyy"), col("saldo_fin_mes", d, MONEDA), col("saldo_promedio_mes", d, MONEDA),
+            col("num_movimientos_mes", k), col("en_sobregiro", b)]),
+        tabla_python("m_recomendaciones", oc("id_cuenta", "id_cliente") + [
+            col("modelo"), col("recomendacion_1"), col("recomendacion_2"), col("recomendacion_3"),
+            col("prestamo_cuota_maxima", d, MONEDA), col("prestamo_monto_maximo_36m", d, MONEDA)]),
+        tabla_composicion(),
     ]
-    t = dict(prest="m_prestamos", ord="m_ordenes", trans="m_trans_anual", saldo="m_saldo_cuenta", cli="m_clientes",
-             dist="m_distritos", estado="m_prestamos[codigo_estado]", prest_dist="id_distrito", prest_cli="id_cliente",
-             sin_tiempo="REMOVEFILTERS(m_anios)", op="m_trans_anual[tipo_operacion]", op_rf="m_trans_anual[tipo_operacion]",
-             cat="m_ordenes[categoria_orden]", cat_rf="m_ordenes[categoria_orden]", region="m_distritos[region]",
-             cli_key="m_clientes[id_cliente]", dist_nombre="m_distritos[nombre_distrito]", cli_nombre="m_clientes[cliente]")
-    tablas.append(tabla_medidas(medidas(t)))
+    t = dict(prest="m_prestamos", ord="m_ordenes", trans="m_trans_anual", saldo="m_saldo_mensual",
+             tiempo="m_meses", fecha="m_meses[fecha_mes]", cli="m_clientes", dist="m_distritos", rec="m_recomendaciones",
+             estado="m_prestamos[codigo_estado]", estado_lbl="m_prestamos[estado]",
+             banda="m_prestamos[banda_capacidad]", orden_banda="m_prestamos[orden_banda]",
+             prest_cli="m_prestamos[id_cliente]", ord_cta="m_ordenes[id_cuenta]",
+             sin_tiempo="REMOVEFILTERS(m_anios), REMOVEFILTERS(m_meses)",
+             cat_trans="m_trans_anual[categoria_analitica]", cat_orden="m_ordenes[categoria_orden]",
+             ks="m_ordenes[k_symbol]", cred="m_cuentas[tiene_credito_externo]",
+             cuenta="m_cuentas[id_cuenta]", cuenta_lbl="m_cuentas[cuenta]", region="m_distritos[region]",
+             dist_nombre="m_distritos[nombre_distrito]", cli_nombre="m_clientes[cliente]",
+             segmento="m_clientes[segmento_edad]", calificacion="m_clientes[calificacion_pago]")
+    tablas.append(tabla_medidas(t))
     rels = []
-    for f in ["m_prestamos", "m_ordenes", "m_trans_anual", "m_saldo_cuenta"]:
-        rels += [rel(f, "id_distrito", "m_distritos", "id_distrito"), rel(f, "id_cliente", "m_clientes", "id_cliente")]
-    rels += [rel("m_prestamos", "anio", "m_anios", "anio"), rel("m_trans_anual", "anio", "m_anios", "anio")]
+    for f in ["m_prestamos", "m_ordenes", "m_trans_anual", "m_saldo_mensual"]:
+        rels += [rel(f, "id_distrito", "m_distritos", "id_distrito"), rel(f, "id_cliente", "m_clientes", "id_cliente"),
+                 rel(f, "id_cuenta", "m_cuentas", "id_cuenta")]
+    rels += [rel("m_prestamos", "anio", "m_anios", "anio"), rel("m_trans_anual", "anio", "m_anios", "anio"),
+             rel("m_saldo_mensual", "fecha_mes", "m_meses", "fecha_mes"), rel("m_meses", "anio", "m_anios", "anio"),
+             rel("m_recomendaciones", "id_cuenta", "m_cuentas", "id_cuenta"),
+             rel("m_recomendaciones", "id_cliente", "m_clientes", "id_cliente")]
 
     script = open(CONECTOR_MONGO, encoding="utf-8").read()
     script_m = script.replace('"', '""').replace("\r\n", "\n").replace("\n", "#(lf)")
     expresiones = [{"name": "MongoFinancial", "kind": "m",
                     "expression": ["let", f'    Origen = Python.Execute("{script_m}")', "in", "    Origen"]}]
-    return modelo_base("Dashboard_Financial_Mongo", tablas, rels, expresiones)
+    return modelo_base("Dashboard_Financial_Mongo", tablas, rels, expresiones), t
 
 
 # ==========================================================================
@@ -378,8 +549,19 @@ class Pagina:
         self.visuales.append({"x": x, "y": y, "z": self.z, "width": w, "height": h,
                               "config": json.dumps(cfg, ensure_ascii=False), "filters": "[]"})
 
-    def visual(self, tipo, x, y, w, h, roles, titulo=None, orden=None, objetos=None, extra=None):
-        """roles: {rol: [campo, ...]} donde campo es una clave lógica de self.F o 'm:Nombre medida'."""
+    def _resolver(self, c):
+        if c.startswith("m:"):
+            return "_Medidas", c[2:], True
+        ent, prop = self.F[c]
+        return ent, prop, False
+
+    def ref(self, c):
+        ent, prop, _ = self._resolver(c)
+        return f"{ent}.{prop}"
+
+    def visual(self, tipo, x, y, w, h, roles, titulo=None, orden=None, objetos=None, extra=None, etiquetas=None):
+        """roles: {rol: [campo, ...]}; campo = clave de self.F o 'm:Nombre medida'.
+        etiquetas: {campo: 'Nombre visible'} para encabezados de tablas y leyendas."""
         alias, desde, select, proy = {}, [], [], {}
         for rol, campos in roles.items():
             proy[rol] = []
@@ -402,31 +584,33 @@ class Pagina:
             single["prototypeQuery"]["OrderBy"] = [{"Direction": 2 if direccion == "desc" else 1, "Expression": {
                 ("Measure" if es_medida else "Column"): {"Expression": {"SourceRef": {"Source": alias[ent]}},
                                                           "Property": prop}}}]
+        if etiquetas:
+            single["columnProperties"] = {self.ref(c): {"displayName": e} for c, e in etiquetas.items()}
+        if tipo == "tableEx":
+            objetos = {"total": [{"properties": {"totals": lit(False)}}], **(objetos or {})}
         if objetos:
             single["objects"] = objetos
-        vc = {}
+        vc = {"background": [{"properties": {"show": lit(True), "color": color(BLANCO)}}],
+              "border": [{"properties": {"show": lit(True), "color": color(GRIS_BORDE)}}]}
         if titulo:
-            vc["title"] = [{"properties": {"show": lit(True), "text": lit(titulo), "fontSize": lit(11)}}]
-        single["vcObjects"] = {**vc, **{"background": [{"properties": {"show": lit(True), "color": color("#FFFFFF")}}],
-                                         "border": [{"properties": {"show": lit(True), "color": color("#E5E7EB")}}]}}
+            vc["title"] = [{"properties": {"show": lit(True), "text": lit(titulo), "fontSize": lit(12),
+                                           "fontColor": color(TINTA)}}]
+        single["vcObjects"] = vc
         if extra:
             single.update(extra)
         self._contenedor(x, y, w, h, single)
 
-    def _resolver(self, c):
-        if c.startswith("m:"):
-            return "_Medidas", c[2:], True
-        ent, prop = self.F[c]
-        return ent, prop, False
-
-    def texto(self, x, y, w, h, texto, tam=12, negrita=False, col=TINTA):
+    def texto(self, x, y, w, h, texto, tam=12, negrita=False, col=TINTA, fondo=None):
         parrafos = [{"textRuns": [{"value": linea, "textStyle": {"fontSize": f"{tam}pt", "color": col,
                                                                    **({"fontWeight": "bold"} if negrita else {})}}]}
                     for linea in texto.split("\n")]
-        self._contenedor(x, y, w, h, {"visualType": "textbox", "drillFilterOtherVisuals": True,
-                                      "objects": {"general": [{"properties": {"paragraphs": parrafos}}]}})
+        single = {"visualType": "textbox", "drillFilterOtherVisuals": True,
+                  "objects": {"general": [{"properties": {"paragraphs": parrafos}}]}}
+        if fondo:
+            single["vcObjects"] = {"background": [{"properties": {"show": lit(True), "color": color(fondo)}}]}
+        self._contenedor(x, y, w, h, single)
 
-    def boton(self, x, y, w, h, texto, destino=None, tipo="PageNavigation", fondo=AZUL, col_texto="#FFFFFF"):
+    def boton(self, x, y, w, h, texto, destino=None, tipo="PageNavigation", fondo=TINTA, col_texto=BLANCO, tam=10):
         enlace = {"show": lit(True), "type": lit(tipo)}
         if destino:
             enlace["navigationSection"] = lit(destino)
@@ -437,12 +621,13 @@ class Pagina:
                 "icon": [{"properties": {"show": lit(False)}},
                          {"properties": {"shapeType": lit("blank")}, "selector": {"id": "default"}}],
                 "text": [{"properties": {"show": lit(True)}},
-                         {"properties": {"text": lit(texto), "fontColor": color(col_texto), "fontSize": lit(10),
+                         {"properties": {"text": lit(texto), "fontColor": color(col_texto), "fontSize": lit(tam),
                                          "bold": lit(True)}, "selector": {"id": "default"}}],
                 "fill": [{"properties": {"show": lit(True)}},
                          {"properties": {"fillColor": color(fondo), "transparency": lit(0)},
                           "selector": {"id": "default"}}],
-                "outline": [{"properties": {"show": lit(False)}}],
+                "outline": [{"properties": {"show": lit(fondo == BLANCO)}},
+                            {"properties": {"lineColor": color(GRIS_BORDE)}, "selector": {"id": "default"}}],
             },
             "vcObjects": {"visualLink": [{"properties": enlace}]}})
 
@@ -452,199 +637,406 @@ class Pagina:
                 "height": float(H), "name": self.id, "visualContainers": self.visuales, "width": float(W)}
 
 
+# ---- Objetos de formato reutilizables ----
+def colores_series(pagina, colores):
+    """Color fijo por medida (serie): {'m:Medida': '#hex'}. En Power BI 2.157 el selector 'metadata'
+    colorea líneas; las COLUMNAS lo ignoran y necesitan 'defaultColor' (ver obj_combo)."""
+    return [{"properties": {"fill": color(h)}, "selector": {"metadata": pagina.ref(c)}} for c, h in colores.items()]
+
+
+def colores_categorias(pagina, campo, colores):
+    """Color fijo por valor de categoría: estados, bandas, propósito de la orden."""
+    ent, prop, _ = pagina._resolver(campo)
+    return [{"properties": {"fill": color(h)}, "selector": {"data": [{"scopeId": {"Comparison": {
+        "ComparisonKind": 0, "Left": {"Column": {"Expression": {"SourceRef": {"Entity": ent}}, "Property": prop}},
+        "Right": {"Literal": {"Value": "'" + v.replace("'", "''") + "'"}}}}}]}} for v, h in colores.items()]
+
+
+ETIQUETAS = [{"properties": {"show": lit(True), "fontSize": lit(10), "color": color(TINTA)}}]
+SIN_CUADRICULA = [{"properties": {"gridlineShow": lit(False), "fontSize": lit(10)}}]
+LEYENDA_ABAJO = [{"properties": {"show": lit(True), "position": lit("Bottom"), "fontSize": lit(10)}}]
+
+
+EJE_CATEGORICO = [{"properties": {"axisType": lit("Categorical"), "fontSize": lit(10)}}]
+
+
+def obj_columnas(p, colores_cat=None, campo_cat=None, serie=GRIS, extra=None):
+    o = {"labels": ETIQUETAS, "valueAxis": SIN_CUADRICULA, "categoryAxis": EJE_CATEGORICO,
+         "dataPoint": [{"properties": {"defaultColor": color(serie)}}]}
+    if colores_cat:
+        o["dataPoint"] += colores_categorias(p, campo_cat, colores_cat)
+    if extra:
+        o.update(extra)
+    return o
+
+
+def obj_combo(p, col_columnas, lineas, eje_secundario, categorias=None, campo_cat=None):
+    """Columnas + línea. Columnas con 'defaultColor' (y color por categoría si se pide); líneas con 'metadata'.
+    eje_secundario=False: la línea es una referencia en la MISMA escala (promedio del banco)."""
+    dp = [{"properties": {"defaultColor": color(col_columnas)}}] + colores_series(p, lineas)
+    if categorias:
+        dp += colores_categorias(p, campo_cat, categorias)
+    # Las referencias (misma escala) no llevan etiqueta: repetir "10.04%" en cada categoría es ruido
+    etiquetas = ETIQUETAS + ([] if eje_secundario else
+                             [{"properties": {"showSeries": lit(False)}, "selector": {"metadata": p.ref(c)}} for c in lineas])
+    return {"labels": etiquetas, "dataPoint": dp, "categoryAxis": EJE_CATEGORICO,
+            "valueAxis": [{"properties": {"gridlineShow": lit(False), "secShow": lit(eje_secundario), "fontSize": lit(10)}}],
+            "legend": LEYENDA_ABAJO}
+
+
+# Tarjetas de moneda en millones con 2 decimales ($80.30M) — Guía 07 v4, sección 4.2
+UNIDADES = {MONEDA: {"labelDisplayUnits": lit(1000000), "labelPrecision": lit(2)},
+            ENTERO: {"labelDisplayUnits": lit(1)}}   # conteos completos: 1,056,320 y no "1 mill."
+FORMATOS = {}   # nombre de medida -> formato; lo llena main() desde el modelo
+
+
 def construir_informe(F):
-    nombres = ["Inicio", "P1 ¿Cuándo?", "P2 ¿Dónde?", "P3 ¿Cuánto?", "P4 Flujo", "P5 Órdenes", "P6 Impago",
-               "D1 Detalle Distrito", "D2 Ficha Cliente 360"]
-    titulos = ["¿Cómo está el banco? — Panorama de la Carta de Diseño",
-               "P1 · ¿Cómo evoluciona la morosidad activa año a año?",
-               "P2 · ¿Qué distritos concentran el mayor riesgo crediticio?",
-               "P3 · ¿Qué porcentaje de los depósitos está comprometido en préstamos?",
-               "P4 · ¿Qué operaciones mueven más dinero y cómo varía el saldo?",
-               "P5 · ¿Qué cuentas tienen órdenes que saturan su saldo?",
-               "P6 · ¿A qué clientes no se les deben dar nuevos productos?",
-               "Detalle del distrito (drill-through)", "Ficha Cliente 360 (drill-through)"]
+    nombres = ["Inicio", "P1 Cosechas", "P2 Regiones", "P3 Liquidez", "P4 Flujo", "P5 Órdenes", "P6 Impago",
+               "D1 Distrito", "D2 Cliente 360"]
+    titulos = [
+        "¿Cómo está el banco? — Financial_ijs, corte 31/12/1998",
+        "P1 · ¿Cómo evolucionan la cantidad y la tasa de mora por año de otorgamiento?",
+        "P2 · ¿Qué regiones y distritos concentran la cartera y la mora?",
+        "P3 · ¿Qué proporción del saldo está comprometida en la cartera vigente y cómo evoluciona el saldo?",
+        "P4 · ¿Qué operaciones concentran el flujo, cómo varía el saldo promedio y cuántas cuentas caen en sobregiro?",
+        "P5 · ¿Qué cuentas comprometen en cuotas y órdenes fijas una proporción alta de su saldo, incluidas deudas con otras entidades?",
+        "P6 · ¿Qué clientes tienen impago histórico y en qué medida la capacidad de pago previa lo anticipa?",
+        "D1 · Detalle del distrito", "D2 · Ficha Cliente 360"]
     pags = [Pagina(n, t, F) for n, t in zip(nombres, titulos)]
     ids = {p.nombre: p.id for p in pags}
+    Y0 = 152            # inicio del área de gráficos, debajo de la cabecera de KPIs
+    ALTO = H - Y0 - 8   # 560
 
-    def cabecera(p, detalle=False):
-        p.texto(12, 6, 700 if not detalle else 1000, 38, p.titulo, 15, True)
-        if detalle:
-            p.boton(1150, 12, 115, 34, "◀ Atrás", tipo="Back", fondo="#34557A")
-            return
+    def cabecera(p):
+        p.texto(12, 0, 1256, 36, p.titulo, 14, True)
         x = 12
         for n in nombres[:7]:
-            ancho = 86 if n == "Inicio" else 88
             activa = n == p.nombre
-            p.boton(x, 48, ancho, 24, n, ids[n], fondo="#F9A825" if activa else "#34557A",
-                    col_texto=TINTA if activa else "#FFFFFF")
-            x += ancho + 4
+            p.boton(x, 44, 94, 32, n, ids[n], fondo=EST_A if activa else TINTA)
+            x += 98
         sync = lambda g: {"syncGroup": {"groupName": g, "fieldChanges": True, "filterChanges": True}}
-        modo = {"data": [{"properties": {"mode": lit("Dropdown")}}],
-                "header": [{"properties": {"show": lit(False)}}]}
-        p.visual("slicer", 890, 8, 185, 58, {"Values": ["anio"]}, "Año", objetos=modo, extra=sync("anio"))
-        p.visual("slicer", 1083, 8, 185, 58, {"Values": ["macro"]}, "Macro-región", objetos=modo, extra=sync("macro"))
+        # Desplegables: 6 años + 3 macro-regiones en botones necesitan ~700 px y no caben junto a la navegación
+        # (probado en Power BI Desktop 2.157); el desplegable muestra el valor activo y ocupa una sola fila.
+        desplegable = {"data": [{"properties": {"mode": lit("Dropdown")}}],
+                       "header": [{"properties": {"show": lit(True), "fontSize": lit(9), "fontColor": color(TINTA)}}],
+                       "items": [{"properties": {"fontSize": lit(10)}}]}
+        p.visual("slicer", 706, 34, 276, 56, {"Values": ["anio"]}, objetos=desplegable, extra=sync("anio"),
+                 etiquetas={"anio": "Año"})
+        p.visual("slicer", 990, 34, 278, 56, {"Values": ["macro"]}, objetos=desplegable, extra=sync("macro"),
+                 etiquetas={"macro": "Macro-región"})
 
-    def kpis(p, lista, y=80, h=78):
+    def detalle(p, medida_titulo):
+        p.visual("card", 12, 4, 1000, 44, {"Values": ["m:" + medida_titulo]},
+                 objetos={"labels": [{"properties": {"fontSize": lit(16), "color": color(TINTA)}}],
+                          "categoryLabels": [{"properties": {"show": lit(False)}}]},
+                 extra={"vcObjects": {"background": [{"properties": {"show": lit(False)}}]}})
+        p.boton(1150, 10, 118, 32, "◀ Atrás", tipo="Back", fondo=GRIS)
+
+    def formato_de(m):
+        return FORMATOS.get(m)
+
+    def kpis(p, lista, y=94, h=54):
+        """Cabecera de KPIs (regla 6): una tarjeta por KPI con etiqueta legible arriba.
+        lista = [(medida, etiqueta, es_alerta)]; las alertas llevan el valor en bermellón."""
         n = len(lista)
         ancho = (W - 24 - 8 * (n - 1)) / n
-        for i, m in enumerate(lista):
-            p.visual("card", round(12 + i * (ancho + 8)), y, round(ancho), h, {"Values": ["m:" + m]})
+        for i, (m, etiqueta, alerta) in enumerate(lista):
+            p.visual("card", round(12 + i * (ancho + 8)), y, round(ancho), h, {"Values": ["m:" + m]}, etiqueta,
+                     objetos={"labels": [{"properties": {"fontSize": lit(18), "color": color(ALERTA if alerta else TINTA),
+                                                         **UNIDADES.get(formato_de(m), {})}}],
+                              "categoryLabels": [{"properties": {"show": lit(False)}}]})
 
-    etiquetas = {"labels": [{"properties": {"show": lit(True)}}]}
-    dona = {"labels": [{"properties": {"show": lit(True), "labelStyle": lit("Category, percent of total")}}],
-            "legend": [{"properties": {"show": lit(True), "position": lit("Bottom")}}]}
-
-    # ---- 0 Inicio
+    # ================= Inicio =================
     p = pags[0]
     cabecera(p)
-    kpis(p, ["Cartera Total", "Saldo Depositos", "Ratio Absorcion", "Tasa Mora Vigente", "Tasa Incumplimiento",
-             "Volumen Transaccionado"])
-    preguntas = ["P1 · ¿Cómo evoluciona la morosidad año a año?", "P2 · ¿Qué distritos concentran el mayor riesgo?",
-                 "P3 · ¿Qué % de los depósitos está prestado?", "P4 · ¿Qué operaciones mueven más dinero?",
-                 "P5 · ¿Qué cuentas tienen órdenes que saturan su saldo?", "P6 · ¿A quién no darle nuevos productos?"]
+    kpis(p, [("Tasa Mora Vigente", "Tasa de mora vigente", True),
+             ("Tasa Incumplimiento", "Tasa de incumplimiento", True),
+             ("Cartera Vigente", "Cartera vigente (C + D)", False),
+             ("Saldo Neto Corte", "Saldo neto al cierre", False),
+             ("Absorcion Vigente", "Absorción vigente", False),
+             ("Cuentas en Sobregiro", "Cuentas en sobregiro", True)])
+    problemas = [
+        ("Problema 1 · Impago y mora", "45 préstamos vigentes en mora y 31 cerrados con deuda. Los casos crecen con el "
+         "volumen colocado, pero la tasa por año de otorgamiento no cambia (χ² p = 0.93). → P1, P2"),
+        ("Problema 2 · Capacidad de pago", "El ratio cuota / saldo previo separa el impago: 2.9% en la banda Baja y 23.3% "
+         "en la Alta (χ² = 38.58). 47 cuentas comprometen más de la mitad de su saldo en órdenes fijas. → P5, P6"),
+        ("Problema 3 · Medición de saldos", "El saldo es semiaditivo: al corte hay $197.14M, la cartera vigente absorbe el "
+         "40.73% y 39 cuentas cierran en sobregiro. → P3, P4"),
+    ]
+    for i, (tit, txt) in enumerate(problemas):
+        p.texto(12, Y0 + i * 188, 560, 180, f"{tit}\n{txt}", 11, False, TINTA, GRIS_FONDO)
+    preguntas = ["P1 · ¿Sube la tasa de mora cuando se presta más?", "P2 · ¿Dónde se concentran cartera y mora?",
+                 "P3 · ¿Cuánto del saldo respalda la cartera vigente?", "P4 · ¿Qué operaciones mueven el dinero?",
+                 "P5 · ¿Qué cuentas están saturadas de órdenes?", "P6 · ¿La capacidad de pago anticipa el impago?"]
     for i, (txt, dest) in enumerate(zip(preguntas, nombres[1:7])):
-        p.boton(12 + (i % 2) * 418, 178 + (i // 2) * 176, 410, 166, txt, ids[dest], fondo="#FFFFFF", col_texto=AZUL)
-    p.texto(850, 178, 418, 520,
-            "Ruta de análisis\n\n"
-            "1. P1 ¿Cuándo? 23 morosos en 1997; la tasa por año es estable (χ² p = 0.93).\n"
-            "2. P2 ¿Dónde? north Moravia: 12 de 45 morosos (15.79%).\n"
-            "3. D1 Distrito: Karvina, 3 en mora de 15 vigentes.\n"
-            "4. D2 Cliente 2823: $541,200 a 60 meses, estado D.\n"
-            "5. ¿Qué más tiene? 5 órdenes = $14,286/mes; saldo final −$2,803.\n"
-            "6. P5 ¿Es aislado? Índice de saturación 2.14: único > 1 de 47.", 11)
+        p.boton(584 + (i % 2) * 346, Y0 + (i // 2) * 188, 338, 180, txt, ids[dest], fondo=BLANCO, col_texto=EST_A, tam=12)
 
-    # ---- P1
+    # ================= P1 =================
     p = pags[1]
     cabecera(p)
-    kpis(p, ["Num Prestamos", "Prestamos en Mora", "Tasa Mora Vigente", "Prestamos Incumplidos", "Tasa Incumplimiento"])
-    p.visual("lineChart", 12, 166, 624, 280, {"Category": ["anio"], "Y": ["m:Num Prestamos"], "Series": ["estado"]},
-             "Los morosos (D) pasan de 2 a 23 mientras la colocación se duplica", objetos=etiquetas)
-    p.visual("lineChart", 644, 166, 624, 280, {"Category": ["anio"], "Y": ["m:Tasa Mora Vigente"]},
-             "La tasa de mora por año es estable (12–15%); 1998 aún es reciente", objetos=etiquetas)
-    p.visual("pivotTable", 12, 454, 900, 256, {"Rows": ["anio"], "Columns": ["estado"], "Values": ["m:Num Prestamos"]},
-             "Matriz Año × Estado — todas las categorías, todos los años")
-    p.boton(920, 640, 348, 70, "Ver dónde ocurre →", ids["P2 ¿Dónde?"])
+    kpis(p, [("Num Prestamos", "Préstamos otorgados", False), ("Prestamos en Mora", "Vigentes en mora (D)", True),
+             ("Tasa Mora Vigente", "Tasa de mora vigente", True), ("Tasa Incumplimiento", "Tasa de incumplimiento", True)])
+    p.visual("lineClusteredColumnComboChart", 12, Y0, 780, ALTO,
+             {"Category": ["anio"], "Y": ["m:Num Prestamos"], "Y2": ["m:Tasa Mora Vigente"],
+              "Tooltips": ["m:Mora Wilson Inferior", "m:Mora Wilson Superior", "m:Prestamos Vigentes", "m:Prestamos en Mora"]},
+             "Se presta el doble (101 → 196) y la tasa de mora de cada cosecha no sube: 12.2%–15.4% (χ² p = 0.93)",
+             orden=("anio", "asc"),
+             objetos=obj_combo(p, GRIS, {"m:Tasa Mora Vigente": EST_D}, eje_secundario=True),
+             etiquetas={"anio": "Año de otorgamiento", "m:Num Prestamos": "Préstamos otorgados",
+                        "m:Tasa Mora Vigente": "Tasa de mora de la cosecha"})
+    p.visual("pivotTable", 800, Y0, 468, 400, {"Rows": ["anio"], "Columns": ["estado"], "Values": ["m:Num Prestamos"]},
+             "Todas las combinaciones año × estado", etiquetas={"anio": "Año", "estado": "Estado"})
+    p.texto(800, Y0 + 408, 468, 152,
+            "Nota de lectura\n1998: préstamos recientes, aún sin tiempo para caer en mora (2.5%).\n"
+            "1993: los 20 préstamos ya están cerrados; no tiene tasa vigente.\n"
+            "Tooltip de la línea: intervalo de Wilson (z = 1).", 10, False, TINTA, GRIS_FONDO)
 
-    # ---- P2
+    # ================= P2 =================
     p = pags[2]
     cabecera(p)
-    kpis(p, ["Region Mayor Mora", "Region Mayor Cartera", "Monto en Riesgo", "Distritos con Prestamos"])
-    p.visual("treemap", 12, 166, 620, 544, {"Group": ["region"], "Details": ["distrito"], "Values": ["m:Cartera Total"]},
-             "Treemap: área = cartera por región y distrito")
-    p.visual("clusteredColumnChart", 640, 166, 628, 272, {"Category": ["region"], "Y": ["m:Tasa Mora Vigente"]},
-             "north Moravia tiene la mayor tasa de mora (±1 EE)", orden=("m:Tasa Mora Vigente", "desc"), objetos=etiquetas)
-    p.visual("clusteredColumnChart", 640, 446, 310, 264, {"Category": ["macro"], "Y": ["m:Monto Promedio Prestamo"]},
-             "Monto promedio por macro-región (±1σ)", objetos=etiquetas)
-    p.visual("clusteredColumnChart", 958, 446, 310, 264, {"Category": ["distrito"], "Y": ["m:Prestamos en Mora"]},
-             "Distritos con más préstamos en mora", orden=("m:Prestamos en Mora", "desc"), objetos=etiquetas)
+    kpis(p, [("Region Mayor Mora", "Región con mayor tasa de mora", True),
+             ("Distrito Mayor Morosos", "Distrito con más préstamos en mora", True),
+             ("Tasa Mora Banco", "Tasa de mora del banco", False),
+             ("Cartera Distritos Sobre Mora Banco", "Cartera vigente sobre mora del banco", False)])
+    p.visual("decompositionTreeVisual", 12, Y0, 620, 300,
+             {"Analyze": ["m:Prestamos en Mora"], "ExplainBy": ["region", "distrito", "cliente"]},
+             "Préstamos en mora: región → distrito → cliente")
+    p.visual("treemap", 640, Y0, 628, 300,
+             {"Group": ["region"], "Details": ["distrito"], "Values": ["m:Cartera Vigente"],
+              "Tooltips": ["m:Tasa Mora Vigente", "m:Prestamos Vigentes"]},
+             "Área = cartera vigente; color = tasa de mora",
+             objetos={"dataPoint": [{"properties": {"defaultColor": color(GRIS)}}], "labels": ETIQUETAS})
+    p.visual("lineClusteredColumnComboChart", 12, Y0 + 308, 620, ALTO - 308,
+             {"Category": ["region"], "Y": ["m:Tasa Mora Vigente"], "Y2": ["m:Tasa Mora Banco"],
+              "Tooltips": ["m:Mora Wilson Inferior", "m:Mora Wilson Superior", "m:Prestamos Vigentes"]},
+             "north Moravia tiene la mayor tasa de mora (15.8%, 12 de 76); north Bohemia 0 de 41",
+             orden=("m:Tasa Mora Vigente", "desc"),
+             objetos=obj_combo(p, EST_D, {"m:Tasa Mora Banco": GRIS}, eje_secundario=False),
+             etiquetas={"region": "Región", "m:Tasa Mora Vigente": "Tasa de mora", "m:Tasa Mora Banco": "Banco"})
+    p.visual("tableEx", 640, Y0 + 308, 628, ALTO - 308,
+             {"Values": ["distrito", "m:Prestamos Vigentes", "m:Prestamos en Mora", "m:Tasa Mora Vigente",
+                         "m:Mora Wilson Inferior", "m:Mora Wilson Superior"]},
+             "Cada tasa con su n: 70 de 77 distritos tienen menos de 10 vigentes",
+             orden=("m:Prestamos en Mora", "desc"),
+             etiquetas={"distrito": "Distrito", "m:Prestamos Vigentes": "Vigentes (n)", "m:Prestamos en Mora": "En mora",
+                        "m:Tasa Mora Vigente": "Tasa", "m:Mora Wilson Inferior": "Wilson inf.",
+                        "m:Mora Wilson Superior": "Wilson sup."})
 
-    # ---- P3
+    # ================= P3 =================
     p = pags[3]
     cabecera(p)
-    kpis(p, ["Cartera Total", "Saldo Depositos", "Ratio Absorcion", "Region Mayor Absorcion"])
-    p.visual("clusteredColumnChart", 12, 166, 480, 544,
-             {"Category": ["macro"], "Y": ["m:Cartera Total", "m:Saldo Depositos"]},
-             "La cartera es poco más de la mitad de los depósitos", objetos=etiquetas)
-    p.visual("clusteredColumnChart", 500, 166, 768, 272, {"Category": ["region"], "Y": ["m:Ratio Absorcion"]},
-             "Ratio de absorción por región (referencia: 52.38%)", orden=("m:Ratio Absorcion", "desc"), objetos=etiquetas)
-    p.visual("clusteredColumnChart", 500, 446, 768, 264, {"Category": ["distrito"], "Y": ["m:Ratio Absorcion"]},
-             "Distritos con mayor presión de liquidez", orden=("m:Ratio Absorcion", "desc"))
+    kpis(p, [("Absorcion Vigente", "Absorción vigente (ref. total 52.38%)", False),
+             ("Cartera Vigente Corte", "Cartera vigente", False), ("Saldo Neto Corte", "Saldo neto al cierre", False),
+             ("Saldo por Cobrar Estimado", "Saldo por cobrar estimado (C + D)", False)])
+    p.visual("lineClusteredColumnComboChart", 12, Y0, 620, ALTO,
+             {"Category": ["region"], "Y": ["m:Absorcion Vigente"], "Y2": ["m:Absorcion Banco"],
+              "Tooltips": ["m:Cartera Vigente Corte", "m:Saldo Neto Corte Total", "m:Absorcion Cartera Total"]},
+             "east Bohemia compromete el 51.6% de su saldo; north Bohemia solo el 28.2% (banco 40.73%)",
+             orden=("m:Absorcion Vigente", "desc"),
+             objetos=obj_combo(p, EST_A, {"m:Absorcion Banco": GRIS}, eje_secundario=False),
+             etiquetas={"region": "Región", "m:Absorcion Vigente": "Absorción vigente", "m:Absorcion Banco": "Banco"})
+    p.visual("lineChart", 640, Y0, 628, 276,
+             {"Category": ["fecha_mes"], "Y": ["m:Saldo Promedio por Cuenta"],
+              "Tooltips": ["m:Saldo Neto Corte", "m:Cuentas Activas Corte"]},
+             "El saldo por cuenta activa, no el total: el total crece sobre todo porque se abren cuentas",
+             objetos={"dataPoint": colores_series(p, {"m:Saldo Promedio por Cuenta": EST_A}), "valueAxis": SIN_CUADRICULA},
+             etiquetas={"fecha_mes": "Mes", "m:Saldo Promedio por Cuenta": "Saldo promedio por cuenta"})
+    p.visual("waterfallChart", 640, Y0 + 284, 628, ALTO - 284,
+             {"Category": ["concepto"], "Y": ["m:Valor Composicion Liquidez"]},
+             "Saldo neto − cartera vigente = liquidez libre", orden=("concepto", "asc"),
+             objetos={"labels": ETIQUETAS, "valueAxis": SIN_CUADRICULA,
+                      "sentimentColors": [{"properties": {"increaseFill": color(GRIS), "decreaseFill": color(EST_D),
+                                                          "totalFill": color(EST_A)}}]},
+             etiquetas={"concepto": "Concepto", "m:Valor Composicion Liquidez": "Monto"})
 
-    # ---- P4
+    # ================= P4 =================
     p = pags[4]
     cabecera(p)
-    kpis(p, ["Volumen Transaccionado", "Num Transacciones", "Ticket Promedio Transaccion", "Operacion Mayor Volumen"])
-    p.visual("clusteredColumnChart", 12, 166, 412, 272, {"Category": ["operacion"], "Y": ["m:Volumen Transaccionado"]},
-             "Volumen por tipo de operación", orden=("m:Volumen Transaccionado", "desc"), objetos=etiquetas)
-    p.visual("clusteredColumnChart", 432, 166, 412, 272, {"Category": ["operacion"], "Y": ["m:Ticket Promedio Transaccion"]},
-             "Ticket promedio por operación (±1σ)", objetos=etiquetas)
-    p.visual("lineChart", 852, 166, 416, 272, {"Category": ["anio"], "Y": ["m:Volumen Transaccionado"],
-                                               "Series": ["operacion"]}, "Todas las operaciones crecen cada año")
-    p.visual("pivotTable", 12, 446, 620, 264, {"Rows": ["anio"], "Columns": ["operacion"],
-                                               "Values": ["m:Volumen Transaccionado"]},
-             "Matriz Año × Operación — todas las categorías, todos los años")
-    p.visual("lineChart", 640, 446, 300, 264, {"Category": ["anio"], "Y": ["m:Saldo Promedio Historico"]},
-             "Cómo varía el balance promedio", objetos=etiquetas)
-    p.visual("tableEx", 948, 446, 320, 264, {"Values": ["cliente", "m:Volumen Transaccionado", "m:Num Transacciones"]},
-             "Clientes con mayor volumen", orden=("m:Volumen Transaccionado", "desc"))
+    kpis(p, [("Volumen Transaccionado", "Volumen transaccionado", False), ("Num Transacciones", "Movimientos", False),
+             ("Ticket Promedio", "Ticket promedio", False), ("Cuentas en Sobregiro", "Cuentas en sobregiro al cierre", True)])
+    mitad = (ALTO - 8) // 2
+    p.visual("clusteredColumnChart", 12, Y0, 620, mitad,
+             {"Category": ["cat_trans"], "Y": ["m:Ticket Promedio"],
+              "Tooltips": ["m:Ticket Limite Inferior", "m:Ticket Limite Superior", "m:EE Ticket", "m:Num Transacciones"]},
+             "Ticket promedio por categoría (±1σ en la barra de error; error estándar en el tooltip)",
+             orden=("m:Ticket Promedio", "desc"), objetos=obj_columnas(p),
+             etiquetas={"cat_trans": "Categoría", "m:Ticket Promedio": "Ticket promedio"})
+    p.visual("lineChart", 640, Y0, 628, mitad,
+             {"Category": ["anio"], "Y": ["m:Volumen Transaccionado"], "Series": ["cat_trans"]},
+             "Volumen anual por categoría", orden=("anio", "asc"),
+             objetos={"valueAxis": SIN_CUADRICULA, "legend": LEYENDA_ABAJO, "categoryAxis": EJE_CATEGORICO},
+             etiquetas={"anio": "Año", "cat_trans": "Categoría", "m:Volumen Transaccionado": "Volumen"})
+    p.visual("pivotTable", 12, Y0 + mitad + 8, 620, mitad,
+             {"Rows": ["anio"], "Columns": ["cat_trans"], "Values": ["m:Volumen Transaccionado"]},
+             "Todas las categorías en todos los años", etiquetas={"anio": "Año", "cat_trans": "Categoría"})
+    p.visual("lineChart", 640, Y0 + mitad + 8, 628, mitad,
+             {"Category": ["fecha_mes"], "Y": ["m:Cuentas en Sobregiro"], "Tooltips": ["m:Cuentas Activas Corte"]},
+             "Cuentas en sobregiro al cierre de cada mes: máximo 43 en noviembre de 1998",
+             objetos={"dataPoint": colores_series(p, {"m:Cuentas en Sobregiro": ALERTA}), "valueAxis": SIN_CUADRICULA},
+             etiquetas={"fecha_mes": "Mes", "m:Cuentas en Sobregiro": "Cuentas en sobregiro"})
 
-    # ---- P5
+    # ================= P5 =================
     p = pags[5]
     cabecera(p)
-    kpis(p, ["Num Ordenes", "Compromiso Ordenes", "Categoria Principal Orden", "Clientes Saturados"])
-    p.visual("donutChart", 12, 166, 400, 544, {"Category": ["categoria"], "Y": ["m:Num Ordenes"]},
-             "Órdenes por categoría (%)", objetos=dona)
-    p.visual("clusteredColumnChart", 420, 166, 848, 272, {"Category": ["categoria"], "Y": ["m:Compromiso Ordenes"]},
-             "Servicios del hogar comprometen $13.97M al mes", orden=("m:Compromiso Ordenes", "desc"), objetos=etiquetas)
-    p.visual("tableEx", 420, 446, 848, 264, {"Values": ["cliente", "distrito", "m:Compromiso Alerta",
-                                                        "m:Saldo Promedio Alerta", "m:Indice Saturacion Alerta"]},
-             "Cuentas en alerta (índice de saturación > 0.5) — clic derecho → Obtener detalles",
-             orden=("m:Indice Saturacion Alerta", "desc"))
+    kpis(p, [("Compromiso Ordenes", "Compromiso mensual en órdenes", False), ("Num Ordenes", "Órdenes", False),
+             ("Cuentas Saturadas", "Cuentas con índice > 0.5", True),
+             ("Cuentas con Credito Externo", "Cuentas con crédito externo", True)])
+    p.visual("scatterChart", 12, Y0, 780, 300,
+             {"Category": ["cuenta"], "X": ["m:Saldo Promedio Historico"], "Y": ["m:Compromiso Ordenes"],
+              "Tooltips": ["m:Indice Saturacion", "m:Cliente Ficha"]},
+             "Sobre la diagonal, la cuenta compromete más de lo que suele tener: la cuenta 2335 (índice 2.14) queda sola",
+             objetos={"dataPoint": [{"properties": {"defaultColor": color(GRIS)}}], "valueAxis": SIN_CUADRICULA},
+             etiquetas={"cuenta": "Cuenta", "m:Saldo Promedio Historico": "Saldo promedio de la cuenta",
+                        "m:Compromiso Ordenes": "Órdenes mensuales"})
+    p.visual("donutChart", 800, Y0, 468, 300, {"Category": ["cat_orden"], "Y": ["m:Num Ordenes"]},
+             "Órdenes por propósito",
+             objetos={"labels": [{"properties": {"show": lit(True), "labelStyle": lit("Category, percent of total")}}],
+                      "legend": [{"properties": {"show": lit(False)}}],
+                      "dataPoint": colores_categorias(p, "cat_orden", ORDENES)},
+             etiquetas={"cat_orden": "Propósito", "m:Num Ordenes": "Órdenes"})
+    p.visual("tableEx", 12, Y0 + 308, 1256, ALTO - 308,
+             {"Values": ["cuenta", "m:Cliente Titular Alerta", "m:Indice Saturacion Alerta", "m:Compromiso Alerta",
+                         "m:Saldo Promedio Alerta", "m:Credito Externo Alerta"]},
+             "47 cuentas en alerta (índice > 0.5) — lista para cobranza temprana; clic derecho → Obtener detalles",
+             orden=("m:Indice Saturacion Alerta", "desc"),
+             etiquetas={"cuenta": "Cuenta", "m:Cliente Titular Alerta": "Titular",
+                        "m:Indice Saturacion Alerta": "Índice de saturación", "m:Compromiso Alerta": "Órdenes mensuales",
+                        "m:Saldo Promedio Alerta": "Saldo promedio", "m:Credito Externo Alerta": "Crédito externo mensual"})
 
-    # ---- P6
+    # ================= P6 =================
     p = pags[6]
     cabecera(p)
-    kpis(p, ["Clientes con Impago", "Tasa Incumplimiento", "Monto en Riesgo", "Prestamos Cerrados"])
-    p.visual("tableEx", 12, 166, 620, 544, {"Values": ["cliente", "distrito", "m:Monto Incumplido", "m:Cuota Mensual"]},
-             "Lista de denegación: clientes con préstamo en estado B", orden=("m:Monto Incumplido", "desc"))
-    p.visual("clusteredColumnChart", 640, 166, 628, 272, {"Category": ["segmento"], "Y": ["m:Tasa Incumplimiento"]},
-             "La edad no predice el impago (±1 EE; χ² p = 0.64)", objetos=etiquetas)
-    p.visual("clusteredColumnChart", 640, 446, 628, 264, {"Category": ["region"], "Y": ["m:Prestamos Incumplidos"]},
-             "Incumplidos por región", orden=("m:Prestamos Incumplidos", "desc"), objetos=etiquetas)
+    kpis(p, [("Clientes con Impago", "Clientes con impago (B)", True),
+             ("Tasa Impago Banda Baja", "Impago banda Baja", False),
+             ("Tasa Impago Banda Alta", "Impago banda Alta", True),
+             ("Monto Original en Riesgo", "Monto original en riesgo (B + D)", True)])
+    p.visual("lineClusteredColumnComboChart", 12, Y0, 620, 300,
+             {"Category": ["banda"], "Y": ["m:Tasa Impago"], "Y2": ["m:Tasa Impago Banco"],
+              "Tooltips": ["m:Impago Wilson Inferior", "m:Impago Wilson Superior", "m:Num Prestamos", "m:Prestamos con Impago"]},
+             "El impago sube de 2.9% (banda Baja) a 23.3% (banda Alta): χ² = 38.58, p < 0.001",
+             orden=("banda", "asc"),
+             objetos=obj_combo(p, GRIS, {"m:Tasa Impago Banco": GRIS}, eje_secundario=False, categorias=BANDAS, campo_cat="banda"),
+             etiquetas={"banda": "Banda de capacidad (cuota / saldo previo)", "m:Tasa Impago": "Tasa de impago (B o D)",
+                        "m:Tasa Impago Banco": "Banco"})
+    p.visual("lineClusteredColumnComboChart", 640, Y0, 628, 300,
+             {"Category": ["segmento"], "Y": ["m:Tasa Incumplimiento"], "Y2": ["m:Tasa Incumplimiento Banco"],
+              "Tooltips": ["m:Incumplimiento Wilson Inferior", "m:Incumplimiento Wilson Superior", "m:Prestamos Cerrados"]},
+             "La edad no separa el incumplimiento (χ² = 2.28, p = 0.32): se decide por capacidad, no por perfil",
+             orden=("segmento", "asc"),
+             objetos=obj_combo(p, GRIS, {"m:Tasa Incumplimiento Banco": TINTA}, eje_secundario=False),
+             etiquetas={"segmento": "Segmento de edad", "m:Tasa Incumplimiento": "Tasa de incumplimiento",
+                        "m:Tasa Incumplimiento Banco": "Banco"})
+    p.visual("tableEx", 12, Y0 + 308, 1256, ALTO - 308,
+             {"Values": ["cliente", "m:Distrito Impago", "m:Monto Incumplido", "m:Banda Capacidad Impago"]},
+             "Lista de denegación: titulares con préstamo cerrado con deuda (B) — clic derecho → Obtener detalles",
+             orden=("m:Monto Incumplido", "desc"),
+             etiquetas={"cliente": "Cliente", "m:Distrito Impago": "Distrito", "m:Monto Incumplido": "Monto del préstamo B",
+                        "m:Banda Capacidad Impago": "Banda de capacidad"})
 
-    # ---- D1
+    # ================= D1 =================
     p = pags[7]
-    cabecera(p, detalle=True)
-    p.visual("card", 12, 56, 700, 40, {"Values": ["m:Titulo Distrito"]})
-    kpis(p, ["Num Prestamos", "Prestamos en Mora", "Tasa Mora Vigente", "Cartera Total", "Ratio Absorcion"], y=100)
-    p.visual("donutChart", 12, 186, 380, 524, {"Category": ["estado"], "Y": ["m:Num Prestamos"]},
-             "Estado de los préstamos del distrito (%)", objetos=dona)
-    p.visual("lineChart", 400, 186, 868, 250, {"Category": ["anio"], "Y": ["m:Num Prestamos", "m:Prestamos en Mora"]},
-             "Préstamos otorgados y en mora por año", objetos=etiquetas)
-    p.visual("tableEx", 400, 444, 868, 266, {"Values": ["cliente", "id_prestamo", "estado", "m:Cartera Total",
-                                                        "m:Cuota Mensual", "m:Plazo Meses"]},
-             "Préstamos del distrito — clic derecho en un cliente → Obtener detalles",
-             orden=("m:Cartera Total", "desc"))
+    detalle(p, "Titulo Distrito")
+    p.visual("multiRowCard", 12, 56, 300, 652,
+             {"Values": ["m:Num Prestamos", "m:Prestamos Vigentes", "m:Prestamos en Mora", "m:Tasa Mora Vigente",
+                         "m:Cartera Vigente", "m:Saldo Neto Corte", "m:Absorcion Vigente", "m:Poblacion Distrito",
+                         "m:Salario Promedio Distrito", "m:Desempleo Distrito 1995", "m:Origen Indicadores"]},
+             "Indicadores del distrito",
+             etiquetas={"m:Num Prestamos": "Préstamos", "m:Prestamos Vigentes": "Vigentes", "m:Prestamos en Mora": "En mora",
+                        "m:Tasa Mora Vigente": "Tasa de mora vigente", "m:Cartera Vigente": "Cartera vigente",
+                        "m:Saldo Neto Corte": "Saldo neto al cierre", "m:Absorcion Vigente": "Absorción vigente",
+                        "m:Poblacion Distrito": "Población", "m:Salario Promedio Distrito": "Salario promedio",
+                        "m:Desempleo Distrito 1995": "Desempleo 1995 (%)", "m:Origen Indicadores": "Indicadores"})
+    p.visual("donutChart", 320, 56, 360, 320, {"Category": ["estado"], "Y": ["m:Num Prestamos"]},
+             "Préstamos del distrito por estado",
+             objetos={"labels": [{"properties": {"show": lit(True), "labelStyle": lit("Category, percent of total")}}],
+                      "legend": [{"properties": {"show": lit(False)}}],
+                      "dataPoint": colores_categorias(p, "estado", ESTADOS)},
+             etiquetas={"estado": "Estado", "m:Num Prestamos": "Préstamos"})
+    p.visual("lineChart", 688, 56, 580, 320,
+             {"Category": ["fecha_mes"], "Y": ["m:Saldo Promedio por Cuenta", "m:Saldo Promedio Banco"]},
+             "Saldo promedio por cuenta: el distrito frente al banco (gris)",
+             objetos={"dataPoint": colores_series(p, {"m:Saldo Promedio por Cuenta": EST_A, "m:Saldo Promedio Banco": GRIS}),
+                      "valueAxis": SIN_CUADRICULA, "legend": LEYENDA_ABAJO},
+             etiquetas={"fecha_mes": "Mes", "m:Saldo Promedio por Cuenta": "Distrito", "m:Saldo Promedio Banco": "Banco"})
+    p.visual("tableEx", 320, 384, 948, 324,
+             {"Values": ["cliente", "m:Estado Prestamo", "m:Cartera Total", "m:Cuota Mensual", "m:Banda Capacidad"]},
+             "Préstamos del distrito — clic derecho en un cliente → Obtener detalles → D2",
+             orden=("m:Cartera Total", "desc"),
+             etiquetas={"cliente": "Cliente", "m:Estado Prestamo": "Estado", "m:Cartera Total": "Monto",
+                        "m:Cuota Mensual": "Cuota", "m:Banda Capacidad": "Banda de capacidad"})
 
-    # ---- D2
+    # ================= D2 =================
     p = pags[8]
-    cabecera(p, detalle=True)
-    p.visual("card", 12, 56, 700, 40, {"Values": ["m:Titulo Cliente"]})
-    kpis(p, ["Cartera Total", "Cuota Mensual", "Compromiso Ordenes", "Indice Saturacion", "Saldo Depositos"], y=100)
-    p.visual("tableEx", 12, 186, 300, 524, {"Values": ["cliente", "sexo", "edad", "segmento"]}, "Perfil")
-    p.visual("clusteredColumnChart", 320, 186, 470, 262, {"Category": ["categoria"], "Y": ["m:Compromiso Ordenes"]},
-             "Órdenes fijas del cliente", orden=("m:Compromiso Ordenes", "desc"), objetos=etiquetas)
-    p.visual("lineChart", 798, 186, 470, 262, {"Category": ["anio"], "Y": ["m:Saldo Promedio Historico"]},
-             "Saldo promedio por año", objetos=etiquetas)
-    p.visual("clusteredColumnChart", 320, 456, 948, 254, {"Category": ["operacion"], "Y": ["m:Volumen Transaccionado"]},
-             "Movimientos de su cuenta por tipo de operación", objetos=etiquetas)
+    detalle(p, "Titulo Cliente")
+    p.visual("multiRowCard", 12, 56, 300, 320,
+             {"Values": ["m:Edad Cliente", "m:Segmento Cliente", "m:Arquetipo Cliente", "m:Distrito Cuenta",
+                         "m:Calificacion Cliente"]}, "Perfil",
+             etiquetas={"m:Edad Cliente": "Edad", "m:Segmento Cliente": "Segmento", "m:Arquetipo Cliente": "Arquetipo",
+                        "m:Distrito Cuenta": "Distrito de la cuenta", "m:Calificacion Cliente": "Calificación de pago"})
+    p.visual("multiRowCard", 12, 384, 300, 324,
+             {"Values": ["m:Estado Prestamo", "m:Cartera Total", "m:Cuota Mensual", "m:Banda Capacidad",
+                         "m:Compromiso Ordenes", "m:Indice Saturacion", "m:Credito Externo Mensual"]}, "Situación",
+             etiquetas={"m:Estado Prestamo": "Préstamo", "m:Cartera Total": "Monto del préstamo", "m:Cuota Mensual": "Cuota",
+                        "m:Banda Capacidad": "Banda de capacidad", "m:Compromiso Ordenes": "Órdenes mensuales",
+                        "m:Indice Saturacion": "Índice de saturación", "m:Credito Externo Mensual": "Crédito externo mensual"})
+    p.visual("lineChart", 320, 56, 948, 300,
+             {"Category": ["fecha_mes"], "Y": ["m:Saldo Neto Corte", "m:Umbral Sobregiro"]},
+             "Saldo al cierre de cada mes; bajo la línea gris la cuenta está en sobregiro",
+             objetos={"dataPoint": colores_series(p, {"m:Saldo Neto Corte": EST_A, "m:Umbral Sobregiro": GRIS}),
+                      "valueAxis": SIN_CUADRICULA, "legend": [{"properties": {"show": lit(False)}}]},
+             etiquetas={"fecha_mes": "Mes", "m:Saldo Neto Corte": "Saldo al cierre", "m:Umbral Sobregiro": "Cero"})
+    p.visual("tableEx", 320, 364, 440, 344, {"Values": ["cat_orden", "m:Num Ordenes", "m:Compromiso Ordenes"]},
+             "Órdenes fijas de la cuenta", orden=("m:Compromiso Ordenes", "desc"),
+             etiquetas={"cat_orden": "Propósito", "m:Num Ordenes": "Órdenes", "m:Compromiso Ordenes": "Monto mensual"})
+    p.visual("tableEx", 768, 364, 500, 344,
+             {"Values": ["rec1", "rec2", "rec3", "m:Cuota Maxima Prudente", "m:Monto Maximo Prudente"]},
+             "Qué ofrecerle (Informe 04, modelo demográfico)",
+             etiquetas={"rec1": "1.ª recomendación", "rec2": "2.ª", "rec3": "3.ª",
+                        "m:Cuota Maxima Prudente": "Cuota máxima prudente",
+                        "m:Monto Maximo Prudente": "Monto máximo (36 meses)"})
 
     secciones = [pg.seccion() for pg in pags]
-    config = {"version": "5.50", "themeCollection": {"baseTheme": {"name": "CY24SU08", "version": "5.55", "type": 2}},
+    config = {"version": "5.50", "themeCollection": {"baseTheme": {"name": "CY24SU08", "version": "5.55", "type": 2},
+                                                     "customTheme": {"name": TEMA_ARCHIVO, "version": "5.55", "type": 1}},
               "activeSectionIndex": 0, "defaultDrillFilterOtherVisuals": True}
-    return {"config": json.dumps(config), "layoutOptimization": 0, "sections": secciones}
+    recursos = [{"resourcePackage": {"name": "RegisteredResources", "type": 1, "disabled": False,
+                                     "items": [{"type": 202, "path": TEMA_ARCHIVO, "name": TEMA_ARCHIVO}]}}]
+    return {"config": json.dumps(config), "layoutOptimization": 0, "resourcePackages": recursos, "sections": secciones}
 
 
 CAMPOS_KIMBALL = {
     "anio": ("Dim_Anio", "anio"), "macro": ("Dim_Distrito", "Macro Region"), "region": ("Dim_Distrito", "region"),
-    "distrito": ("Dim_Distrito", "nombre_distrito"), "estado": ("Dim_Estado_Prestamo", "codigo_estado"),
-    "cliente": ("Dim_Cliente", "Cliente"), "segmento": ("Dim_Cliente", "Segmento Edad"), "sexo": ("Dim_Cliente", "sexo"),
-    "edad": ("Dim_Cliente", "edad_corte"), "operacion": ("Dim_Operacion", "tipo_operacion_traducido"),
-    "categoria": ("Dim_Orden", "categoria_orden_traducida"), "id_prestamo": ("Fact_Prestamos", "id_prestamo_bk"),
+    "distrito": ("Dim_Distrito", "nombre_distrito"), "estado": ("Dim_Estado_Prestamo", "Estado"),
+    "cliente": ("Dim_Cliente", "Cliente"), "cuenta": ("Dim_Cuenta", "Cuenta"), "segmento": ("Dim_Cliente", "segmento_edad"),
+    "cat_trans": ("vw_PBI_Trans_Anual_Cuenta", "categoria_analitica"), "cat_orden": ("Dim_Orden", "categoria_orden_traducida"),
+    "banda": ("Fact_Prestamos", "banda_capacidad"), "fecha_mes": ("Dim_Tiempo", "fecha"),
+    "concepto": ("Composicion_Liquidez", "concepto"), "rec1": ("Recomendacion_Cuenta", "recomendacion_1"),
+    "rec2": ("Recomendacion_Cuenta", "recomendacion_2"), "rec3": ("Recomendacion_Cuenta", "recomendacion_3"),
 }
 CAMPOS_MONGO = {
     "anio": ("m_anios", "anio"), "macro": ("m_distritos", "macro_region"), "region": ("m_distritos", "region"),
-    "distrito": ("m_distritos", "nombre_distrito"), "estado": ("m_prestamos", "codigo_estado"),
-    "cliente": ("m_clientes", "cliente"), "segmento": ("m_clientes", "segmento_edad"), "sexo": ("m_clientes", "sexo"),
-    "edad": ("m_clientes", "edad_corte"), "operacion": ("m_trans_anual", "tipo_operacion"),
-    "categoria": ("m_ordenes", "categoria_orden"), "id_prestamo": ("m_prestamos", "id_prestamo"),
+    "distrito": ("m_distritos", "nombre_distrito"), "estado": ("m_prestamos", "estado"),
+    "cliente": ("m_clientes", "cliente"), "cuenta": ("m_cuentas", "cuenta"), "segmento": ("m_clientes", "segmento_edad"),
+    "cat_trans": ("m_trans_anual", "categoria_analitica"), "cat_orden": ("m_ordenes", "categoria_orden"),
+    "banda": ("m_prestamos", "banda_capacidad"), "fecha_mes": ("m_meses", "fecha_mes"),
+    "concepto": ("Composicion_Liquidez", "concepto"), "rec1": ("m_recomendaciones", "recomendacion_1"),
+    "rec2": ("m_recomendaciones", "recomendacion_2"), "rec3": ("m_recomendaciones", "recomendacion_3"),
 }
 
+# Tema (Guía 07 v4, sección 4): la primera serie es gris (las categorías ya están nombradas en el eje).
+# Se incrusta en el informe (StaticResources/RegisteredResources) y se deja una copia junto al .pbip.
+TEMA_ARCHIVO = "tema_financial.json"
 TEMA = {
-    "name": "Financial_ijs Guia 07",
-    "dataColors": ["#1565C0", "#00897B", "#F9A825", "#5E35B1", "#EF6C00", "#8E1B1B", "#2E7D32", "#90A4AE"],
-    "background": "#F3F4F6", "foreground": TINTA, "tableAccent": AZUL,
-    "good": "#2E7D32", "neutral": "#F9A825", "bad": NARANJA,
+    "name": "Financial_ijs Guia 07 v4 (Okabe-Ito)",
+    "dataColors": [GRIS, EST_D, EST_A, EST_C, EST_B, "#009E73", "#CC79A7", "#F0E442"],
+    "background": BLANCO, "foreground": TINTA, "tableAccent": EST_A,
+    "good": EST_A, "neutral": EST_D, "bad": ALERTA,
+    "minimum": BLANCO, "center": "#F2B48C", "maximum": ALERTA,
+    "textClasses": {
+        "title": {"fontFace": "Segoe UI Semibold", "fontSize": 12, "color": TINTA},
+        "label": {"fontFace": "Segoe UI", "fontSize": 10, "color": TINTA},
+        "callout": {"fontFace": "Segoe UI", "fontSize": 18, "color": TINTA},
+    },
 }
 
 
@@ -652,7 +1044,7 @@ TEMA = {
 # 3. ESCRITURA Y VALIDACIÓN
 # ==========================================================================
 def validar(modelo, informe):
-    """Comprueba que cada campo usado en el informe exista en el modelo."""
+    """Comprueba que cada campo del informe y cada relación/orden existan en el modelo."""
     columnas = {(t["name"], c["name"]) for t in modelo["model"]["tables"] for c in t["columns"]}
     medidas_ = {m["name"] for t in modelo["model"]["tables"] for m in t.get("measures", [])}
     errores = []
@@ -672,7 +1064,51 @@ def validar(modelo, informe):
                 errores.append(f"relación con columna inexistente {tb}.{cl}")
             if tb not in tablas:
                 errores.append(f"relación con tabla inexistente {tb}")
+    for t in modelo["model"]["tables"]:
+        for c in t["columns"]:
+            if "sortByColumn" in c and (t["name"], c["sortByColumn"]) not in columnas:
+                errores.append(f"ordenar por columna inexistente {t['name']}.{c['sortByColumn']}")
+    # Cada medida referenciada con [ ] dentro de otra medida debe existir
+    import re
+    for t in modelo["model"]["tables"]:
+        for m in t.get("measures", []):
+            for ref in re.findall(r"(?<![\w'\]])\[([^\]]+)\]", m["expression"]):
+                if ref not in medidas_:
+                    errores.append(f"medida {m['name']}: referencia desconocida [{ref}]")
     return errores
+
+
+def escribir_dax(t):
+    """sql/05_Medidas_DAX_PowerBI.dax: las mismas medidas del modelo Kimball, documentadas."""
+    lineas = [
+        "/*",
+        "==============================================================================",
+        "UNIVERSIDAD TÉCNICA DE AMBATO - INTELIGENCIA DE NEGOCIOS",
+        "AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores",
+        "DOCENTE: Ing. Ruben Nogales, Mg.",
+        "==============================================================================",
+        "ARCHIVO: 05_Medidas_DAX_PowerBI.dax   (Guía 07 v4)",
+        "GENERADO POR: scripts/30_generar_powerbi_pbip.py — no editar a mano.",
+        "DESCRIPCIÓN: Medidas del modelo Kimball. El modelo MongoDB tiene las mismas",
+        "             medidas con los nombres de tabla m_* (mismo generador).",
+        "             Las cifras entre paréntesis son los valores de control al corte",
+        "             31/12/1998 sin filtros (Informes 09 y 10, Carta v8).",
+        "REGLAS: tasas con intervalo de Wilson (z = 1); promedios con ±1σ exacta;",
+        "        saldo semiaditivo desde la foto mensual; DIVIDE en lugar de '/';",
+        "        CALCULATE + FILTER cuando la condición es una medida (sección 7).",
+        "==============================================================================",
+        "*/",
+        "",
+    ]
+    for seccion, grupo in medidas(t):
+        lineas += ["// " + "=" * 78, f"// {seccion}", "// " + "=" * 78, ""]
+        for nombre, expr, fmt, coment in grupo:
+            lineas.append(f"// {coment}" + (f"   [formato {fmt}]" if fmt else ""))
+            lineas.append(f"'_Medidas'[{nombre}] =")
+            lineas.append("    " + expr)
+            lineas.append("")
+    with open(ARCHIVO_DAX, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lineas))
 
 
 def escribir(nombre, modelo, informe, leeme):
@@ -695,30 +1131,60 @@ def escribir(nombre, modelo, informe, leeme):
     guardar(os.path.join(rp, "definition.pbir"),
             {"version": "1.0", "datasetReference": {"byPath": {"path": f"../{nombre}.Dataset"}, "byConnection": None}})
     guardar(os.path.join(rp, "report.json"), informe)
+    os.makedirs(os.path.join(rp, "StaticResources", "RegisteredResources"))
+    guardar(os.path.join(rp, "StaticResources", "RegisteredResources", TEMA_ARCHIVO), TEMA)
     guardar(os.path.join(carpeta, "tema_financial.json"), TEMA)
     with open(os.path.join(carpeta, "README.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write(leeme)
 
 
+CONTROL = """
+### Cifras de control (sin filtros; deben coincidir en Kimball y MongoDB)
+| KPI | Valor |
+| :--- | ---: |
+| Préstamos / en mora (D) | 682 / 45 |
+| Tasa de mora vigente · incumplimiento | 10.04% · 13.25% |
+| Cartera vigente · saldo neto al cierre | $80.30M · $197.14M |
+| Absorción vigente (ref. cartera total) | 40.73% (52.38%) |
+| Cuentas en sobregiro al cierre · cuentas con índice > 0.5 | 39 · 47 |
+| Volumen · movimientos | $6.26bn · 1,056,320 |
+| Impago banda Baja · Alta | 2.92% · 23.26% |
+"""
+
 PASOS_MANUALES = """
-### Ajustes finales en Power BI Desktop (≈ 5 minutos)
-Estos pasos no se pueden guardar de forma fiable en el archivo del proyecto; hazlos una vez y guarda (Ctrl+S):
-1. **Drill-through:** en la página *D1 Detalle Distrito*, arrastra `{distrito}` al campo *Obtener detalles* del panel
-   Visualizaciones. En *D2 Ficha Cliente 360*, arrastra `{cliente}`. Después, clic derecho en cada pestaña D1/D2 → *Ocultar página*.
-2. **Barras de error** (panel *Análisis* de cada gráfico → *Barras de error* → límites superior/inferior):
-   - P1 y P2 tasa de mora → `Mora Limite Superior` / `Mora Limite Inferior`
-   - P2 monto promedio → `Prestamo Limite Superior` / `Prestamo Limite Inferior`
-   - P4 ticket promedio → `Transaccion Limite Superior` / `Transaccion Limite Inferior`
-   - P6 incumplimiento por edad → `Incumplimiento Limite Superior` / `Incumplimiento Limite Inferior`
-3. **Tema de colores:** *Vista → Temas → Buscar temas* → `tema_financial.json` (esta carpeta).
-4. **Treemap (P2):** *Formato → Colores → fx* → degradado por `Tasa Mora Vigente` (blanco → naranja).
-5. **Top 10 (P2, P3):** en el gráfico de distritos, panel *Filtros* → `{distrito}` → *N superior* = 10 por la medida del eje Y.
-6. **Línea de referencia (P3):** *Análisis → Línea constante* = 0.5238 en el ratio de absorción por región.
+### Ajustes finales en Power BI Desktop (≈ 15 minutos, una sola vez; luego Ctrl+S)
+El formato heredado `report.json` no guarda de forma fiable estas opciones; se configuran a mano:
+
+1. **Tema:** ya viene incrustado (Okabe e Ito). Si no se aplicara: *Vista → Temas → Buscar temas* →
+   `tema_financial.json` (esta carpeta). Los colores con significado (estados, bandas, alertas, propósitos)
+   están fijados en cada visual.
+2. **Drill-through:** en *D1 Distrito* arrastra `{distrito}` a *Obtener detalles*; en *D2 Cliente 360* arrastra
+   `{cliente}` **y** `{cuenta}` (P5 llega por cuenta; P2, P6 y D1 por cliente). Luego clic derecho en las
+   pestañas D1 y D2 → *Ocultar página*.
+3. **Árbol de descomposición (P2):** clic en **+** → `region` → **+** → `nombre_distrito` → **+** → `Cliente`
+   (o *Valor alto* en cada nivel).
+4. **Barras de error** (*Análisis → Barras de error*, límites superior/inferior):
+   - P1 línea y P2 columnas de tasa de mora → `Mora Wilson Superior` / `Mora Wilson Inferior`
+   - P4 ticket promedio → `Ticket Limite Superior` / `Ticket Limite Inferior`
+   - P6 bandas → `Impago Wilson Superior/Inferior`; P6 edad → `Incumplimiento Wilson Superior/Inferior`
+   (Los mismos límites ya están en el tooltip de cada gráfico.)
+5. **Treemap (P2):** *Formato → Colores → fx* → degradado por `Tasa Mora Vigente`, mínimo `#FFFFFF`, máximo `#D55E00`.
+6. **Dispersión (P5):** *Análisis → Sombreado de simetría* = activado. *Formato → Marcadores → Color → fx* →
+   reglas por `Indice Saturacion`: > 1 → `#D55E00`, > 0.5 → `#E69F00`, resto `#7F7F7F`.
+7. **Múltiplos pequeños (P4):** en el gráfico de líneas de volumen, mueve `categoria_analitica` de *Leyenda* a
+   *Múltiplos pequeños* (un panel por categoría, sin colores).
+8. **Formato condicional:** matrices de P1 y P4 → *Color de fondo* escala `#FFFFFF` → `#D55E00`; matriz de P1 →
+   clic derecho en `Estado` → *Mostrar elementos sin datos*. Tabla de P2 → *Barras de datos* en `Tasa`.
+   Tabla de P5 → *Iconos* en `Índice de saturación` (> 1 bermellón, > 0.5 naranja).
+9. **Combinados con referencia (P2, P3, P6):** la línea "Banco" usa el mismo eje que las columnas (eje Y
+   secundario desactivado). Si Power BI lo muestra en otra escala, *Formato → Eje Y secundario → Desactivado*.
+10. **Opcional (sección 8 de la guía):** página de tooltip *TT Distrito* y marcador *Restablecer filtros*.
 """
 
 
 def main():
-    km, mm = modelo_kimball(), modelo_mongo()
+    (km, tk), (mm, tm) = modelo_kimball(), modelo_mongo()
+    FORMATOS.update({m["name"]: m.get("formatString") for m in km["model"]["tables"][-1]["measures"]})
     ki, mi = construir_informe(CAMPOS_KIMBALL), construir_informe(CAMPOS_MONGO)
     for n, mod, inf in (("Kimball", km, ki), ("Mongo", mm, mi)):
         err = validar(mod, inf)
@@ -727,26 +1193,32 @@ def main():
 
     escribir("Dashboard_Financial_Kimball", km, ki, f"""# Dashboard_Financial_Kimball (Power BI Project)
 
-Fuente: SQL Server `DM_Financial_Kimball_v2`. Generado con `python scripts/30_generar_powerbi_pbip.py`.
+Fuente: SQL Server `DM_Financial_Kimball_v2`. Diseño: Guía 07 v4. Generado con `python scripts/30_generar_powerbi_pbip.py`.
 
 ### Cómo abrirlo
-1. Ejecuta antes `sql/04_Vistas_PowerBI_Kimball.sql` en la base (crea las 2 vistas del modelo).
+1. La base debe estar cargada (scripts 31, 34 y 42) y con la vista de `sql/04_Vistas_PowerBI_Kimball.sql`.
 2. Doble clic en `Dashboard_Financial_Kimball.pbip` (Power BI Desktop).
 3. Si tu servidor no es `(localdb)\\MSSQLLocalDB`: *Transformar datos → Editar parámetros* → `ServidorSQL`.
-4. *Inicio → Actualizar*. Comprueba las cifras de control de la guía 07 (sección 9.3).
-{PASOS_MANUALES.format(distrito="Dim_Distrito[nombre_distrito]", cliente="Dim_Cliente[Cliente]")}""")
+4. *Inicio → Actualizar* y compara con las cifras de control.
+{CONTROL}{PASOS_MANUALES.format(distrito="Dim_Distrito[nombre_distrito]", cliente="Dim_Cliente[Cliente]",
+                                 cuenta="Dim_Cuenta[Cuenta]")}""")
     escribir("Dashboard_Financial_Mongo", mm, mi, f"""# Dashboard_Financial_Mongo (Power BI Project)
 
 Fuente: MongoDB `Financial` (localhost:27017) mediante el conector `scripts/26_powerbi_mongo_dashboard.py`,
-incrustado en la consulta compartida `MongoFinancial`. Generado con `python scripts/30_generar_powerbi_pbip.py`.
+incrustado en la consulta compartida `MongoFinancial`. Diseño: Guía 07 v4. Generado con `python scripts/30_generar_powerbi_pbip.py`.
 
 ### Cómo abrirlo
-1. MongoDB en ejecución con la base `Financial` cargada (script 22/23 o `Financial_mongo_dump.gz`).
-2. *Archivo → Opciones → Scripts de Python*: el Python elegido debe tener `pandas`, `matplotlib` y `pymongo`
-   (Power BI siempre importa `matplotlib`). Si falta alguna: `python -m pip install pandas matplotlib pymongo`.
-3. Doble clic en `Dashboard_Financial_Mongo.pbip` → *Inicio → Actualizar*. Acepta el aviso de privacidad del script de Python.
-4. Comprueba las cifras de control de la guía 07 (sección 9.3): deben ser idénticas a las de Kimball.
-{PASOS_MANUALES.format(distrito="m_distritos[nombre_distrito]", cliente="m_clientes[cliente]")}""")
+1. MongoDB en ejecución con la base `Financial` (scripts 35 y 42, o `mongorestore --gzip --archive=Financial_mongo_dump.gz`).
+2. **Python de python.org, no el de Microsoft Store.** Power BI Desktop no puede ejecutar el Python de la
+   Store (carpeta `WindowsApps`): la actualización falla con *"Acceso denegado"* (comprobado en
+   Power BI 2.157). Instala Python desde https://www.python.org, luego
+   `python -m pip install pandas matplotlib pymongo` (Power BI siempre importa `matplotlib`) y elige esa
+   carpeta en *Archivo → Opciones → Scripts de Python*.
+3. Doble clic en `Dashboard_Financial_Mongo.pbip` → *Inicio → Actualizar*. Acepta el aviso de privacidad del script.
+4. Compara con las cifras de control: deben ser idénticas a las de Kimball.
+{CONTROL}{PASOS_MANUALES.format(distrito="m_distritos[nombre_distrito]", cliente="m_clientes[cliente]",
+                                 cuenta="m_cuentas[cuenta]")}""")
+    escribir_dax(tk)
 
     for n, mod, inf in (("Kimball", km, ki), ("Mongo", mm, mi)):
         nvis = sum(len(s["visualContainers"]) for s in inf["sections"])
@@ -754,6 +1226,7 @@ incrustado en la consulta compartida `MongoFinancial`. Generado con `python scri
         print(f"[OK] Dashboard_Financial_{n}: {len(mod['model']['tables'])} tablas, "
               f"{len(mod['model']['relationships'])} relaciones, {nmed} medidas, "
               f"{len(inf['sections'])} páginas, {nvis} visuales")
+    print(f"[OK] {os.path.relpath(ARCHIVO_DAX, BASE_DIR)} regenerado")
 
 
 if __name__ == "__main__":

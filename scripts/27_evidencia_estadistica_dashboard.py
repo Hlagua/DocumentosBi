@@ -3,11 +3,14 @@
 UNIVERSIDAD TÉCNICA DE AMBATO - Inteligencia de Negocios
 AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 ==============================================================================
-ARCHIVO: 27_evidencia_estadistica_dashboard.py
+ARCHIVO: 27_evidencia_estadistica_dashboard.py   (Guía 07 v4, Carta v8)
 DESCRIPCIÓN: Reproduce TODAS las cifras y pruebas estadísticas que se citan en
-             los dashboards de Power BI (guía 07). Usa solo los DataFrames del
-             repositorio, por lo que cualquier persona puede verificarlas sin
-             SQL Server ni MongoDB.
+             los títulos y KPIs de los dashboards de Power BI (Guía 07 v4). Usa
+             solo los DataFrames del repositorio, por lo que cualquier persona
+             puede verificarlas sin SQL Server ni MongoDB.
+             Tasas con intervalo de Wilson (z = 1), segmentación de edad en 3
+             grupos (la del Data Mart), bandas de capacidad de pago, absorción
+             de la cartera vigente y saldo semiaditivo (último saldo del mes).
 SALIDA:      metricas_dashboard_07.json + resumen en consola.
 USO:         python scripts/27_evidencia_estadistica_dashboard.py
 ==============================================================================
@@ -31,22 +34,31 @@ def macro_region(region):
 
 
 def segmento_edad(edad):
-    if edad <= 25:
-        return "Joven (<=25)"
-    if edad <= 40:
-        return "Adulto joven (26-40)"
-    if edad <= 60:
-        return "Adulto (41-60)"
-    return "Mayor (>60)"
+    """Los 3 grupos de Dim_Cliente[segmento_edad] (script 34: tramos [0,30), [30,50), [50,120));
+    la etiqueta dice ">50" pero incluye a los de 50 años, igual que el Data Mart."""
+    if edad < 30:
+        return "Joven (<30)"
+    if edad < 50:
+        return "Adulto (30-50)"
+    return "Adulto Mayor (>50)"
 
 
-def tasa_con_error(df, grupo, positivo, universo):
-    """Tasa de una categoría con error estándar binomial sqrt(p(1-p)/n)."""
+def wilson(casos, n, z=1.0):
+    """Intervalo de Wilson (1927); con z = 1 equivale a ±1 error estándar, sin colapsar en p = 0."""
+    p = casos / n
+    centro = (p + z * z / (2 * n)) / (1 + z * z / n)
+    margen = z / (1 + z * z / n) * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return centro - margen, centro + margen
+
+
+def tasa_con_error(df, grupo, positivos, universo):
+    """Tasa de una categoría con su n y el intervalo de Wilson (z = 1)."""
+    positivos = [positivos] if isinstance(positivos, str) else positivos
     base = df[df["estado_prestamo"].isin(universo)]
     g = base.groupby(grupo)["estado_prestamo"].agg(
-        n="size", casos=lambda s: (s == positivo).sum())
+        n="size", casos=lambda s: s.isin(positivos).sum())
     g["tasa"] = g["casos"] / g["n"]
-    g["error_estandar"] = np.sqrt(g["tasa"] * (1 - g["tasa"]) / g["n"])
+    g["wilson_inf"], g["wilson_sup"] = wilson(g["casos"], g["n"])
     return g
 
 
@@ -68,18 +80,28 @@ def main():
     r = {}
 
     # ---------------- Cabeceras (valores de control) ----------------
-    saldo = (t.sort_values(["fecha", "id_transaccion"])
-              .groupby("id_cuenta")["saldo_cuenta"].last().sum())
+    t = t.sort_values(["fecha", "id_transaccion"])       # desempate del saldo: mayor id del día
+    saldo = t.groupby("id_cuenta")["saldo_cuenta"].last().sum()
+    vig = p["estado_prestamo"].isin(["C", "D"])
+    # Foto mensual semiaditiva: último saldo de cada mes, arrastrado a los meses sin movimientos
+    t["mes_corte"] = pd.to_datetime(t["fecha"]).dt.to_period("M")
+    foto = t.groupby(["id_cuenta", "mes_corte"])["saldo_cuenta"].last().unstack().ffill(axis=1)
+    sobregiro_mes = (foto < 0).sum()
     r["kpi"] = {
         "cartera_total": float(p["monto_prestamo"].sum()),
+        "cartera_vigente": float(p.loc[vig, "monto_prestamo"].sum()),
+        "saldo_por_cobrar_estimado": float(p.loc[vig, "saldo_pendiente_estimado"].sum()),
         "num_prestamos": int(len(p)),
         "prestamos_mora_D": int((p["estado_prestamo"] == "D").sum()),
-        "tasa_mora_vigente": round((p["estado_prestamo"] == "D").sum()
-                                   / p["estado_prestamo"].isin(["C", "D"]).sum(), 4),
+        "tasa_mora_vigente": round((p["estado_prestamo"] == "D").sum() / vig.sum(), 4),
         "tasa_incumplimiento": round((p["estado_prestamo"] == "B").sum()
                                      / p["estado_prestamo"].isin(["A", "B"]).sum(), 4),
-        "saldo_depositos": float(saldo),
-        "ratio_absorcion": round(p["monto_prestamo"].sum() / saldo, 4),
+        "tasa_impago_BD": round(p["estado_prestamo"].isin(["B", "D"]).mean(), 4),
+        "saldo_neto_corte": float(saldo),
+        "absorcion_vigente": round(p.loc[vig, "monto_prestamo"].sum() / saldo, 4),
+        "absorcion_cartera_total_referencia": round(p["monto_prestamo"].sum() / saldo, 4),
+        "liquidez_libre": float(saldo - p.loc[vig, "monto_prestamo"].sum()),
+        "cuentas_sobregiro_dic1998": int(sobregiro_mes.iloc[-1]),
         "volumen_transaccionado": float(t["monto_transaccion"].sum()),
         "num_transacciones": int(len(t)),
         "ticket_promedio_transaccion": round(float(t["monto_transaccion"].mean()), 2),
@@ -99,7 +121,11 @@ def main():
     r["p1_chi2_mora_vs_cosecha_1994_1997"] = chi2(pd.crosstab(v["anio_otorgamiento"], v["estado_prestamo"]))
 
     # ---------------- P2: riesgo geográfico ----------------
-    r["p2_tasa_mora_region"] = tasa_con_error(p, "region", "D", ["C", "D"]).round(4).to_dict(orient="index")
+    r["p2_tasa_mora_region"] = (tasa_con_error(p, "region", "D", ["C", "D"]).sort_values("tasa", ascending=False)
+                                .round(4).to_dict(orient="index"))
+    dm = tasa_con_error(p, "nombre_distrito", "D", ["C", "D"])
+    r["p2_distritos"] = {"con_vigentes": int(len(dm)), "con_menos_de_10_vigentes": int((dm["n"] < 10).sum()),
+                         "mas_morosos": dm.sort_values("casos", ascending=False).head(4)["casos"].to_dict()}
     v = p[p["estado_prestamo"].isin(["C", "D"])]
     r["p2_chi2_mora_vs_region"] = chi2(pd.crosstab(v["region"], v["estado_prestamo"]))
     r["p2_chi2_mora_vs_macro_region"] = chi2(pd.crosstab(v["macro_region"], v["estado_prestamo"]))
@@ -111,18 +137,10 @@ def main():
     r["p2_fisher_north_moravia_vs"] = {b: fisher("north Moravia", b) for b in
                                        ["north Bohemia", "south Moravia", "Prague", "east Bohemia"]}
 
-    g = p.groupby("macro_region")["monto_prestamo"]
-    r["p2_monto_por_macro_region"] = pd.DataFrame({
-        "n": g.size(), "media": g.mean(), "desv_est": g.std(),
-        "error_estandar": g.std() / np.sqrt(g.size())}).round(2).to_dict(orient="index")
-    grupos = [s.values for _, s in g]
-    r["p2_anova_monto_macro_region"] = {"F": round(float(stats.f_oneway(*grupos).statistic), 4),
-                                        "p_valor": round(float(stats.f_oneway(*grupos).pvalue), 4),
-                                        "kruskal_p": round(float(stats.kruskal(*grupos).pvalue), 4)}
-    tm = p.groupby(["region", "nombre_distrito"])["monto_prestamo"].sum()
-    r["p2_treemap_cartera_region"] = (p.groupby("region")["monto_prestamo"].sum()
-                                      .sort_values(ascending=False).to_dict())
-    r["p2_treemap_mayor_distrito"] = {"distrito": tm.idxmax()[1], "monto": float(tm.max())}
+    tm = p[vig].groupby(["region", "nombre_distrito"])["monto_prestamo"].sum()
+    r["p2_treemap_cartera_vigente_region"] = (p[vig].groupby("region")["monto_prestamo"].sum()
+                                              .sort_values(ascending=False).to_dict())
+    r["p2_treemap_mayor_distrito"] = {"distrito": tm.idxmax()[1], "cartera_vigente": float(tm.max())}
 
     # ---------------- P3: liquidez ----------------
     ult = t.sort_values(["fecha", "id_transaccion"]).groupby("id_cuenta").tail(1)
@@ -131,10 +149,17 @@ def main():
                      usecols=["id_cuenta", "region"]).drop_duplicates("id_cuenta")
     dist_cuenta = pd.concat([dist_cuenta, tt]).drop_duplicates("id_cuenta")
     ult = ult.merge(dist_cuenta, on="id_cuenta")
-    liq = pd.DataFrame({"cartera": p.groupby("region")["monto_prestamo"].sum(),
+    liq = pd.DataFrame({"cartera_vigente": p[vig].groupby("region")["monto_prestamo"].sum(),
                         "saldo": ult.groupby("region")["saldo_cuenta"].sum()})
-    liq["ratio_absorcion"] = liq["cartera"] / liq["saldo"]
-    r["p3_absorcion_region"] = liq.sort_values("ratio_absorcion", ascending=False).round(4).to_dict(orient="index")
+    liq["absorcion_vigente"] = liq["cartera_vigente"] / liq["saldo"]
+    r["p3_absorcion_vigente_region"] = (liq.sort_values("absorcion_vigente", ascending=False)
+                                        .round(4).to_dict(orient="index"))
+    activas = foto.notna().sum()
+    total = foto.sum()
+    r["p3_saldo_mensual"] = {"total_ene1993": float(total.iloc[0]), "total_dic1998": float(total.iloc[-1]),
+                             "cuentas_activas_ene1993": int(activas.iloc[0]), "cuentas_activas_dic1998": int(activas.iloc[-1]),
+                             "promedio_por_cuenta_ene1993": round(float(total.iloc[0] / activas.iloc[0]), 2),
+                             "promedio_por_cuenta_dic1998": round(float(total.iloc[-1] / activas.iloc[-1]), 2)}
 
     # ---------------- P4: flujo transaccional ----------------
     g = t.groupby("tipo_operacion_traducido")["monto_transaccion"]
@@ -157,6 +182,9 @@ def main():
     r["p4_volumen_operacion_por_anio"] = (t.pivot_table(index="anio", columns="tipo_operacion_traducido",
                                                         values="monto_transaccion", aggfunc="sum")
                                            .to_dict(orient="index"))
+    r["p4_sobregiro_mensual"] = {"cuentas_que_pasaron_por_sobregiro": int((foto < 0).any(axis=1).sum()),
+                                 "maximo": {"mes": str(sobregiro_mes.idxmax()), "cuentas": int(sobregiro_mes.max())},
+                                 "dic1998": int(sobregiro_mes.iloc[-1])}
 
     # ---------------- P5: órdenes ----------------
     r["p5_ordenes_categoria_pct"] = (o["categoria_orden"].value_counts(normalize=True).round(4).to_dict())
@@ -167,7 +195,14 @@ def main():
                                  "cuentas_mayor_1": int((sat > 1).sum()),
                                  "maximo": {"id_cuenta": int(sat.idxmax()), "indice": round(float(sat.max()), 4)}}
 
-    # ---------------- P6: impago histórico ----------------
+    # ---------------- P6: impago histórico y capacidad de pago ----------------
+    orden_bandas = ["Baja", "Media-baja", "Media-alta", "Alta"]
+    r["p6_impago_por_banda"] = (tasa_con_error(p, "banda_capacidad", ["B", "D"], list("ABCD"))
+                                .reindex(orden_bandas).round(4).to_dict(orient="index"))
+    r["p6_chi2_impago_vs_banda"] = chi2(pd.crosstab(p["banda_capacidad"], p["estado_prestamo"].isin(["B", "D"])))
+    impago = p["estado_prestamo"].isin(["B", "D"])
+    u = stats.mannwhitneyu(p.loc[impago, "ratio_cuota_saldo_previo"], p.loc[~impago, "ratio_cuota_saldo_previo"])
+    r["p6_auc_ratio_cuota_saldo"] = round(float(u.statistic / (impago.sum() * (~impago).sum())), 4)
     r["p6_incumplimiento_segmento_edad"] = tasa_con_error(p, "segmento_edad", "B", ["A", "B"]).round(4).to_dict(orient="index")
     q = p[p["estado_prestamo"].isin(["A", "B"])]
     r["p6_chi2_incumplimiento_vs_edad"] = chi2(pd.crosstab(q["segmento_edad"], q["estado_prestamo"]))
@@ -187,7 +222,8 @@ def main():
                        "cartera": float(k["monto_prestamo"].sum()),
                        "cartera_vigente": float(k.loc[k["estado_prestamo"].isin(["C", "D"]), "monto_prestamo"].sum()),
                        "cuentas": int(len(ult_k)), "saldo_depositos": float(ult_k["saldo_cuenta"].sum()),
-                       "ratio_absorcion": round(float(k["monto_prestamo"].sum() / ult_k["saldo_cuenta"].sum()), 4)}
+                       "absorcion_vigente": round(float(k.loc[k["estado_prestamo"].isin(["C", "D"]), "monto_prestamo"].sum()
+                                                          / ult_k["saldo_cuenta"].sum()), 4)}
     tc = t[t["id_cuenta"] == 2335].sort_values(["fecha", "id_transaccion"])
     r["d2_cliente_2823"] = {"saldo_promedio_anual": tc.groupby("anio")["saldo_cuenta"].mean().round(2).to_dict(),
                             "saldo_cierre_anual": tc.groupby("anio")["saldo_cuenta"].last().to_dict(),
@@ -198,15 +234,16 @@ def main():
         json.dump(r, f, ensure_ascii=False, indent=2, default=float)
 
     print("=" * 78)
-    print("EVIDENCIA ESTADÍSTICA DEL DASHBOARD (guía 07)")
+    print("EVIDENCIA ESTADÍSTICA DEL DASHBOARD (Guía 07 v4)")
     print("=" * 78)
     for k, val in r["kpi"].items():
         print(f"  {k:<30} {val:>20,}")
     print("\nPruebas:")
     for k in ["p1_chi2_mora_vs_cosecha_1994_1997", "p2_chi2_mora_vs_region", "p2_chi2_mora_vs_macro_region",
-              "p2_fisher_north_moravia_vs", "p2_anova_monto_macro_region", "p4_anova_ticket_operacion",
-              "p4_welch_ingreso_vs_retiro", "p5_indice_saturacion", "p6_chi2_incumplimiento_vs_edad",
-              "p6_fisher_incumplimiento", "d1_karvina", "d2_cliente_2823"]:
+              "p2_fisher_north_moravia_vs", "p2_distritos", "p3_saldo_mensual", "p4_anova_ticket_operacion",
+              "p4_welch_ingreso_vs_retiro", "p4_sobregiro_mensual", "p5_indice_saturacion", "p6_chi2_impago_vs_banda",
+              "p6_auc_ratio_cuota_saldo", "p6_chi2_incumplimiento_vs_edad", "p6_fisher_incumplimiento",
+              "d1_karvina", "d2_cliente_2823"]:
         print(f"  {k}: {r[k]}")
     print(f"\nJSON completo: {SALIDA}")
 

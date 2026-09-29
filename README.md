@@ -31,15 +31,16 @@
 > | 4 | DataFrames, completitud de datos y carga en Kimball (14/14 y 12/12 pruebas) | ✅ | [`03`](03_Informe_Limpieza_y_Transformacion_de_Datos.md), [`10`](10_Informe_Completitud_Carga_Kimball.md), [`scripts/32`](scripts/32_extraer_dataframes_kimball.py) a [`34`](scripts/34_carga_completitud_kimball.py) |
 > | 5 | Migración Kimball → MongoDB, validadores `$jsonSchema`, reconciliación por desgloses (33/33) y respaldo `Financial_mongo_dump.gz` | ✅ | [`05`](05_Especificacion_Tecnica_Kimball_MongoDB.md), [`scripts/35`](scripts/35_migrar_kimball_a_mongodb.py), [`scripts/36`](scripts/36_reconciliacion_kimball_mongo.py) |
 > | 6 | Sistemas de recomendación (Informe 04 v2): catálogo real de 8 productos, protocolo de evaluación común con popularidad, cola larga y confirmación, fugas de información corregidas y recomendaciones para 4,500 titulares. El `.docx` y el `.pdf` siguen siendo de la versión 1 | ✅ (solo `.md`) | [`04`](04_Informe_Sistemas_de_Recomendacion.md), [`scripts/37`](scripts/37_rs_preparacion.py) a [`41`](scripts/41_rs_figuras.py) |
-> | 7 | Medidas DAX y proyectos Power BI (`.pbip`) | ⏳ | `sql/05`, `dashboards/` |
-> | 8 | Guías de dashboard, dossier y demo HTML | ⏳ | `06_*`, `07_*`, `08_*`, `demo_dashboard.html` |
-> | 9 | Este README (resto de secciones) | ⏳ | — |
+> | 7 | Dashboard (Guía 07 v4): recomendaciones cargadas en los dos motores, vista por categoría, 85 medidas DAX, conector MongoDB alineado y los dos `.pbip` con 9 páginas y KPIs en todas. El modelo Kimball se abrió en Power BI Desktop y sus medidas se verificaron en el motor (Guía 07, sección 10.1). Quedan los ajustes manuales listados en el README de cada proyecto | ✅ (Mongo requiere Python de python.org; ver README del proyecto) | [`07`](07_Guia_Dashboards_Articulados_PowerBI.md), [`sql/04`](sql/04_Vistas_PowerBI_Kimball.sql), [`sql/05`](sql/05_Medidas_DAX_PowerBI.dax), [`scripts/26`](scripts/26_powerbi_mongo_dashboard.py), [`scripts/30`](scripts/30_generar_powerbi_pbip.py), [`scripts/42`](scripts/42_cargar_recomendaciones.py), `dashboards/` |
+> | 8 | Evidencia estadística de los títulos del dashboard (Carta v8) | ✅ | [`scripts/27`](scripts/27_evidencia_estadistica_dashboard.py), `metricas_dashboard_07.json` |
+> | 9 | Guía 06, dossier 08 y demo HTML | ⏳ | `06_*`, `08_*`, `demo_dashboard.html` |
+> | 10 | Este README (resto de secciones) | ⏳ | — |
 >
 > **Cambios que aún no se reflejan en las etapas ⏳:**
 > * El KPI de liquidez de la Carta v8 es el **Ratio de Absorción de Cartera Vigente (40.73%)**. El 52.38% que citan los documentos y el dashboard queda solo como referencia histórica.
-> * El Data Mart ahora tiene **4 hechos** (se agrega `Fact_Saldo_Cuenta_Mensual`) y **8 dimensiones** (`Dim_Operacion` con 15 combinaciones y la nueva `Dim_Concepto_Movimiento`). El proyecto Power BI Kimball **no carga** hasta regenerarse, porque usa columnas que cambiaron de nombre.
+> * El Data Mart ahora tiene **4 hechos** (se agrega `Fact_Saldo_Cuenta_Mensual`) y **8 dimensiones** (`Dim_Operacion` con 15 combinaciones y la nueva `Dim_Concepto_Movimiento`), más `Recomendacion_Cuenta`. Los proyectos Power BI ya están regenerados con este modelo (etapa 7).
 > * El distrito 69 se imputa con desempleo **5.83** y criminalidad **1,326**. El documento 08 todavía cita 5.00 / 3,736.
-> * MongoDB ya refleja la Carta v8, pero el proyecto Power BI de Mongo incrusta una copia anterior del conector y debe regenerarse (etapa 7). La carga alternativa desde CSV (script 23) todavía genera el esquema anterior.
+> * La carga alternativa de MongoDB desde CSV (script 23) todavía genera el esquema anterior; la vigente es el script 35.
 >
 > **Cadena reproducible actual:**
 >
@@ -50,6 +51,8 @@
 > python scripts/34_carga_completitud_kimball.py
 > python scripts/35_migrar_kimball_a_mongodb.py
 > python scripts/36_reconciliacion_kimball_mongo.py
+> python scripts/42_cargar_recomendaciones.py      # después de los scripts 37 a 41 del Informe 04
+> python scripts/30_generar_powerbi_pbip.py        # proyectos .pbip y sql/05
 > ```
 
 ---

@@ -4,202 +4,374 @@ UNIVERSIDAD TÉCNICA DE AMBATO - INTELIGENCIA DE NEGOCIOS
 AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 DOCENTE: Ing. Ruben Nogales, Mg.
 ==============================================================================
-ARCHIVO: 05_Medidas_DAX_PowerBI.dax
-DESCRIPCIÓN: Medidas DAX estandarizadas e idénticas para ambos dashboards
-             (Dashboard_Financial_Kimball.pbix y Dashboard_Financial_Mongo.pbix).
-             Crear una tabla vacía '_Medidas' en Power BI Desktop y pegar.
+ARCHIVO: 05_Medidas_DAX_PowerBI.dax   (Guía 07 v4)
+GENERADO POR: scripts/30_generar_powerbi_pbip.py — no editar a mano.
+DESCRIPCIÓN: Medidas del modelo Kimball. El modelo MongoDB tiene las mismas
+             medidas con los nombres de tabla m_* (mismo generador).
+             Las cifras entre paréntesis son los valores de control al corte
+             31/12/1998 sin filtros (Informes 09 y 10, Carta v8).
+REGLAS: tasas con intervalo de Wilson (z = 1); promedios con ±1σ exacta;
+        saldo semiaditivo desde la foto mensual; DIVIDE en lugar de '/';
+        CALCULATE + FILTER cuando la condición es una medida (sección 7).
 ==============================================================================
 */
 
 // ==============================================================================
-// 1. CARTERA DE PRÉSTAMOS Y RIESGO CREDITICIO (P1, P2, P6, D1)
+// 1. PRÉSTAMOS Y RIESGO (Inicio, P1, P2, P6, D1)
 // ==============================================================================
 
-// Cartera total colocada ($103,261,740.00)
-Cartera Total = SUM(Fact_Prestamos[monto_prestamo])
+// Préstamos otorgados (682)   [formato #,0]
+'_Medidas'[Num Prestamos] =
+    COUNTROWS(Fact_Prestamos)
 
-// Cantidad total de préstamos (682)
-Num Prestamos = COUNTROWS(Fact_Prestamos)
+// Vigentes en mora, estado D (45)   [formato #,0]
+'_Medidas'[Prestamos en Mora] =
+    CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = "D")
 
-// Préstamos en mora activa irremediable (Estado D: 45 créditos)
-Prestamos en Mora = CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = "D")
+// Estados C + D (448)   [formato #,0]
+'_Medidas'[Prestamos Vigentes] =
+    CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {"C", "D"})
 
-// Préstamos vigentes en ejecución (Estados C + D: 448 créditos)
-Prestamos Vigentes = CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {"C", "D"})
+// Cerrados con deuda, estado B (31)   [formato #,0]
+'_Medidas'[Prestamos Incumplidos] =
+    CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = "B")
 
-// Préstamos cerrados con quebranto definitivo (Estado B: 31 créditos)
-Prestamos Incumplidos = CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] = "B")
+// Estados A + B (234)   [formato #,0]
+'_Medidas'[Prestamos Cerrados] =
+    CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {"A", "B"})
 
-// Préstamos cerrados históricos (Estados A + B: 234 créditos)
-Prestamos Cerrados = CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {"A", "B"})
+// Estados B + D (76)   [formato #,0]
+'_Medidas'[Prestamos con Impago] =
+    CALCULATE([Num Prestamos], Dim_Estado_Prestamo[codigo_estado] IN {"B", "D"})
 
-// Tasa de Morosidad Activa sobre Cartera Vigente (10.0446%)
-Tasa Mora Vigente = DIVIDE([Prestamos en Mora], [Prestamos Vigentes], 0)
+// D / (C + D) = 10.04%; 0% (no vacío) si hay vigentes sin mora, p. ej. north Bohemia 0/41   [formato 0.00%]
+'_Medidas'[Tasa Mora Vigente] =
+    IF([Prestamos Vigentes] > 0, DIVIDE([Prestamos en Mora] + 0, [Prestamos Vigentes]))
 
-// Tasa de Incumplimiento sobre Cartera Cerrada (13.2478%)
-Tasa Incumplimiento = DIVIDE([Prestamos Incumplidos], [Prestamos Cerrados], 0)
+// B / (A + B) = 13.25%   [formato 0.00%]
+'_Medidas'[Tasa Incumplimiento] =
+    IF([Prestamos Cerrados] > 0, DIVIDE([Prestamos Incumplidos] + 0, [Prestamos Cerrados]))
 
-// Cartera en riesgo colocada (B + D: $15,580,152.00)
-Monto en Riesgo = CALCULATE(SUM(Fact_Prestamos[monto_prestamo]), Dim_Estado_Prestamo[codigo_estado] IN {"B", "D"})
+// (B + D) / total = 11.14%; es la tasa de P6 por banda de capacidad   [formato 0.00%]
+'_Medidas'[Tasa Impago] =
+    IF([Num Prestamos] > 0, DIVIDE([Prestamos con Impago] + 0, [Num Prestamos]))
 
-// Monto promedio por préstamo ($151,410.18)
-Monto Promedio Prestamo = AVERAGE(Fact_Prestamos[monto_prestamo])
+// Límite inferior de Wilson (z = 1) de mora   [formato 0.00%]
+'_Medidas'[Mora Wilson Inferior] =
+    VAR n = [Prestamos Vigentes] VAR p = DIVIDE([Prestamos en Mora] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c - m)
 
-// Desviación estándar muestral del préstamo ($113,372.41)
-Desv Est Prestamo = STDEV.S(Fact_Prestamos[monto_prestamo])
+// Límite superior de Wilson (z = 1) de mora   [formato 0.00%]
+'_Medidas'[Mora Wilson Superior] =
+    VAR n = [Prestamos Vigentes] VAR p = DIVIDE([Prestamos en Mora] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c + m)
 
-// Límites de control (+- 1 sigma)
-Prestamo Limite Superior = [Monto Promedio Prestamo] + [Desv Est Prestamo]
-Prestamo Limite Inferior = [Monto Promedio Prestamo] - [Desv Est Prestamo]
+// Límite inferior de Wilson (z = 1) de incumplimiento   [formato 0.00%]
+'_Medidas'[Incumplimiento Wilson Inferior] =
+    VAR n = [Prestamos Cerrados] VAR p = DIVIDE([Prestamos Incumplidos] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c - m)
 
+// Límite superior de Wilson (z = 1) de incumplimiento   [formato 0.00%]
+'_Medidas'[Incumplimiento Wilson Superior] =
+    VAR n = [Prestamos Cerrados] VAR p = DIVIDE([Prestamos Incumplidos] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c + m)
+
+// Límite inferior de Wilson (z = 1) de impago   [formato 0.00%]
+'_Medidas'[Impago Wilson Inferior] =
+    VAR n = [Num Prestamos] VAR p = DIVIDE([Prestamos con Impago] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c - m)
+
+// Límite superior de Wilson (z = 1) de impago   [formato 0.00%]
+'_Medidas'[Impago Wilson Superior] =
+    VAR n = [Num Prestamos] VAR p = DIVIDE([Prestamos con Impago] + 0, n) VAR c = DIVIDE(p + 1 / (2 * n), 1 + 1 / n) VAR m = DIVIDE(1, 1 + 1 / n) * SQRT(p * (1 - p) / n + 1 / (4 * n * n)) RETURN IF(n > 0, c + m)
+
+// Referencia de P2: la tasa del banco, sin el filtro de distrito   [formato 0.00%]
+'_Medidas'[Tasa Mora Banco] =
+    CALCULATE([Tasa Mora Vigente], REMOVEFILTERS(Dim_Distrito))
+
+// Referencia de P6: impago de todas las bandas   [formato 0.00%]
+'_Medidas'[Tasa Impago Banco] =
+    CALCULATE([Tasa Impago], REMOVEFILTERS(Fact_Prestamos[banda_capacidad], Fact_Prestamos[Orden Banda]))
+
+// Referencia de P6: incumplimiento de todos los segmentos de edad   [formato 0.00%]
+'_Medidas'[Tasa Incumplimiento Banco] =
+    CALCULATE([Tasa Incumplimiento], REMOVEFILTERS(Dim_Cliente))
+
+// Impago de la banda Baja (2.92%); KEEPFILTERS respeta los demás filtros   [formato 0.00%]
+'_Medidas'[Tasa Impago Banda Baja] =
+    CALCULATE([Tasa Impago], KEEPFILTERS(Fact_Prestamos[banda_capacidad] = "Baja"))
+
+// Impago de la banda Alta (23.26%)   [formato 0.00%]
+'_Medidas'[Tasa Impago Banda Alta] =
+    CALCULATE([Tasa Impago], KEEPFILTERS(Fact_Prestamos[banda_capacidad] = "Alta"))
+
+// Monto original de todos los préstamos ($103,261,740)   [formato "$"#,0]
+'_Medidas'[Cartera Total] =
+    SUM(Fact_Prestamos[monto_prestamo])
+
+// Monto original C + D ($80,296,176)   [formato "$"#,0]
+'_Medidas'[Cartera Vigente] =
+    CALCULATE([Cartera Total], Dim_Estado_Prestamo[codigo_estado] IN {"C", "D"})
+
+// Capital pendiente estimado de la cartera vigente ($46,620,926)   [formato "$"#,0]
+'_Medidas'[Saldo por Cobrar Estimado] =
+    CALCULATE(SUM(Fact_Prestamos[saldo_pendiente_estimado]), Dim_Estado_Prestamo[codigo_estado] IN {"C", "D"})
+
+// Monto original de los préstamos B + D ($15,580,152)   [formato "$"#,0]
+'_Medidas'[Monto Original en Riesgo] =
+    CALCULATE([Cartera Total], Dim_Estado_Prestamo[codigo_estado] IN {"B", "D"})
+
+// Monto original de los préstamos B   [formato "$"#,0]
+'_Medidas'[Monto Incumplido] =
+    CALCULATE([Cartera Total], Dim_Estado_Prestamo[codigo_estado] = "B")
+
+// Cuota mensual de los préstamos del contexto   [formato "$"#,0]
+'_Medidas'[Cuota Mensual] =
+    SUM(Fact_Prestamos[pago_mensual])
+
+// Titulares con préstamo B (31): lista de denegación   [formato #,0]
+'_Medidas'[Clientes con Impago] =
+    CALCULATE(DISTINCTCOUNT(Fact_Prestamos[sk_cliente]), Dim_Estado_Prestamo[codigo_estado] = "B")
+
+// CALCULATE + FILTER: cartera vigente de los distritos con mora sobre la del banco   [formato "$"#,0]
+'_Medidas'[Cartera Distritos Sobre Mora Banco] =
+    VAR moraBanco = CALCULATE([Tasa Mora Vigente], REMOVEFILTERS(Dim_Distrito)) RETURN CALCULATE([Cartera Vigente], FILTER(VALUES(Dim_Distrito[nombre_distrito]), [Tasa Mora Vigente] > moraBanco))
+
+// Distritos con tasa de mora vigente sobre la del banco   [formato #,0]
+'_Medidas'[Distritos Sobre Mora Banco] =
+    VAR moraBanco = CALCULATE([Tasa Mora Vigente], REMOVEFILTERS(Dim_Distrito)) RETURN COUNTROWS(FILTER(VALUES(Dim_Distrito[nombre_distrito]), [Tasa Mora Vigente] > moraBanco))
+
+// north Moravia · 15.8%
+'_Medidas'[Region Mayor Mora] =
+    VAR r = TOPN(1, FILTER(VALUES(Dim_Distrito[region]), [Prestamos Vigentes] > 0), [Tasa Mora Vigente], DESC) RETURN CONCATENATEX(r, Dim_Distrito[region] & " · " & FORMAT([Tasa Mora Vigente], "0.0%"), ", ")
+
+// Hl.m. Praha · 4 en mora
+'_Medidas'[Distrito Mayor Morosos] =
+    VAR d = TOPN(1, FILTER(VALUES(Dim_Distrito[nombre_distrito]), [Prestamos en Mora] > 0), [Prestamos en Mora], DESC) RETURN CONCATENATEX(d, Dim_Distrito[nombre_distrito] & " · " & [Prestamos en Mora] & " en mora", ", ")
+
+// Estado del préstamo del cliente o de la cuenta (fichas)
+'_Medidas'[Estado Prestamo] =
+    IF([Num Prestamos] > 0, CALCULATE(CONCATENATEX(VALUES(Dim_Estado_Prestamo[Estado]), Dim_Estado_Prestamo[Estado], ", "), Fact_Prestamos))
+
+// Banda de capacidad de pago (ratio cuota / saldo previo)
+'_Medidas'[Banda Capacidad] =
+    IF([Num Prestamos] > 0, CONCATENATEX(VALUES(Fact_Prestamos[banda_capacidad]), Fact_Prestamos[banda_capacidad], ", "))
+
+// Distrito de la cuenta del préstamo
+'_Medidas'[Distrito Prestamo] =
+    IF([Num Prestamos] > 0, CALCULATE(CONCATENATEX(VALUES(Dim_Distrito[nombre_distrito]), Dim_Distrito[nombre_distrito], ", "), Fact_Prestamos))
+
+// Banda del préstamo B (lista de P6)
+'_Medidas'[Banda Capacidad Impago] =
+    CALCULATE([Banda Capacidad], Dim_Estado_Prestamo[codigo_estado] = "B")
+
+// Distrito del préstamo B (lista de P6)
+'_Medidas'[Distrito Impago] =
+    CALCULATE([Distrito Prestamo], Dim_Estado_Prestamo[codigo_estado] = "B")
 
 // ==============================================================================
-// 2. CAPTACIÓN, DEPÓSITOS Y RATIO DE ABSORCIÓN (P3, D1)
+// 2. SALDOS: FOTO MENSUAL SEMIADITIVA (Inicio, P3, P4, D1, D2)
 // ==============================================================================
 
-// Saldo final en depósitos al corte del 31/12/1998 ($197,140,434.00)
-// Utiliza la vista semiaditiva vw_PBI_Saldo_Final_Cuenta
-Saldo Depositos = SUM(vw_PBI_Saldo_Final_Cuenta[saldo_final])
+// Saldo al cierre del último mes del contexto ($197,140,434 en dic-1998)   [formato "$"#,0]
+'_Medidas'[Saldo Neto Corte] =
+    VAR ultimoMes = CALCULATE(MAX(Dim_Tiempo[fecha]), Fact_Saldo_Cuenta_Mensual) RETURN CALCULATE(SUM(Fact_Saldo_Cuenta_Mensual[saldo_fin_mes]), FILTER(ALL(Dim_Tiempo), Dim_Tiempo[fecha] = ultimoMes))
 
-// Ratio de Absorción Crediticia (52.3803%)
-// Cartera colocada total / Depósitos captados al corte
-Ratio Absorcion = 
-    DIVIDE(
-        CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo)),
-        [Saldo Depositos],
-        0
-    )
+// Cuentas con foto en el último mes del contexto (4,500 en dic-1998)   [formato #,0]
+'_Medidas'[Cuentas Activas Corte] =
+    VAR ultimoMes = CALCULATE(MAX(Dim_Tiempo[fecha]), Fact_Saldo_Cuenta_Mensual) RETURN CALCULATE(COUNTROWS(Fact_Saldo_Cuenta_Mensual), FILTER(ALL(Dim_Tiempo), Dim_Tiempo[fecha] = ultimoMes))
 
-// Cobertura de Liquidez Libre ($93,878,694.00)
-Liquidez Libre = [Saldo Depositos] - CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo))
+// Cuentas con saldo negativo al cierre del último mes (39 en dic-1998)   [formato #,0]
+'_Medidas'[Cuentas en Sobregiro] =
+    VAR ultimoMes = CALCULATE(MAX(Dim_Tiempo[fecha]), Fact_Saldo_Cuenta_Mensual) RETURN CALCULATE(CALCULATE(COUNTROWS(Fact_Saldo_Cuenta_Mensual), Fact_Saldo_Cuenta_Mensual[en_sobregiro] = TRUE()), FILTER(ALL(Dim_Tiempo), Dim_Tiempo[fecha] = ultimoMes))
 
+// Saldo por cuenta activa: aísla el crecimiento por apertura de cuentas   [formato "$"#,0]
+'_Medidas'[Saldo Promedio por Cuenta] =
+    DIVIDE([Saldo Neto Corte], [Cuentas Activas Corte])
 
-// ==============================================================================
-// 3. FLUJO TRANSACCIONAL Y VOLATILIDAD OPERATIVA (P4, D2)
-// ==============================================================================
+// Referencia gris de D1   [formato "$"#,0]
+'_Medidas'[Saldo Promedio Banco] =
+    CALCULATE([Saldo Promedio por Cuenta], REMOVEFILTERS(Dim_Distrito))
 
-// Volumen transaccionado acumulado ($6,257,862,197.00)
-Volumen Transaccionado = SUM(vw_PBI_Trans_Anual_Cuenta[monto_total])
+// Línea en 0 de la ficha D2   [formato "$"#,0.00]
+'_Medidas'[Umbral Sobregiro] =
+    IF(NOT ISBLANK([Saldo Neto Corte]), 0)
 
-// Cantidad de transacciones (1,056,320)
-Num Transacciones = SUM(vw_PBI_Trans_Anual_Cuenta[num_transacciones])
+// Saldo al corte dic-1998, sin importar el año elegido   [formato "$"#,0]
+'_Medidas'[Saldo Neto Corte Total] =
+    CALCULATE([Saldo Neto Corte], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo))
 
-// Ticket promedio de transacción ($5,924.21)
-Ticket Promedio Transaccion = DIVIDE([Volumen Transaccionado], [Num Transacciones], 0)
+// Cartera vigente al corte, sin importar el año elegido   [formato "$"#,0]
+'_Medidas'[Cartera Vigente Corte] =
+    CALCULATE([Cartera Vigente], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo))
 
-// Desviación estándar muestral exacta calculada desde la agregación con suma de cuadrados
-Desv Est Transaccion = 
-    VAR n = [Num Transacciones]
-    VAR s = [Volumen Transaccionado]
-    VAR sq = SUM(vw_PBI_Trans_Anual_Cuenta[suma_cuadrados])
-    RETURN 
-        IF(n > 1, SQRT(DIVIDE(sq - (s * s / n), n - 1)), 0)
+// KPI de liquidez de la Carta v8: cartera vigente / saldo neto al corte (40.73%)   [formato 0.00%]
+'_Medidas'[Absorcion Vigente] =
+    DIVIDE([Cartera Vigente Corte], [Saldo Neto Corte Total])
 
-Transaccion Limite Superior = [Ticket Promedio Transaccion] + [Desv Est Transaccion]
-Transaccion Limite Inferior = [Ticket Promedio Transaccion] - [Desv Est Transaccion]
+// Referencia histórica: cartera total / saldo neto (52.38%)   [formato 0.00%]
+'_Medidas'[Absorcion Cartera Total] =
+    DIVIDE(CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo)), [Saldo Neto Corte Total])
 
-// Saldo promedio histórico ponderado de las cuentas
-Saldo Promedio Historico = 
-    DIVIDE(
-        SUMX(vw_PBI_Trans_Anual_Cuenta, vw_PBI_Trans_Anual_Cuenta[saldo_promedio] * vw_PBI_Trans_Anual_Cuenta[num_transacciones]),
-        [Num Transacciones],
-        0
-    )
+// Referencia de P3: absorción del banco   [formato 0.00%]
+'_Medidas'[Absorcion Banco] =
+    CALCULATE([Absorcion Vigente], REMOVEFILTERS(Dim_Distrito))
 
+// Saldo que no respalda cartera vigente ($116,844,258)   [formato "$"#,0]
+'_Medidas'[Liquidez Libre] =
+    [Saldo Neto Corte Total] - [Cartera Vigente Corte]
 
-// ==============================================================================
-// 4. ÓRDENES PERMANENTES Y SATURACIÓN FINANCIERA (P5, D2)
-// ==============================================================================
-
-// Compromiso mensual de pagos automáticos ($21,229,041.00)
-Compromiso Ordenes = SUM(Fact_Ordenes[monto_orden])
-
-// Cantidad de órdenes permanentes (6,471)
-Num Ordenes = COUNTROWS(Fact_Ordenes)
-
-// Índice de Saturación Financiera = Órdenes Mensuales / Saldo Promedio
-Indice Saturacion = 
-    DIVIDE(
-        [Compromiso Ordenes],
-        CALCULATE([Saldo Promedio Historico], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Operacion)),
-        0
-    )
-
-// Clientes con Índice de Saturación mayor a 0.5 (47 clientes sobreendeudados)
-Clientes Saturados = 
-    COUNTROWS(
-        FILTER(
-            VALUES(Dim_Cliente[sk_cliente]),
-            [Indice Saturacion] > 0.5
-        )
-    )
-
-// Clientes con quiebra histórica en Estado B (31 clientes)
-Clientes con Impago = 
-    CALCULATE(
-        DISTINCTCOUNT(Fact_Prestamos[sk_cliente]),
-        Dim_Estado_Prestamo[codigo_estado] = "B"
-    )
-
-// Total de clientes (5,369)
-Clientes Totales = COUNTROWS(Dim_Cliente)
-
+// Cascada de P3; el total es la liquidez libre   [formato "$"#,0]
+'_Medidas'[Valor Composicion Liquidez] =
+    SWITCH(SELECTEDVALUE(Composicion_Liquidez[concepto]), "Saldo neto al corte", [Saldo Neto Corte Total], "Cartera vigente", -[Cartera Vigente Corte])
 
 // ==============================================================================
-// 5. TÍTULOS DINÁMICOS PARA NAVEGACIÓN Y DRILL-THROUGH (D1, D2)
+// 3. TRANSACCIONES POR CATEGORÍA ANALÍTICA (P4, D2)
 // ==============================================================================
 
-Titulo Distrito = "Detalle del distrito: " & SELECTEDVALUE(Dim_Distrito[nombre_distrito], "(Seleccione un distrito)")
+// $6,257,862,197   [formato "$"#,0]
+'_Medidas'[Volumen Transaccionado] =
+    SUM(vw_PBI_Trans_Anual_Cuenta[monto_total])
 
-Titulo Cliente = "Ficha 360 · " & SELECTEDVALUE(Dim_Cliente[Cliente], "(Seleccione un cliente)")
+// 1,056,320   [formato #,0]
+'_Medidas'[Num Transacciones] =
+    SUM(vw_PBI_Trans_Anual_Cuenta[num_transacciones])
+
+// Monto promedio por movimiento   [formato "$"#,0.00]
+'_Medidas'[Ticket Promedio] =
+    DIVIDE([Volumen Transaccionado], [Num Transacciones])
+
+// σ muestral exacta desde la suma y la suma de cuadrados   [formato "$"#,0.00]
+'_Medidas'[Desv Est Transaccion] =
+    VAR n = [Num Transacciones] VAR s = [Volumen Transaccionado] VAR sq = SUM(vw_PBI_Trans_Anual_Cuenta[suma_cuadrados]) RETURN IF(n > 1, SQRT(DIVIDE(sq - s * s / n, n - 1)))
+
+// Promedio + 1σ   [formato "$"#,0.00]
+'_Medidas'[Ticket Limite Superior] =
+    [Ticket Promedio] + [Desv Est Transaccion]
+
+// Promedio − 1σ (no negativo)   [formato "$"#,0.00]
+'_Medidas'[Ticket Limite Inferior] =
+    MAX(0, [Ticket Promedio] - [Desv Est Transaccion])
+
+// Error estándar (tooltip)   [formato "$"#,0.00]
+'_Medidas'[EE Ticket] =
+    DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))
+
+// Saldo promedio de la cuenta ponderado por movimientos   [formato "$"#,0]
+'_Medidas'[Saldo Promedio Historico] =
+    DIVIDE(SUMX(vw_PBI_Trans_Anual_Cuenta, vw_PBI_Trans_Anual_Cuenta[saldo_promedio] * vw_PBI_Trans_Anual_Cuenta[num_transacciones]), [Num Transacciones])
 
 // ==============================================================================
-// EQUIVALENTE PARA MONGODB (Se sustituye Fact_* por m_* con idéntico nombre de medida)
-// Ejemplo: Cartera Total = SUM(m_prestamos[monto_prestamo])
-//          Saldo Depositos = SUM(m_saldo_cuenta[saldo_final])
-//          Volumen Transaccionado = SUM(m_trans_anual[monto_total])
+// 4. ÓRDENES Y CAPACIDAD DE PAGO (P5, D2)
 // ==============================================================================
 
+// Órdenes fijas mensuales ($21,229,041)   [formato "$"#,0]
+'_Medidas'[Compromiso Ordenes] =
+    SUM(Fact_Ordenes[monto_orden])
+
+// 6,471 órdenes   [formato #,0]
+'_Medidas'[Num Ordenes] =
+    COUNTROWS(Fact_Ordenes)
+
+// Participación de cada propósito   [formato 0.00%]
+'_Medidas'[Pct Ordenes] =
+    DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS(Dim_Orden[categoria_orden_traducida])))
+
+// Órdenes mensuales / saldo promedio histórico de la cuenta (cuenta 2335: 2.14)   [formato 0.00]
+'_Medidas'[Indice Saturacion] =
+    DIVIDE([Compromiso Ordenes], CALCULATE([Saldo Promedio Historico], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo), REMOVEFILTERS(vw_PBI_Trans_Anual_Cuenta[categoria_analitica])))
+
+// CALCULATE + FILTER: cuentas con índice > 0.5 (47)   [formato #,0]
+'_Medidas'[Cuentas Saturadas] =
+    COUNTROWS(FILTER(VALUES(Dim_Cuenta[id_cuenta_bk]), [Indice Saturacion] > 0.5))
+
+// Cuentas cuyas órdenes superan su saldo promedio (1)   [formato #,0]
+'_Medidas'[Cuentas Sobre Saldo] =
+    COUNTROWS(FILTER(VALUES(Dim_Cuenta[id_cuenta_bk]), [Indice Saturacion] > 1))
+
+// Cuentas que pagan un préstamo a otra entidad (35)   [formato #,0]
+'_Medidas'[Cuentas con Credito Externo] =
+    CALCULATE(DISTINCTCOUNT(Fact_Ordenes[sk_cuenta]), Dim_Cuenta[tiene_credito_externo] = TRUE())
+
+// Cuotas mensuales a otras entidades ($177,154)   [formato "$"#,0]
+'_Medidas'[Credito Externo Mensual] =
+    CALCULATE([Compromiso Ordenes], Dim_Cuenta[tiene_credito_externo] = TRUE(), Dim_Orden[k_symbol_original] = "UVER")
+
+// Solo cuentas en alerta   [formato 0.00]
+'_Medidas'[Indice Saturacion Alerta] =
+    VAR i = [Indice Saturacion] RETURN IF(i > 0.5, i)
+
+// Solo cuentas en alerta   [formato "$"#,0]
+'_Medidas'[Compromiso Alerta] =
+    IF([Indice Saturacion] > 0.5, [Compromiso Ordenes])
+
+// Solo cuentas en alerta   [formato "$"#,0]
+'_Medidas'[Saldo Promedio Alerta] =
+    IF([Indice Saturacion] > 0.5, CALCULATE([Saldo Promedio Historico], REMOVEFILTERS(Dim_Anio), REMOVEFILTERS(Dim_Tiempo), REMOVEFILTERS(vw_PBI_Trans_Anual_Cuenta[categoria_analitica])))
+
+// Solo cuentas en alerta   [formato "$"#,0]
+'_Medidas'[Credito Externo Alerta] =
+    IF([Indice Saturacion] > 0.5, [Credito Externo Mensual])
+
+// Solo cuentas en alerta
+'_Medidas'[Cliente Titular Alerta] =
+    IF([Indice Saturacion] > 0.5, CALCULATE(SELECTEDVALUE(Dim_Cliente[Cliente]), Fact_Saldo_Cuenta_Mensual))
+
 // ==============================================================================
-// 6. MEDIDAS ADICIONALES: ERROR ESTÁNDAR, PORCENTAJES Y CABECERAS (guía 07, 9.4)
-//    Valores de control reproducibles con scripts/27_evidencia_estadistica_dashboard.py
+// 5. FICHAS D1 Y D2, RECOMENDACIONES Y TÍTULOS DINÁMICOS
 // ==============================================================================
 
-// Error estándar binomial de la tasa de mora: sqrt(p(1-p)/n)
-EE Mora = SQRT(DIVIDE([Tasa Mora Vigente] * (1 - [Tasa Mora Vigente]), [Prestamos Vigentes]))
-Mora Limite Superior = [Tasa Mora Vigente] + [EE Mora]
-Mora Limite Inferior = MAX(0, [Tasa Mora Vigente] - [EE Mora])
+// Título dinámico de D1
+'_Medidas'[Titulo Distrito] =
+    "Distrito: " & SELECTEDVALUE(Dim_Distrito[nombre_distrito], "(varios)") & " (" & SELECTEDVALUE(Dim_Distrito[region], "varias regiones") & ")"
 
-EE Incumplimiento = SQRT(DIVIDE([Tasa Incumplimiento] * (1 - [Tasa Incumplimiento]), [Prestamos Cerrados]))
-Incumplimiento Limite Superior = [Tasa Incumplimiento] + [EE Incumplimiento]
-Incumplimiento Limite Inferior = MAX(0, [Tasa Incumplimiento] - [EE Incumplimiento])
+// Habitantes   [formato #,0]
+'_Medidas'[Poblacion Distrito] =
+    SELECTEDVALUE(Dim_Distrito[poblacion])
 
-// Error estándar de promedios (tooltip)
-EE Prestamo = DIVIDE([Desv Est Prestamo], SQRT([Num Prestamos]))
-EE Transaccion = DIVIDE([Desv Est Transaccion], SQRT([Num Transacciones]))
+// Salario promedio   [formato "$"#,0]
+'_Medidas'[Salario Promedio Distrito] =
+    SELECTEDVALUE(Dim_Distrito[salario_promedio])
 
-// Porcentajes para donas y tooltips
-Pct Ordenes = DIVIDE([Num Ordenes], CALCULATE([Num Ordenes], REMOVEFILTERS(Dim_Orden)))
-Pct Volumen = DIVIDE([Volumen Transaccionado], CALCULATE([Volumen Transaccionado], REMOVEFILTERS(Dim_Operacion)))
-Pct Cartera = DIVIDE([Cartera Total], CALCULATE([Cartera Total], REMOVEFILTERS(Dim_Distrito)))
+// Tasa de desempleo 1995 (%)   [formato 0.00]
+'_Medidas'[Desempleo Distrito 1995] =
+    SELECTEDVALUE(Dim_Distrito[tasa_desempleo])
 
-// Tarjetas de cabecera con el "ganador" (north Moravia 15.79%, south Moravia 19.1%, south Bohemia 60.55%)
-Region Mayor Mora =
-    VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Tasa Mora Vigente], DESC)
-    RETURN MAXX(t, Dim_Distrito[region]) & " · " & FORMAT(MAXX(t, [Tasa Mora Vigente]), "0.00%")
+// Marca el distrito 69 con indicadores imputados
+'_Medidas'[Origen Indicadores] =
+    IF(HASONEVALUE(Dim_Distrito[es_imputado]), IF(VALUES(Dim_Distrito[es_imputado]), "Imputado (Informe 10)", "Fuente original"))
 
-Region Mayor Cartera =
-    VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Cartera Total], DESC)
-    RETURN MAXX(t, Dim_Distrito[region]) & " · " & FORMAT(MAXX(t, [Pct Cartera]), "0.0%")
+// Titular de la cuenta (vale si se llega por cliente o por cuenta)
+'_Medidas'[Cliente Ficha] =
+    CALCULATE(SELECTEDVALUE(Dim_Cliente[Cliente]), Fact_Saldo_Cuenta_Mensual)
 
-Region Mayor Absorcion =
-    VAR t = TOPN(1, VALUES(Dim_Distrito[region]), [Ratio Absorcion], DESC)
-    RETURN MAXX(t, Dim_Distrito[region]) & " · " & FORMAT(MAXX(t, [Ratio Absorcion]), "0.00%")
+// Cuenta del titular
+'_Medidas'[Cuenta Ficha] =
+    CALCULATE(SELECTEDVALUE(Dim_Cuenta[Cuenta]), Fact_Saldo_Cuenta_Mensual)
 
-Operacion Mayor Volumen =
-    VAR t = TOPN(1, VALUES(Dim_Operacion[tipo_operacion_traducido]), [Volumen Transaccionado], DESC)
-    RETURN MAXX(t, Dim_Operacion[tipo_operacion_traducido]) & " · " & FORMAT(MAXX(t, [Pct Volumen]), "0.00%")
+// Título dinámico de D2
+'_Medidas'[Titulo Cliente] =
+    "Ficha 360 · " & COALESCE([Cliente Ficha], SELECTEDVALUE(Dim_Cliente[Cliente], "(varios clientes)")) & " · " & COALESCE([Cuenta Ficha], "sin cuenta propia")
 
-Categoria Principal Orden =
-    VAR t = TOPN(1, VALUES(Dim_Orden[categoria_orden_traducida]), [Num Ordenes], DESC)
-    RETURN MAXX(t, Dim_Orden[categoria_orden_traducida]) & " · " & FORMAT(MAXX(t, [Pct Ordenes]), "0.00%")
+// Edad al 31/12/1998   [formato #,0]
+'_Medidas'[Edad Cliente] =
+    CALCULATE(SELECTEDVALUE(Dim_Cliente[edad_corte]), Fact_Saldo_Cuenta_Mensual)
+
+// Segmento de edad (3 grupos del Data Mart)
+'_Medidas'[Segmento Cliente] =
+    CALCULATE(SELECTEDVALUE(Dim_Cliente[segmento_edad]), Fact_Saldo_Cuenta_Mensual)
+
+// Macro-región y segmento
+'_Medidas'[Arquetipo Cliente] =
+    CALCULATE(SELECTEDVALUE(Dim_Cliente[arquetipo_demografico]), Fact_Saldo_Cuenta_Mensual)
+
+// Buen / Mal pagador / Sin evaluar
+'_Medidas'[Calificacion Cliente] =
+    CALCULATE(SELECTEDVALUE(Dim_Cliente[calificacion_pago_desc]), Fact_Saldo_Cuenta_Mensual)
+
+// Distrito de la cuenta
+'_Medidas'[Distrito Cuenta] =
+    CALCULATE(SELECTEDVALUE(Dim_Distrito[nombre_distrito]), Fact_Saldo_Cuenta_Mensual)
+
+// Cuota que deja el ratio en la banda Baja (Informe 04)   [formato "$"#,0]
+'_Medidas'[Cuota Maxima Prudente] =
+    SUM(Recomendacion_Cuenta[prestamo_cuota_maxima])
+
+// Monto a 36 meses con esa cuota (Informe 04)   [formato "$"#,0]
+'_Medidas'[Monto Maximo Prudente] =
+    SUM(Recomendacion_Cuenta[prestamo_monto_maximo_36m])

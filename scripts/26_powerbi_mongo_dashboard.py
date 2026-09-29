@@ -3,28 +3,25 @@
 UNIVERSIDAD TÉCNICA DE AMBATO - Inteligencia de Negocios
 AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 ==============================================================================
-ARCHIVO: 26_powerbi_mongo_dashboard.py
-USO EN POWER BI: Obtener datos -> Más... -> Script de Python -> pegar TODO
-                 este archivo -> Aceptar -> marcar las 7 tablas m_*.
+ARCHIVO: 26_powerbi_mongo_dashboard.py   (Guía 07 v4)
+USO EN POWER BI: el script 30 lo incrusta en la consulta MongoFinancial del
+                 proyecto Dashboard_Financial_Mongo.pbip. También se puede
+                 ejecutar suelto para revisar las tablas.
 
-Construye el modelo estrella del Dashboard_Financial_Mongo.pbix a partir de
-la base documental 'Financial' (MongoDB). Las transacciones y el saldo final
-se calculan DENTRO de MongoDB con Aggregation Pipelines ($group), de modo que
-Power BI recibe ~54 mil filas en lugar de 1,056,320.
+Construye, desde la base documental 'Financial' (cargada por el script 35 y
+completada por el 42), las mismas tablas que el modelo Kimball, con los mismos
+nombres de columnas, para que las medidas DAX sean idénticas:
 
-Funciona con los dos esquemas de carga del proyecto:
-  * Esquema documental anidado (script 22 / Financial_mongo_dump.gz)
-  * Esquema plano (script 23, restauración desde CSV)
-
-Tablas resultantes (mismas claves y nombres de columnas que el modelo Kimball
-para reutilizar las medidas DAX de la guía 07):
-  m_distritos        77 filas     (dimensión)
-  m_clientes      5,369 filas     (dimensión, Cliente 360)
-  m_anios             6 filas     (dimensión de tiempo anual 1993-1998)
-  m_prestamos       682 filas     (hecho)
-  m_ordenes       6,471 filas     (hecho)
-  m_trans_anual  ~54,298 filas    (hecho agregado cuenta-año-operación)
-  m_saldo_cuenta  4,500 filas     (hecho semiaditivo: último saldo)
+  m_distritos         77   (Dim_Distrito)
+  m_clientes       5,369   (Dim_Cliente)
+  m_cuentas        4,500   (Dim_Cuenta)
+  m_anios              6   (Dim_Anio)
+  m_meses             72   (meses de la foto de saldos)
+  m_prestamos        682   (Fact_Prestamos)
+  m_ordenes        6,471   (Fact_Ordenes)
+  m_trans_anual   54,298   (vw_PBI_Trans_Anual_Cuenta: agregado en MongoDB con $group)
+  m_saldo_mensual 185,615  (Fact_Saldo_Cuenta_Mensual)
+  m_recomendaciones 4,500  (Recomendacion_Cuenta)
 ==============================================================================
 """
 import pandas as pd
@@ -37,169 +34,92 @@ client = pymongo.MongoClient(MONGO_URI)
 db = client[DB_NAME]
 
 
-def campo(doc, *rutas, defecto=None):
-    """Devuelve el primer valor existente entre varias rutas 'a.b.c'."""
-    for ruta in rutas:
-        valor = doc
-        for parte in ruta.split("."):
-            if isinstance(valor, dict) and parte in valor:
-                valor = valor[parte]
-            else:
-                valor = None
-                break
-        if valor is not None and not (isinstance(valor, float) and pd.isna(valor)):
-            return valor
-    return defecto
+def macro(region):
+    return "Praga" if region == "Prague" else ("Moravia" if "Moravia" in str(region) else "Bohemia")
 
 
-# ------------------------------------------------------------------------------
-# 1. DIMENSIÓN DISTRITO
-# ------------------------------------------------------------------------------
+# ---- Dimensiones ----
 m_distritos = pd.DataFrame([{
-    "id_distrito": int(campo(d, "id_distrito", "_id")),
-    "nombre_distrito": campo(d, "nombre", "nombre_distrito"),
-    "region": campo(d, "region"),
-    "poblacion": campo(d, "poblacion"),
-    "salario_promedio": campo(d, "salario_promedio"),
-    "tasa_desempleo": campo(d, "indicadores_1995.tasa_desempleo", "tasa_desempleo"),
-    "tasa_criminalidad": campo(d, "indicadores_1995.tasa_criminalidad", "tasa_criminalidad"),
-    "es_imputado": bool(campo(d, "auditoria.es_imputado", "es_imputado", defecto=False)),
+    "id_distrito": d["id_distrito"], "nombre_distrito": d["nombre"], "region": d["region"], "poblacion": d["poblacion"],
+    "salario_promedio": d["salario_promedio"], "tasa_desempleo": d["indicadores_1995"]["tasa_desempleo"],
+    "tasa_criminalidad": d["indicadores_1995"]["tasa_criminalidad"], "es_imputado": d["auditoria"]["es_imputado"],
 } for d in db.distritos.find({})])
+m_distritos["macro_region"] = m_distritos.region.map(macro)
 
-MACRO = {"Prague": "Praga"}
-m_distritos["macro_region"] = m_distritos["region"].map(
-    lambda r: MACRO.get(r, "Moravia" if "Moravia" in str(r) else "Bohemia"))
-region_de = m_distritos.set_index("id_distrito")["region"].to_dict()
+filas_cli, filas_cta = [], {}
+for c in db.FinancialMongo.find({}, {"ordenes_recurrentes": 0, "prestamo_asociado": 0}):
+    filas_cli.append({
+        "id_cliente": c["id_cliente"], "cliente": f"Cliente {c['id_cliente']}", "sexo": c["datos_personales"]["sexo"],
+        "edad_corte": c["datos_personales"]["edad_al_corte_1998"], "tipo_disposicion": c["datos_personales"]["tipo_disposicion"],
+        "segmento_edad": c["perfil_analitico"]["segmento_edad"], "arquetipo_demografico": c["perfil_analitico"]["arquetipo_demografico"],
+        "calificacion_pago": c["evaluacion_crediticia"]["calificacion"]})
+    cta = c["cuenta"]
+    filas_cta[cta["id_cuenta"]] = {"id_cuenta": cta["id_cuenta"], "frecuencia_extracto": cta["frecuencia_extracto"],
+                                   "fecha_apertura": cta["fecha_apertura"], "tiene_credito_externo": cta["tiene_credito_externo"],
+                                   "monto_credito_externo": cta["monto_credito_externo"]}
+m_clientes = pd.DataFrame(filas_cli)
+# Columnas de orden de las categorías ordinales (Power BI ordena por ellas, no alfabéticamente)
+m_clientes["orden_segmento"] = m_clientes.segmento_edad.map(
+    lambda s: 1 if "Joven" in s else (3 if "Mayor" in s else 2)).astype("int64")
+m_cuentas = pd.DataFrame(list(filas_cta.values()))
+m_cuentas["fecha_apertura"] = pd.to_datetime(m_cuentas.fecha_apertura)
+m_anios = pd.DataFrame({"anio": range(1993, 1999)})
+m_meses = pd.DataFrame({"fecha_mes": pd.date_range("1993-01-31", "1998-12-31", freq="ME")})
+m_meses["anio"] = m_meses.fecha_mes.dt.year
+m_meses["mes"] = m_meses.fecha_mes.dt.month
 
-# ------------------------------------------------------------------------------
-# 2. DIMENSIÓN CLIENTE 360 (colección FinancialMongo)
-# ------------------------------------------------------------------------------
-m_clientes = pd.DataFrame([{
-    "id_cliente": int(campo(c, "id_cliente", "_id")),
-    "sexo": campo(c, "datos_personales.sexo", "sexo"),
-    "edad_corte": campo(c, "datos_personales.edad_al_corte_1998", "edad_corte"),
-    "tipo_disposicion": campo(c, "datos_personales.tipo_disposicion", "tipo_disposicion"),
-    "calificacion_pago": str(campo(c, "evaluacion_crediticia.calificacion",
-                                   "etiqueta_buen_pagador", defecto="Sin evaluar")),
-    "tiene_prestamo": bool(campo(c, "evaluacion_crediticia.tiene_prestamo",
-                                 "tiene_prestamo", defecto=False)),
-    "id_distrito_residencia": campo(c, "distrito.id_distrito", "id_distrito"),
-    "total_ordenes_activas": campo(c, "perfil_analitico.total_ordenes_activas",
-                                   "total_ordenes_activas", defecto=0),
-} for c in db.FinancialMongo.find({}, {"ordenes_recurrentes": 0, "prestamo_asociado": 0})])
-
-m_clientes["calificacion_pago"] = m_clientes["calificacion_pago"].replace(
-    {"True": "Buen pagador", "False": "Moroso historico", "1": "Buen pagador", "0": "Moroso historico"})
-m_clientes["cliente"] = "Cliente " + m_clientes["id_cliente"].astype(str)
-m_clientes["segmento_edad"] = pd.cut(
-    m_clientes["edad_corte"], bins=[0, 25, 40, 60, 200],
-    labels=["Joven (<=25)", "Adulto joven (26-40)", "Adulto (41-60)", "Mayor (>60)"]
-).astype(str)
-
-# ------------------------------------------------------------------------------
-# 3. HECHO PRÉSTAMOS
-# ------------------------------------------------------------------------------
+# ---- Hechos ----
 m_prestamos = pd.DataFrame([{
-    "id_prestamo": int(campo(p, "id_prestamo", "_id")),
-    "id_cuenta": int(campo(p, "id_cuenta")),
-    "id_cliente": int(campo(p, "id_cliente")),
-    "id_distrito": int(campo(p, "distrito.id_distrito", "id_distrito")),
-    "fecha_otorgamiento": campo(p, "condiciones.fecha_otorgamiento", "fecha_otorgamiento"),
-    "monto_prestamo": float(campo(p, "condiciones.monto", "monto_prestamo")),
-    "plazo_meses": int(campo(p, "condiciones.plazo_meses", "plazo_meses")),
-    "pago_mensual": float(campo(p, "condiciones.cuota_mensual", "pago_mensual")),
-    "saldo_pendiente_estimado": float(campo(p, "condiciones.saldo_pendiente_estimado", "condiciones.saldo_pendiente",
-                                            "saldo_pendiente_estimado", defecto=0)),
-    "codigo_estado": campo(p, "evaluacion_riesgo.codigo_estado", "estado_prestamo"),
-    "condicion": campo(p, "evaluacion_riesgo.condicion", "condicion_prestamo"),
-    "descripcion_estado": campo(p, "evaluacion_riesgo.descripcion", "descripcion_estado"),
+    "id_prestamo": p["id_prestamo"], "id_cuenta": p["id_cuenta"], "id_cliente": p["id_cliente"], "id_distrito": p["id_distrito"],
+    "fecha_otorgamiento": p["condiciones"]["fecha_otorgamiento"], "anio": p["anio"], "monto_prestamo": p["condiciones"]["monto"],
+    "plazo_meses": p["condiciones"]["plazo_meses"], "pago_mensual": p["condiciones"]["cuota_mensual"],
+    "saldo_pendiente_estimado": p["condiciones"]["saldo_pendiente_estimado"],
+    "meses_transcurridos_al_corte": p["condiciones"]["meses_transcurridos_al_corte"],
+    "codigo_estado": p["evaluacion_riesgo"]["codigo_estado"], "condicion": p["evaluacion_riesgo"]["condicion"],
+    "descripcion_estado": p["evaluacion_riesgo"]["descripcion"],
+    "saldo_promedio_previo": p["capacidad_pago"]["saldo_promedio_previo"],
+    "ratio_cuota_saldo_previo": p["capacidad_pago"]["ratio_cuota_saldo_previo"],
+    "banda_capacidad": p["capacidad_pago"]["banda_capacidad"],
 } for p in db.prestamos.find({})])
+m_prestamos["fecha_otorgamiento"] = pd.to_datetime(m_prestamos.fecha_otorgamiento)
+m_prestamos["orden_banda"] = m_prestamos.banda_capacidad.map({"Baja": 1, "Media-baja": 2, "Media-alta": 3, "Alta": 4}).astype("int64")
 
-m_prestamos["fecha_otorgamiento"] = pd.to_datetime(m_prestamos["fecha_otorgamiento"])
-m_prestamos["anio"] = m_prestamos["fecha_otorgamiento"].dt.year
-
-# ------------------------------------------------------------------------------
-# 4. HECHO ÓRDENES PERMANENTES
-# ------------------------------------------------------------------------------
 m_ordenes = pd.DataFrame([{
-    "id_orden": int(campo(o, "id_orden", "_id")),
-    "id_cuenta": int(campo(o, "id_cuenta")),
-    "id_cliente": int(campo(o, "id_cliente")),
-    "id_distrito": campo(o, "id_distrito"),
-    "k_symbol": campo(o, "categoria_pago.codigo", "k_symbol"),
-    "categoria_orden": campo(o, "categoria_pago.descripcion", "categoria_orden"),
-    "monto_orden": float(campo(o, "monto_mensual", "monto_orden")),
+    "id_orden": o["id_orden"], "id_cuenta": o["id_cuenta"], "id_cliente": o["id_cliente"], "id_distrito": o["id_distrito"],
+    "k_symbol": o["categoria_pago"]["codigo"], "categoria_orden": o["categoria_pago"]["descripcion"], "monto_orden": o["monto_mensual"],
 } for o in db.ordenes.find({})])
 
-# ------------------------------------------------------------------------------
-# 5. HECHOS DE TRANSACCIONES (agregados en MongoDB)
-# ------------------------------------------------------------------------------
-pipeline_anual = [
-    {"$group": {
-        "_id": {"id_cuenta": "$id_cuenta", "anio": "$anio",
-                "tipo_operacion": "$tipo_operacion_traducido"},
-        "id_cliente": {"$first": "$id_cliente"},
-        "id_distrito": {"$first": "$id_distrito"},
-        "canal": {"$first": "$canal"},
-        "num_transacciones": {"$sum": 1},
-        "monto_total": {"$sum": "$monto_transaccion"},
-        "suma_cuadrados": {"$sum": {"$multiply": ["$monto_transaccion", "$monto_transaccion"]}},
-        "saldo_promedio": {"$avg": "$saldo_cuenta"},
-    }},
-]
-m_trans_anual = pd.json_normalize(
-    list(db.transacciones.aggregate(pipeline_anual, allowDiskUse=True)))
+# Agregado anual por cuenta y categoría, calculado DENTRO de MongoDB
+m_trans_anual = pd.json_normalize(list(db.transacciones.aggregate([
+    {"$group": {"_id": {"id_cuenta": "$id_cuenta", "anio": "$anio", "categoria_analitica": "$tipo_operacion_traducido"},
+                "id_cliente": {"$first": "$id_cliente"}, "id_distrito": {"$first": "$id_distrito"},
+                "num_transacciones": {"$sum": 1}, "monto_total": {"$sum": "$monto_transaccion"},
+                "suma_cuadrados": {"$sum": {"$multiply": ["$monto_transaccion", "$monto_transaccion"]}},
+                "saldo_promedio": {"$avg": "$saldo_cuenta"}}}], allowDiskUse=True)))
 m_trans_anual.columns = [c.replace("_id.", "") for c in m_trans_anual.columns]
 
-pipeline_saldo = [
-    {"$sort": {"id_cuenta": 1, "fecha": -1, "_id": -1}},
-    {"$group": {
-        "_id": "$id_cuenta",
-        "id_cliente": {"$first": "$id_cliente"},
-        "id_distrito": {"$first": "$id_distrito"},
-        "fecha_ultimo_movimiento": {"$first": "$fecha"},
-        "saldo_final": {"$first": "$saldo_cuenta"},
-    }},
-]
-m_saldo_cuenta = pd.DataFrame(
-    list(db.transacciones.aggregate(pipeline_saldo, allowDiskUse=True))
-).rename(columns={"_id": "id_cuenta"})
-m_saldo_cuenta["fecha_ultimo_movimiento"] = pd.to_datetime(m_saldo_cuenta["fecha_ultimo_movimiento"])
+m_saldo_mensual = pd.DataFrame(list(db.saldos_mensuales.find({}, {"_id": 0})))
+m_saldo_mensual["fecha_mes"] = pd.to_datetime(dict(year=m_saldo_mensual.anio, month=m_saldo_mensual.mes, day=1)) + pd.offsets.MonthEnd(0)
+m_saldo_mensual["en_sobregiro"] = m_saldo_mensual.en_sobregiro.astype(bool)
 
-# ------------------------------------------------------------------------------
-# 6. DISTRITO DE LA CUENTA en cada hecho (si el documento no lo trae, se hereda
-#    de la cuenta a través de préstamos/órdenes o, en último caso, del cliente).
-#    Igual que en Kimball: el distrito del hecho es el de la CUENTA.
-# ------------------------------------------------------------------------------
-distrito_cuenta = (
-    pd.concat([m_prestamos[["id_cuenta", "id_distrito"]],
-               m_ordenes[["id_cuenta", "id_distrito"]],
-               m_trans_anual[["id_cuenta", "id_distrito"]] if "id_distrito" in m_trans_anual else None])
-    .dropna().drop_duplicates("id_cuenta").set_index("id_cuenta")["id_distrito"]
-)
-distrito_cliente = m_clientes.set_index("id_cliente")["id_distrito_residencia"]
-for df in (m_ordenes, m_trans_anual, m_saldo_cuenta):
-    if "id_distrito" not in df:
-        df["id_distrito"] = None
-    df["id_distrito"] = (df["id_distrito"]
-                         .fillna(df["id_cuenta"].map(distrito_cuenta))
-                         .fillna(df["id_cliente"].map(distrito_cliente))
-                         .astype(int))
+m_recomendaciones = pd.DataFrame([{
+    "id_cuenta": r["id_cuenta"], "id_cliente": r["id_cliente"], "modelo": r["modelo"],
+    "recomendacion_1": (r["recomendaciones"] + [None] * 3)[0], "recomendacion_2": (r["recomendaciones"] + [None] * 3)[1],
+    "recomendacion_3": (r["recomendaciones"] + [None] * 3)[2],
+    "prestamo_cuota_maxima": r["prestamo_cuota_maxima"], "prestamo_monto_maximo_36m": r["prestamo_monto_maximo_36m"],
+} for r in db.recomendaciones.find({})])
 
-# ------------------------------------------------------------------------------
-# 7. DIMENSIÓN AÑO
-# ------------------------------------------------------------------------------
-m_anios = pd.DataFrame({"anio": range(1993, 1999)})
-
-# El puente Python de Power BI no reconoce el tipo StringDtype de pandas >= 3.
-for df in (m_distritos, m_clientes, m_prestamos, m_ordenes, m_trans_anual, m_saldo_cuenta):
+# El puente Python de Power BI no reconoce StringDtype (pandas >= 3) ni fechas en microsegundos
+for df in (m_meses, m_distritos, m_clientes, m_cuentas, m_prestamos, m_ordenes, m_trans_anual, m_saldo_mensual, m_recomendaciones):
     for col in df.columns:
         if pd.api.types.is_string_dtype(df[col]) and not pd.api.types.is_object_dtype(df[col]):
             df[col] = df[col].astype(object)
+        elif pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].astype("datetime64[ns]")   # resolución que espera el puente de Power BI
 
 client.close()
 
 print("Tablas MongoDB listas para Power BI:")
-for nombre in ["m_distritos", "m_clientes", "m_anios", "m_prestamos",
-               "m_ordenes", "m_trans_anual", "m_saldo_cuenta"]:
-    print(f"  - {nombre:<15} {len(globals()[nombre]):>8,} filas")
+for nombre in ["m_distritos", "m_clientes", "m_cuentas", "m_anios", "m_meses", "m_prestamos", "m_ordenes",
+               "m_trans_anual", "m_saldo_mensual", "m_recomendaciones"]:
+    print(f"  - {nombre:<18} {len(globals()[nombre]):>8,} filas")
