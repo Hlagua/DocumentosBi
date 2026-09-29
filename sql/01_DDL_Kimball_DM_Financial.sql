@@ -113,6 +113,19 @@ CREATE TABLE Dim_Cliente (
 );
 GO
 
+-- Puente_Cuenta_Cliente: resuelve la relación multivaluada cuenta-cliente (disps).
+-- Los hechos se unen solo al titular; esta tabla permite llegar a los 869 cotitulares
+-- (Carta v8, sección 9.2). Una fila por cliente: 4,500 OWNER + 869 DISPONENT.
+CREATE TABLE Puente_Cuenta_Cliente (
+    sk_cuenta INT NOT NULL,
+    sk_cliente INT NOT NULL UNIQUE,              -- En la fuente cada cliente tiene una sola cuenta
+    tipo_disposicion VARCHAR(20) NOT NULL,       -- OWNER / DISPONENT
+    CONSTRAINT PK_Puente_Cuenta_Cliente PRIMARY KEY (sk_cuenta, sk_cliente),
+    CONSTRAINT FK_Puente_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+    CONSTRAINT FK_Puente_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente)
+);
+GO
+
 -- ==============================================================================
 -- 2. DIMENSIONES DE CATÁLOGO (SCD 0)
 -- ==============================================================================

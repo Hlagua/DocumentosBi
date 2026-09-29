@@ -256,6 +256,6 @@ Los scripts anteriores (`completar_transacciones.py`, `imputar_final.py`, `20_wr
 
 | # | Pendiente | Motivo |
 | :-: | :--- | :--- |
-| 1 | Actualizar los documentos 05 y 08, que citan la imputación anterior del distrito 69 (5.00 / 3,736, "K-Means Clustered") | Cambio de método de esta etapa |
+| 1 | Actualizar el documento 08, que cita la imputación anterior del distrito 69 (5.00 / 3,736, "K-Means Clustered"). El 05 ya está actualizado | Cambio de método de esta etapa |
 | 2 | Decidir una única segmentación de edad para `Dim_Cliente` y el dashboard | Hoy conviven 3 grupos (Informe 04) y 4 grupos (P6) |
-| 3 | Proyecto Power BI Kimball, medidas DAX y réplica MongoDB | Siguen pendientes desde el Informe 09 |
+| 3 | Proyecto Power BI Kimball y medidas DAX | Siguen pendientes desde el Informe 09. La réplica MongoDB ya está hecha (Informe 05 v2) |

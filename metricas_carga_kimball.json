@@ -1,8 +1,8 @@
 {
-  "id_ejecucion": "20260928_174907",
+  "id_ejecucion": "20260928_214018",
   "fuente": "relational.fel.cvut.cz/Financial_ijs",
   "destino": "(localdb)\\MSSQLLocalDB/DM_Financial_Kimball_v2",
-  "duracion_segundos": 88.5,
+  "duracion_segundos": 124.2,
   "filas_extraidas": {
     "districts": 77,
     "accounts": 4500,
@@ -19,6 +19,7 @@
     "Dim_Distrito": 77,
     "Dim_Cuenta": 4500,
     "Dim_Cliente": 5369,
+    "Puente_Cuenta_Cliente": 5369,
     "Dim_Estado_Prestamo": 4,
     "Dim_Operacion": 15,
     "Dim_Orden": 5,
@@ -62,6 +63,12 @@
       "prueba": "1. Conteo districts -> Dim_Distrito",
       "esperado": "77",
       "obtenido": "77",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "1. Conteo disps -> Puente_Cuenta_Cliente",
+      "esperado": "5369",
+      "obtenido": "5369",
       "resultado": "OK"
     },
     {
@@ -161,8 +168,8 @@
       "resultado": "OK"
     }
   ],
-  "pruebas_ok": 22,
-  "pruebas_total": 22,
+  "pruebas_ok": 23,
+  "pruebas_total": 23,
   "anomalias_fuente": [
     {
       "tabla": "districts",

@@ -1,0 +1,3295 @@
+{
+  "preparacion": {
+    "punto_1_dataframes": {
+      "df_transacciones_completado": 1056320,
+      "df_ordenes_clean": 6471,
+      "df_prestamos_clean": 682,
+      "df_cliente_consolidado_clean": 5369
+    },
+    "punto_2_organizar": {
+      "unidad": "cuenta con su titular (OWNER)",
+      "cuentas": 4500,
+      "cotitulares_excluidos": 869,
+      "meses_vida": {
+        "min": 12.1,
+        "50%": 35.9,
+        "max": 72.0
+      }
+    },
+    "punto_3_clasificar": {
+      "productos": {
+        "SERVICIOS_HOGAR": "Pago domiciliado de servicios del hogar (SIPO)",
+        "TRANSF_SALIENTE": "Transferencias salientes a otros bancos",
+        "INGRESO_TRANSF": "Ingresos recibidos por transferencia",
+        "RETIRO_TARJETA": "Retiros con tarjeta en cajero",
+        "PENSION": "Abono de pensión (DUCHOD)",
+        "PRESTAMO": "Préstamo del banco",
+        "SEGURO": "Pago de pólizas de seguro (POJISTNE)",
+        "LEASING": "Orden permanente de leasing"
+      },
+      "transacciones_por_clase": {
+        "NO_ES_PRODUCTO": 785490,
+        "SERVICIOS_HOGAR": 128166,
+        "TRANSF_SALIENTE": 50093,
+        "INGRESO_TRANSF": 34888,
+        "PENSION": 30338,
+        "SEGURO": 19309,
+        "RETIRO_TARJETA": 8036
+      },
+      "conceptos_que_no_son_producto": {
+        "RETIRO_EFECTIVO": 274623,
+        "UROK": 183114,
+        "DEPOSITO_EFECTIVO": 156743,
+        "SLUZBY": 155832,
+        "UVER": 13601,
+        "SANKC. UROK": 1577
+      },
+      "motivo_exclusion": {
+        "DEPOSITO_EFECTIVO / RETIRO_EFECTIVO": "Los usan las 4,500 cuentas: no distinguen a nadie",
+        "UROK / SLUZBY / SANKC. UROK": "Los genera el banco automáticamente, no los elige el cliente",
+        "UVER": "Es la cuota del préstamo: el producto PRESTAMO se toma de loans"
+      },
+      "cuentas_por_producto": {
+        "SERVICIOS_HOGAR": 3439,
+        "TRANSF_SALIENTE": 1197,
+        "INGRESO_TRANSF": 866,
+        "RETIRO_TARJETA": 807,
+        "PENSION": 740,
+        "PRESTAMO": 682,
+        "SEGURO": 532,
+        "LEASING": 341
+      }
+    },
+    "punto_4_filtrar": {
+      "celdas_observadas": 8604,
+      "celdas_posibles": 36000,
+      "dispersion": 0.761,
+      "asimetria_monto_mensual_bruto": 4.39,
+      "asimetria_tras_log": -0.986,
+      "escala_rating": {
+        "formula": "1 + 4 * (ln(1+monto) - min) / (max - min)",
+        "ln_min": 0.6024,
+        "ln_max": 10.9059
+      },
+      "cuentas_por_numero_de_productos": {
+        "0": 493,
+        "1": 1037,
+        "2": 1843,
+        "3": 717,
+        "4": 327,
+        "5": 76,
+        "6": 7
+      },
+      "cuentas_con_2_o_mas_productos": 2970,
+      "monto_mensual_mediano_por_producto": {
+        "INGRESO_TRANSF": 3965.92,
+        "LEASING": 1951.0,
+        "PENSION": 5497.21,
+        "PRESTAMO": 3934.0,
+        "RETIRO_TARJETA": 393.03,
+        "SEGURO": 547.29,
+        "SERVICIOS_HOGAR": 2859.9,
+        "TRANSF_SALIENTE": 1409.44
+      }
+    },
+    "productos": {
+      "SERVICIOS_HOGAR": {
+        "descripcion": "Pago domiciliado de servicios del hogar (SIPO)",
+        "direccion": "Salida",
+        "canal": "Transferencia saliente",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 1,
+        "regularidad_mensual": 0.874,
+        "monto_mensual_mediano": 2859.9,
+        "cuentas": 3439,
+        "penetracion": 0.7642
+      },
+      "TRANSF_SALIENTE": {
+        "descripcion": "Transferencias salientes a otros bancos",
+        "direccion": "Salida",
+        "canal": "Transferencia saliente",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 0,
+        "regularidad_mensual": 0.876,
+        "monto_mensual_mediano": 1409.44,
+        "cuentas": 1197,
+        "penetracion": 0.266
+      },
+      "INGRESO_TRANSF": {
+        "descripcion": "Ingresos recibidos por transferencia",
+        "direccion": "Entrada",
+        "canal": "Transferencia entrante",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 0,
+        "regularidad_mensual": 0.995,
+        "monto_mensual_mediano": 3965.92,
+        "cuentas": 866,
+        "penetracion": 0.1924
+      },
+      "RETIRO_TARJETA": {
+        "descripcion": "Retiros con tarjeta en cajero",
+        "direccion": "Salida",
+        "canal": "Retiro con tarjeta",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 0,
+        "regularidad_mensual": 0.124,
+        "monto_mensual_mediano": 393.03,
+        "cuentas": 807,
+        "penetracion": 0.1793
+      },
+      "PENSION": {
+        "descripcion": "Abono de pensión (DUCHOD)",
+        "direccion": "Entrada",
+        "canal": "Transferencia entrante",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 1,
+        "regularidad_mensual": 0.995,
+        "monto_mensual_mediano": 5497.21,
+        "cuentas": 740,
+        "penetracion": 0.1644
+      },
+      "PRESTAMO": {
+        "descripcion": "Préstamo del banco",
+        "direccion": "Salida",
+        "canal": "Orden o contrato",
+        "contraparte": "Banco",
+        "es_credito": 1,
+        "es_recurrente_fijo": 1,
+        "regularidad_mensual": 1.0,
+        "monto_mensual_mediano": 3934.0,
+        "cuentas": 682,
+        "penetracion": 0.1516
+      },
+      "SEGURO": {
+        "descripcion": "Pago de pólizas de seguro (POJISTNE)",
+        "direccion": "Salida",
+        "canal": "Transferencia saliente",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 0,
+        "es_recurrente_fijo": 1,
+        "regularidad_mensual": 0.875,
+        "monto_mensual_mediano": 547.29,
+        "cuentas": 532,
+        "penetracion": 0.1182
+      },
+      "LEASING": {
+        "descripcion": "Orden permanente de leasing",
+        "direccion": "Salida",
+        "canal": "Orden o contrato",
+        "contraparte": "Entidad externa registrada",
+        "es_credito": 1,
+        "es_recurrente_fijo": 1,
+        "regularidad_mensual": 1.0,
+        "monto_mensual_mediano": 1951.0,
+        "cuentas": 341,
+        "penetracion": 0.0758
+      }
+    }
+  },
+  "slope_one": {
+    "matriz_desviaciones": {
+      "SERVICIOS_HOGAR": {
+        "SERVICIOS_HOGAR": 0.0,
+        "TRANSF_SALIENTE": 0.1669,
+        "INGRESO_TRANSF": -0.5141,
+        "RETIRO_TARJETA": 0.8811,
+        "PENSION": -0.3445,
+        "PRESTAMO": 0.0247,
+        "SEGURO": 0.5678,
+        "LEASING": 0.2901
+      },
+      "TRANSF_SALIENTE": {
+        "SERVICIOS_HOGAR": -0.1669,
+        "TRANSF_SALIENTE": 0.0,
+        "INGRESO_TRANSF": -0.896,
+        "RETIRO_TARJETA": 0.4993,
+        "PENSION": 0.0,
+        "PRESTAMO": -0.3241,
+        "SEGURO": 0.2497,
+        "LEASING": -0.1885
+      },
+      "INGRESO_TRANSF": {
+        "SERVICIOS_HOGAR": 0.5141,
+        "TRANSF_SALIENTE": 0.896,
+        "INGRESO_TRANSF": 0.0,
+        "RETIRO_TARJETA": 1.8263,
+        "PENSION": 0.0,
+        "PRESTAMO": 0.7584,
+        "SEGURO": 1.225,
+        "LEASING": 0.9564
+      },
+      "RETIRO_TARJETA": {
+        "SERVICIOS_HOGAR": -0.8811,
+        "TRANSF_SALIENTE": -0.4993,
+        "INGRESO_TRANSF": -1.8263,
+        "RETIRO_TARJETA": 0.0,
+        "PENSION": -1.3949,
+        "PRESTAMO": -1.0158,
+        "SEGURO": -0.0903,
+        "LEASING": -0.7529
+      },
+      "PENSION": {
+        "SERVICIOS_HOGAR": 0.3445,
+        "TRANSF_SALIENTE": 0.0,
+        "INGRESO_TRANSF": 0.0,
+        "RETIRO_TARJETA": 1.3949,
+        "PENSION": 0.0,
+        "PRESTAMO": 0.0,
+        "SEGURO": 0.0,
+        "LEASING": 0.0
+      },
+      "PRESTAMO": {
+        "SERVICIOS_HOGAR": -0.0247,
+        "TRANSF_SALIENTE": 0.3241,
+        "INGRESO_TRANSF": -0.7584,
+        "RETIRO_TARJETA": 1.0158,
+        "PENSION": 0.0,
+        "PRESTAMO": 0.0,
+        "SEGURO": 0.7005,
+        "LEASING": 0.0
+      },
+      "SEGURO": {
+        "SERVICIOS_HOGAR": -0.5678,
+        "TRANSF_SALIENTE": -0.2497,
+        "INGRESO_TRANSF": -1.225,
+        "RETIRO_TARJETA": 0.0903,
+        "PENSION": 0.0,
+        "PRESTAMO": -0.7005,
+        "SEGURO": 0.0,
+        "LEASING": -0.5265
+      },
+      "LEASING": {
+        "SERVICIOS_HOGAR": -0.2901,
+        "TRANSF_SALIENTE": 0.1885,
+        "INGRESO_TRANSF": -0.9564,
+        "RETIRO_TARJETA": 0.7529,
+        "PENSION": 0.0,
+        "PRESTAMO": 0.0,
+        "SEGURO": 0.5265,
+        "LEASING": 0.0
+      }
+    },
+    "matriz_soportes": {
+      "SERVICIOS_HOGAR": {
+        "SERVICIOS_HOGAR": 3439,
+        "TRANSF_SALIENTE": 1197,
+        "INGRESO_TRANSF": 690,
+        "RETIRO_TARJETA": 539,
+        "PENSION": 740,
+        "PRESTAMO": 468,
+        "SEGURO": 532,
+        "LEASING": 208
+      },
+      "TRANSF_SALIENTE": {
+        "SERVICIOS_HOGAR": 1197,
+        "TRANSF_SALIENTE": 1197,
+        "INGRESO_TRANSF": 307,
+        "RETIRO_TARJETA": 225,
+        "PENSION": 0,
+        "PRESTAMO": 233,
+        "SEGURO": 531,
+        "LEASING": 101
+      },
+      "INGRESO_TRANSF": {
+        "SERVICIOS_HOGAR": 690,
+        "TRANSF_SALIENTE": 307,
+        "INGRESO_TRANSF": 866,
+        "RETIRO_TARJETA": 130,
+        "PENSION": 0,
+        "PRESTAMO": 210,
+        "SEGURO": 137,
+        "LEASING": 71
+      },
+      "RETIRO_TARJETA": {
+        "SERVICIOS_HOGAR": 539,
+        "TRANSF_SALIENTE": 225,
+        "INGRESO_TRANSF": 130,
+        "RETIRO_TARJETA": 807,
+        "PENSION": 18,
+        "PRESTAMO": 148,
+        "SEGURO": 91,
+        "LEASING": 81
+      },
+      "PENSION": {
+        "SERVICIOS_HOGAR": 740,
+        "TRANSF_SALIENTE": 0,
+        "INGRESO_TRANSF": 0,
+        "RETIRO_TARJETA": 18,
+        "PENSION": 740,
+        "PRESTAMO": 0,
+        "SEGURO": 0,
+        "LEASING": 0
+      },
+      "PRESTAMO": {
+        "SERVICIOS_HOGAR": 468,
+        "TRANSF_SALIENTE": 233,
+        "INGRESO_TRANSF": 210,
+        "RETIRO_TARJETA": 148,
+        "PENSION": 0,
+        "PRESTAMO": 682,
+        "SEGURO": 114,
+        "LEASING": 0
+      },
+      "SEGURO": {
+        "SERVICIOS_HOGAR": 532,
+        "TRANSF_SALIENTE": 531,
+        "INGRESO_TRANSF": 137,
+        "RETIRO_TARJETA": 91,
+        "PENSION": 0,
+        "PRESTAMO": 114,
+        "SEGURO": 532,
+        "LEASING": 50
+      },
+      "LEASING": {
+        "SERVICIOS_HOGAR": 208,
+        "TRANSF_SALIENTE": 101,
+        "INGRESO_TRANSF": 71,
+        "RETIRO_TARJETA": 81,
+        "PENSION": 0,
+        "PRESTAMO": 0,
+        "SEGURO": 50,
+        "LEASING": 341
+      }
+    },
+    "antisimetria_max_error": 0.0,
+    "trazabilidad": {
+      "cliente_2": {
+        "id_cuenta": 2,
+        "productos_conocidos": {
+          "SERVICIOS_HOGAR": 4.1884,
+          "INGRESO_TRANSF": 4.6467,
+          "PRESTAMO": 3.92
+        },
+        "predicciones": {
+          "PENSION": {
+            "prediccion": 4.5329,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 4.1884,
+                "b_ji": 0.3445,
+                "soporte": 740
+              }
+            ]
+          },
+          "TRANSF_SALIENTE": {
+            "prediccion": 3.9165,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 4.1884,
+                "b_ji": -0.1669,
+                "soporte": 1197
+              },
+              {
+                "desde": "INGRESO_TRANSF",
+                "r_i": 4.6467,
+                "b_ji": -0.896,
+                "soporte": 307
+              },
+              {
+                "desde": "PRESTAMO",
+                "r_i": 3.92,
+                "b_ji": -0.3241,
+                "soporte": 233
+              }
+            ]
+          },
+          "LEASING": {
+            "prediccion": 3.8454,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 4.1884,
+                "b_ji": -0.2901,
+                "soporte": 208
+              },
+              {
+                "desde": "INGRESO_TRANSF",
+                "r_i": 4.6467,
+                "b_ji": -0.9564,
+                "soporte": 71
+              }
+            ]
+          },
+          "SEGURO": {
+            "prediccion": 3.5274,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 4.1884,
+                "b_ji": -0.5678,
+                "soporte": 532
+              },
+              {
+                "desde": "INGRESO_TRANSF",
+                "r_i": 4.6467,
+                "b_ji": -1.225,
+                "soporte": 137
+              },
+              {
+                "desde": "PRESTAMO",
+                "r_i": 3.92,
+                "b_ji": -0.7005,
+                "soporte": 114
+              }
+            ]
+          },
+          "RETIRO_TARJETA": {
+            "prediccion": 3.1568,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 4.1884,
+                "b_ji": -0.8811,
+                "soporte": 539
+              },
+              {
+                "desde": "INGRESO_TRANSF",
+                "r_i": 4.6467,
+                "b_ji": -1.8263,
+                "soporte": 130
+              },
+              {
+                "desde": "PRESTAMO",
+                "r_i": 3.92,
+                "b_ji": -1.0158,
+                "soporte": 148
+              }
+            ]
+          }
+        }
+      },
+      "cliente_45": {
+        "id_cuenta": 37,
+        "productos_conocidos": {
+          "SERVICIOS_HOGAR": 3.7121,
+          "TRANSF_SALIENTE": 3.7544,
+          "PRESTAMO": 4.0959,
+          "SEGURO": 2.4847
+        },
+        "predicciones": {
+          "INGRESO_TRANSF": {
+            "prediccion": 4.3686,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 3.7121,
+                "b_ji": 0.5141,
+                "soporte": 690
+              },
+              {
+                "desde": "TRANSF_SALIENTE",
+                "r_i": 3.7544,
+                "b_ji": 0.896,
+                "soporte": 307
+              },
+              {
+                "desde": "PRESTAMO",
+                "r_i": 4.0959,
+                "b_ji": 0.7584,
+                "soporte": 210
+              },
+              {
+                "desde": "SEGURO",
+                "r_i": 2.4847,
+                "b_ji": 1.225,
+                "soporte": 137
+              }
+            ]
+          },
+          "PENSION": {
+            "prediccion": 4.0566,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 3.7121,
+                "b_ji": 0.3445,
+                "soporte": 740
+              }
+            ]
+          },
+          "LEASING": {
+            "prediccion": 3.5113,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 3.7121,
+                "b_ji": -0.2901,
+                "soporte": 208
+              },
+              {
+                "desde": "TRANSF_SALIENTE",
+                "r_i": 3.7544,
+                "b_ji": 0.1885,
+                "soporte": 101
+              },
+              {
+                "desde": "SEGURO",
+                "r_i": 2.4847,
+                "b_ji": 0.5265,
+                "soporte": 50
+              }
+            ]
+          },
+          "RETIRO_TARJETA": {
+            "prediccion": 2.9233,
+            "terminos": [
+              {
+                "desde": "SERVICIOS_HOGAR",
+                "r_i": 3.7121,
+                "b_ji": -0.8811,
+                "soporte": 539
+              },
+              {
+                "desde": "TRANSF_SALIENTE",
+                "r_i": 3.7544,
+                "b_ji": -0.4993,
+                "soporte": 225
+              },
+              {
+                "desde": "PRESTAMO",
+                "r_i": 4.0959,
+                "b_ji": -1.0158,
+                "soporte": 148
+              },
+              {
+                "desde": "SEGURO",
+                "r_i": 2.4847,
+                "b_ji": -0.0903,
+                "soporte": 91
+              }
+            ]
+          }
+        }
+      }
+    },
+    "validacion_5fold": {
+      "celdas": 8604,
+      "cobertura_slope_one": 0.7825,
+      "modelos": {
+        "slope_one": {
+          "mae": 0.3303,
+          "mae_desv": 0.0064,
+          "rmse": 0.472,
+          "mae_por_pliegue": [
+            0.3257,
+            0.3379,
+            0.3319,
+            0.334,
+            0.3222
+          ]
+        },
+        "media_global": {
+          "mae": 0.393,
+          "mae_desv": 0.0044,
+          "rmse": 0.5357,
+          "mae_por_pliegue": [
+            0.3977,
+            0.3904,
+            0.3871,
+            0.3965,
+            0.3934
+          ],
+          "mejora_slope_one_pct": 15.95
+        },
+        "media_producto": {
+          "mae": 0.2853,
+          "mae_desv": 0.0033,
+          "rmse": 0.3899,
+          "mae_por_pliegue": [
+            0.2811,
+            0.2849,
+            0.2855,
+            0.2903,
+            0.2845
+          ],
+          "mejora_slope_one_pct": -15.77
+        },
+        "media_cliente": {
+          "mae": 0.4867,
+          "mae_desv": 0.0056,
+          "rmse": 0.647,
+          "mae_por_pliegue": [
+            0.494,
+            0.489,
+            0.4841,
+            0.4875,
+            0.479
+          ],
+          "mejora_slope_one_pct": 32.13
+        },
+        "sesgos": {
+          "mae": 0.3453,
+          "mae_desv": 0.0052,
+          "rmse": 0.482,
+          "mae_por_pliegue": [
+            0.341,
+            0.3507,
+            0.3451,
+            0.3501,
+            0.3394
+          ],
+          "mejora_slope_one_pct": 4.34
+        }
+      },
+      "mae_slope_one_por_producto": {
+        "SERVICIOS_HOGAR": 0.312,
+        "TRANSF_SALIENTE": 0.5141,
+        "INGRESO_TRANSF": 0.2576,
+        "RETIRO_TARJETA": 0.3706,
+        "PENSION": 0.093,
+        "PRESTAMO": 0.258,
+        "SEGURO": 0.5852,
+        "LEASING": 0.2241
+      }
+    },
+    "ranking": {
+      "Slope One": {
+        "modelo": "Slope One",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.2805,
+        "hit_3": 0.6542,
+        "mrr": 0.514,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.2112,
+          "hit_3": 0.6596,
+          "mrr": 0.4837
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.9485,
+          "LEASING": 0.0,
+          "PENSION": 0.0028,
+          "PRESTAMO": 0.0048,
+          "RETIRO_TARJETA": 0.0,
+          "SEGURO": 0.0,
+          "SERVICIOS_HOGAR": 0.4545,
+          "TRANSF_SALIENTE": 0.0
+        },
+        "productos_distintos_en_top1": 5,
+        "top1_mas_frecuente": {
+          "INGRESO_TRANSF": 1954,
+          "SERVICIOS_HOGAR": 609,
+          "PENSION": 320
+        },
+        "vs_popularidad": {
+          "gana_modelo": 223,
+          "gana_popularidad": 1127,
+          "p_valor": 1.707e-145
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 223,
+          "gana_popularidad": 28,
+          "p_valor": 6.723e-39
+        }
+      },
+      "Popularidad": {
+        "modelo": "Popularidad",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.5848,
+        "hit_3": 0.7741,
+        "mrr": 0.7057,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.0631,
+          "hit_3": 0.4901,
+          "mrr": 0.3358
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.2405,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0191,
+          "RETIRO_TARJETA": 0.0373,
+          "SEGURO": 0.0,
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 1.0
+        },
+        "productos_distintos_en_top1": 5,
+        "top1_mas_frecuente": {
+          "SERVICIOS_HOGAR": 1412,
+          "TRANSF_SALIENTE": 1218,
+          "INGRESO_TRANSF": 289
+        }
+      }
+    }
+  },
+  "item_item": {
+    "adopcion": {
+      "coseno_binario": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 0.59,
+          "INGRESO_TRANSF": 0.3998,
+          "RETIRO_TARJETA": 0.3235,
+          "PENSION": 0.4639,
+          "PRESTAMO": 0.3056,
+          "SEGURO": 0.3933,
+          "LEASING": 0.1921
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 0.59,
+          "TRANSF_SALIENTE": 1.0,
+          "INGRESO_TRANSF": 0.3015,
+          "RETIRO_TARJETA": 0.2289,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.2579,
+          "SEGURO": 0.6654,
+          "LEASING": 0.1581
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.3998,
+          "TRANSF_SALIENTE": 0.3015,
+          "INGRESO_TRANSF": 1.0,
+          "RETIRO_TARJETA": 0.1555,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.2733,
+          "SEGURO": 0.2018,
+          "LEASING": 0.1307
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": 0.3235,
+          "TRANSF_SALIENTE": 0.2289,
+          "INGRESO_TRANSF": 0.1555,
+          "RETIRO_TARJETA": 1.0,
+          "PENSION": 0.0233,
+          "PRESTAMO": 0.1995,
+          "SEGURO": 0.1389,
+          "LEASING": 0.1544
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.4639,
+          "TRANSF_SALIENTE": 0.0,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.0233,
+          "PENSION": 1.0,
+          "PRESTAMO": 0.0,
+          "SEGURO": 0.0,
+          "LEASING": 0.0
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.3056,
+          "TRANSF_SALIENTE": 0.2579,
+          "INGRESO_TRANSF": 0.2733,
+          "RETIRO_TARJETA": 0.1995,
+          "PENSION": 0.0,
+          "PRESTAMO": 1.0,
+          "SEGURO": 0.1893,
+          "LEASING": 0.0
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 0.3933,
+          "TRANSF_SALIENTE": 0.6654,
+          "INGRESO_TRANSF": 0.2018,
+          "RETIRO_TARJETA": 0.1389,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1893,
+          "SEGURO": 1.0,
+          "LEASING": 0.1174
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.1921,
+          "TRANSF_SALIENTE": 0.1581,
+          "INGRESO_TRANSF": 0.1307,
+          "RETIRO_TARJETA": 0.1544,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0,
+          "SEGURO": 0.1174,
+          "LEASING": 1.0
+        }
+      },
+      "pearson_phi": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 0.3344,
+          "INGRESO_TRANSF": 0.0374,
+          "RETIRO_TARJETA": -0.1061,
+          "PENSION": 0.2464,
+          "PRESTAMO": -0.0777,
+          "SEGURO": 0.2034,
+          "LEASING": -0.1041
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 0.3344,
+          "TRANSF_SALIENTE": 1.0,
+          "INGRESO_TRANSF": 0.0978,
+          "RETIRO_TARJETA": 0.0136,
+          "PENSION": -0.2671,
+          "PRESTAMO": 0.0724,
+          "SEGURO": 0.6067,
+          "LEASING": 0.0196
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.0374,
+          "TRANSF_SALIENTE": 0.0978,
+          "INGRESO_TRANSF": 1.0,
+          "RETIRO_TARJETA": -0.0372,
+          "PENSION": -0.2166,
+          "PRESTAMO": 0.1238,
+          "SEGURO": 0.0604,
+          "LEASING": 0.0115
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": -0.1061,
+          "TRANSF_SALIENTE": 0.0136,
+          "INGRESO_TRANSF": -0.0372,
+          "RETIRO_TARJETA": 1.0,
+          "PENSION": -0.1793,
+          "PRESTAMO": 0.0415,
+          "SEGURO": -0.0079,
+          "LEASING": 0.0434
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.2464,
+          "TRANSF_SALIENTE": -0.2671,
+          "INGRESO_TRANSF": -0.2166,
+          "RETIRO_TARJETA": -0.1793,
+          "PENSION": 1.0,
+          "PRESTAMO": -0.1875,
+          "SEGURO": -0.1624,
+          "LEASING": -0.127
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": -0.0777,
+          "TRANSF_SALIENTE": 0.0724,
+          "INGRESO_TRANSF": 0.1238,
+          "RETIRO_TARJETA": 0.0415,
+          "PENSION": -0.1875,
+          "PRESTAMO": 1.0,
+          "SEGURO": 0.0641,
+          "LEASING": -0.121
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 0.2034,
+          "TRANSF_SALIENTE": 0.6067,
+          "INGRESO_TRANSF": 0.0604,
+          "RETIRO_TARJETA": -0.0079,
+          "PENSION": -0.1624,
+          "PRESTAMO": 0.0641,
+          "SEGURO": 1.0,
+          "LEASING": 0.0252
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": -0.1041,
+          "TRANSF_SALIENTE": 0.0196,
+          "INGRESO_TRANSF": 0.0115,
+          "RETIRO_TARJETA": 0.0434,
+          "PENSION": -0.127,
+          "PRESTAMO": -0.121,
+          "SEGURO": 0.0252,
+          "LEASING": 1.0
+        }
+      },
+      "itf": {
+        "SERVICIOS_HOGAR": 0.2689,
+        "TRANSF_SALIENTE": 1.3243,
+        "INGRESO_TRANSF": 1.6479,
+        "RETIRO_TARJETA": 1.7185,
+        "PENSION": 1.8052,
+        "PRESTAMO": 1.8868,
+        "SEGURO": 2.1352,
+        "LEASING": 2.58
+      },
+      "pares": [
+        {
+          "par": "TRANSF_SALIENTE - SEGURO",
+          "ambos": 531,
+          "coseno": 0.6654,
+          "phi": 0.6067,
+          "lift": 3.752,
+          "chi2": 1652.05,
+          "p": 0.0,
+          "p_holm": 0.0,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - TRANSF_SALIENTE",
+          "ambos": 1197,
+          "coseno": 0.59,
+          "phi": 0.3344,
+          "lift": 1.309,
+          "chi2": 501.35,
+          "p": 4.83e-111,
+          "p_holm": 1.3e-109,
+          "significativo_holm": true
+        },
+        {
+          "par": "TRANSF_SALIENTE - PENSION",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.2671,
+          "lift": 0.0,
+          "chi2": 319.32,
+          "p": 2.03e-71,
+          "p_holm": 5.28e-70,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - PENSION",
+          "ambos": 740,
+          "coseno": 0.4639,
+          "phi": 0.2464,
+          "lift": 1.309,
+          "chi2": 271.67,
+          "p": 4.9e-61,
+          "p_holm": 1.23e-59,
+          "significativo_holm": true
+        },
+        {
+          "par": "INGRESO_TRANSF - PENSION",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.2166,
+          "lift": 0.0,
+          "chi2": 209.57,
+          "p": 1.7e-47,
+          "p_holm": 4.09e-46,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - SEGURO",
+          "ambos": 532,
+          "coseno": 0.3933,
+          "phi": 0.2034,
+          "lift": 1.309,
+          "chi2": 184.66,
+          "p": 4.66e-42,
+          "p_holm": 1.07e-40,
+          "significativo_holm": true
+        },
+        {
+          "par": "PENSION - PRESTAMO",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.1875,
+          "lift": 0.0,
+          "chi2": 156.79,
+          "p": 5.68e-36,
+          "p_holm": 1.25e-34,
+          "significativo_holm": true
+        },
+        {
+          "par": "RETIRO_TARJETA - PENSION",
+          "ambos": 18,
+          "coseno": 0.0233,
+          "phi": -0.1793,
+          "lift": 0.136,
+          "chi2": 143.33,
+          "p": 4.97e-33,
+          "p_holm": 1.04e-31,
+          "significativo_holm": true
+        },
+        {
+          "par": "PENSION - SEGURO",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.1624,
+          "lift": 0.0,
+          "chi2": 117.39,
+          "p": 2.36e-27,
+          "p_holm": 4.72e-26,
+          "significativo_holm": true
+        },
+        {
+          "par": "PENSION - LEASING",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.127,
+          "lift": 0.0,
+          "chi2": 71.33,
+          "p": 3.03e-17,
+          "p_holm": 5.76e-16,
+          "significativo_holm": true
+        },
+        {
+          "par": "INGRESO_TRANSF - PRESTAMO",
+          "ambos": 210,
+          "coseno": 0.2733,
+          "phi": 0.1238,
+          "lift": 1.6,
+          "chi2": 68.09,
+          "p": 1.56e-16,
+          "p_holm": 2.8e-15,
+          "significativo_holm": true
+        },
+        {
+          "par": "PRESTAMO - LEASING",
+          "ambos": 0,
+          "coseno": 0.0,
+          "phi": -0.121,
+          "lift": 0.0,
+          "chi2": 64.64,
+          "p": 9e-16,
+          "p_holm": 1.53e-14,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - RETIRO_TARJETA",
+          "ambos": 539,
+          "coseno": 0.3235,
+          "phi": -0.1061,
+          "lift": 0.874,
+          "chi2": 49.98,
+          "p": 1.55e-12,
+          "p_holm": 2.49e-11,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - LEASING",
+          "ambos": 208,
+          "coseno": 0.1921,
+          "phi": -0.1041,
+          "lift": 0.798,
+          "chi2": 47.8,
+          "p": 4.72e-12,
+          "p_holm": 7.08e-11,
+          "significativo_holm": true
+        },
+        {
+          "par": "TRANSF_SALIENTE - INGRESO_TRANSF",
+          "ambos": 307,
+          "coseno": 0.3015,
+          "phi": 0.0978,
+          "lift": 1.333,
+          "chi2": 42.46,
+          "p": 7.21e-11,
+          "p_holm": 1.01e-09,
+          "significativo_holm": true
+        },
+        {
+          "par": "SERVICIOS_HOGAR - PRESTAMO",
+          "ambos": 468,
+          "coseno": 0.3056,
+          "phi": -0.0777,
+          "lift": 0.898,
+          "chi2": 26.64,
+          "p": 2.46e-07,
+          "p_holm": 3.19e-06,
+          "significativo_holm": true
+        },
+        {
+          "par": "TRANSF_SALIENTE - PRESTAMO",
+          "ambos": 233,
+          "coseno": 0.2579,
+          "phi": 0.0724,
+          "lift": 1.284,
+          "chi2": 23.1,
+          "p": 1.54e-06,
+          "p_holm": 1.84e-05,
+          "significativo_holm": true
+        },
+        {
+          "par": "PRESTAMO - SEGURO",
+          "ambos": 114,
+          "coseno": 0.1893,
+          "phi": 0.0641,
+          "lift": 1.414,
+          "chi2": 17.91,
+          "p": 2.31e-05,
+          "p_holm": 0.000254,
+          "significativo_holm": true
+        },
+        {
+          "par": "INGRESO_TRANSF - SEGURO",
+          "ambos": 137,
+          "coseno": 0.2018,
+          "phi": 0.0604,
+          "lift": 1.338,
+          "chi2": 15.97,
+          "p": 6.44e-05,
+          "p_holm": 0.000644,
+          "significativo_holm": true
+        },
+        {
+          "par": "RETIRO_TARJETA - LEASING",
+          "ambos": 81,
+          "coseno": 0.1544,
+          "phi": 0.0434,
+          "lift": 1.325,
+          "chi2": 8.07,
+          "p": 0.0045,
+          "p_holm": 0.0405,
+          "significativo_holm": true
+        },
+        {
+          "par": "RETIRO_TARJETA - PRESTAMO",
+          "ambos": 148,
+          "coseno": 0.1995,
+          "phi": 0.0415,
+          "lift": 1.21,
+          "chi2": 7.45,
+          "p": 0.00633,
+          "p_holm": 0.0506,
+          "significativo_holm": false
+        },
+        {
+          "par": "SERVICIOS_HOGAR - INGRESO_TRANSF",
+          "ambos": 690,
+          "coseno": 0.3998,
+          "phi": 0.0374,
+          "lift": 1.043,
+          "chi2": 6.08,
+          "p": 0.0137,
+          "p_holm": 0.0956,
+          "significativo_holm": false
+        },
+        {
+          "par": "INGRESO_TRANSF - RETIRO_TARJETA",
+          "ambos": 130,
+          "coseno": 0.1555,
+          "phi": -0.0372,
+          "lift": 0.837,
+          "chi2": 5.98,
+          "p": 0.0145,
+          "p_holm": 0.0956,
+          "significativo_holm": false
+        },
+        {
+          "par": "SEGURO - LEASING",
+          "ambos": 50,
+          "coseno": 0.1174,
+          "phi": 0.0252,
+          "lift": 1.24,
+          "chi2": 2.57,
+          "p": 0.109,
+          "p_holm": 0.545,
+          "significativo_holm": false
+        },
+        {
+          "par": "TRANSF_SALIENTE - LEASING",
+          "ambos": 101,
+          "coseno": 0.1581,
+          "phi": 0.0196,
+          "lift": 1.113,
+          "chi2": 1.56,
+          "p": 0.212,
+          "p_holm": 0.847,
+          "significativo_holm": false
+        },
+        {
+          "par": "TRANSF_SALIENTE - RETIRO_TARJETA",
+          "ambos": 225,
+          "coseno": 0.2289,
+          "phi": 0.0136,
+          "lift": 1.048,
+          "chi2": 0.75,
+          "p": 0.387,
+          "p_holm": 1.0,
+          "significativo_holm": false
+        },
+        {
+          "par": "INGRESO_TRANSF - LEASING",
+          "ambos": 71,
+          "coseno": 0.1307,
+          "phi": 0.0115,
+          "lift": 1.082,
+          "chi2": 0.49,
+          "p": 0.486,
+          "p_holm": 1.0,
+          "significativo_holm": false
+        },
+        {
+          "par": "RETIRO_TARJETA - SEGURO",
+          "ambos": 91,
+          "coseno": 0.1389,
+          "phi": -0.0079,
+          "lift": 0.954,
+          "chi2": 0.22,
+          "p": 0.638,
+          "p_holm": 1.0,
+          "significativo_holm": false
+        }
+      ]
+    },
+    "intensidad": {
+      "pearson_r": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": null,
+          "TRANSF_SALIENTE": -0.2628,
+          "INGRESO_TRANSF": 0.5459,
+          "RETIRO_TARJETA": -0.0096,
+          "PENSION": 0.0874,
+          "PRESTAMO": 0.0839,
+          "SEGURO": -0.2691,
+          "LEASING": 0.079
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": -0.2628,
+          "TRANSF_SALIENTE": null,
+          "INGRESO_TRANSF": 0.4312,
+          "RETIRO_TARJETA": -0.0561,
+          "PENSION": null,
+          "PRESTAMO": 0.1532,
+          "SEGURO": 0.2429,
+          "LEASING": -0.0005
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.5459,
+          "TRANSF_SALIENTE": 0.4312,
+          "INGRESO_TRANSF": null,
+          "RETIRO_TARJETA": 0.1675,
+          "PENSION": null,
+          "PRESTAMO": 0.8897,
+          "SEGURO": 0.3729,
+          "LEASING": 0.8531
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": -0.0096,
+          "TRANSF_SALIENTE": -0.0561,
+          "INGRESO_TRANSF": 0.1675,
+          "RETIRO_TARJETA": null,
+          "PENSION": 0.6162,
+          "PRESTAMO": -0.1638,
+          "SEGURO": -0.0541,
+          "LEASING": 0.0494
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.0874,
+          "TRANSF_SALIENTE": null,
+          "INGRESO_TRANSF": null,
+          "RETIRO_TARJETA": 0.6162,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": null,
+          "LEASING": null
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.0839,
+          "TRANSF_SALIENTE": 0.1532,
+          "INGRESO_TRANSF": 0.8897,
+          "RETIRO_TARJETA": -0.1638,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": 0.0822,
+          "LEASING": null
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": -0.2691,
+          "TRANSF_SALIENTE": 0.2429,
+          "INGRESO_TRANSF": 0.3729,
+          "RETIRO_TARJETA": -0.0541,
+          "PENSION": null,
+          "PRESTAMO": 0.0822,
+          "SEGURO": null,
+          "LEASING": -0.1898
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.079,
+          "TRANSF_SALIENTE": -0.0005,
+          "INGRESO_TRANSF": 0.8531,
+          "RETIRO_TARJETA": 0.0494,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": -0.1898,
+          "LEASING": null
+        }
+      },
+      "pearson_n": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 3439.0,
+          "TRANSF_SALIENTE": 1197.0,
+          "INGRESO_TRANSF": 690.0,
+          "RETIRO_TARJETA": 539.0,
+          "PENSION": 740.0,
+          "PRESTAMO": 468.0,
+          "SEGURO": 532.0,
+          "LEASING": 208.0
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 1197.0,
+          "TRANSF_SALIENTE": 1197.0,
+          "INGRESO_TRANSF": 307.0,
+          "RETIRO_TARJETA": 225.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 233.0,
+          "SEGURO": 531.0,
+          "LEASING": 101.0
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 690.0,
+          "TRANSF_SALIENTE": 307.0,
+          "INGRESO_TRANSF": 866.0,
+          "RETIRO_TARJETA": 130.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 210.0,
+          "SEGURO": 137.0,
+          "LEASING": 71.0
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": 539.0,
+          "TRANSF_SALIENTE": 225.0,
+          "INGRESO_TRANSF": 130.0,
+          "RETIRO_TARJETA": 807.0,
+          "PENSION": 18.0,
+          "PRESTAMO": 148.0,
+          "SEGURO": 91.0,
+          "LEASING": 81.0
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 740.0,
+          "TRANSF_SALIENTE": 0.0,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 18.0,
+          "PENSION": 740.0,
+          "PRESTAMO": 0.0,
+          "SEGURO": 0.0,
+          "LEASING": 0.0
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 468.0,
+          "TRANSF_SALIENTE": 233.0,
+          "INGRESO_TRANSF": 210.0,
+          "RETIRO_TARJETA": 148.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 682.0,
+          "SEGURO": 114.0,
+          "LEASING": 0.0
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 532.0,
+          "TRANSF_SALIENTE": 531.0,
+          "INGRESO_TRANSF": 137.0,
+          "RETIRO_TARJETA": 91.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 114.0,
+          "SEGURO": 532.0,
+          "LEASING": 50.0
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 208.0,
+          "TRANSF_SALIENTE": 101.0,
+          "INGRESO_TRANSF": 71.0,
+          "RETIRO_TARJETA": 81.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0,
+          "SEGURO": 50.0,
+          "LEASING": 341.0
+        }
+      },
+      "pearson_p": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": null,
+          "TRANSF_SALIENTE": 0.0,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.824112,
+          "PENSION": 0.017395,
+          "PRESTAMO": 0.069679,
+          "SEGURO": 0.0,
+          "LEASING": 0.256769
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 0.0,
+          "TRANSF_SALIENTE": null,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.401953,
+          "PENSION": null,
+          "PRESTAMO": 0.019286,
+          "SEGURO": 0.0,
+          "LEASING": 0.995874
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.0,
+          "TRANSF_SALIENTE": 0.0,
+          "INGRESO_TRANSF": null,
+          "RETIRO_TARJETA": 0.056749,
+          "PENSION": null,
+          "PRESTAMO": 0.0,
+          "SEGURO": 7e-06,
+          "LEASING": 0.0
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": 0.824112,
+          "TRANSF_SALIENTE": 0.401953,
+          "INGRESO_TRANSF": 0.056749,
+          "RETIRO_TARJETA": null,
+          "PENSION": 0.006466,
+          "PRESTAMO": 0.046616,
+          "SEGURO": 0.610693,
+          "LEASING": 0.661432
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.017395,
+          "TRANSF_SALIENTE": null,
+          "INGRESO_TRANSF": null,
+          "RETIRO_TARJETA": 0.006466,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": null,
+          "LEASING": null
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.069679,
+          "TRANSF_SALIENTE": 0.019286,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.046616,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": 0.384575,
+          "LEASING": null
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 0.0,
+          "TRANSF_SALIENTE": 0.0,
+          "INGRESO_TRANSF": 7e-06,
+          "RETIRO_TARJETA": 0.610693,
+          "PENSION": null,
+          "PRESTAMO": 0.384575,
+          "SEGURO": null,
+          "LEASING": 0.186861
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.256769,
+          "TRANSF_SALIENTE": 0.995874,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.661432,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": 0.186861,
+          "LEASING": null
+        }
+      },
+      "coseno_ajustado": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": -0.5166,
+          "INGRESO_TRANSF": -0.1579,
+          "RETIRO_TARJETA": -0.6562,
+          "PENSION": -0.7624,
+          "PRESTAMO": 0.106,
+          "SEGURO": -0.6162,
+          "LEASING": 0.0853
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": -0.5166,
+          "TRANSF_SALIENTE": 1.0,
+          "INGRESO_TRANSF": -0.5287,
+          "RETIRO_TARJETA": -0.2638,
+          "PENSION": null,
+          "PRESTAMO": -0.2528,
+          "SEGURO": -0.0712,
+          "LEASING": -0.3729
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": -0.1579,
+          "TRANSF_SALIENTE": -0.5287,
+          "INGRESO_TRANSF": 1.0,
+          "RETIRO_TARJETA": -0.9374,
+          "PENSION": null,
+          "PRESTAMO": -0.0981,
+          "SEGURO": -0.7431,
+          "LEASING": -0.5128
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": -0.6562,
+          "TRANSF_SALIENTE": -0.2638,
+          "INGRESO_TRANSF": -0.9374,
+          "RETIRO_TARJETA": 1.0,
+          "PENSION": -0.9762,
+          "PRESTAMO": -0.7135,
+          "SEGURO": 0.0296,
+          "LEASING": -0.4521
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": -0.7624,
+          "TRANSF_SALIENTE": null,
+          "INGRESO_TRANSF": null,
+          "RETIRO_TARJETA": -0.9762,
+          "PENSION": 1.0,
+          "PRESTAMO": null,
+          "SEGURO": null,
+          "LEASING": null
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.106,
+          "TRANSF_SALIENTE": -0.2528,
+          "INGRESO_TRANSF": -0.0981,
+          "RETIRO_TARJETA": -0.7135,
+          "PENSION": null,
+          "PRESTAMO": 1.0,
+          "SEGURO": -0.622,
+          "LEASING": null
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": -0.6162,
+          "TRANSF_SALIENTE": -0.0712,
+          "INGRESO_TRANSF": -0.7431,
+          "RETIRO_TARJETA": 0.0296,
+          "PENSION": null,
+          "PRESTAMO": -0.622,
+          "SEGURO": 1.0,
+          "LEASING": -0.6401
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.0853,
+          "TRANSF_SALIENTE": -0.3729,
+          "INGRESO_TRANSF": -0.5128,
+          "RETIRO_TARJETA": -0.4521,
+          "PENSION": null,
+          "PRESTAMO": null,
+          "SEGURO": -0.6401,
+          "LEASING": 1.0
+        }
+      },
+      "r_medio_absoluto": 0.2573
+    },
+    "ranking": {
+      "Popularidad": {
+        "modelo": "Popularidad",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.5848,
+        "hit_3": 0.7741,
+        "mrr": 0.7057,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.0631,
+          "hit_3": 0.4901,
+          "mrr": 0.3358
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.2405,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0191,
+          "RETIRO_TARJETA": 0.0373,
+          "SEGURO": 0.0,
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 1.0
+        },
+        "productos_distintos_en_top1": 5,
+        "top1_mas_frecuente": {
+          "SERVICIOS_HOGAR": 1412,
+          "TRANSF_SALIENTE": 1218,
+          "INGRESO_TRANSF": 289
+        }
+      },
+      "Coseno binario": {
+        "modelo": "Coseno binario",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.2603,
+        "hit_3": 0.7094,
+        "mrr": 0.5118,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.1307,
+          "hit_3": 0.3913,
+          "mrr": 0.3407
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.0928,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0287,
+          "RETIRO_TARJETA": 0.0041,
+          "SEGURO": 0.9928,
+          "SERVICIOS_HOGAR": 0.1376,
+          "TRANSF_SALIENTE": 1.0
+        },
+        "productos_distintos_en_top1": 6,
+        "top1_mas_frecuente": {
+          "TRANSF_SALIENTE": 1724,
+          "SEGURO": 626,
+          "RETIRO_TARJETA": 375
+        },
+        "vs_popularidad": {
+          "gana_modelo": 142,
+          "gana_popularidad": 1106,
+          "p_valor": 1.921e-185
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 142,
+          "gana_popularidad": 53,
+          "p_valor": 1.412e-10
+        }
+      },
+      "Coseno binario x ITF": {
+        "modelo": "Coseno binario x ITF",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.1067,
+        "hit_3": 0.4754,
+        "mrr": 0.3689,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.1292,
+          "hit_3": 0.443,
+          "mrr": 0.3451
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.079,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0335,
+          "RETIRO_TARJETA": 0.0041,
+          "SEGURO": 1.0,
+          "SERVICIOS_HOGAR": 0.0,
+          "TRANSF_SALIENTE": 0.3395
+        },
+        "productos_distintos_en_top1": 6,
+        "top1_mas_frecuente": {
+          "SEGURO": 2039,
+          "RETIRO_TARJETA": 382,
+          "TRANSF_SALIENTE": 311
+        },
+        "vs_popularidad": {
+          "gana_modelo": 144,
+          "gana_popularidad": 1564,
+          "p_valor": 1.671e-301
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 144,
+          "gana_popularidad": 57,
+          "p_valor": 7.157e-10
+        }
+      },
+      "Pearson (phi), solo asociaciones positivas": {
+        "modelo": "Pearson (phi), solo asociaciones positivas",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.1232,
+        "hit_3": 0.4475,
+        "mrr": 0.3627,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.1261,
+          "hit_3": 0.4878,
+          "mrr": 0.3695
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.0241,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0957,
+          "RETIRO_TARJETA": 0.0,
+          "SEGURO": 1.0,
+          "SERVICIOS_HOGAR": 0.0434,
+          "TRANSF_SALIENTE": 0.3395
+        },
+        "productos_distintos_en_top1": 7,
+        "top1_mas_frecuente": {
+          "SEGURO": 2082,
+          "TRANSF_SALIENTE": 387,
+          "PRESTAMO": 245
+        },
+        "vs_popularidad": {
+          "gana_modelo": 157,
+          "gana_popularidad": 1528,
+          "p_valor": 2.294e-282
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 157,
+          "gana_popularidad": 74,
+          "p_valor": 4.965e-08
+        }
+      },
+      "Coseno ajustado sobre intensidad": {
+        "modelo": "Coseno ajustado sobre intensidad",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.1192,
+        "hit_3": 0.4485,
+        "mrr": 0.3643,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.0684,
+          "hit_3": 0.4354,
+          "mrr": 0.33
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.0344,
+          "LEASING": 0.7195,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0478,
+          "RETIRO_TARJETA": 0.0373,
+          "SEGURO": 0.0144,
+          "SERVICIOS_HOGAR": 0.2121,
+          "TRANSF_SALIENTE": 0.0115
+        },
+        "productos_distintos_en_top1": 8,
+        "top1_mas_frecuente": {
+          "LEASING": 1686,
+          "SERVICIOS_HOGAR": 314,
+          "SEGURO": 190
+        },
+        "vs_popularidad": {
+          "gana_modelo": 88,
+          "gana_popularidad": 1471,
+          "p_valor": 0.0
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 88,
+          "gana_popularidad": 81,
+          "p_valor": 0.6445
+        }
+      },
+      "Coseno asimétrico P(j|i)": {
+        "modelo": "Coseno asimétrico P(j|i)",
+        "cuentas_evaluadas": 2970,
+        "hit_1": 0.4889,
+        "hit_3": 0.7219,
+        "mrr": 0.6442,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.1307,
+          "hit_3": 0.3723,
+          "mrr": 0.3391
+        },
+        "hit_1_por_producto_oculto": {
+          "INGRESO_TRANSF": 0.0928,
+          "LEASING": 0.0,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.0287,
+          "RETIRO_TARJETA": 0.0041,
+          "SEGURO": 0.9928,
+          "SERVICIOS_HOGAR": 0.6937,
+          "TRANSF_SALIENTE": 1.0
+        },
+        "productos_distintos_en_top1": 6,
+        "top1_mas_frecuente": {
+          "TRANSF_SALIENTE": 1218,
+          "SERVICIOS_HOGAR": 1038,
+          "RETIRO_TARJETA": 375
+        },
+        "vs_popularidad": {
+          "gana_modelo": 142,
+          "gana_popularidad": 427,
+          "p_valor": 4.141e-34
+        },
+        "vs_popularidad_cola_larga": {
+          "gana_modelo": 142,
+          "gana_popularidad": 53,
+          "p_valor": 1.412e-10
+        }
+      }
+    }
+  },
+  "perfiles_contenido": {
+    "punto_6_productos": {
+      "atributos": {
+        "SERVICIOS_HOGAR": {
+          "descripcion": "Pago domiciliado de servicios del hogar (SIPO)",
+          "direccion": "Salida",
+          "canal": "Transferencia saliente",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 1,
+          "regularidad_mensual": 0.874,
+          "monto_mensual_mediano": 2859.9,
+          "cuentas": 3439,
+          "penetracion": 0.7642
+        },
+        "TRANSF_SALIENTE": {
+          "descripcion": "Transferencias salientes a otros bancos",
+          "direccion": "Salida",
+          "canal": "Transferencia saliente",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 0,
+          "regularidad_mensual": 0.876,
+          "monto_mensual_mediano": 1409.44,
+          "cuentas": 1197,
+          "penetracion": 0.266
+        },
+        "INGRESO_TRANSF": {
+          "descripcion": "Ingresos recibidos por transferencia",
+          "direccion": "Entrada",
+          "canal": "Transferencia entrante",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 0,
+          "regularidad_mensual": 0.995,
+          "monto_mensual_mediano": 3965.92,
+          "cuentas": 866,
+          "penetracion": 0.1924
+        },
+        "RETIRO_TARJETA": {
+          "descripcion": "Retiros con tarjeta en cajero",
+          "direccion": "Salida",
+          "canal": "Retiro con tarjeta",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 0,
+          "regularidad_mensual": 0.124,
+          "monto_mensual_mediano": 393.03,
+          "cuentas": 807,
+          "penetracion": 0.1793
+        },
+        "PENSION": {
+          "descripcion": "Abono de pensión (DUCHOD)",
+          "direccion": "Entrada",
+          "canal": "Transferencia entrante",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 1,
+          "regularidad_mensual": 0.995,
+          "monto_mensual_mediano": 5497.21,
+          "cuentas": 740,
+          "penetracion": 0.1644
+        },
+        "PRESTAMO": {
+          "descripcion": "Préstamo del banco",
+          "direccion": "Salida",
+          "canal": "Orden o contrato",
+          "contraparte": "Banco",
+          "es_credito": 1,
+          "es_recurrente_fijo": 1,
+          "regularidad_mensual": 1.0,
+          "monto_mensual_mediano": 3934.0,
+          "cuentas": 682,
+          "penetracion": 0.1516
+        },
+        "SEGURO": {
+          "descripcion": "Pago de pólizas de seguro (POJISTNE)",
+          "direccion": "Salida",
+          "canal": "Transferencia saliente",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 0,
+          "es_recurrente_fijo": 1,
+          "regularidad_mensual": 0.875,
+          "monto_mensual_mediano": 547.29,
+          "cuentas": 532,
+          "penetracion": 0.1182
+        },
+        "LEASING": {
+          "descripcion": "Orden permanente de leasing",
+          "direccion": "Salida",
+          "canal": "Orden o contrato",
+          "contraparte": "Entidad externa registrada",
+          "es_credito": 1,
+          "es_recurrente_fijo": 1,
+          "regularidad_mensual": 1.0,
+          "monto_mensual_mediano": 1951.0,
+          "cuentas": 341,
+          "penetracion": 0.0758
+        }
+      },
+      "prestamos_por_plazo": {
+        "12": {
+          "prestamos": 131.0,
+          "monto_medio": 53635.5115,
+          "cuota_media": 4469.626,
+          "tasa_impago": 0.084,
+          "ratio_cuota_saldo_mediano": 0.0943
+        },
+        "24": {
+          "prestamos": 138.0,
+          "monto_medio": 99217.913,
+          "cuota_media": 4134.0797,
+          "tasa_impago": 0.1232,
+          "ratio_cuota_saldo_mediano": 0.0835
+        },
+        "36": {
+          "prestamos": 130.0,
+          "monto_medio": 144048.1846,
+          "cuota_media": 4001.3385,
+          "tasa_impago": 0.1154,
+          "ratio_cuota_saldo_mediano": 0.0872
+        },
+        "48": {
+          "prestamos": 138.0,
+          "monto_medio": 205592.6957,
+          "cuota_media": 4283.1812,
+          "tasa_impago": 0.1159,
+          "ratio_cuota_saldo_mediano": 0.09
+        },
+        "60": {
+          "prestamos": 145.0,
+          "monto_medio": 244450.7586,
+          "cuota_media": 4074.1793,
+          "tasa_impago": 0.1172,
+          "ratio_cuota_saldo_mediano": 0.096
+        }
+      },
+      "chi2_impago_vs_plazo": {
+        "chi2": 1.289,
+        "gl": 4,
+        "p": 0.8633
+      }
+    },
+    "punto_6_comportamientos": {
+      "diferencia_estandarizada_tiene_vs_no_tiene": {
+        "SERVICIOS_HOGAR": {
+          "deposito_mensual": -0.319,
+          "retiro_mensual": -0.811,
+          "saldo_promedio": -0.577,
+          "sanciones_sobregiro": -0.305,
+          "meses_vida": -0.008
+        },
+        "TRANSF_SALIENTE": {
+          "deposito_mensual": 0.211,
+          "retiro_mensual": -0.013,
+          "saldo_promedio": 0.087,
+          "sanciones_sobregiro": -0.123,
+          "meses_vida": 0.026
+        },
+        "INGRESO_TRANSF": {
+          "deposito_mensual": -1.134,
+          "retiro_mensual": 0.065,
+          "saldo_promedio": -0.278,
+          "sanciones_sobregiro": 0.009,
+          "meses_vida": -0.019
+        },
+        "RETIRO_TARJETA": {
+          "deposito_mensual": 0.615,
+          "retiro_mensual": 0.747,
+          "saldo_promedio": 1.211,
+          "sanciones_sobregiro": -0.111,
+          "meses_vida": 0.078
+        },
+        "PENSION": {
+          "deposito_mensual": -1.141,
+          "retiro_mensual": -0.984,
+          "saldo_promedio": -1.055,
+          "sanciones_sobregiro": -0.184,
+          "meses_vida": 0.029
+        },
+        "PRESTAMO": {
+          "deposito_mensual": 0.544,
+          "retiro_mensual": 0.893,
+          "saldo_promedio": 0.643,
+          "sanciones_sobregiro": 0.289,
+          "meses_vida": -0.043
+        },
+        "SEGURO": {
+          "deposito_mensual": 0.175,
+          "retiro_mensual": -0.012,
+          "saldo_promedio": 0.057,
+          "sanciones_sobregiro": -0.045,
+          "meses_vida": 0.022
+        },
+        "LEASING": {
+          "deposito_mensual": 0.752,
+          "retiro_mensual": 1.002,
+          "saldo_promedio": 0.794,
+          "sanciones_sobregiro": 0.086,
+          "meses_vida": 0.128
+        }
+      },
+      "nota": "Diferencia de medias en desviaciones estándar (d de Cohen aproximado)."
+    },
+    "punto_6_perfiles": {
+      "clientes_por_arquetipo": {
+        "Bohemia - Adulto Mayor (>50)": 924,
+        "Bohemia - Adulto (30-50)": 857,
+        "Bohemia - Joven (<30)": 615,
+        "Moravia - Adulto Mayor (>50)": 614,
+        "Moravia - Adulto (30-50)": 560,
+        "Moravia - Joven (<30)": 383,
+        "Praga - Adulto Mayor (>50)": 212,
+        "Praga - Adulto (30-50)": 202,
+        "Praga - Joven (<30)": 133
+      },
+      "adopcion_por_arquetipo": {
+        "Bohemia - Adulto (30-50)": {
+          "SERVICIOS_HOGAR": 0.7503,
+          "TRANSF_SALIENTE": 0.3232,
+          "INGRESO_TRANSF": 0.259,
+          "RETIRO_TARJETA": 0.2019,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1972,
+          "SEGURO": 0.1342,
+          "LEASING": 0.0933
+        },
+        "Bohemia - Adulto Mayor (>50)": {
+          "SERVICIOS_HOGAR": 0.8636,
+          "TRANSF_SALIENTE": 0.184,
+          "INGRESO_TRANSF": 0.1331,
+          "RETIRO_TARJETA": 0.1418,
+          "PENSION": 0.434,
+          "PRESTAMO": 0.1082,
+          "SEGURO": 0.0823,
+          "LEASING": 0.0498
+        },
+        "Bohemia - Joven (<30)": {
+          "SERVICIOS_HOGAR": 0.6423,
+          "TRANSF_SALIENTE": 0.3024,
+          "INGRESO_TRANSF": 0.2098,
+          "RETIRO_TARJETA": 0.2341,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1366,
+          "SEGURO": 0.1301,
+          "LEASING": 0.0764
+        },
+        "Moravia - Adulto (30-50)": {
+          "SERVICIOS_HOGAR": 0.7429,
+          "TRANSF_SALIENTE": 0.3446,
+          "INGRESO_TRANSF": 0.2304,
+          "RETIRO_TARJETA": 0.1714,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.2036,
+          "SEGURO": 0.1429,
+          "LEASING": 0.0929
+        },
+        "Moravia - Adulto Mayor (>50)": {
+          "SERVICIOS_HOGAR": 0.8583,
+          "TRANSF_SALIENTE": 0.2101,
+          "INGRESO_TRANSF": 0.1287,
+          "RETIRO_TARJETA": 0.1026,
+          "PENSION": 0.4121,
+          "PRESTAMO": 0.114,
+          "SEGURO": 0.0945,
+          "LEASING": 0.0668
+        },
+        "Moravia - Joven (<30)": {
+          "SERVICIOS_HOGAR": 0.6162,
+          "TRANSF_SALIENTE": 0.2428,
+          "INGRESO_TRANSF": 0.2428,
+          "RETIRO_TARJETA": 0.201,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1723,
+          "SEGURO": 0.1305,
+          "LEASING": 0.0601
+        },
+        "Praga - Adulto (30-50)": {
+          "SERVICIOS_HOGAR": 0.7624,
+          "TRANSF_SALIENTE": 0.3168,
+          "INGRESO_TRANSF": 0.2178,
+          "RETIRO_TARJETA": 0.2426,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1881,
+          "SEGURO": 0.1782,
+          "LEASING": 0.1139
+        },
+        "Praga - Adulto Mayor (>50)": {
+          "SERVICIOS_HOGAR": 0.8538,
+          "TRANSF_SALIENTE": 0.1981,
+          "INGRESO_TRANSF": 0.1132,
+          "RETIRO_TARJETA": 0.184,
+          "PENSION": 0.4057,
+          "PRESTAMO": 0.0849,
+          "SEGURO": 0.0849,
+          "LEASING": 0.0708
+        },
+        "Praga - Joven (<30)": {
+          "SERVICIOS_HOGAR": 0.6692,
+          "TRANSF_SALIENTE": 0.3233,
+          "INGRESO_TRANSF": 0.1729,
+          "RETIRO_TARJETA": 0.2632,
+          "PENSION": 0.0,
+          "PRESTAMO": 0.1729,
+          "SEGURO": 0.1429,
+          "LEASING": 0.1053
+        }
+      },
+      "chi2_por_producto": [
+        {
+          "producto": "SERVICIOS_HOGAR",
+          "chi2": 196.63,
+          "gl": 8,
+          "p": 3.28e-38,
+          "v_cramer": 0.209,
+          "p_holm": 2.29e-37,
+          "significativo": true
+        },
+        {
+          "producto": "TRANSF_SALIENTE",
+          "chi2": 88.92,
+          "gl": 8,
+          "p": 7.69e-16,
+          "v_cramer": 0.1406,
+          "p_holm": 4.61e-15,
+          "significativo": true
+        },
+        {
+          "producto": "INGRESO_TRANSF",
+          "chi2": 83.8,
+          "gl": 8,
+          "p": 8.36e-15,
+          "v_cramer": 0.1365,
+          "p_holm": 4.18e-14,
+          "significativo": true
+        },
+        {
+          "producto": "RETIRO_TARJETA",
+          "chi2": 62.26,
+          "gl": 8,
+          "p": 1.67e-10,
+          "v_cramer": 0.1176,
+          "p_holm": 6.69e-10,
+          "significativo": true
+        },
+        {
+          "producto": "PENSION",
+          "chi2": 1393.53,
+          "gl": 8,
+          "p": 1.42e-295,
+          "v_cramer": 0.5565,
+          "p_holm": 1.14e-294,
+          "significativo": true
+        },
+        {
+          "producto": "PRESTAMO",
+          "chi2": 58.15,
+          "gl": 8,
+          "p": 1.08e-09,
+          "v_cramer": 0.1137,
+          "p_holm": 3.23e-09,
+          "significativo": true
+        },
+        {
+          "producto": "SEGURO",
+          "chi2": 31.54,
+          "gl": 8,
+          "p": 0.000112,
+          "v_cramer": 0.0837,
+          "p_holm": 0.000225,
+          "significativo": true
+        },
+        {
+          "producto": "LEASING",
+          "chi2": 23.0,
+          "gl": 8,
+          "p": 0.00336,
+          "v_cramer": 0.0715,
+          "p_holm": 0.00336,
+          "significativo": true
+        }
+      ]
+    },
+    "punto_8_contenidos": {
+      "vector_de_atributos": {
+        "SERVICIOS_HOGAR": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 1.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 1.0,
+          "regularidad": 0.874,
+          "monto": 0.752
+        },
+        "TRANSF_SALIENTE": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 1.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 0.0,
+          "regularidad": 0.876,
+          "monto": 0.484
+        },
+        "INGRESO_TRANSF": {
+          "direccion_Entrada": 1.0,
+          "direccion_Salida": 0.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 1.0,
+          "canal_Transferencia saliente": 0.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 0.0,
+          "regularidad": 0.995,
+          "monto": 0.876
+        },
+        "RETIRO_TARJETA": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 1.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 0.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 0.0,
+          "regularidad": 0.124,
+          "monto": 0.0
+        },
+        "PENSION": {
+          "direccion_Entrada": 1.0,
+          "direccion_Salida": 0.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 1.0,
+          "canal_Transferencia saliente": 0.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 1.0,
+          "regularidad": 0.995,
+          "monto": 1.0
+        },
+        "PRESTAMO": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 1.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 0.0,
+          "contraparte_Banco": 1.0,
+          "contraparte_Entidad externa registrada": 0.0,
+          "es_credito": 1.0,
+          "es_recurrente_fijo": 1.0,
+          "regularidad": 1.0,
+          "monto": 0.873
+        },
+        "SEGURO": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 0.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 1.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 0.0,
+          "es_recurrente_fijo": 1.0,
+          "regularidad": 0.875,
+          "monto": 0.125
+        },
+        "LEASING": {
+          "direccion_Entrada": 0.0,
+          "direccion_Salida": 1.0,
+          "canal_Orden o contrato": 1.0,
+          "canal_Retiro con tarjeta": 0.0,
+          "canal_Transferencia entrante": 0.0,
+          "canal_Transferencia saliente": 0.0,
+          "contraparte_Banco": 0.0,
+          "contraparte_Entidad externa registrada": 1.0,
+          "es_credito": 1.0,
+          "es_recurrente_fijo": 1.0,
+          "regularidad": 1.0,
+          "monto": 0.607
+        }
+      },
+      "documentos_tfidf": {
+        "SERVICIOS_HOGAR": "salida transferencia saliente entidad externa registrada no_credito recurrente pago domiciliado de servicios del hogar sipo",
+        "TRANSF_SALIENTE": "salida transferencia saliente entidad externa registrada no_credito variable transferencias salientes a otros bancos",
+        "INGRESO_TRANSF": "entrada transferencia entrante entidad externa registrada no_credito variable ingresos recibidos por transferencia",
+        "RETIRO_TARJETA": "salida retiro con tarjeta entidad externa registrada no_credito variable retiros con tarjeta en cajero",
+        "PENSION": "entrada transferencia entrante entidad externa registrada no_credito recurrente abono de pensión duchod",
+        "PRESTAMO": "salida orden o contrato banco credito recurrente préstamo del banco",
+        "SEGURO": "salida transferencia saliente entidad externa registrada no_credito recurrente pago de pólizas de seguro pojistne",
+        "LEASING": "salida orden o contrato entidad externa registrada credito recurrente orden permanente de leasing"
+      },
+      "similitud_atributos": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 0.8942,
+          "INGRESO_TRANSF": 0.5022,
+          "RETIRO_TARJETA": 0.5259,
+          "PENSION": 0.641,
+          "PRESTAMO": 0.5881,
+          "SEGURO": 0.9626,
+          "LEASING": 0.7433
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 0.8942,
+          "TRANSF_SALIENTE": 1.0,
+          "INGRESO_TRANSF": 0.5261,
+          "RETIRO_TARJETA": 0.607,
+          "PENSION": 0.4811,
+          "PRESTAMO": 0.4418,
+          "SEGURO": 0.875,
+          "LEASING": 0.6279
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.5022,
+          "TRANSF_SALIENTE": 0.5261,
+          "INGRESO_TRANSF": 1.0,
+          "RETIRO_TARJETA": 0.2966,
+          "PENSION": 0.9115,
+          "PRESTAMO": 0.3103,
+          "SEGURO": 0.4152,
+          "LEASING": 0.4591
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": 0.5259,
+          "TRANSF_SALIENTE": 0.607,
+          "INGRESO_TRANSF": 0.2966,
+          "RETIRO_TARJETA": 1.0,
+          "PENSION": 0.2643,
+          "PRESTAMO": 0.2489,
+          "SEGURO": 0.5553,
+          "LEASING": 0.4847
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.641,
+          "TRANSF_SALIENTE": 0.4811,
+          "INGRESO_TRANSF": 0.9115,
+          "RETIRO_TARJETA": 0.2643,
+          "PENSION": 1.0,
+          "PRESTAMO": 0.4506,
+          "SEGURO": 0.5598,
+          "LEASING": 0.5832
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.5881,
+          "TRANSF_SALIENTE": 0.4418,
+          "INGRESO_TRANSF": 0.3103,
+          "RETIRO_TARJETA": 0.2489,
+          "PENSION": 0.4506,
+          "PRESTAMO": 1.0,
+          "SEGURO": 0.5249,
+          "LEASING": 0.8427
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 0.9626,
+          "TRANSF_SALIENTE": 0.875,
+          "INGRESO_TRANSF": 0.4152,
+          "RETIRO_TARJETA": 0.5553,
+          "PENSION": 0.5598,
+          "PRESTAMO": 0.5249,
+          "SEGURO": 1.0,
+          "LEASING": 0.716
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.7433,
+          "TRANSF_SALIENTE": 0.6279,
+          "INGRESO_TRANSF": 0.4591,
+          "RETIRO_TARJETA": 0.4847,
+          "PENSION": 0.5832,
+          "PRESTAMO": 0.8427,
+          "SEGURO": 0.716,
+          "LEASING": 1.0
+        }
+      },
+      "similitud_tfidf": {
+        "SERVICIOS_HOGAR": {
+          "SERVICIOS_HOGAR": 1.0,
+          "TRANSF_SALIENTE": 0.2496,
+          "INGRESO_TRANSF": 0.1962,
+          "RETIRO_TARJETA": 0.1047,
+          "PENSION": 0.2641,
+          "PRESTAMO": 0.1482,
+          "SEGURO": 0.4813,
+          "LEASING": 0.1893
+        },
+        "TRANSF_SALIENTE": {
+          "SERVICIOS_HOGAR": 0.2496,
+          "TRANSF_SALIENTE": 1.0,
+          "INGRESO_TRANSF": 0.2762,
+          "RETIRO_TARJETA": 0.1608,
+          "PENSION": 0.1698,
+          "PRESTAMO": 0.0303,
+          "SEGURO": 0.2577,
+          "LEASING": 0.1066
+        },
+        "INGRESO_TRANSF": {
+          "SERVICIOS_HOGAR": 0.1962,
+          "TRANSF_SALIENTE": 0.2762,
+          "INGRESO_TRANSF": 1.0,
+          "RETIRO_TARJETA": 0.14,
+          "PENSION": 0.4335,
+          "PRESTAMO": 0.0,
+          "SEGURO": 0.2026,
+          "LEASING": 0.0774
+        },
+        "RETIRO_TARJETA": {
+          "SERVICIOS_HOGAR": 0.1047,
+          "TRANSF_SALIENTE": 0.1608,
+          "INGRESO_TRANSF": 0.14,
+          "RETIRO_TARJETA": 1.0,
+          "PENSION": 0.0916,
+          "PRESTAMO": 0.0225,
+          "SEGURO": 0.1081,
+          "LEASING": 0.0789
+        },
+        "PENSION": {
+          "SERVICIOS_HOGAR": 0.2641,
+          "TRANSF_SALIENTE": 0.1698,
+          "INGRESO_TRANSF": 0.4335,
+          "RETIRO_TARJETA": 0.0916,
+          "PENSION": 1.0,
+          "PRESTAMO": 0.0417,
+          "SEGURO": 0.331,
+          "LEASING": 0.1801
+        },
+        "PRESTAMO": {
+          "SERVICIOS_HOGAR": 0.1482,
+          "TRANSF_SALIENTE": 0.0303,
+          "INGRESO_TRANSF": 0.0,
+          "RETIRO_TARJETA": 0.0225,
+          "PENSION": 0.0417,
+          "PRESTAMO": 1.0,
+          "SEGURO": 0.0682,
+          "LEASING": 0.4646
+        },
+        "SEGURO": {
+          "SERVICIOS_HOGAR": 0.4813,
+          "TRANSF_SALIENTE": 0.2577,
+          "INGRESO_TRANSF": 0.2026,
+          "RETIRO_TARJETA": 0.1081,
+          "PENSION": 0.331,
+          "PRESTAMO": 0.0682,
+          "SEGURO": 1.0,
+          "LEASING": 0.2456
+        },
+        "LEASING": {
+          "SERVICIOS_HOGAR": 0.1893,
+          "TRANSF_SALIENTE": 0.1066,
+          "INGRESO_TRANSF": 0.0774,
+          "RETIRO_TARJETA": 0.0789,
+          "PENSION": 0.1801,
+          "PRESTAMO": 0.4646,
+          "SEGURO": 0.2456,
+          "LEASING": 1.0
+        }
+      }
+    },
+    "ranking": {
+      "seleccion": {
+        "Popularidad": {
+          "modelo": "Popularidad",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.5848,
+          "hit_3": 0.7741,
+          "mrr": 0.7057,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.0631,
+            "hit_3": 0.4901,
+            "mrr": 0.3358
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.2405,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0191,
+            "RETIRO_TARJETA": 0.0373,
+            "SEGURO": 0.0,
+            "SERVICIOS_HOGAR": 1.0,
+            "TRANSF_SALIENTE": 1.0
+          },
+          "productos_distintos_en_top1": 5,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1412,
+            "TRANSF_SALIENTE": 1218,
+            "INGRESO_TRANSF": 289
+          }
+        },
+        "Contenidos (atributos)": {
+          "modelo": "Contenidos (atributos)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.2013,
+          "hit_3": 0.6273,
+          "mrr": 0.4689,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.1102,
+            "hit_3": 0.1626,
+            "mrr": 0.2992
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.0,
+            "LEASING": 0.0732,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0,
+            "RETIRO_TARJETA": 0.0,
+            "SEGURO": 1.0,
+            "SERVICIOS_HOGAR": 0.2727,
+            "TRANSF_SALIENTE": 0.2771
+          },
+          "productos_distintos_en_top1": 7,
+          "top1_mas_frecuente": {
+            "SEGURO": 1211,
+            "INGRESO_TRANSF": 381,
+            "LEASING": 357
+          },
+          "vs_popularidad": {
+            "gana_modelo": 145,
+            "gana_popularidad": 1284,
+            "p_valor": 2.948e-228
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 145,
+            "gana_popularidad": 83,
+            "p_valor": 4.844e-05
+          }
+        },
+        "Contenidos (TF-IDF)": {
+          "modelo": "Contenidos (TF-IDF)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.0811,
+          "hit_3": 0.6448,
+          "mrr": 0.3833,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.0965,
+            "hit_3": 0.4407,
+            "mrr": 0.3711
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.0,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0,
+            "RETIRO_TARJETA": 0.0,
+            "SEGURO": 0.9137,
+            "SERVICIOS_HOGAR": 0.0835,
+            "TRANSF_SALIENTE": 0.0277
+          },
+          "productos_distintos_en_top1": 7,
+          "top1_mas_frecuente": {
+            "SEGURO": 1160,
+            "INGRESO_TRANSF": 548,
+            "PENSION": 545
+          },
+          "vs_popularidad": {
+            "gana_modelo": 127,
+            "gana_popularidad": 1623,
+            "p_valor": 0.0
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 127,
+            "gana_popularidad": 83,
+            "p_valor": 0.002915
+          }
+        },
+        "Demográfico (arquetipo)": {
+          "modelo": "Demográfico (arquetipo)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.6596,
+          "hit_3": 0.8623,
+          "mrr": 0.7755,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.3214,
+            "hit_3": 0.6892,
+            "mrr": 0.5396
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.1237,
+            "LEASING": 0.0,
+            "PENSION": 1.0,
+            "PRESTAMO": 0.0335,
+            "RETIRO_TARJETA": 0.1079,
+            "SEGURO": 0.0,
+            "SERVICIOS_HOGAR": 1.0,
+            "TRANSF_SALIENTE": 0.7275
+          },
+          "productos_distintos_en_top1": 6,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1412,
+            "PENSION": 676,
+            "TRANSF_SALIENTE": 633
+          },
+          "vs_popularidad": {
+            "gana_modelo": 377,
+            "gana_popularidad": 155,
+            "p_valor": 2.31e-22
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 377,
+            "gana_popularidad": 37,
+            "p_valor": 4.89e-72
+          }
+        },
+        "Ítem a ítem P(j|i)": {
+          "modelo": "Ítem a ítem P(j|i)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.4889,
+          "hit_3": 0.7219,
+          "mrr": 0.6442,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.1307,
+            "hit_3": 0.3723,
+            "mrr": 0.3391
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.0928,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0287,
+            "RETIRO_TARJETA": 0.0041,
+            "SEGURO": 0.9928,
+            "SERVICIOS_HOGAR": 0.6937,
+            "TRANSF_SALIENTE": 1.0
+          },
+          "productos_distintos_en_top1": 6,
+          "top1_mas_frecuente": {
+            "TRANSF_SALIENTE": 1218,
+            "SERVICIOS_HOGAR": 1038,
+            "RETIRO_TARJETA": 375
+          },
+          "vs_popularidad": {
+            "gana_modelo": 142,
+            "gana_popularidad": 427,
+            "p_valor": 4.141e-34
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 142,
+            "gana_popularidad": 53,
+            "p_valor": 1.412e-10
+          }
+        },
+        "kNN usuario-usuario (productos)": {
+          "modelo": "kNN usuario-usuario (productos)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.1872,
+          "hit_3": 0.5101,
+          "mrr": 0.4195,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.1771,
+            "hit_3": 0.5091,
+            "mrr": 0.4121
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.1237,
+            "LEASING": 0.1585,
+            "PENSION": 0.1299,
+            "PRESTAMO": 0.1435,
+            "RETIRO_TARJETA": 0.195,
+            "SEGURO": 0.4388,
+            "SERVICIOS_HOGAR": 0.1884,
+            "TRANSF_SALIENTE": 0.2148
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SEGURO": 501,
+            "PRESTAMO": 418,
+            "RETIRO_TARJETA": 385
+          },
+          "vs_popularidad": {
+            "gana_modelo": 218,
+            "gana_popularidad": 1399,
+            "p_valor": 5.936e-211
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 218,
+            "gana_popularidad": 68,
+            "p_valor": 1.721e-19
+          }
+        },
+        "kNN usuario-usuario (perfil exógeno)": {
+          "modelo": "kNN usuario-usuario (perfil exógeno)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.6529,
+          "hit_3": 0.8552,
+          "mrr": 0.7706,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.3723,
+            "hit_3": 0.6976,
+            "mrr": 0.5737
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.2096,
+            "LEASING": 0.0244,
+            "PENSION": 0.935,
+            "PRESTAMO": 0.1148,
+            "RETIRO_TARJETA": 0.249,
+            "SEGURO": 0.0863,
+            "SERVICIOS_HOGAR": 0.9943,
+            "TRANSF_SALIENTE": 0.5427
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1402,
+            "TRANSF_SALIENTE": 443,
+            "PENSION": 379
+          },
+          "vs_popularidad": {
+            "gana_modelo": 455,
+            "gana_popularidad": 253,
+            "p_valor": 2.84e-14
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 455,
+            "gana_popularidad": 48,
+            "p_valor": 3.209e-84
+          }
+        },
+        "kNN usuario-usuario (perfil con comportamiento) [referencia sesgada]": {
+          "modelo": "kNN usuario-usuario (perfil con comportamiento) [referencia sesgada]",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.7471,
+          "hit_3": 0.9343,
+          "mrr": 0.8453,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1316,
+            "hit_1": 0.579,
+            "hit_3": 0.8632,
+            "mrr": 0.7331
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.7457,
+            "LEASING": 0.0244,
+            "PENSION": 1.0,
+            "PRESTAMO": 0.2632,
+            "RETIRO_TARJETA": 0.4066,
+            "SEGURO": 0.259,
+            "SERVICIOS_HOGAR": 0.9672,
+            "TRANSF_SALIENTE": 0.6374
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1288,
+            "PENSION": 437,
+            "TRANSF_SALIENTE": 427
+          },
+          "vs_popularidad": {
+            "gana_modelo": 699,
+            "gana_popularidad": 217,
+            "p_valor": 1.01e-59
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 699,
+            "gana_popularidad": 20,
+            "p_valor": 3.204e-178
+          }
+        }
+      },
+      "confirmacion": {
+        "Popularidad": {
+          "modelo": "Popularidad",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.5751,
+          "hit_3": 0.768,
+          "mrr": 0.6985,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.0721,
+            "hit_3": 0.4934,
+            "mrr": 0.3416
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.276,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0309,
+            "RETIRO_TARJETA": 0.0276,
+            "SEGURO": 0.0,
+            "SERVICIOS_HOGAR": 1.0,
+            "TRANSF_SALIENTE": 1.0
+          },
+          "productos_distintos_en_top1": 5,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1378,
+            "TRANSF_SALIENTE": 1234,
+            "INGRESO_TRANSF": 301
+          }
+        },
+        "Contenidos (atributos)": {
+          "modelo": "Contenidos (atributos)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.2017,
+          "hit_3": 0.6155,
+          "mrr": 0.4664,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.111,
+            "hit_3": 0.1662,
+            "mrr": 0.3006
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.0,
+            "LEASING": 0.0693,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0,
+            "RETIRO_TARJETA": 0.0,
+            "SEGURO": 1.0,
+            "SERVICIOS_HOGAR": 0.2687,
+            "TRANSF_SALIENTE": 0.305
+          },
+          "productos_distintos_en_top1": 7,
+          "top1_mas_frecuente": {
+            "SEGURO": 1233,
+            "LEASING": 379,
+            "INGRESO_TRANSF": 376
+          },
+          "vs_popularidad": {
+            "gana_modelo": 151,
+            "gana_popularidad": 1260,
+            "p_valor": 4.256e-218
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 151,
+            "gana_popularidad": 98,
+            "p_valor": 0.000945
+          }
+        },
+        "Contenidos (TF-IDF)": {
+          "modelo": "Contenidos (TF-IDF)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.0828,
+          "hit_3": 0.6448,
+          "mrr": 0.3856,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.0875,
+            "hit_3": 0.4507,
+            "mrr": 0.3688
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.0,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0,
+            "RETIRO_TARJETA": 0.0,
+            "SEGURO": 0.8264,
+            "SERVICIOS_HOGAR": 0.091,
+            "TRANSF_SALIENTE": 0.0449
+          },
+          "productos_distintos_en_top1": 7,
+          "top1_mas_frecuente": {
+            "SEGURO": 1173,
+            "INGRESO_TRANSF": 541,
+            "PENSION": 536
+          },
+          "vs_popularidad": {
+            "gana_modelo": 119,
+            "gana_popularidad": 1581,
+            "p_valor": 0.0
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 119,
+            "gana_popularidad": 98,
+            "p_valor": 0.1744
+          }
+        },
+        "Demográfico (arquetipo)": {
+          "modelo": "Demográfico (arquetipo)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.6377,
+          "hit_3": 0.8626,
+          "mrr": 0.764,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.325,
+            "hit_3": 0.7,
+            "mrr": 0.5427
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.1558,
+            "LEASING": 0.0,
+            "PENSION": 1.0,
+            "PRESTAMO": 0.0773,
+            "RETIRO_TARJETA": 0.0787,
+            "SEGURO": 0.0,
+            "SERVICIOS_HOGAR": 1.0,
+            "TRANSF_SALIENTE": 0.6265
+          },
+          "productos_distintos_en_top1": 6,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1378,
+            "PENSION": 701,
+            "TRANSF_SALIENTE": 546
+          },
+          "vs_popularidad": {
+            "gana_modelo": 402,
+            "gana_popularidad": 216,
+            "p_valor": 6.47e-14
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 402,
+            "gana_popularidad": 58,
+            "p_valor": 2.154e-64
+          }
+        },
+        "Ítem a ítem P(j|i)": {
+          "modelo": "Ítem a ítem P(j|i)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.4808,
+          "hit_3": 0.7306,
+          "mrr": 0.6387,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.136,
+            "hit_3": 0.4118,
+            "mrr": 0.3459
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.1136,
+            "LEASING": 0.0,
+            "PENSION": 0.0,
+            "PRESTAMO": 0.0258,
+            "RETIRO_TARJETA": 0.0079,
+            "SEGURO": 0.9931,
+            "SERVICIOS_HOGAR": 0.6908,
+            "TRANSF_SALIENTE": 1.0
+          },
+          "productos_distintos_en_top1": 6,
+          "top1_mas_frecuente": {
+            "TRANSF_SALIENTE": 1234,
+            "SERVICIOS_HOGAR": 1011,
+            "RETIRO_TARJETA": 369
+          },
+          "vs_popularidad": {
+            "gana_modelo": 145,
+            "gana_popularidad": 425,
+            "p_valor": 7.283e-33
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 145,
+            "gana_popularidad": 58,
+            "p_valor": 8.783e-10
+          }
+        },
+        "kNN usuario-usuario (productos)": {
+          "modelo": "kNN usuario-usuario (productos)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.2168,
+          "hit_3": 0.5232,
+          "mrr": 0.4386,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.1824,
+            "hit_3": 0.5169,
+            "mrr": 0.4175
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.1656,
+            "LEASING": 0.1584,
+            "PENSION": 0.1281,
+            "PRESTAMO": 0.1753,
+            "RETIRO_TARJETA": 0.1693,
+            "SEGURO": 0.4028,
+            "SERVICIOS_HOGAR": 0.2317,
+            "TRANSF_SALIENTE": 0.2861
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SEGURO": 453,
+            "TRANSF_SALIENTE": 392,
+            "PRESTAMO": 385
+          },
+          "vs_popularidad": {
+            "gana_modelo": 219,
+            "gana_popularidad": 1283,
+            "p_valor": 4.426e-183
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 219,
+            "gana_popularidad": 69,
+            "p_valor": 2.365e-19
+          }
+        },
+        "kNN usuario-usuario (perfil exógeno)": {
+          "modelo": "kNN usuario-usuario (perfil exógeno)",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.638,
+          "hit_3": 0.8481,
+          "mrr": 0.76,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.3603,
+            "hit_3": 0.6978,
+            "mrr": 0.5659
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.2468,
+            "LEASING": 0.0,
+            "PENSION": 0.9109,
+            "PRESTAMO": 0.1649,
+            "RETIRO_TARJETA": 0.1378,
+            "SEGURO": 0.1389,
+            "SERVICIOS_HOGAR": 0.9949,
+            "TRANSF_SALIENTE": 0.5296
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1369,
+            "TRANSF_SALIENTE": 492,
+            "PENSION": 369
+          },
+          "vs_popularidad": {
+            "gana_modelo": 444,
+            "gana_popularidad": 257,
+            "p_valor": 1.588e-12
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 444,
+            "gana_popularidad": 52,
+            "p_valor": 1.256e-78
+          }
+        },
+        "kNN usuario-usuario (perfil con comportamiento) [referencia sesgada]": {
+          "modelo": "kNN usuario-usuario (perfil con comportamiento) [referencia sesgada]",
+          "cuentas_evaluadas": 2970,
+          "hit_1": 0.7424,
+          "hit_3": 0.937,
+          "mrr": 0.8433,
+          "cola_larga": {
+            "productos_excluidos": [
+              "SERVICIOS_HOGAR",
+              "TRANSF_SALIENTE"
+            ],
+            "cuentas": 1360,
+            "hit_1": 0.5654,
+            "hit_3": 0.8699,
+            "mrr": 0.7288
+          },
+          "hit_1_por_producto_oculto": {
+            "INGRESO_TRANSF": 0.776,
+            "LEASING": 0.0396,
+            "PENSION": 0.9944,
+            "PRESTAMO": 0.2268,
+            "RETIRO_TARJETA": 0.3465,
+            "SEGURO": 0.2569,
+            "SERVICIOS_HOGAR": 0.9773,
+            "TRANSF_SALIENTE": 0.6525
+          },
+          "productos_distintos_en_top1": 8,
+          "top1_mas_frecuente": {
+            "SERVICIOS_HOGAR": 1281,
+            "TRANSF_SALIENTE": 439,
+            "PENSION": 432
+          },
+          "vs_popularidad": {
+            "gana_modelo": 689,
+            "gana_popularidad": 192,
+            "p_valor": 2.209e-66
+          },
+          "vs_popularidad_cola_larga": {
+            "gana_modelo": 689,
+            "gana_popularidad": 18,
+            "p_valor": 7.46e-178
+          }
+        }
+      }
+    },
+    "modelo_elegido": {
+      "nombre": "Demográfico (arquetipo)",
+      "criterio": "mayor MRR en la partición de selección (semilla 42)",
+      "seleccion": {
+        "hit_1": 0.6596,
+        "hit_3": 0.8623,
+        "mrr": 0.7755,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1316,
+          "hit_1": 0.3214,
+          "hit_3": 0.6892,
+          "mrr": 0.5396
+        }
+      },
+      "confirmacion": {
+        "hit_1": 0.6377,
+        "hit_3": 0.8626,
+        "mrr": 0.764,
+        "cola_larga": {
+          "productos_excluidos": [
+            "SERVICIOS_HOGAR",
+            "TRANSF_SALIENTE"
+          ],
+          "cuentas": 1360,
+          "hit_1": 0.325,
+          "hit_3": 0.7,
+          "mrr": 0.5427
+        }
+      }
+    },
+    "utilidad": {
+      "regla_anterior_cuota_salario_distrital": {
+        "tramos": {
+          "<= 30%": {
+            "prestamos": 213,
+            "impagos": 14,
+            "tasa": 0.0657
+          },
+          "30% - 50%": {
+            "prestamos": 208,
+            "impagos": 18,
+            "tasa": 0.0865
+          },
+          "> 50%": {
+            "prestamos": 261,
+            "impagos": 44,
+            "tasa": 0.1686
+          }
+        },
+        "chi2_mas_50_vs_resto": 13.025,
+        "p": 0.0003,
+        "auc_impago": 0.6591
+      },
+      "regla_carta_v8_cuota_saldo_previo": {
+        "bandas": {
+          "Baja": {
+            "prestamos": 171,
+            "impagos": 5,
+            "tasa": 0.0292
+          },
+          "Media-baja": {
+            "prestamos": 167,
+            "impagos": 16,
+            "tasa": 0.0958
+          },
+          "Media-alta": {
+            "prestamos": 172,
+            "impagos": 15,
+            "tasa": 0.0872
+          },
+          "Alta": {
+            "prestamos": 172,
+            "impagos": 40,
+            "tasa": 0.2326
+          }
+        },
+        "chi2": 38.582,
+        "p": 2.13e-08,
+        "auc_impago": 0.7165
+      },
+      "titulares_sin_prestamo": {
+        "cuentas": 3818,
+        "cuota_maxima_prudente_mediana": 1872.88,
+        "cuota_mediana_de_los_prestamos_otorgados": 3934.0,
+        "pueden_pagar_la_cuota_mediana": 71,
+        "monto_maximo_mediano_por_plazo": {
+          "12": 22475.0,
+          "24": 44949.0,
+          "36": 67424.0,
+          "48": 89898.0,
+          "60": 112373.0
+        }
+      }
+    },
+    "recomendaciones_finales": {
+      "modelo": "Demográfico (arquetipo)",
+      "cuentas": 4500,
+      "archivo": "dataframes/rs_recomendaciones.csv",
+      "recomendacion_1": {
+        "TRANSF_SALIENTE": 1817,
+        "SERVICIOS_HOGAR": 1061,
+        "PENSION": 766,
+        "INGRESO_TRANSF": 464,
+        "RETIRO_TARJETA": 329,
+        "PRESTAMO": 51,
+        "SEGURO": 7,
+        "LEASING": 5
+      },
+      "apariciones_en_top3": {
+        "TRANSF_SALIENTE": 3303,
+        "INGRESO_TRANSF": 3083,
+        "RETIRO_TARJETA": 2626,
+        "PRESTAMO": 1721,
+        "PENSION": 1065,
+        "SERVICIOS_HOGAR": 1061,
+        "SEGURO": 374,
+        "LEASING": 260
+      },
+      "cuentas_con_prestamo_en_top3": 1721,
+      "cuentas_sin_prestamo_bloqueadas_por_capacidad": 0,
+      "ejemplos": [
+        {
+          "id_cuenta": 2,
+          "id_cliente": 2,
+          "arquetipo": "Praga - Adulto Mayor (>50)",
+          "recomendacion_1": "PENSION",
+          "recomendacion_2": "TRANSF_SALIENTE",
+          "recomendacion_3": "RETIRO_TARJETA",
+          "prestamo_cuota_maxima": NaN,
+          "prestamo_monto_maximo_36m": NaN
+        },
+        {
+          "id_cuenta": 37,
+          "id_cliente": 45,
+          "arquetipo": "Bohemia - Adulto (30-50)",
+          "recomendacion_1": "INGRESO_TRANSF",
+          "recomendacion_2": "RETIRO_TARJETA",
+          "recomendacion_3": "LEASING",
+          "prestamo_cuota_maxima": NaN,
+          "prestamo_monto_maximo_36m": NaN
+        }
+      ]
+    }
+  }
+}

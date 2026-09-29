@@ -1,0 +1,19 @@
+{
+  "duracion_segundos": 119.3,
+  "colecciones": {
+    "distritos": 77,
+    "prestamos": 682,
+    "ordenes": 6471,
+    "FinancialMongo": 5369,
+    "transacciones": 1056320,
+    "saldos_mensuales": 185615
+  },
+  "validadores": {
+    "distritos": "strict",
+    "prestamos": "strict",
+    "ordenes": "strict",
+    "FinancialMongo": "strict",
+    "transacciones": "strict",
+    "saldos_mensuales": "strict"
+  }
+}

@@ -19,13 +19,13 @@
 
 | Dato | Valor |
 | :--- | :--- |
-| Identificador de ejecución | `20260928_174907` |
+| Identificador de ejecución | `20260928_214018` (última ejecución; incluye la tabla puente) |
 | Fuente (OLTP) | MySQL `relational.fel.cvut.cz:3306` / `Financial_ijs` (usuario `guest`, solo lectura) |
 | Destino (OLAP) | SQL Server `(localdb)\MSSQLLocalDB` / `DM_Financial_Kimball_v2` |
-| Duración total | 88.5 segundos (extracción, transformación, carga y validación) |
+| Duración total | 124.2 segundos (extracción, transformación, carga y validación) |
 | Filas extraídas | 1,079,914 (9 tablas) |
-| Filas cargadas | 1,261,249 (7 dimensiones y 4 hechos) |
-| Pruebas de validación | **22 de 22 OK** |
+| Filas cargadas | 1,266,618 (7 dimensiones, 4 hechos y la tabla puente cuenta–cliente) |
+| Pruebas de validación | **23 de 23 OK** |
 | Anomalías de la fuente registradas | 2 |
 
 ---
@@ -77,7 +77,7 @@ flowchart LR
         D["7 dimensiones"] --> F["4 hechos"] --> V["Vistas sql/04"]
     end
     subgraph Q["4. Validación"]
-        P["22 pruebas (Carta 12.3)"] --> A["Auditoria_Carga<br>Auditoria_Anomalias<br>metricas_carga_kimball.json"]
+        P["23 pruebas (Carta 12.3)"] --> A["Auditoria_Carga<br>Auditoria_Anomalias<br>metricas_carga_kimball.json"]
     end
     M --> T1 --> T2 --> T3 --> T4 --> T5 --> D
     V --> P
@@ -94,7 +94,7 @@ flowchart LR
 | `districts` | 77 | `Dim_Distrito` | 77 |
 | `accounts` | 4,500 | `Dim_Cuenta` | 4,500 |
 | `clients` | 5,369 | `Dim_Cliente` | 5,369 |
-| `disps` | 5,369 | Rol en `Dim_Cliente` y titular (`sk_cliente`) de todos los hechos | — |
+| `disps` | 5,369 | `Puente_Cuenta_Cliente` (cuenta de cada cliente, titular o cotitular), rol en `Dim_Cliente` y titular (`sk_cliente`) de todos los hechos | 5,369 |
 | `loans` | 682 | `Fact_Prestamos` (+ etiqueta de `Dim_Cliente`, + crédito externo de `Dim_Cuenta`) | 682 |
 | `trans` | 1,056,320 | `Fact_Transacciones`, `Dim_Operacion` y `Fact_Saldo_Cuenta_Mensual` | 1,056,320 / 15 / 185,615 |
 | `orders` | 6,471 | `Fact_Ordenes`, `Dim_Orden` y crédito externo de `Dim_Cuenta` | 6,471 / 5 |
@@ -169,6 +169,16 @@ Resultado: **15 filas**, una por combinación real de la fuente.
 | `Dim_Orden` | `SIPO` Servicios del Hogar · `UVER` Cuota de Préstamo · `POJISTNE` Pago de Seguros · `LEASING` Arrendamiento / Leasing · `SIN_ESPECIFICAR` (valor vacío en la fuente) Sin Especificar |
 | `Dim_Estado_Prestamo` | A Cerrado, pagado sin problemas · B Cerrado, terminado con deuda · C Vigente, al día · D Vigente, en mora |
 
+#### `Puente_Cuenta_Cliente` ← `disps`
+
+| Origen | Destino | Transformación |
+| :--- | :--- | :--- |
+| `disps.account_id` | `sk_cuenta` | Clave sustituta de la cuenta |
+| `disps.client_id` | `sk_cliente` | Clave sustituta del cliente (única: cada cliente tiene una sola cuenta) |
+| `disps.type` | `tipo_disposicion` | `OWNER` / `DISPONENT` |
+
+Resuelve la relación multivaluada cuenta–cliente: los hechos se unen solo al titular, y esta tabla permite llegar a los 869 cotitulares (por ejemplo, para el Cliente 360 de MongoDB). Se añadió al migrar a MongoDB (Informe 05).
+
 #### `Fact_Prestamos` ← `loans` (+ `trans` previas, `disps`, `accounts`)
 
 | Origen | Destino | Transformación |
@@ -231,6 +241,7 @@ Pruebas del plan de validación de la Carta v8 (sección 12.3), ejecutadas autom
 | 1 | `clients` → `Dim_Cliente` | 5,369 | 5,369 | OK |
 | 1 | `accounts` → `Dim_Cuenta` | 4,500 | 4,500 | OK |
 | 1 | `districts` → `Dim_Distrito` | 77 | 77 | OK |
+| 1 | `disps` → `Puente_Cuenta_Cliente` | 5,369 | 5,369 | OK |
 | 2 | Monto de préstamos | $103,261,740.00 | $103,261,740.00 | OK |
 | 2 | Monto de transacciones | $6,257,862,197.00 | $6,257,862,197.00 | OK |
 | 2 | Monto de órdenes | $21,229,041.00 | $21,229,041.00 | OK |
@@ -262,7 +273,7 @@ Las pruebas 6 comparan contra la fuente, no contra el propio Data Mart: la carte
 Consulta para revisarlas:
 
 ```sql
-SELECT * FROM DM_Financial_Kimball_v2.dbo.Auditoria_Anomalias WHERE id_ejecucion = '20260928_174907';
+SELECT * FROM DM_Financial_Kimball_v2.dbo.Auditoria_Anomalias WHERE id_ejecucion = '20260928_214018';
 ```
 
 ---
@@ -290,7 +301,7 @@ La carga del modelo dimensional está completa. Estos son los puntos que quedan 
 | :--- | :--- | :--- |
 | Código del ETL | `scripts/31_etl_oltp_a_kimball.py` | Extracción, transformaciones, carga y pruebas |
 | Estructura destino | `sql/01_DDL_Kimball_DM_Financial.sql` | 8 dimensiones (la 8.ª, `Dim_Concepto_Movimiento`, la llena la completitud del Informe 10), 4 hechos, 2 tablas de auditoría |
-| Resumen de la ejecución | `metricas_carga_kimball.json` | Filas extraídas y cargadas, las 22 pruebas y las anomalías |
+| Resumen de la ejecución | `metricas_carga_kimball.json` | Filas extraídas y cargadas, las 23 pruebas y las anomalías |
 | Historial de validaciones | Tabla `Auditoria_Carga` | Una fila por prueba y ejecución |
 | Historial de anomalías | Tabla `Auditoria_Anomalias` | Registros de la fuente que no cumplen una regla |
 | Reglas de diseño | `01_Carta_de_Diseno_Financial_ijs.md` (v8) | Grano, reglas de cálculo, homologación y plan de validación |

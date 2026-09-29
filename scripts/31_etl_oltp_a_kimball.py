@@ -265,6 +265,7 @@ def transformar(src):
     st["ordenes"] = o.assign(k_symbol_n=o.k_symbol.map(normalizar), amount=o.amount.astype(float))
 
     st["titular"] = titular
+    st["disps"] = disps
     st["cuenta_distrito"] = a.set_index("id").district_id
     st["cuenta_apertura"] = a.set_index("id").date
     for nombre in ["tiempo", "distrito", "cuenta", "cliente", "operacion", "prestamos", "saldo_mensual", "ordenes"]:
@@ -299,9 +300,16 @@ def cargar(st):
     cn = conexion_sql(BD_KIMBALL)
     cur = cn.cursor()
     cur.fast_executemany = True
+    # Tabla puente cuenta-cliente (se crea si la base viene de un DDL anterior a su incorporación)
+    cur.execute("""IF OBJECT_ID('Puente_Cuenta_Cliente') IS NULL
+        CREATE TABLE Puente_Cuenta_Cliente (
+            sk_cuenta INT NOT NULL, sk_cliente INT NOT NULL UNIQUE, tipo_disposicion VARCHAR(20) NOT NULL,
+            CONSTRAINT PK_Puente_Cuenta_Cliente PRIMARY KEY (sk_cuenta, sk_cliente),
+            CONSTRAINT FK_Puente_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+            CONSTRAINT FK_Puente_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente))""")
     for tabla in ["Fact_Transacciones", "Fact_Saldo_Cuenta_Mensual", "Fact_Ordenes", "Fact_Prestamos",
-                  "Dim_Cliente", "Dim_Cuenta", "Dim_Distrito", "Dim_Tiempo", "Dim_Estado_Prestamo",
-                  "Dim_Operacion", "Dim_Orden"]:
+                  "Puente_Cuenta_Cliente", "Dim_Cliente", "Dim_Cuenta", "Dim_Distrito", "Dim_Tiempo",
+                  "Dim_Estado_Prestamo", "Dim_Operacion", "Dim_Orden"]:
         cur.execute(f"DELETE FROM {tabla}")
         # Reiniciar el contador solo si la tabla ya tuvo filas (si no, la primera clave sería 0)
         cur.execute(f"IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('{tabla}') "
@@ -336,6 +344,8 @@ def cargar(st):
 
     sk_cuenta = {r[0]: r[1] for r in cur.execute("SELECT id_cuenta_bk, sk_cuenta FROM Dim_Cuenta")}
     sk_cliente = {r[0]: r[1] for r in cur.execute("SELECT id_cliente_bk, sk_cliente FROM Dim_Cliente")}
+    insertar(cur, "Puente_Cuenta_Cliente", ["sk_cuenta", "sk_cliente", "tipo_disposicion"],
+             [(sk_cuenta[int(r.account_id)], sk_cliente[int(r.client_id)], r.type.strip()) for r in st["disps"].itertuples()])
     titular, dist_cta = st["titular"], st["cuenta_distrito"]
     claves = lambda cta: (sk_cuenta[cta], sk_cliente[titular[cta]], sk_distrito[dist_cta[cta]])
 
@@ -404,7 +414,8 @@ def validar(src, st, anomalias):
                                ("orders -> Fact_Ordenes", len(o), uno("SELECT COUNT(*) FROM Fact_Ordenes")),
                                ("clients -> Dim_Cliente", len(src["clients"]), uno("SELECT COUNT(*) FROM Dim_Cliente")),
                                ("accounts -> Dim_Cuenta", len(src["accounts"]), uno("SELECT COUNT(*) FROM Dim_Cuenta")),
-                               ("districts -> Dim_Distrito", len(src["districts"]), uno("SELECT COUNT(*) FROM Dim_Distrito"))]:
+                               ("districts -> Dim_Distrito", len(src["districts"]), uno("SELECT COUNT(*) FROM Dim_Distrito")),
+                               ("disps -> Puente_Cuenta_Cliente", len(src["disps"]), uno("SELECT COUNT(*) FROM Puente_Cuenta_Cliente"))]:
         registrar(f"1. Conteo {tabla}", n_src, n_dm)
     # 2. Totales monetarios
     registrar("2. Monto de préstamos", f"{l.amount.astype(float).sum():,.2f}", f"{uno('SELECT SUM(monto_prestamo) FROM Fact_Prestamos'):,.2f}")
@@ -472,7 +483,8 @@ def validar(src, st, anomalias):
                         "VALUES (?, ?, ?, ?, ?)", [(ID_EJECUCION, *a) for a in anomalias])
     cn.commit()
     filas = {tb: uno(f"SELECT COUNT(*) FROM {tb}") for tb in
-             ["Dim_Tiempo", "Dim_Distrito", "Dim_Cuenta", "Dim_Cliente", "Dim_Estado_Prestamo", "Dim_Operacion", "Dim_Orden",
+             ["Dim_Tiempo", "Dim_Distrito", "Dim_Cuenta", "Dim_Cliente", "Puente_Cuenta_Cliente", "Dim_Estado_Prestamo",
+              "Dim_Operacion", "Dim_Orden",
               "Fact_Prestamos", "Fact_Transacciones", "Fact_Saldo_Cuenta_Mensual", "Fact_Ordenes"]}
     cn.close()
     return pruebas, filas

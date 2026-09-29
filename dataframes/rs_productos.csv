@@ -1,0 +1,9 @@
+﻿producto,descripcion,direccion,canal,contraparte,es_credito,es_recurrente_fijo,regularidad_mensual,monto_mensual_mediano,cuentas,penetracion
+SERVICIOS_HOGAR,Pago domiciliado de servicios del hogar (SIPO),Salida,Transferencia saliente,Entidad externa registrada,0,1,0.874,2859.9,3439,0.7642
+TRANSF_SALIENTE,Transferencias salientes a otros bancos,Salida,Transferencia saliente,Entidad externa registrada,0,0,0.876,1409.44,1197,0.266
+INGRESO_TRANSF,Ingresos recibidos por transferencia,Entrada,Transferencia entrante,Entidad externa registrada,0,0,0.995,3965.92,866,0.1924
+RETIRO_TARJETA,Retiros con tarjeta en cajero,Salida,Retiro con tarjeta,Entidad externa registrada,0,0,0.124,393.03,807,0.1793
+PENSION,Abono de pensión (DUCHOD),Entrada,Transferencia entrante,Entidad externa registrada,0,1,0.995,5497.21,740,0.1644
+PRESTAMO,Préstamo del banco,Salida,Orden o contrato,Banco,1,1,1.0,3934.0,682,0.1516
+SEGURO,Pago de pólizas de seguro (POJISTNE),Salida,Transferencia saliente,Entidad externa registrada,0,1,0.875,547.29,532,0.1182
+LEASING,Orden permanente de leasing,Salida,Orden o contrato,Entidad externa registrada,1,1,1.0,1951.0,341,0.0758

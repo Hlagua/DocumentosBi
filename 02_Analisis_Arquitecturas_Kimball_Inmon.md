@@ -232,7 +232,7 @@ Especificación física (resumen; detalle en `sql/01_DDL_Kimball_DM_Financial.sq
 
 | Relación | Resolución en Kimball |
 | :--- | :--- |
-| Cliente – Cuenta (869 cuentas mancomunadas) | Los hechos se unen **solo al titular**; `Dim_Cliente` conserva a los 5,369 clientes con su rol. Una tabla puente cuenta–cliente queda disponible si se analizan cotitulares |
+| Cliente – Cuenta (869 cuentas mancomunadas) | Los hechos se unen **solo al titular**; `Dim_Cliente` conserva a los 5,369 clientes con su rol, y la tabla `Puente_Cuenta_Cliente` (5,369 filas) vincula a cada cliente, incluidos los cotitulares, con su cuenta |
 | Cuenta – Préstamo (0..1) | Sin riesgo de duplicación |
 | Cuenta – Órdenes (0..5) y Cuenta – Movimientos (1..N) | No se unen hechos entre sí fila a fila. Cada hecho se agrega por cuenta y los resultados se combinan (*drill-across*) sobre `Dim_Cuenta` |
 | Distrito de cuenta vs. residencia (409 titulares distintos) | `sk_distrito` de los hechos = distrito de la cuenta; la residencia queda en `Dim_Cliente` |

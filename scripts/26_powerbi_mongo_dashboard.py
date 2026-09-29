@@ -61,8 +61,8 @@ m_distritos = pd.DataFrame([{
     "region": campo(d, "region"),
     "poblacion": campo(d, "poblacion"),
     "salario_promedio": campo(d, "salario_promedio"),
-    "tasa_desempleo": campo(d, "tasa_desempleo"),
-    "tasa_criminalidad": campo(d, "tasa_criminalidad"),
+    "tasa_desempleo": campo(d, "indicadores_1995.tasa_desempleo", "tasa_desempleo"),
+    "tasa_criminalidad": campo(d, "indicadores_1995.tasa_criminalidad", "tasa_criminalidad"),
     "es_imputado": bool(campo(d, "auditoria.es_imputado", "es_imputado", defecto=False)),
 } for d in db.distritos.find({})])
 
@@ -108,7 +108,7 @@ m_prestamos = pd.DataFrame([{
     "monto_prestamo": float(campo(p, "condiciones.monto", "monto_prestamo")),
     "plazo_meses": int(campo(p, "condiciones.plazo_meses", "plazo_meses")),
     "pago_mensual": float(campo(p, "condiciones.cuota_mensual", "pago_mensual")),
-    "saldo_pendiente_estimado": float(campo(p, "condiciones.saldo_pendiente",
+    "saldo_pendiente_estimado": float(campo(p, "condiciones.saldo_pendiente_estimado", "condiciones.saldo_pendiente",
                                             "saldo_pendiente_estimado", defecto=0)),
     "codigo_estado": campo(p, "evaluacion_riesgo.codigo_estado", "estado_prestamo"),
     "condicion": campo(p, "evaluacion_riesgo.condicion", "condicion_prestamo"),

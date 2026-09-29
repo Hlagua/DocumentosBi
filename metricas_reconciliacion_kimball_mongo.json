@@ -1,0 +1,206 @@
+{
+  "id_ejecucion": "M20260928_214552",
+  "duracion_segundos": 23.0,
+  "pruebas_ok": 33,
+  "pruebas_total": 33,
+  "pruebas": [
+    {
+      "prueba": "Dim_Distrito = distritos",
+      "kimball": "77",
+      "mongodb": "77",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Fact_Prestamos = prestamos",
+      "kimball": "682",
+      "mongodb": "682",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Fact_Ordenes = ordenes",
+      "kimball": "6471",
+      "mongodb": "6471",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Dim_Cliente = FinancialMongo",
+      "kimball": "5369",
+      "mongodb": "5369",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Fact_Transacciones = transacciones",
+      "kimball": "1056320",
+      "mongodb": "1056320",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Fact_Saldo_Cuenta_Mensual = saldos_mensuales",
+      "kimball": "185615",
+      "mongodb": "185615",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cartera total",
+      "kimball": "103261740.00",
+      "mongodb": "103261740.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cuotas mensuales",
+      "kimball": "2858033.00",
+      "mongodb": "2858033.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Saldo por cobrar estimado",
+      "kimball": "46620926.00",
+      "mongodb": "46620926.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Órdenes",
+      "kimball": "21229041.00",
+      "mongodb": "21229041.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Transacciones",
+      "kimball": "6257862197.00",
+      "mongodb": "6257862197.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Saldo neto al corte (dic-1998)",
+      "kimball": "197140434.00",
+      "mongodb": "197140434.0",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cartera por región",
+      "kimball": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "mongodb": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Saldo al corte por región",
+      "kimball": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "mongodb": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Órdenes por región",
+      "kimball": "{'Prague': 2774875.0, 'central Bohemia': 2730867.0, 'east Bohemia': 2404446.0, 'north Bohemia': 2188888.0, 'north Moravia': 3780668.0, 'south Bohemia': 1777142.0, 'south Moravia': 3527649.0, 'west Bohemia': 2044506.0}",
+      "mongodb": "{'Prague': 2774875.0, 'central Bohemia': 2730867.0, 'east Bohemia': 2404446.0, 'north Bohemia': 2188888.0, 'north Moravia': 3780668.0, 'south Bohemia': 1777142.0, 'south Moravia': 3527649.0, 'west Bohemia': 2044506.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Transacciones por región",
+      "kimball": "{'Prague': 804494161.0, 'central Bohemia': 814021352.0, 'east Bohemia': 721968313.0, 'north Bohemia': 621471460.0, 'north Moravia': 1138455588.0, 'south Bohemia': 520503224.0, 'south Moravia': 1058151784.0, 'west Bohemia': 578796315.0}",
+      "mongodb": "{'Prague': 804494161.0, 'central Bohemia': 814021352.0, 'east Bohemia': 721968313.0, 'north Bohemia': 621471460.0, 'north Moravia': 1138455588.0, 'south Bohemia': 520503224.0, 'south Moravia': 1058151784.0, 'west Bohemia': 578796315.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Préstamos en mora (D) por región",
+      "kimball": "{'Prague': 4, 'central Bohemia': 5, 'east Bohemia': 9, 'north Bohemia': 0, 'north Moravia': 12, 'south Bohemia': 4, 'south Moravia': 7, 'west Bohemia': 4}",
+      "mongodb": "{'Prague': 4, 'central Bohemia': 5, 'east Bohemia': 9, 'north Bohemia': 0, 'north Moravia': 12, 'south Bohemia': 4, 'south Moravia': 7, 'west Bohemia': 4}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Movimientos por categoría analítica",
+      "kimball": "{'Egreso / Gasto': 634571, 'Ingreso / Deposito': 221969, 'Intereses Ganados': 183114, 'Retiro en Efectivo': 16666}",
+      "mongodb": "{'Egreso / Gasto': 634571, 'Ingreso / Deposito': 221969, 'Intereses Ganados': 183114, 'Retiro en Efectivo': 16666}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Monto por categoría analítica",
+      "kimball": "{'Egreso / Gasto': 2821775775.0, 'Ingreso / Deposito': 3200002902.0, 'Intereses Ganados': 27479762.0, 'Retiro en Efectivo': 208603758.0}",
+      "mongodb": "{'Egreso / Gasto': 2821775775.0, 'Ingreso / Deposito': 3200002902.0, 'Intereses Ganados': 27479762.0, 'Retiro en Efectivo': 208603758.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Movimientos por concepto completado",
+      "kimball": "{'DEPOSITO_EFECTIVO': 156743, 'DUCHOD': 30338, 'INGRESO_ORDINARIO': 34888, 'POJISTNE': 19309, 'RETIRO_EFECTIVO': 282657, 'SANKC. UROK': 1577, 'SIPO': 128168, 'SLUZBY': 155832, 'TRANSFERENCIA_EXTERNA': 50093, 'UROK': 183114, 'UVER': 13601}",
+      "mongodb": "{'DEPOSITO_EFECTIVO': 156743, 'DUCHOD': 30338, 'INGRESO_ORDINARIO': 34888, 'POJISTNE': 19309, 'RETIRO_EFECTIVO': 282657, 'SANKC. UROK': 1577, 'SIPO': 128168, 'SLUZBY': 155832, 'TRANSFERENCIA_EXTERNA': 50093, 'UROK': 183114, 'UVER': 13601}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Movimientos por método del concepto",
+      "kimball": "{'Cruce con ordenes': 10912, 'Cruce con prestamos': 21, 'Fuente': 521006, 'Regla de canal': 439400, 'Residual': 84981}",
+      "mongodb": "{'Cruce con ordenes': 10912, 'Cruce con prestamos': 21, 'Fuente': 521006, 'Regla de canal': 439400, 'Residual': 84981}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Préstamos por estado",
+      "kimball": "{'A': 203, 'B': 31, 'C': 403, 'D': 45}",
+      "mongodb": "{'A': 203, 'B': 31, 'C': 403, 'D': 45}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Préstamos con impago por banda de capacidad",
+      "kimball": "{'Alta': 40, 'Baja': 5, 'Media-alta': 15, 'Media-baja': 16}",
+      "mongodb": "{'Alta': 40, 'Baja': 5, 'Media-alta': 15, 'Media-baja': 16}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Cuentas en sobregiro al corte",
+      "kimball": "39",
+      "mongodb": "39",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes por calificación",
+      "kimball": "{'Buen Pagador': 258, 'Mal Pagador': 31, 'Sin evaluar': 5080}",
+      "mongodb": "{'Buen Pagador': 258, 'Mal Pagador': 31, 'Sin evaluar': 5080}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes por arquetipo",
+      "kimball": "{'Bohemia - Adulto (30-50)': 1013, 'Bohemia - Adulto Mayor (>50)': 1141, 'Bohemia - Joven (<30)': 695, 'Moravia - Adulto (30-50)': 673, 'Moravia - Adulto Mayor (>50)': 751, 'Moravia - Joven (<30)': 433, 'Praga - Adulto (30-50)': 238, 'Praga - Adulto Mayor (>50)': 271, 'Praga - Joven (<30)': 154}",
+      "mongodb": "{'Bohemia - Adulto (30-50)': 1013, 'Bohemia - Adulto Mayor (>50)': 1141, 'Bohemia - Joven (<30)': 695, 'Moravia - Adulto (30-50)': 673, 'Moravia - Adulto Mayor (>50)': 751, 'Moravia - Joven (<30)': 433, 'Praga - Adulto (30-50)': 238, 'Praga - Adulto Mayor (>50)': 271, 'Praga - Joven (<30)': 154}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes por distrito de su cuenta (titulares y cotitulares)",
+      "kimball": "{'Prague': 671, 'central Bohemia': 669, 'east Bohemia': 642, 'north Bohemia': 553, 'north Moravia': 942, 'south Bohemia': 445, 'south Moravia': 932, 'west Bohemia': 515}",
+      "mongodb": "{'Prague': 671, 'central Bohemia': 669, 'east Bohemia': 642, 'north Bohemia': 553, 'north Moravia': 942, 'south Bohemia': 445, 'south Moravia': 932, 'west Bohemia': 515}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Clientes sin saldo promedio (cotitulares)",
+      "kimball": "869",
+      "mongodb": "869",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Órdenes embebidas en el Cliente 360",
+      "kimball": "6471",
+      "mongodb": "6471",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Distrito 69 imputado",
+      "kimball": "{'criminalidad': 1326.0, 'desempleo': 5.83}",
+      "mongodb": "{'criminalidad': 1326.0, 'desempleo': 5.83}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Conector: saldo al corte por región",
+      "kimball": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "mongodb": "{'Prague': 24896682.0, 'central Bohemia': 25151592.0, 'east Bohemia': 23660859.0, 'north Bohemia': 20166494.0, 'north Moravia': 35000037.0, 'south Bohemia': 15481233.0, 'south Moravia': 34019639.0, 'west Bohemia': 18763898.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Conector: monto por categoría",
+      "kimball": "{'Egreso / Gasto': 2821775775.0, 'Ingreso / Deposito': 3200002902.0, 'Intereses Ganados': 27479762.0, 'Retiro en Efectivo': 208603758.0}",
+      "mongodb": "{'Egreso / Gasto': 2821775775.0, 'Ingreso / Deposito': 3200002902.0, 'Intereses Ganados': 27479762.0, 'Retiro en Efectivo': 208603758.0}",
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Conector: cartera por región",
+      "kimball": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "mongodb": "{'Prague': 12932412.0, 'central Bohemia': 13985304.0, 'east Bohemia': 13943724.0, 'north Bohemia': 7486620.0, 'north Moravia': 18081312.0, 'south Bohemia': 9374136.0, 'south Moravia': 19678848.0, 'west Bohemia': 7779384.0}",
+      "resultado": "OK"
+    }
+  ]
+}

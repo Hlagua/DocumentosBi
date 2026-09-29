@@ -270,6 +270,7 @@ A esto se suma el **compromiso fijo mensual** de las cuentas: las órdenes perma
 | **Dimensión** | `Dim_Estado_Prestamo` | Catálogo fijo A, B, C, D. | Condición (Vigente / Cerrado) > Estado | `sk_estado_prestamo` | SCD 0 |
 | **Dimensión** | `Dim_Operacion` | Una fila por combinación real `type` + `operation` + `k_symbol` normalizado (15 filas), con la categoría analítica de 4 valores. | Categoría analítica > Tipo > Operación > Concepto | `sk_operacion` | SCD 0 |
 | **Dimensión** | `Dim_Orden` | Propósito de la orden (5 valores). | Categoría > Símbolo | `sk_orden_tipo` | SCD 0 |
+| **Puente** | `Puente_Cuenta_Cliente` | Una fila por cliente (5,369: 4,500 titulares y 869 cotitulares) con su cuenta y su rol. | — | `sk_cuenta`, `sk_cliente` (PK compuesta) | Resuelve la relación multivaluada cuenta–cliente (sección 9.2) |
 | **Dimensión** | `Dim_Concepto_Movimiento` | Concepto de cada transacción **después de la completitud** (19 combinaciones de concepto × método × contraparte). Complementa a `Dim_Operacion`, que conserva el dato original. | Concepto > Método (fuente / inferido) > Contraparte | `sk_concepto` | SCD 0. Se asigna en la etapa de completitud (Informe 10) |
 
 **Matriz de Bus (procesos × dimensiones conformadas):**
@@ -302,7 +303,7 @@ En banca, el equivalente del "pedido – producto – vendedor" del comercio es 
 
 | Relación | Cardinalidad verificada | Riesgo si no se resuelve | Resolución en el modelo |
 | :--- | :--- | :--- | :--- |
-| Cliente – Cuenta (`disps`) | Cada cliente tiene exactamente 1 cuenta. Cada cuenta tiene exactamente 1 titular (OWNER) y 0 o 1 cotitular (DISPONENT): 3,631 cuentas individuales y 869 mancomunadas | Unir hechos con `disps` duplica montos en 869 cuentas | Los hechos se unen **solo al titular**. `Dim_Cliente` guarda a los 5,369 clientes con su rol. Una tabla puente cuenta–cliente queda disponible si se requiere analizar cotitulares |
+| Cliente – Cuenta (`disps`) | Cada cliente tiene exactamente 1 cuenta. Cada cuenta tiene exactamente 1 titular (OWNER) y 0 o 1 cotitular (DISPONENT): 3,631 cuentas individuales y 869 mancomunadas | Unir hechos con `disps` duplica montos en 869 cuentas | Los hechos se unen **solo al titular**. `Dim_Cliente` guarda a los 5,369 clientes con su rol, y la tabla `Puente_Cuenta_Cliente` vincula a cada cliente, incluidos los cotitulares, con su cuenta |
 | Cuenta – Préstamo | 0 o 1 préstamo por cuenta (682 préstamos en 682 cuentas) | Ninguno | `Fact_Prestamos` se une por cuenta sin duplicación |
 | Cuenta – Orden | 0 a 5 órdenes por cuenta (3,758 cuentas con órdenes) | Unir órdenes con préstamos a nivel de fila multiplica el préstamo | Se combinan por *drill-across*: cada hecho se agrega por cuenta y luego se relacionan |
 | Cuenta – Transacción | 1 a N movimientos por cuenta | Sumar saldos de varios movimientos | Saldo semiaditivo en `Fact_Saldo_Cuenta_Mensual` |
@@ -425,10 +426,10 @@ flowchart LR
 | :-: | :--- | :--- | :--- |
 | 1 | Levantamiento de requisitos y perfilado de la fuente | Esta Carta de Diseño (v8) | Completado |
 | 2 | Limpieza y preparación de datos | Informe 03 y DataFrames en `dataframes/` | Completado |
-| 3 | Diseño dimensional | DDL `sql/01_DDL_Kimball_DM_Financial.sql` | Requiere actualización: `Fact_Saldo_Cuenta_Mensual`, nuevas columnas de `Fact_Prestamos` y `Dim_Cuenta`, `Dim_Operacion` a 15 filas |
-| 4 | Carga ETL | `scripts/etl_populate_kimball_v2.py` | Requiere actualización para las columnas y hechos de la fase 3 |
-| 5 | Validación de la carga | Resultados del plan 12.3 | Pruebas 1–4 superadas con el modelo actual; pruebas 5–7 pendientes de la fase 4 |
-| 6 | Réplica documental | MongoDB `Financial` | Requiere guardar el distrito de la cuenta y la categoría de operación |
+| 3 | Diseño dimensional | DDL `sql/01_DDL_Kimball_DM_Financial.sql` | Completado: 4 hechos, 8 dimensiones, tabla puente y auditoría (Informe 02) |
+| 4 | Carga ETL y completitud | `scripts/31` a `scripts/34` | Completado (Informes 09 y 10) |
+| 5 | Validación de la carga | Resultados del plan 12.3 | Completado: las 8 pruebas superadas (23/23 en el ETL, 12/12 en la completitud) |
+| 6 | Réplica documental | MongoDB `Financial` (`scripts/35`, `scripts/36`) | Completado: reconciliación por desgloses 33/33 (Informe 05 v2) |
 | 7 | Tableros | Proyectos `.pbip` Kimball y Mongo | Requiere ajustar medidas (ratio de absorción, capacidad de pago) |
 | 8 | Defensa | Guía 07 y Dossier 08 | Requiere actualizar cifras a esta carta |
 

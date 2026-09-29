@@ -27,10 +27,10 @@
 > | :-: | :--- | :-: | :--- |
 > | 1 | Análisis de la base remota y Carta de Diseño (v8): problemas con evidencia, granularidad, relaciones multivaluadas, arquitectura, plan y validación | ✅ | [`01`](01_Carta_de_Diseno_Financial_ijs.md) |
 > | 2 | Arquitecturas Kimball vs. Inmon (v2) y sus DDL, validados con carga real | ✅ | [`02`](02_Analisis_Arquitecturas_Kimball_Inmon.md), [`sql/01`](sql/01_DDL_Kimball_DM_Financial.sql), [`sql/02`](sql/02_DDL_Inmon_EDW_Financial.sql) |
-> | 3 | Carga ETL OLTP → Kimball (22/22 pruebas) | ✅ | [`09`](09_Informe_Carga_ETL_OLTP_Kimball.md), [`scripts/31`](scripts/31_etl_oltp_a_kimball.py) |
+> | 3 | Carga ETL OLTP → Kimball (23/23 pruebas) | ✅ | [`09`](09_Informe_Carga_ETL_OLTP_Kimball.md), [`scripts/31`](scripts/31_etl_oltp_a_kimball.py) |
 > | 4 | DataFrames, completitud de datos y carga en Kimball (14/14 y 12/12 pruebas) | ✅ | [`03`](03_Informe_Limpieza_y_Transformacion_de_Datos.md), [`10`](10_Informe_Completitud_Carga_Kimball.md), [`scripts/32`](scripts/32_extraer_dataframes_kimball.py) a [`34`](scripts/34_carga_completitud_kimball.py) |
-> | 5 | Sistemas de recomendación (Informe 04) | ⏳ | `04_*` |
-> | 6 | Especificación Kimball ↔ MongoDB y réplica MongoDB (scripts 22 a 26) | ⏳ | `05_*` |
+> | 5 | Migración Kimball → MongoDB, validadores `$jsonSchema`, reconciliación por desgloses (33/33) y respaldo `Financial_mongo_dump.gz` | ✅ | [`05`](05_Especificacion_Tecnica_Kimball_MongoDB.md), [`scripts/35`](scripts/35_migrar_kimball_a_mongodb.py), [`scripts/36`](scripts/36_reconciliacion_kimball_mongo.py) |
+> | 6 | Sistemas de recomendación (Informe 04 v2): catálogo real de 8 productos, protocolo de evaluación común con popularidad, cola larga y confirmación, fugas de información corregidas y recomendaciones para 4,500 titulares. El `.docx` y el `.pdf` siguen siendo de la versión 1 | ✅ (solo `.md`) | [`04`](04_Informe_Sistemas_de_Recomendacion.md), [`scripts/37`](scripts/37_rs_preparacion.py) a [`41`](scripts/41_rs_figuras.py) |
 > | 7 | Medidas DAX y proyectos Power BI (`.pbip`) | ⏳ | `sql/05`, `dashboards/` |
 > | 8 | Guías de dashboard, dossier y demo HTML | ⏳ | `06_*`, `07_*`, `08_*`, `demo_dashboard.html` |
 > | 9 | Este README (resto de secciones) | ⏳ | — |
@@ -38,8 +38,8 @@
 > **Cambios que aún no se reflejan en las etapas ⏳:**
 > * El KPI de liquidez de la Carta v8 es el **Ratio de Absorción de Cartera Vigente (40.73%)**. El 52.38% que citan los documentos y el dashboard queda solo como referencia histórica.
 > * El Data Mart ahora tiene **4 hechos** (se agrega `Fact_Saldo_Cuenta_Mensual`) y **8 dimensiones** (`Dim_Operacion` con 15 combinaciones y la nueva `Dim_Concepto_Movimiento`). El proyecto Power BI Kimball **no carga** hasta regenerarse, porque usa columnas que cambiaron de nombre.
-> * El distrito 69 se imputa con desempleo **5.83** y criminalidad **1,326**. Los documentos 05 y 08 todavía citan 5.00 / 3,736.
-> * La réplica MongoDB todavía no guarda el distrito de la cuenta ni la categoría de operación de la Carta v8.
+> * El distrito 69 se imputa con desempleo **5.83** y criminalidad **1,326**. El documento 08 todavía cita 5.00 / 3,736.
+> * MongoDB ya refleja la Carta v8, pero el proyecto Power BI de Mongo incrusta una copia anterior del conector y debe regenerarse (etapa 7). La carga alternativa desde CSV (script 23) todavía genera el esquema anterior.
 >
 > **Cadena reproducible actual:**
 >
@@ -48,6 +48,8 @@
 > python scripts/32_extraer_dataframes_kimball.py
 > python scripts/33_completitud_datos.py
 > python scripts/34_carga_completitud_kimball.py
+> python scripts/35_migrar_kimball_a_mongodb.py
+> python scripts/36_reconciliacion_kimball_mongo.py
 > ```
 
 ---
