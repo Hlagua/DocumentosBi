@@ -25,9 +25,10 @@
 3. [Cómo navegar y filtrar](#3-cómo-navegar-y-filtrar)
 4. [Conceptos y medidas que se repiten](#4-conceptos-y-medidas-que-se-repiten)
 5. [Página por página](#5-página-por-página) — Inicio · P1 · P2 · P3 · P4 · P5 · P6 · R1 · R2 · R3 · D1 · D2
-6. [Recorridos de decisión (ejemplos)](#6-recorridos-de-decisión-ejemplos)
-7. [Cuidados al interpretar](#7-cuidados-al-interpretar)
-8. [Anexo: medidas por página](#8-anexo-medidas-por-página)
+6. [Antes de presentar](#6-antes-de-presentar-lista-de-verificación)
+7. [Recorridos de decisión (ejemplos)](#7-recorridos-de-decisión-ejemplos)
+8. [Cuidados al interpretar](#8-cuidados-al-interpretar)
+9. [Anexo: medidas por página](#9-anexo-medidas-por-página)
 
 ---
 
@@ -117,11 +118,11 @@ Reglas del modelo que el gerente debe conocer, porque cambian la lectura:
 
 ## 3. CÓMO NAVEGAR Y FILTRAR
 
-### 3.1 El panel lateral (todas las páginas)
+### 3.1 Banda superior y panel de filtros (todas las páginas)
 
 | Elemento | Qué hace |
 | :--- | :--- |
-| Botones **Inicio, P1–P6, R1–R3** | Cambian de página (dos columnas). El botón azul es la página actual. |
+| Botones **Inicio, P1–P6, R1–R3** (banda azul superior) | Cambian de página. El botón ámbar es la página actual. Debajo de los botones va la pregunta de la página. |
 | Filtro **Año** | Filtra por año del hecho: otorgamiento del préstamo, año de las transacciones, mes del saldo. |
 | Filtro **Zona** | Jerárquico: macro-región (Bohemia, Moravia, Praga) › región › distrito. Se abre con la flecha y se puede elegir un nivel o varios elementos. |
 | Filtro **Edad** | Joven (< 30), Adulto (30–50), Adulto Mayor (50 o más). |
@@ -263,8 +264,8 @@ Cada página tiene la misma estructura: **título = pregunta de la Carta**, una 
 
 | | |
 | :--- | :--- |
-| **Muestra** | Rectángulos por región y distrito. **Área** = cartera vigente; **color** = tasa de mora (blanco → bermellón) |
-| **Campos y medidas** | Grupo: región · Detalle: distrito · Valor: `Cartera Vigente` · Color: `Color Mora` · Tooltip: `Tasa Mora Vigente`, `Prestamos Vigentes` |
+| **Muestra** | Un rectángulo por distrito. **Área** = cartera vigente; **color** = tasa de mora (blanco → bermellón) |
+| **Campos y medidas** | Grupo: distrito · Valor: `Cartera Vigente` · Color: `Color Mora` · Tooltip: `Tasa Mora Vigente`, `Prestamos Vigentes`, `Region del Distrito`. Un solo nivel porque Power BI no permite color condicional en un treemap con dos niveles |
 | **Por qué** | Muestra a la vez **cuánto** hay en juego y **qué tan riesgoso** es |
 | **Cómo interpretarlo** | Rectángulo grande y oscuro = mucho dinero con mucha mora (prioridad de cobranza). Grande y claro = cartera sana. Pequeño y oscuro = tasa alta pero con pocos préstamos (revise el *n*) |
 
@@ -578,7 +579,18 @@ Igual que el gráfico 1 de P6 (`Tasa Impago` por `banda_capacidad`, línea `Tasa
 
 ---
 
-## 6. RECORRIDOS DE DECISIÓN (EJEMPLOS)
+## 6. ANTES DE PRESENTAR (LISTA DE VERIFICACIÓN)
+
+1. `git pull` y, en un equipo nuevo o con una base antigua, `python REPARAR_TODO.py` (deja listos Kimball y MongoDB).
+2. Abrir el `.pbip` → **Inicio → Actualizar**. Si Power BI pregunta por el formato TMDL: **No actualizar**.
+3. Comprobar en **Inicio** las cifras de control: mora 10.04%, incumplimiento 13.25%, cartera vigente $80.30M, saldo $197.14M, absorción 40.73%, sobregiro 39.
+4. En **P2**, expandir el árbol de descomposición: clic en **+** → región → distrito → cliente (Power BI no guarda el árbol abierto desde el archivo).
+5. Dejar los **filtros globales** en "Todas" antes de empezar (el panel izquierdo recuerda la última selección).
+6. Probar una vez el clic derecho en **Cliente 2823** (tabla de P6 o R1) → *Obtener detalles* → D2, y el botón **◀ Atrás**.
+
+**Guion sugerido (10 minutos):** Inicio (los 3 problemas) → P1 (la mora crece por volumen, no por deterioro) → P2 (north Moravia, árbol hasta Karvina) → D1 Karvina → D2 cliente 2823 → P5 (no es aislado: 47 cuentas) → P6 (la capacidad de pago anticipa el impago) → R2 (a quién sí prestar y cuánto) → R1 y R3 (qué ofrecer) → mostrar un filtro global (por ejemplo, *Banda de capacidad = Alta*) recorriendo dos o tres páginas.
+
+## 7. RECORRIDOS DE DECISIÓN (EJEMPLOS)
 
 **A. ¿Dónde reforzar la cobranza?**
 1. P2 → la columna de north Moravia está sobre la línea del banco (15.8%).
@@ -603,7 +615,7 @@ Igual que el gráfico 1 de P6 (`Tasa Impago` por `banda_capacidad`, línea `Tasa
 
 ---
 
-## 7. CUIDADOS AL INTERPRETAR
+## 8. CUIDADOS AL INTERPRETAR
 
 * **Pocos casos, tasas extremas.** Una tasa con menos de 10 préstamos casi siempre tiene un intervalo muy ancho. Mire siempre el *n* y el intervalo de Wilson del tooltip antes de concluir.
 * **1998 es un año censurado.** Sus préstamos no han tenido tiempo de caer en mora; su tasa baja no significa mejor calidad.
@@ -614,7 +626,7 @@ Igual que el gráfico 1 de P6 (`Tasa Impago` por `banda_capacidad`, línea `Tasa
 
 ---
 
-## 8. ANEXO: MEDIDAS POR PÁGINA
+## 9. ANEXO: MEDIDAS POR PÁGINA
 
 Todas están en la tabla `_Medidas` de los dos modelos, con la misma fórmula. La fórmula completa y su comentario están en `sql/05_Medidas_DAX_PowerBI.dax`.
 

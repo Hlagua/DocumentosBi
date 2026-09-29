@@ -324,6 +324,10 @@ REGLAS: tasas con intervalo de Wilson (z = 1); promedios con ±1σ exacta;
 '_Medidas'[Titulo Distrito] =
     "Distrito: " & SELECTEDVALUE(Dim_Distrito[nombre_distrito], "(varios)") & " (" & SELECTEDVALUE(Dim_Distrito[region], "varias regiones") & ")"
 
+// Región del distrito (tooltip del treemap de P2)
+'_Medidas'[Region del Distrito] =
+    SELECTEDVALUE(Dim_Distrito[region])
+
 // Habitantes   [formato #,0]
 '_Medidas'[Poblacion Distrito] =
     SELECTEDVALUE(Dim_Distrito[poblacion])

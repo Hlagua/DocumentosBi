@@ -100,7 +100,7 @@ Las regiones, operaciones y segmentos **no** llevan color: ya están nombrados e
 | Título de visual | 12 pt, la **respuesta** | Knaflic (2015) |
 | Etiquetas y ejes | 10 pt; sin cuadrícula secundaria; eje Y desde 0 en columnas | Tufte (2001): menos tinta que no es dato |
 | Números | Moneda `$#,0` (tarjetas en millones con 2 decimales); tasas `0.00%` (las mismas cifras que citan la Carta y los informes: 10.04%, 13.25%); conteos `#,0` | Coherencia entre páginas y documentos |
-| Distribución | Fila 1: pregunta. Fila 2: navegación (7 botones) y segmentadores. Fila 3: cabecera de KPIs. Debajo: visual principal a la izquierda y detalle a la derecha y abajo | Lectura en Z (Few, 2006) |
+| Distribución | Banda superior azul marino (`#0F2A4A`, 70 px): subtítulo, navegación (página actual en ámbar) y la pregunta de la página en blanco. Panel izquierdo (180 px): filtros globales. Fila de KPIs en tarjetas blancas con barra de color a la izquierda (azul = indicador, bermellón = alerta). Debajo: visual principal a la izquierda y detalle a la derecha y abajo, en tarjetas blancas con bordes redondeados sobre fondo gris `#EEF1F5` | Lectura en Z (Few, 2006); la interfaz usa azul marino y grises neutros para no competir con los colores de los datos |
 
 Estos valores se guardan en `tema_financial.json`, **incrustado en cada informe** (`StaticResources/RegisteredResources`) y copiado junto al `.pbip`. Los colores con significado (estados, bandas, alertas, propósitos, referencias en gris) se fijan además en cada visual, para que no dependan del tema.
 
@@ -110,7 +110,7 @@ Estos valores se guardan en `tema_financial.json`, **incrustado en cada informe*
 
 Doce páginas: **Inicio**, seis de preguntas (**P1–P6**, una por pregunta de la Carta v8), tres de recomendación (**R1–R3**) y dos de detalle por *drill-through* (**D1** distrito, **D2** cliente, ocultas en las pestañas).
 
-**Panel lateral fijo (180 px, en todas las páginas):** navegación a las diez páginas visibles y ocho filtros **sincronizados** —**Año**, **Zona** (jerarquía macro-región › región › distrito), **Edad** y cinco atributos del cliente: **estado del préstamo, banda de capacidad, alerta de saturación, primera oferta (R1) y préstamo prudente (R2)**—. Los atributos del cliente son columnas calculadas de la dimensión cliente (no de los hechos), por lo que un filtro sobre ellos llega a todos los hechos del proyecto. Lo que el gerente elige en ese panel se mantiene al cambiar de página, de modo que puede recorrer P1 → P6 → R1–R3 con la misma zona o segmento y decidir con el mismo recorte. El área de gráficos se comprime proporcionalmente al ancho restante.
+**Banda superior y panel lateral (en todas las páginas):** la banda azul lleva la navegación a las diez páginas visibles; el panel izquierdo, ocho filtros **sincronizados** —**Año**, **Zona** (jerarquía macro-región › región › distrito), **Edad** y cinco atributos del cliente: **estado del préstamo, banda de capacidad, alerta de saturación, primera oferta (R1) y préstamo prudente (R2)**—. Los atributos del cliente son columnas calculadas de la dimensión cliente (no de los hechos), por lo que un filtro sobre ellos llega a todos los hechos del proyecto. Lo que el gerente elige en ese panel se mantiene al cambiar de página, de modo que puede recorrer P1 → P6 → R1–R3 con la misma zona o segmento y decidir con el mismo recorte. El área de gráficos se comprime proporcionalmente al ancho restante.
 
 ### Inicio — "¿Cómo está el banco?"
 

@@ -43,6 +43,11 @@ ESTADOS = {"A · Cerrado al día": EST_A, "B · Cerrado con deuda": EST_B,
 ORDENES = {"Servicios del Hogar": "#009E73", "Cuota de Prestamo": "#CC79A7", "Pago de Seguros": "#F0E442",
            "Arrendamiento / Leasing": "#000000", "Sin Especificar": "#C8C8C8"}
 
+# Interfaz (banda superior, fondo, tarjetas): azul marino institucional y grises neutros.
+# No compite con los colores de los datos (Okabe e Ito), que siguen significando lo mismo.
+NAVY, NAVY_2, AMBAR = "#0F2A4A", "#24466E", "#F2A900"
+FONDO_PAG, PANEL, BORDE, TXT_SUAVE, TITULO = "#EEF1F5", "#E3E8F0", "#DDE3EB", "#5B6B7F", "#1F2D3D"
+
 MONEDA = '"$"#,0'
 MONEDA2 = '"$"#,0.00'
 PORC = "0.00%"
@@ -294,6 +299,7 @@ def medidas(t):
             ("Titulo Distrito",
              f'"Distrito: " & SELECTEDVALUE({t["dist_nombre"]}, "(varios)") & " (" & SELECTEDVALUE({t["region"]}, "varias regiones") & ")"',
              None, "Título dinámico de D1"),
+            ("Region del Distrito", f'SELECTEDVALUE({t["region"]})', None, "Región del distrito (tooltip del treemap de P2)"),
             ("Poblacion Distrito", f"SELECTEDVALUE({t['dist']}[poblacion])", ENTERO, "Habitantes"),
             ("Salario Promedio Distrito", f"SELECTEDVALUE({t['dist']}[salario_promedio])", MONEDA, "Salario promedio"),
             ("Desempleo Distrito 1995", f"SELECTEDVALUE({t['dist']}[tasa_desempleo])", "0.00", "Tasa de desempleo 1995 (%)"),
@@ -736,7 +742,8 @@ class Pagina:
         ent, prop, _ = self._resolver(c)
         return f"{ent}.{prop}"
 
-    def visual(self, tipo, x, y, w, h, roles, titulo=None, orden=None, objetos=None, extra=None, etiquetas=None):
+    def visual(self, tipo, x, y, w, h, roles, titulo=None, orden=None, objetos=None, extra=None, etiquetas=None,
+               titulo_tam=12, titulo_color=TITULO):
         """roles: {rol: [campo, ...]}; campo = clave de self.F o 'm:Nombre medida'.
         etiquetas: {campo: 'Nombre visible'} para encabezados de tablas y leyendas."""
         alias, desde, select, proy = {}, [], [], {}
@@ -768,10 +775,10 @@ class Pagina:
         if objetos:
             single["objects"] = objetos
         vc = {"background": [{"properties": {"show": lit(True), "color": color(BLANCO)}}],
-              "border": [{"properties": {"show": lit(True), "color": color(GRIS_BORDE)}}]}
+              "border": [{"properties": {"show": lit(True), "color": color(BORDE), "radius": lit(8)}}]}
         if titulo:
-            vc["title"] = [{"properties": {"show": lit(True), "text": lit(titulo), "fontSize": lit(12),
-                                           "fontColor": color(TINTA)}}]
+            vc["title"] = [{"properties": {"show": lit(True), "text": lit(titulo), "fontSize": lit(titulo_tam),
+                                           "fontColor": color(titulo_color)}}]
         single["vcObjects"] = vc
         if extra:
             single.update(extra)
@@ -783,11 +790,26 @@ class Pagina:
                     for linea in texto.split("\n")]
         single = {"visualType": "textbox", "drillFilterOtherVisuals": True,
                   "objects": {"general": [{"properties": {"paragraphs": parrafos}}]}}
-        if fondo:
-            single["vcObjects"] = {"background": [{"properties": {"show": lit(True), "color": color(fondo)}}]}
+        # Sin fondo explícito Power BI pinta los cuadros de texto en blanco y taparían la banda y el panel
+        single["vcObjects"] = {"background": [{"properties": {"show": lit(bool(fondo)), **({"color": color(fondo)} if fondo else {})}}]}
         self._contenedor(x, y, w, h, single)
 
-    def boton(self, x, y, w, h, texto, destino=None, tipo="PageNavigation", fondo=TINTA, col_texto=BLANCO, tam=10):
+    def texto_rico(self, x, y, w, h, parrafos, fondo=None, borde=None):
+        """parrafos = [[(texto, tamaño, negrita, color, cursiva), ...], ...]: un párrafo por lista de tramos."""
+        ps = [{"textRuns": [{"value": t or " ", "textStyle": {"fontSize": f"{tam}pt", "color": col,
+                                                             **({"fontWeight": "bold"} if neg else {}),
+                                                             **({"fontStyle": "italic"} if cur else {})}}
+                            for (t, tam, neg, col, cur) in tramos]} for tramos in parrafos]
+        single = {"visualType": "textbox", "drillFilterOtherVisuals": True,
+                  "objects": {"general": [{"properties": {"paragraphs": ps}}]}}
+        vc = {"background": [{"properties": {"show": lit(bool(fondo)), **({"color": color(fondo)} if fondo else {})}}]}
+        if borde:
+            vc["border"] = [{"properties": {"show": lit(True), "color": color(borde), "radius": lit(10)}}]
+        single["vcObjects"] = vc
+        self._contenedor(x, y, w, h, single)
+
+    def boton(self, x, y, w, h, texto, destino=None, tipo="PageNavigation", fondo=TINTA, col_texto=BLANCO, tam=10,
+              transparente=False):
         enlace = {"show": lit(True), "type": lit(tipo)}
         if destino:
             enlace["navigationSection"] = lit(destino)
@@ -801,9 +823,9 @@ class Pagina:
                          {"properties": {"text": lit(texto), "fontColor": color(col_texto), "fontSize": lit(tam),
                                          "bold": lit(True)}, "selector": {"id": "default"}}],
                 "fill": [{"properties": {"show": lit(True)}},
-                         {"properties": {"fillColor": color(fondo), "transparency": lit(0)},
+                         {"properties": {"fillColor": color(fondo), "transparency": lit(100 if transparente else 0)},
                           "selector": {"id": "default"}}],
-                "outline": [{"properties": {"show": lit(fondo == BLANCO)}},
+                "outline": [{"properties": {"show": lit(fondo == BLANCO and not transparente)}},
                             {"properties": {"lineColor": color(GRIS_BORDE)}, "selector": {"id": "default"}}],
             },
             "vcObjects": {"visualLink": [{"properties": enlace}]}})
@@ -885,7 +907,7 @@ UNIDADES = {MONEDA: {"labelDisplayUnits": lit(1000000), "labelPrecision": lit(2)
 FORMATOS = {}   # nombre de medida -> formato; lo llena main() desde el modelo
 
 
-def construir_informe(F):
+def construir_informe(F, fuente):
     nombres = ["Inicio", "P1 Cosechas", "P2 Regiones", "P3 Liquidez", "P4 Flujo", "P5 Órdenes", "P6 Impago",
                "R1 Qué ofrecer", "R2 Préstamo", "R3 Venta cruzada", "D1 Distrito", "D2 Cliente 360"]
     titulos = [
@@ -902,8 +924,8 @@ def construir_informe(F):
         "D1 · Detalle del distrito", "D2 · Ficha Cliente 360"]
     pags = [Pagina(n, t, F) for n, t in zip(nombres, titulos)]
     ids = {p.nombre: p.id for p in pags}
-    Y0 = 110            # inicio del área de gráficos, debajo del título y de la fila de KPIs
-    ALTO = H - Y0 - 8   # 602
+    Y0 = 148            # inicio del área de gráficos, debajo de la banda superior y de la fila de KPIs
+    ALTO = H - Y0 - 8   # 564
     sync = lambda g: {"syncGroup": {"groupName": g, "fieldChanges": True, "filterChanges": True}}
     desplegable = {"data": [{"properties": {"mode": lit("Dropdown")}}],
                    "header": [{"properties": {"show": lit(False)}}],
@@ -915,42 +937,56 @@ def construir_informe(F):
                ("estado_cli", "Estado del préstamo"), ("banda_cli", "Banda de capacidad"), ("alerta_cli", "Alerta de saturación"),
                ("oferta_cli", "Primera oferta"), ("prestamo_cli", "Préstamo prudente")]
 
-    def lateral(p):
-        """Panel fijo: navegación a las 10 páginas y 8 filtros SINCRONIZADOS (mismo valor en todas las páginas)."""
+    CORTOS = {"R1 Qué ofrecer": "R1 Ofrecer", "R3 Venta cruzada": "R3 Cruzada"}
+
+    def marco(p):
+        """Fondo gris, banda azul con navegación y panel de filtros globales (coordenadas reales del lienzo)."""
         p.crudo = True
-        p.texto(0, 0, 180, H, " ", 8, False, TINTA, "#EFEFEF")
-        p.texto(4, 2, 172, 34, "Financial_ijs", 11, True)
-        for i, n in enumerate(nombres[:10]):
-            corto = {"R1 Qué ofrecer": "R1 Ofrecer", "R3 Venta cruzada": "R3 Cruzada"}.get(n, n)
-            p.boton(6 + (i % 2) * 86, 40 + (i // 2) * 30, 82, 26, corto, ids[n], fondo=EST_A if n == p.nombre else TINTA, tam=8)
-        p.texto(4, 192, 172, 28, "Filtros globales", 10, True)
-        for i, (clave, titulo) in enumerate(FILTROS):
+        p.texto(0, 0, W, H, " ", 8, False, TINTA, FONDO_PAG)
+        p.texto(0, 0, W, 70, " ", 8, False, BLANCO, NAVY)
+        p.texto(8, 0, 430, 32, f"Financial_ijs · Dashboard {fuente}", 9, False, "#AFC3DA")
+        for k, n in enumerate(nombres[:10]):
+            activa = n == p.nombre
+            p.boton(444 + k * 83, 6, 80, 24, CORTOS.get(n, n), ids[n], fondo=AMBAR if activa else NAVY_2,
+                    col_texto=NAVY if activa else BLANCO, tam=8)
+        # Panel de filtros globales: se sincronizan en todas las páginas (lo elegido sigue activo al cambiar de página).
+        p.texto(0, 70, 180, H - 70, " ", 8, False, TINTA, PANEL)
+        p.texto(4, 72, 172, 30, "Filtros globales", 10, True, NAVY)
+        for k, (clave, titulo) in enumerate(FILTROS):
             campos = ["macro", "region", "distrito"] if clave == "zona" else [clave]
-            p.visual("slicer", 6, 220 + i * 60, 168, 56, {"Values": campos}, titulo, objetos=desplegable, extra=sync(clave))
-        p.crudo = False
+            p.visual("slicer", 6, 100 + k * 62, 168, 58, {"Values": campos}, titulo, objetos=desplegable, extra=sync(clave),
+                     titulo_tam=10)
+        p.texto(6, 598, 168, 118, "Siguen activos en todas las páginas.\nClic derecho en una región, distrito o cliente "
+                "→ Obtener detalles.", 8, False, TXT_SUAVE)
 
     def cabecera(p):
-        lateral(p)
-        p.texto(12, 0, 1256, 40, p.titulo, 13, True)
+        marco(p)
+        p.texto(10, 30, 1260, 38, p.titulo, 14, True, BLANCO)
+        p.crudo = False
 
     def detalle(p, medida_titulo):
-        lateral(p)
-        p.visual("card", 12, 4, 1000, 44, {"Values": ["m:" + medida_titulo]},
-                 objetos={"labels": [{"properties": {"fontSize": lit(16), "color": color(TINTA)}}],
+        marco(p)
+        p.visual("card", 10, 28, 1140, 42, {"Values": ["m:" + medida_titulo]},
+                 objetos={"labels": [{"properties": {"fontSize": lit(15), "color": color(BLANCO)}}],
                           "categoryLabels": [{"properties": {"show": lit(False)}}]},
-                 extra={"vcObjects": {"background": [{"properties": {"show": lit(False)}}]}})
-        p.boton(1150, 10, 118, 32, "◀ Atrás", tipo="Back", fondo=GRIS)
+                 extra={"vcObjects": {"background": [{"properties": {"show": lit(False)}}],
+                                      "border": [{"properties": {"show": lit(False)}}]}})
+        p.boton(1168, 36, 104, 28, "◀ Atrás", tipo="Back", fondo=AMBAR, col_texto=NAVY)
+        p.crudo = False
 
-    def kpis(p, lista, y=44, h=58):
-        """Cabecera de KPIs (regla 6): una tarjeta por KPI con etiqueta legible arriba.
-        lista = [(medida, etiqueta, es_alerta)]; las alertas llevan el valor en bermellón."""
+    def kpis(p, lista, y=78, h=62):
+        """Cabecera de KPIs (regla 6): tarjeta blanca con barra de color a la izquierda (azul = indicador,
+        bermellón = alerta), etiqueta gris arriba y valor grande. lista = [(medida, etiqueta, es_alerta)]."""
         n = len(lista)
-        ancho = (1256 - 8 * (n - 1)) / n
-        for i, (m, etiqueta, alerta) in enumerate(lista):
-            p.visual("card", round(12 + i * (ancho + 8)), y, round(ancho), h, {"Values": ["m:" + m]}, etiqueta,
-                     objetos={"labels": [{"properties": {"fontSize": lit(18), "color": color(ALERTA if alerta else TINTA),
+        ancho = (1256 - 10 * (n - 1)) / n
+        for k, (m, etiqueta, alerta) in enumerate(lista):
+            x = round(12 + k * (ancho + 10))
+            p.visual("card", x + 6, y, round(ancho) - 6, h, {"Values": ["m:" + m]}, etiqueta, titulo_tam=10, titulo_color=TXT_SUAVE,
+                     objetos={"labels": [{"properties": {"fontSize": lit(20 if FORMATOS.get(m) else 13),
+                                                         "color": color(ALERTA if alerta else NAVY),
                                                          **UNIDADES.get(FORMATOS.get(m), {})}}],
                               "categoryLabels": [{"properties": {"show": lit(False)}}]})
+            p.texto(x, y, 6, h, " ", 8, False, BLANCO, ALERTA if alerta else EST_A)
 
     def drill(p, campo, nombre):
         """Página de detalle por drill-through: filtro de página (howCreated 5 = Drillthrough) + pod enlazado.
@@ -970,24 +1006,40 @@ def construir_informe(F):
              ("Saldo Neto Corte", "Saldo neto al cierre", False),
              ("Absorcion Vigente", "Absorción vigente", False),
              ("Cuentas en Sobregiro", "Cuentas en sobregiro", True)])
-    problemas = [
-        ("Problema 1 · Impago y mora", "45 préstamos vigentes en mora y 31 cerrados con deuda. Los casos crecen con el "
-         "volumen colocado, pero la tasa por año de otorgamiento no cambia (χ² p = 0.93). → P1, P2"),
-        ("Problema 2 · Capacidad de pago", "El ratio cuota / saldo previo separa el impago: 2.9% en la banda Baja y 23.3% "
-         "en la Alta (χ² = 38.58). 47 cuentas comprometen más de la mitad de su saldo en órdenes fijas. → P5, P6, R2"),
-        ("Problema 3 · Medición de saldos", "El saldo es semiaditivo: al corte hay $197.14M, la cartera vigente absorbe el "
-         "40.73% y 39 cuentas cierran en sobregiro. → P3, P4"),
+    VERDE = "#009E73"
+    tarjetas = [
+        ("P1", "¿Sube la tasa de mora cuando se presta más?", "Colocación 101 → 196; tasa estable 12–15% (χ² p = 0.93)"),
+        ("P2", "¿Dónde se concentran la cartera y la mora?", "north Moravia 15.8% (12 de 76); north Bohemia 0 de 41"),
+        ("P3", "¿Cuánto del saldo respalda la cartera vigente?", "Absorción 40.73%; east Bohemia la más expuesta (51.6%)"),
+        ("P4", "¿Qué operaciones mueven el dinero?", "$6,257.86M en 1,056,320 movimientos; sobregiro máx. 43"),
+        ("P5", "¿Qué cuentas están saturadas de órdenes?", "47 cuentas con índice > 0.5; la 2335 llega a 2.14"),
+        ("P6", "¿La capacidad de pago anticipa el impago?", "Impago 2.9% en la banda Baja → 23.3% en la Alta"),
+        ("R1", "¿Qué producto ofrecer a cada cliente?", "Demográfico: acierta 66.0% (popularidad 58.5%)"),
+        ("R2", "¿A quién prestar y hasta cuánto?", "1,721 préstamos prudentes con monto máximo; AUC 0.717"),
+        ("R3", "¿Qué más ofrecer (venta cruzada)?", "Seguro → Transferencias 99.8%; el kNN suma 2,731 ofertas"),
     ]
-    for i, (tit, txt) in enumerate(problemas):
-        p.texto(12, Y0 + i * 202, 560, 194, f"{tit}\n{txt}", 11, False, TINTA, GRIS_FONDO)
-    preguntas = ["P1 · ¿Sube la tasa de mora cuando se presta más?", "P2 · ¿Dónde se concentran cartera y mora?",
-                 "P3 · ¿Cuánto del saldo respalda la cartera vigente?", "P4 · ¿Qué operaciones mueven el dinero?",
-                 "P5 · ¿Qué cuentas están saturadas de órdenes?", "P6 · ¿La capacidad de pago anticipa el impago?",
-                 "R1 · ¿Qué producto ofrecer a cada cliente?", "R2 · ¿A quién prestar y hasta cuánto?",
-                 "R3 · ¿Qué más ofrecer? (venta cruzada)"]
-    for i, (txt, dest) in enumerate(zip(preguntas, nombres[1:10])):
-        p.boton(584 + (i % 3) * 230, Y0 + (i // 3) * 202, 222, 194, txt, ids[dest], fondo=BLANCO,
-                col_texto=EST_A if i < 6 else "#009E73", tam=12)
+    for k, ((cod, pregunta, dato), dest) in enumerate(zip(tarjetas, nombres[1:10])):
+        tono = EST_A if cod.startswith("P") else VERDE
+        x, y = 12 + (k % 3) * 284, Y0 + (k // 3) * 188
+        p.texto_rico(x, y, 276, 180, [[(cod, 20, True, tono, False)], [(pregunta, 11, False, TITULO, False)],
+                                      [("", 6, False, TINTA, False)], [(dato, 10, False, TXT_SUAVE, True)],
+                                      [("Ir →", 10, True, tono, False)]], fondo=BLANCO, borde=tono)
+        p.boton(x, y, 276, 180, "", ids[dest], fondo=BLANCO, transparente=True)
+    ruta = [("P2", "north Moravia supera al banco: 15.8% de mora"),
+            ("D1", "clic derecho en Karvina: 3 en mora de 15 vigentes"),
+            ("D2", "cliente 2823: préstamo D de $541,200, índice 2.14"),
+            ("P5", "no es aislado: 47 cuentas en alerta de saturación"),
+            ("R2", "a quién sí prestar: 1,721 titulares con monto máximo"),
+            ("R1", "qué ofrecerle: pensión, transferencias, tarjeta")]
+    panel = [[("Problemas de la Carta v8", 12, True, NAVY, False)],
+             [("1 · Impago y mora: ", 10, True, ALERTA, False), ("45 en mora y 31 con deuda; crecen con el volumen.", 10, False, TITULO, False)],
+             [("2 · Capacidad de pago: ", 10, True, ALERTA, False), ("la cuota / saldo separa el impago (2.9% → 23.3%).", 10, False, TITULO, False)],
+             [("3 · Medición de saldos: ", 10, True, ALERTA, False), ("$197.14M al corte; absorción 40.73%.", 10, False, TITULO, False)],
+             [("", 8, False, TINTA, False)],
+             [("Ruta de análisis sugerida", 12, True, NAVY, False)]]
+    for k, (cod, texto_paso) in enumerate(ruta, start=1):
+        panel.append([(f"{k}. {cod}  ", 10, True, EST_A if cod[0] in "PD" else VERDE, False), (texto_paso, 10, False, TITULO, False)])
+    p.texto_rico(864, Y0, 404, 556, panel, fondo=BLANCO, borde=BORDE)
 
     # ================= P1 =================
     p = pags[1]
@@ -1021,9 +1073,10 @@ def construir_informe(F):
              {"Analyze": ["m:Prestamos en Mora"], "ExplainBy": ["region", "distrito", "cliente"]},
              "Préstamos en mora: región → distrito → cliente")
     p.visual("treemap", 640, Y0, 628, 300,
-             {"Group": ["region"], "Details": ["distrito"], "Values": ["m:Cartera Vigente"],
-              "Tooltips": ["m:Tasa Mora Vigente", "m:Prestamos Vigentes"]},
-             "Área = cartera vigente; color = tasa de mora (más oscuro, más riesgo)",
+             # Un solo nivel (distrito): Power BI desactiva el color condicional si el treemap tiene "Detalles"
+             {"Group": ["distrito"], "Values": ["m:Cartera Vigente"],
+              "Tooltips": ["m:Tasa Mora Vigente", "m:Prestamos Vigentes", "m:Region del Distrito"]},
+             "Área = cartera vigente del distrito; color = tasa de mora (más oscuro, más riesgo)",
              objetos={"dataPoint": color_por_medida("Color Mora"), "labels": ETIQUETAS})
     p.visual("lineClusteredColumnComboChart", 12, Y0 + 308, 620, ALTO - 308,
              {"Category": ["region"], "Y": ["m:Tasa Mora Vigente"], "Y2": ["m:Tasa Mora Banco"],
@@ -1241,7 +1294,7 @@ def construir_informe(F):
     # ================= D1 =================
     p = pags[10]
     detalle(p, "Titulo Distrito")
-    p.visual("multiRowCard", 12, 56, 300, 652,
+    p.visual("multiRowCard", 12, 78, 300, 630,
              {"Values": ["m:Num Prestamos", "m:Prestamos Vigentes", "m:Prestamos en Mora", "m:Tasa Mora Vigente",
                          "m:Cartera Vigente", "m:Saldo Neto Corte", "m:Absorcion Vigente", "m:Poblacion Distrito",
                          "m:Salario Promedio Distrito", "m:Desempleo Distrito 1995", "m:Origen Indicadores"]},
@@ -1251,19 +1304,19 @@ def construir_informe(F):
                         "m:Saldo Neto Corte": "Saldo neto al cierre", "m:Absorcion Vigente": "Absorción vigente",
                         "m:Poblacion Distrito": "Población", "m:Salario Promedio Distrito": "Salario promedio",
                         "m:Desempleo Distrito 1995": "Desempleo 1995 (%)", "m:Origen Indicadores": "Indicadores"})
-    p.visual("donutChart", 320, 56, 360, 320, {"Category": ["estado"], "Y": ["m:Num Prestamos"]},
+    p.visual("donutChart", 320, 78, 360, 300, {"Category": ["estado"], "Y": ["m:Num Prestamos"]},
              "Préstamos del distrito por estado",
              objetos={"labels": [{"properties": {"show": lit(True), "labelStyle": lit("Category, percent of total")}}],
                       "legend": [{"properties": {"show": lit(False)}}],
                       "dataPoint": colores_categorias(p, "estado", ESTADOS)},
              etiquetas={"estado": "Estado", "m:Num Prestamos": "Préstamos"})
-    p.visual("lineChart", 688, 56, 580, 320,
+    p.visual("lineChart", 688, 78, 580, 300,
              {"Category": ["fecha_mes"], "Y": ["m:Saldo Promedio por Cuenta", "m:Saldo Promedio Banco"]},
              "Saldo promedio por cuenta: el distrito frente al banco (gris)",
              objetos={"dataPoint": colores_series(p, {"m:Saldo Promedio por Cuenta": EST_A, "m:Saldo Promedio Banco": GRIS}),
                       "valueAxis": SIN_CUADRICULA, "legend": LEYENDA_ABAJO},
              etiquetas={"fecha_mes": "Mes", "m:Saldo Promedio por Cuenta": "Distrito", "m:Saldo Promedio Banco": "Banco"})
-    p.visual("tableEx", 320, 384, 948, 324,
+    p.visual("tableEx", 320, 386, 948, 322,
              {"Values": ["cliente", "m:Estado Prestamo", "m:Cartera Total", "m:Cuota Mensual", "m:Banda Capacidad"]},
              "Préstamos del distrito — clic derecho en un cliente → Obtener detalles → D2",
              orden=("m:Cartera Total", "desc"),
@@ -1273,27 +1326,27 @@ def construir_informe(F):
     # ================= D2 =================
     p = pags[11]
     detalle(p, "Titulo Cliente")
-    p.visual("multiRowCard", 12, 56, 300, 320,
+    p.visual("multiRowCard", 12, 78, 300, 300,
              {"Values": ["m:Edad Cliente", "m:Segmento Cliente", "m:Arquetipo Cliente", "m:Distrito Cuenta",
                          "m:Calificacion Cliente"]}, "Perfil",
              etiquetas={"m:Edad Cliente": "Edad", "m:Segmento Cliente": "Segmento", "m:Arquetipo Cliente": "Arquetipo",
                         "m:Distrito Cuenta": "Distrito de la cuenta", "m:Calificacion Cliente": "Calificación de pago"})
-    p.visual("multiRowCard", 12, 384, 300, 324,
+    p.visual("multiRowCard", 12, 386, 300, 322,
              {"Values": ["m:Estado Prestamo", "m:Cartera Total", "m:Cuota Mensual", "m:Banda Capacidad",
                          "m:Compromiso Ordenes", "m:Indice Saturacion", "m:Credito Externo Mensual"]}, "Situación",
              etiquetas={"m:Estado Prestamo": "Préstamo", "m:Cartera Total": "Monto del préstamo", "m:Cuota Mensual": "Cuota",
                         "m:Banda Capacidad": "Banda de capacidad", "m:Compromiso Ordenes": "Órdenes mensuales",
                         "m:Indice Saturacion": "Índice de saturación", "m:Credito Externo Mensual": "Crédito externo mensual"})
-    p.visual("lineChart", 320, 56, 948, 300,
+    p.visual("lineChart", 320, 78, 948, 280,
              {"Category": ["fecha_mes"], "Y": ["m:Saldo Neto Corte", "m:Umbral Sobregiro"]},
              "Saldo al cierre de cada mes; bajo la línea gris la cuenta está en sobregiro",
              objetos={"dataPoint": colores_series(p, {"m:Saldo Neto Corte": EST_A, "m:Umbral Sobregiro": GRIS}),
                       "valueAxis": SIN_CUADRICULA, "legend": [{"properties": {"show": lit(False)}}]},
              etiquetas={"fecha_mes": "Mes", "m:Saldo Neto Corte": "Saldo al cierre", "m:Umbral Sobregiro": "Cero"})
-    p.visual("tableEx", 320, 364, 440, 344, {"Values": ["cat_orden", "m:Num Ordenes", "m:Compromiso Ordenes"]},
+    p.visual("tableEx", 320, 366, 440, 342, {"Values": ["cat_orden", "m:Num Ordenes", "m:Compromiso Ordenes"]},
              "Órdenes fijas de la cuenta", orden=("m:Compromiso Ordenes", "desc"),
              etiquetas={"cat_orden": "Propósito", "m:Num Ordenes": "Órdenes", "m:Compromiso Ordenes": "Monto mensual"})
-    p.visual("tableEx", 768, 364, 500, 344,
+    p.visual("tableEx", 768, 366, 500, 342,
              {"Values": ["rec1", "rec2", "rec3", "m:Cuota Maxima Prudente", "m:Monto Maximo Prudente", "m:Descubrimiento kNN"]},
              "Qué ofrecerle: demográfico (R1), préstamo prudente (R2) y kNN (R3)",
              etiquetas={"rec1": "1.ª oferta", "rec2": "2.ª", "rec3": "3.ª",
@@ -1353,7 +1406,7 @@ TEMA_ARCHIVO = "tema_financial.json"
 TEMA = {
     "name": "Financial_ijs Guia 07 v4 (Okabe-Ito)",
     "dataColors": [GRIS, EST_D, EST_A, EST_C, EST_B, "#009E73", "#CC79A7", "#F0E442"],
-    "background": BLANCO, "foreground": TINTA, "tableAccent": EST_A,
+    "background": FONDO_PAG, "foreground": TINTA, "tableAccent": EST_A,
     "good": EST_A, "neutral": EST_D, "bad": ALERTA,
     "minimum": BLANCO, "center": "#F2B48C", "maximum": ALERTA,
     "textClasses": {
@@ -1511,7 +1564,7 @@ dispersión de P5; mapas de calor en las matrices de P1, P4, R1 y R3; colores de
 def main():
     (km, tk), (mm, tm) = modelo_kimball(), modelo_mongo()
     FORMATOS.update({m["name"]: m.get("formatString") for m in km["model"]["tables"][-1]["measures"]})
-    ki, mi = construir_informe(CAMPOS_KIMBALL), construir_informe(CAMPOS_MONGO)
+    ki, mi = construir_informe(CAMPOS_KIMBALL, "Kimball · SQL Server"), construir_informe(CAMPOS_MONGO, "MongoDB")
     for n, mod, inf in (("Kimball", km, ki), ("Mongo", mm, mi)):
         err = validar(mod, inf)
         if err:

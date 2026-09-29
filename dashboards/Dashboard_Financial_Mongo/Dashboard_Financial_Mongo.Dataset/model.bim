@@ -1803,6 +1803,11 @@
             "description": "Título dinámico de D1"
           },
           {
+            "name": "Region del Distrito",
+            "expression": "SELECTEDVALUE(m_distritos[region])",
+            "description": "Región del distrito (tooltip del treemap de P2)"
+          },
+          {
             "name": "Poblacion Distrito",
             "expression": "SELECTEDVALUE(m_distritos[poblacion])",
             "description": "Habitantes",
