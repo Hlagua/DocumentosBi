@@ -7,9 +7,13 @@ incrustado en la consulta compartida `MongoFinancial`. Diseño: Guía 07 v4. Gen
 1. MongoDB en ejecución con la base `Financial` (scripts 35 y 42, o `mongorestore --gzip --archive=Financial_mongo_dump.gz`).
 2. **Python de python.org, no el de Microsoft Store.** Power BI Desktop no puede ejecutar el Python de la
    Store (carpeta `WindowsApps`): la actualización falla con *"Acceso denegado"* (comprobado en
-   Power BI 2.157). Instala Python desde https://www.python.org, luego
-   `python -m pip install pandas matplotlib pymongo` (Power BI siempre importa `matplotlib`) y elige esa
-   carpeta en *Archivo → Opciones → Scripts de Python*.
+   Power BI 2.157). Instala Python 3.12 desde https://www.python.org (o
+   `winget install --id Python.Python.3.12 --scope user`) y luego, con ese Python:
+   `python -m pip install pandas==3.0.5 pymongo==4.18.1 matplotlib==3.10.7`
+   Power BI siempre ejecuta `import matplotlib.pyplot`; en este equipo Windows App Control bloquea la DLL
+   `_image` de matplotlib 3.11.2 y deja cargar la 3.10.7 (las versiones fijadas son las probadas).
+   Elige la carpeta de ese Python en *Archivo → Opciones → Scripts de Python*
+   (`%LOCALAPPDATA%\Programs\Python\Python312`).
 3. Doble clic en `Dashboard_Financial_Mongo.pbip` → *Inicio → Actualizar*. Acepta el aviso de privacidad del script.
 4. Compara con las cifras de control: deben ser idénticas a las de Kimball.
 

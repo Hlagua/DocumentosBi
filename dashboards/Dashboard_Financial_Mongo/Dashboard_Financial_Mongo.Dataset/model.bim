@@ -82,7 +82,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_distritos\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_distrito\", \"nombre_distrito\", \"region\", \"poblacion\", \"salario_promedio\", \"tasa_desempleo\", \"tasa_criminalidad\", \"es_imputado\", \"macro_region\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_distrito\", Int64.Type}, {\"nombre_distrito\", type text}, {\"region\", type text}, {\"poblacion\", Int64.Type}, {\"salario_promedio\", type number}, {\"tasa_desempleo\", type number}, {\"tasa_criminalidad\", type number}, {\"es_imputado\", type logical}, {\"macro_region\", type text}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_distrito\", Int64.Type}, {\"nombre_distrito\", type text}, {\"region\", type text}, {\"poblacion\", Int64.Type}, {\"salario_promedio\", type number}, {\"tasa_desempleo\", type number}, {\"tasa_criminalidad\", type number}, {\"es_imputado\", type logical}, {\"macro_region\", type text}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -161,7 +161,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_clientes\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_cliente\", \"cliente\", \"sexo\", \"edad_corte\", \"tipo_disposicion\", \"segmento_edad\", \"arquetipo_demografico\", \"calificacion_pago\", \"orden_segmento\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cliente\", Int64.Type}, {\"cliente\", type text}, {\"sexo\", type text}, {\"edad_corte\", Int64.Type}, {\"tipo_disposicion\", type text}, {\"segmento_edad\", type text}, {\"arquetipo_demografico\", type text}, {\"calificacion_pago\", type text}, {\"orden_segmento\", Int64.Type}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cliente\", Int64.Type}, {\"cliente\", type text}, {\"sexo\", type text}, {\"edad_corte\", Int64.Type}, {\"tipo_disposicion\", type text}, {\"segmento_edad\", type text}, {\"arquetipo_demografico\", type text}, {\"calificacion_pago\", type text}, {\"orden_segmento\", Int64.Type}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -223,7 +223,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_cuentas\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"frecuencia_extracto\", \"fecha_apertura\", \"tiene_credito_externo\", \"monto_credito_externo\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"frecuencia_extracto\", type text}, {\"fecha_apertura\", type datetime}, {\"tiene_credito_externo\", type logical}, {\"monto_credito_externo\", type number}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"frecuencia_extracto\", type text}, {\"fecha_apertura\", type datetime}, {\"tiene_credito_externo\", type logical}, {\"monto_credito_externo\", type number}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -252,7 +252,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_anios\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"anio\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"anio\", Int64.Type}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"anio\", Int64.Type}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -294,7 +294,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_meses\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"fecha_mes\", \"anio\", \"mes\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"fecha_mes\", type datetime}, {\"anio\", Int64.Type}, {\"mes\", Int64.Type}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"fecha_mes\", type datetime}, {\"anio\", Int64.Type}, {\"mes\", Int64.Type}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -443,7 +443,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_prestamos\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_prestamo\", \"id_cuenta\", \"id_cliente\", \"id_distrito\", \"fecha_otorgamiento\", \"anio\", \"monto_prestamo\", \"plazo_meses\", \"pago_mensual\", \"saldo_pendiente_estimado\", \"meses_transcurridos_al_corte\", \"codigo_estado\", \"condicion\", \"descripcion_estado\", \"saldo_promedio_previo\", \"ratio_cuota_saldo_previo\", \"banda_capacidad\", \"orden_banda\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_prestamo\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"fecha_otorgamiento\", type datetime}, {\"anio\", Int64.Type}, {\"monto_prestamo\", type number}, {\"plazo_meses\", Int64.Type}, {\"pago_mensual\", type number}, {\"saldo_pendiente_estimado\", type number}, {\"meses_transcurridos_al_corte\", Int64.Type}, {\"codigo_estado\", type text}, {\"condicion\", type text}, {\"descripcion_estado\", type text}, {\"saldo_promedio_previo\", type number}, {\"ratio_cuota_saldo_previo\", type number}, {\"banda_capacidad\", type text}, {\"orden_banda\", Int64.Type}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_prestamo\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"fecha_otorgamiento\", type datetime}, {\"anio\", Int64.Type}, {\"monto_prestamo\", type number}, {\"plazo_meses\", Int64.Type}, {\"pago_mensual\", type number}, {\"saldo_pendiente_estimado\", type number}, {\"meses_transcurridos_al_corte\", Int64.Type}, {\"codigo_estado\", type text}, {\"condicion\", type text}, {\"descripcion_estado\", type text}, {\"saldo_promedio_previo\", type number}, {\"ratio_cuota_saldo_previo\", type number}, {\"banda_capacidad\", type text}, {\"orden_banda\", Int64.Type}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -512,7 +512,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_ordenes\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_orden\", \"id_cuenta\", \"id_cliente\", \"id_distrito\", \"k_symbol\", \"categoria_orden\", \"monto_orden\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_orden\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"k_symbol\", type text}, {\"categoria_orden\", type text}, {\"monto_orden\", type number}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_orden\", Int64.Type}, {\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"k_symbol\", type text}, {\"categoria_orden\", type text}, {\"monto_orden\", type number}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -595,7 +595,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_trans_anual\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"id_cliente\", \"id_distrito\", \"anio\", \"categoria_analitica\", \"num_transacciones\", \"monto_total\", \"suma_cuadrados\", \"saldo_promedio\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"anio\", Int64.Type}, {\"categoria_analitica\", type text}, {\"num_transacciones\", Int64.Type}, {\"monto_total\", type number}, {\"suma_cuadrados\", type number}, {\"saldo_promedio\", type number}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"anio\", Int64.Type}, {\"categoria_analitica\", type text}, {\"num_transacciones\", Int64.Type}, {\"monto_total\", type number}, {\"suma_cuadrados\", type number}, {\"saldo_promedio\", type number}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -686,7 +686,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_saldo_mensual\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"id_cliente\", \"id_distrito\", \"anio\", \"mes\", \"fecha_mes\", \"saldo_fin_mes\", \"saldo_promedio_mes\", \"num_movimientos_mes\", \"en_sobregiro\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"anio\", Int64.Type}, {\"mes\", Int64.Type}, {\"fecha_mes\", type datetime}, {\"saldo_fin_mes\", type number}, {\"saldo_promedio_mes\", type number}, {\"num_movimientos_mes\", Int64.Type}, {\"en_sobregiro\", type logical}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"id_distrito\", Int64.Type}, {\"anio\", Int64.Type}, {\"mes\", Int64.Type}, {\"fecha_mes\", type datetime}, {\"saldo_fin_mes\", type number}, {\"saldo_promedio_mes\", type number}, {\"num_movimientos_mes\", Int64.Type}, {\"en_sobregiro\", type logical}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
@@ -761,7 +761,7 @@
                 "    Origen = MongoFinancial,",
                 "    Tabla = Origen{[Name=\"m_recomendaciones\"]}[Value],",
                 "    Columnas = Table.SelectColumns(Tabla, {\"id_cuenta\", \"id_cliente\", \"modelo\", \"recomendacion_1\", \"recomendacion_2\", \"recomendacion_3\", \"prestamo_cuota_maxima\", \"prestamo_monto_maximo_36m\"}),",
-                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"modelo\", type text}, {\"recomendacion_1\", type text}, {\"recomendacion_2\", type text}, {\"recomendacion_3\", type text}, {\"prestamo_cuota_maxima\", type number}, {\"prestamo_monto_maximo_36m\", type number}})",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"id_cuenta\", Int64.Type}, {\"id_cliente\", Int64.Type}, {\"modelo\", type text}, {\"recomendacion_1\", type text}, {\"recomendacion_2\", type text}, {\"recomendacion_3\", type text}, {\"prestamo_cuota_maxima\", type number}, {\"prestamo_monto_maximo_36m\", type number}}, \"en-US\")",
                 "in",
                 "    Tipos"
               ]
