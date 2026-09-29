@@ -889,6 +889,512 @@
         ]
       },
       {
+        "name": "Dim_Producto",
+        "columns": [
+          {
+            "name": "producto",
+            "dataType": "string",
+            "sourceColumn": "producto",
+            "summarizeBy": "none",
+            "sortByColumn": "orden"
+          },
+          {
+            "name": "codigo",
+            "dataType": "string",
+            "sourceColumn": "codigo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "descripcion",
+            "dataType": "string",
+            "sourceColumn": "descripcion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "penetracion",
+            "dataType": "double",
+            "sourceColumn": "penetracion",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "orden",
+            "dataType": "int64",
+            "sourceColumn": "orden",
+            "summarizeBy": "none",
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Producto",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Dim_Producto\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"producto\", \"codigo\", \"descripcion\", \"penetracion\", \"orden\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"producto\", type text}, {\"codigo\", type text}, {\"descripcion\", type text}, {\"penetracion\", type number}, {\"orden\", Int64.Type}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Recomendacion_Producto",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sistema",
+            "dataType": "string",
+            "sourceColumn": "sistema",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "producto",
+            "dataType": "string",
+            "sourceColumn": "producto",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "posicion",
+            "dataType": "int64",
+            "sourceColumn": "posicion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "puntaje",
+            "dataType": "double",
+            "sourceColumn": "puntaje",
+            "summarizeBy": "none",
+            "formatString": "0.0000"
+          },
+          {
+            "name": "es_descubrimiento",
+            "dataType": "boolean",
+            "sourceColumn": "es_descubrimiento",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Recomendacion_Producto",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Recomendacion_Producto\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"sistema\", \"producto\", \"posicion\", \"puntaje\", \"es_descubrimiento\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"sistema\", type text}, {\"producto\", type text}, {\"posicion\", Int64.Type}, {\"puntaje\", type number}, {\"es_descubrimiento\", type logical}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Adopcion_Producto",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "producto",
+            "dataType": "string",
+            "sourceColumn": "producto",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Adopcion_Producto",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Adopcion_Producto\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"producto\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"producto\", type text}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Capacidad_Prestamo",
+        "columns": [
+          {
+            "name": "sk_cuenta",
+            "dataType": "int64",
+            "sourceColumn": "sk_cuenta",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_cliente",
+            "dataType": "int64",
+            "sourceColumn": "sk_cliente",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "sk_distrito",
+            "dataType": "int64",
+            "sourceColumn": "sk_distrito",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "tiene_prestamo",
+            "dataType": "boolean",
+            "sourceColumn": "tiene_prestamo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "saldo_promedio",
+            "dataType": "double",
+            "sourceColumn": "saldo_promedio",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "cuota_prudente",
+            "dataType": "double",
+            "sourceColumn": "cuota_prudente",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "monto_maximo_12m",
+            "dataType": "double",
+            "sourceColumn": "monto_maximo_12m",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "monto_maximo_36m",
+            "dataType": "double",
+            "sourceColumn": "monto_maximo_36m",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "monto_maximo_60m",
+            "dataType": "double",
+            "sourceColumn": "monto_maximo_60m",
+            "summarizeBy": "none",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "tramo_monto_36m",
+            "dataType": "string",
+            "sourceColumn": "tramo_monto_36m",
+            "summarizeBy": "none",
+            "sortByColumn": "orden_tramo"
+          },
+          {
+            "name": "orden_tramo",
+            "dataType": "int64",
+            "sourceColumn": "orden_tramo",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "puede_pagar_prestamo_tipico",
+            "dataType": "boolean",
+            "sourceColumn": "puede_pagar_prestamo_tipico",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "prestamo_recomendado",
+            "dataType": "boolean",
+            "sourceColumn": "prestamo_recomendado",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Capacidad_Prestamo",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Capacidad_Prestamo\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"sk_cuenta\", \"sk_cliente\", \"sk_distrito\", \"tiene_prestamo\", \"saldo_promedio\", \"cuota_prudente\", \"monto_maximo_12m\", \"monto_maximo_36m\", \"monto_maximo_60m\", \"tramo_monto_36m\", \"orden_tramo\", \"puede_pagar_prestamo_tipico\", \"prestamo_recomendado\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"sk_cuenta\", Int64.Type}, {\"sk_cliente\", Int64.Type}, {\"sk_distrito\", Int64.Type}, {\"tiene_prestamo\", type logical}, {\"saldo_promedio\", type number}, {\"cuota_prudente\", type number}, {\"monto_maximo_12m\", type number}, {\"monto_maximo_36m\", type number}, {\"monto_maximo_60m\", type number}, {\"tramo_monto_36m\", type text}, {\"orden_tramo\", Int64.Type}, {\"puede_pagar_prestamo_tipico\", type logical}, {\"prestamo_recomendado\", type logical}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Evaluacion_Recomendador",
+        "columns": [
+          {
+            "name": "modelo",
+            "dataType": "string",
+            "sourceColumn": "modelo",
+            "summarizeBy": "none",
+            "sortByColumn": "orden"
+          },
+          {
+            "name": "familia",
+            "dataType": "string",
+            "sourceColumn": "familia",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "rol",
+            "dataType": "string",
+            "sourceColumn": "rol",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "hit_1",
+            "dataType": "double",
+            "sourceColumn": "hit_1",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "hit_3",
+            "dataType": "double",
+            "sourceColumn": "hit_3",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "mrr",
+            "dataType": "double",
+            "sourceColumn": "mrr",
+            "summarizeBy": "none",
+            "formatString": "0.000"
+          },
+          {
+            "name": "hit_1_cola_larga",
+            "dataType": "double",
+            "sourceColumn": "hit_1_cola_larga",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "mrr_confirmacion",
+            "dataType": "double",
+            "sourceColumn": "mrr_confirmacion",
+            "summarizeBy": "none",
+            "formatString": "0.000"
+          },
+          {
+            "name": "orden",
+            "dataType": "int64",
+            "sourceColumn": "orden",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "elegido",
+            "dataType": "boolean",
+            "sourceColumn": "elegido",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Evaluacion_Recomendador",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Evaluacion_Recomendador\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"modelo\", \"familia\", \"rol\", \"hit_1\", \"hit_3\", \"mrr\", \"hit_1_cola_larga\", \"mrr_confirmacion\", \"orden\", \"elegido\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"modelo\", type text}, {\"familia\", type text}, {\"rol\", type text}, {\"hit_1\", type number}, {\"hit_3\", type number}, {\"mrr\", type number}, {\"hit_1_cola_larga\", type number}, {\"mrr_confirmacion\", type number}, {\"orden\", Int64.Type}, {\"elegido\", type logical}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Asociacion_Producto",
+        "columns": [
+          {
+            "name": "producto_origen",
+            "dataType": "string",
+            "sourceColumn": "producto_origen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "producto_destino",
+            "dataType": "string",
+            "sourceColumn": "producto_destino",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "p_destino_dado_origen",
+            "dataType": "double",
+            "sourceColumn": "p_destino_dado_origen",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "lift",
+            "dataType": "double",
+            "sourceColumn": "lift",
+            "summarizeBy": "none",
+            "formatString": "0.00"
+          },
+          {
+            "name": "cuentas_ambos",
+            "dataType": "int64",
+            "sourceColumn": "cuentas_ambos",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Asociacion_Producto",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Asociacion_Producto\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"producto_origen\", \"producto_destino\", \"p_destino_dado_origen\", \"lift\", \"cuentas_ambos\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"producto_origen\", type text}, {\"producto_destino\", type text}, {\"p_destino_dado_origen\", type number}, {\"lift\", type number}, {\"cuentas_ambos\", Int64.Type}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Regla_Capacidad",
+        "columns": [
+          {
+            "name": "regla",
+            "dataType": "string",
+            "sourceColumn": "regla",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tramo",
+            "dataType": "string",
+            "sourceColumn": "tramo",
+            "summarizeBy": "none",
+            "sortByColumn": "orden"
+          },
+          {
+            "name": "orden",
+            "dataType": "int64",
+            "sourceColumn": "orden",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "prestamos",
+            "dataType": "int64",
+            "sourceColumn": "prestamos",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "impagos",
+            "dataType": "int64",
+            "sourceColumn": "impagos",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "tasa_impago",
+            "dataType": "double",
+            "sourceColumn": "tasa_impago",
+            "summarizeBy": "none",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "auc",
+            "dataType": "double",
+            "sourceColumn": "auc",
+            "summarizeBy": "none",
+            "formatString": "0.000"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Regla_Capacidad",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = Sql.Database(ServidorSQL, BaseDatosSQL),",
+                "    Tabla = Origen{[Schema=\"dbo\", Item=\"Regla_Capacidad\"]}[Data],",
+                "    Columnas = Table.SelectColumns(Tabla, {\"regla\", \"tramo\", \"orden\", \"prestamos\", \"impagos\", \"tasa_impago\", \"auc\"}),",
+                "    Tipos = Table.TransformColumnTypes(Columnas, {{\"regla\", type text}, {\"tramo\", type text}, {\"orden\", Int64.Type}, {\"prestamos\", Int64.Type}, {\"impagos\", Int64.Type}, {\"tasa_impago\", type number}, {\"auc\", type number}})",
+                "in",
+                "    Tipos"
+              ]
+            }
+          }
+        ]
+      },
+      {
         "name": "Composicion_Liquidez",
         "columns": [
           {
@@ -1362,6 +1868,11 @@
             "description": "Solo cuentas en alerta"
           },
           {
+            "name": "Cuenta Alerta",
+            "expression": "IF([Indice Saturacion] > 0.5, CALCULATE(SELECTEDVALUE(Dim_Cuenta[Cuenta]), Fact_Saldo_Cuenta_Mensual))",
+            "description": "Cuenta del titular en alerta"
+          },
+          {
             "name": "Titulo Distrito",
             "expression": "\"Distrito: \" & SELECTEDVALUE(Dim_Distrito[nombre_distrito], \"(varios)\") & \" (\" & SELECTEDVALUE(Dim_Distrito[region], \"varias regiones\") & \")\"",
             "description": "Título dinámico de D1"
@@ -1441,6 +1952,242 @@
             "expression": "SUM(Recomendacion_Cuenta[prestamo_monto_maximo_36m])",
             "description": "Monto a 36 meses con esa cuota (Informe 04)",
             "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Recomendaciones Demograficas",
+            "expression": "CALCULATE(COUNTROWS(Recomendacion_Producto), Recomendacion_Producto[sistema] = \"Demográfico\")",
+            "description": "Productos en el top 3 del recomendador demográfico (el más preciso: Hit@1 66.0%)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Primera Opcion",
+            "expression": "CALCULATE([Recomendaciones Demograficas], Recomendacion_Producto[posicion] = 1)",
+            "description": "Veces que el producto es la primera recomendación",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Recomendaciones kNN",
+            "expression": "CALCULATE(COUNTROWS(Recomendacion_Producto), Recomendacion_Producto[sistema] = \"kNN perfil\")",
+            "description": "Productos en el top 3 del kNN por perfil exógeno",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Descubrimientos kNN",
+            "expression": "CALCULATE([Recomendaciones kNN], Recomendacion_Producto[es_descubrimiento] = TRUE())",
+            "description": "Ofertas del kNN que el demográfico no tiene en su top 3 (2,731)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Clientes con Recomendacion",
+            "expression": "CALCULATE(DISTINCTCOUNT(Recomendacion_Producto[sk_cuenta]), Recomendacion_Producto[sistema] = \"Demográfico\")",
+            "description": "Titulares con al menos una recomendación",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Cuentas que ya lo Usan",
+            "expression": "COUNTROWS(Adopcion_Producto)",
+            "description": "Cuentas que ya usan el producto (adopción actual)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Titulares",
+            "expression": "COUNTROWS(Capacidad_Prestamo)",
+            "description": "Titulares (una cuenta cada uno: 4,500)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Penetracion Actual",
+            "expression": "DIVIDE([Cuentas que ya lo Usan], [Titulares])",
+            "description": "Cuentas que ya usan el producto / titulares del contexto",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Producto Mas Recomendado",
+            "expression": "VAR x = TOPN(1, VALUES(Dim_Producto[producto]), [Primera Opcion], DESC) RETURN CONCATENATEX(x, Dim_Producto[producto] & \" · \" & FORMAT([Primera Opcion], \"#,0\"), \", \")",
+            "description": "Primera recomendación más frecuente en el contexto"
+          },
+          {
+            "name": "Recomendacion 1",
+            "expression": "CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = \"Demográfico\", Recomendacion_Producto[posicion] = 1)",
+            "description": "Primera recomendación del titular"
+          },
+          {
+            "name": "Recomendacion 2",
+            "expression": "CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = \"Demográfico\", Recomendacion_Producto[posicion] = 2)",
+            "description": "Segunda recomendación del titular"
+          },
+          {
+            "name": "Recomendacion 3",
+            "expression": "CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = \"Demográfico\", Recomendacion_Producto[posicion] = 3)",
+            "description": "Tercera recomendación del titular"
+          },
+          {
+            "name": "Descubrimiento kNN",
+            "expression": "CALCULATE(CONCATENATEX(VALUES(Recomendacion_Producto[producto]), Recomendacion_Producto[producto], \", \"), Recomendacion_Producto[sistema] = \"kNN perfil\", Recomendacion_Producto[es_descubrimiento] = TRUE())",
+            "description": "Productos que el kNN añade para el titular"
+          },
+          {
+            "name": "Acierto Elegido",
+            "expression": "CALCULATE(MAX(Evaluacion_Recomendador[hit_1]), Evaluacion_Recomendador[modelo] = \"Demográfico (arquetipo)\")",
+            "description": "Hit@1 del demográfico (66.0%, semilla 42)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Acierto Popularidad",
+            "expression": "CALCULATE(MAX(Evaluacion_Recomendador[hit_1]), Evaluacion_Recomendador[modelo] = \"Popularidad\")",
+            "description": "Hit@1 de recomendar lo más popular (58.5%): la línea base",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Acierto Cola Larga kNN",
+            "expression": "CALCULATE(MAX(Evaluacion_Recomendador[hit_1_cola_larga]), Evaluacion_Recomendador[modelo] = \"kNN usuario-usuario (perfil exógeno)\")",
+            "description": "Hit@1 del kNN en productos poco comunes (37.2%)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Acierto Cola Larga Popularidad",
+            "expression": "CALCULATE(MAX(Evaluacion_Recomendador[hit_1_cola_larga]), Evaluacion_Recomendador[modelo] = \"Popularidad\")",
+            "description": "Hit@1 de la popularidad en productos poco comunes (6.3%)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Acierto Hit1",
+            "expression": "SUM(Evaluacion_Recomendador[hit_1])",
+            "description": "Hit@1 del modelo (gráfico comparativo)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Acierto Cola Larga",
+            "expression": "SUM(Evaluacion_Recomendador[hit_1_cola_larga])",
+            "description": "Hit@1 en la cola larga (gráfico comparativo)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "MRR Modelo",
+            "expression": "SUM(Evaluacion_Recomendador[mrr])",
+            "description": "Rango recíproco medio",
+            "formatString": "0.000"
+          },
+          {
+            "name": "MRR Confirmacion",
+            "expression": "SUM(Evaluacion_Recomendador[mrr_confirmacion])",
+            "description": "MRR con la semilla 2026",
+            "formatString": "0.000"
+          },
+          {
+            "name": "Titulares sin Prestamo",
+            "expression": "CALCULATE([Titulares], Capacidad_Prestamo[tiene_prestamo] = FALSE())",
+            "description": "3,818",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Prestamos Prudentes Recomendados",
+            "expression": "CALCULATE([Titulares], Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Titulares con préstamo en su top 3 (1,721)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Cuota Prudente Mediana",
+            "expression": "CALCULATE(MEDIAN(Capacidad_Prestamo[cuota_prudente]), Capacidad_Prestamo[tiene_prestamo] = FALSE())",
+            "description": "5.7% del saldo promedio, mediana de los titulares sin préstamo (1,873)",
+            "formatString": "\"$\"#,0.00"
+          },
+          {
+            "name": "Pueden Pagar Prestamo Tipico",
+            "expression": "CALCULATE([Titulares], Capacidad_Prestamo[puede_pagar_prestamo_tipico] = TRUE())",
+            "description": "Titulares sin préstamo cuya cuota prudente cubre la cuota mediana otorgada (71)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Monto Prudente Ofrecible 36m",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_36m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Suma de montos máximos a 36 meses de los préstamos recomendados",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Saldo Promedio Oferta",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[saldo_promedio]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Saldo promedio del titular con préstamo recomendado",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Cuota Prudente Oferta",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[cuota_prudente]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Cuota prudente del titular con préstamo recomendado",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto 12m Oferta",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_12m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Monto máximo a 12 meses",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto 36m Oferta",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_36m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Monto máximo a 36 meses",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "Monto 60m Oferta",
+            "expression": "CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_60m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())",
+            "description": "Monto máximo a 60 meses",
+            "formatString": "\"$\"#,0"
+          },
+          {
+            "name": "AUC Regla",
+            "expression": "MAX(Regla_Capacidad[auc])",
+            "description": "AUC de la regla para predecir el impago",
+            "formatString": "0.000"
+          },
+          {
+            "name": "AUC Regla Elegida",
+            "expression": "CALCULATE([AUC Regla], Regla_Capacidad[regla] = \"Carta v8: cuota / saldo previo\")",
+            "description": "0.717",
+            "formatString": "0.000"
+          },
+          {
+            "name": "AUC Regla Anterior",
+            "expression": "CALCULATE([AUC Regla], Regla_Capacidad[regla] = \"Anterior: cuota / salario del distrito\")",
+            "description": "0.659",
+            "formatString": "0.000"
+          },
+          {
+            "name": "P Destino dado Origen",
+            "expression": "SUM(Asociacion_Producto[p_destino_dado_origen])",
+            "description": "De quienes tienen el producto de origen, % que también tiene el de destino",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Lift Asociacion",
+            "expression": "SUM(Asociacion_Producto[lift])",
+            "description": "Lift: > 1 van juntos más de lo esperado por azar",
+            "formatString": "0.00"
+          },
+          {
+            "name": "Regla Mas Fuerte",
+            "expression": "VAR x = TOPN(1, FILTER(Asociacion_Producto, Asociacion_Producto[cuentas_ambos] >= 100), Asociacion_Producto[lift], DESC, Asociacion_Producto[p_destino_dado_origen], DESC) RETURN CONCATENATEX(x, Asociacion_Producto[producto_origen] & \" → \" & Asociacion_Producto[producto_destino] & \" · \" & FORMAT(Asociacion_Producto[p_destino_dado_origen], \"0.0%\"), \", \")",
+            "description": "Par con mayor lift (al menos 100 cuentas), en la dirección de mayor P(j|i): Seguro → Transferencias 99.8%"
+          },
+          {
+            "name": "Color Mora",
+            "expression": "VAR x = [Tasa Mora Vigente] RETURN SWITCH(TRUE(), ISBLANK(x), \"#FFFFFF\", x < 0.05, \"#FBE3D3\", x < 0.10, \"#F2B48C\", x < 0.15, \"#E5813F\", \"#D55E00\")",
+            "description": "Treemap de P2: escala secuencial blanco → bermellón por tasa de mora"
+          },
+          {
+            "name": "Color Saturacion",
+            "expression": "VAR x = [Indice Saturacion] RETURN IF(x > 1, \"#D55E00\", IF(x > 0.5, \"#E69F00\", \"#7F7F7F\"))",
+            "description": "Dispersión de P5: bermellón > 1, naranja > 0.5, gris el resto"
+          },
+          {
+            "name": "Color Modelo",
+            "expression": "IF(SELECTEDVALUE(Evaluacion_Recomendador[elegido]) = TRUE(), \"#0072B2\", \"#BDBDBD\")",
+            "description": "R1: modelos elegidos en azul, el resto en gris"
+          },
+          {
+            "name": "Color Regla",
+            "expression": "IF(SELECTEDVALUE(Regla_Capacidad[regla]) = \"Carta v8: cuota / saldo previo\", \"#0072B2\", \"#BDBDBD\")",
+            "description": "R2: regla elegida en azul"
           }
         ]
       }
@@ -1593,6 +2340,83 @@
         "fromColumn": "sk_cliente",
         "toTable": "Dim_Cliente",
         "toColumn": "sk_cliente"
+      },
+      {
+        "name": "a60b6783-d4c0-588e-bf58-d82a2e25f04e",
+        "fromTable": "Recomendacion_Producto",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "63d62597-0a9d-5fe4-a8e9-8714326367a8",
+        "fromTable": "Recomendacion_Producto",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "98812add-6da7-507f-9296-2814e455a8de",
+        "fromTable": "Recomendacion_Producto",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "1c5d7887-ec65-573c-928c-0804b2940ca3",
+        "fromTable": "Adopcion_Producto",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "a92c47ea-ea54-5ed1-90a0-043ff916fb82",
+        "fromTable": "Adopcion_Producto",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "cef24360-56a5-5000-b0d1-ada96f7ffa2e",
+        "fromTable": "Adopcion_Producto",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "1a46feaa-2f56-5f29-ba7b-f66818c3f017",
+        "fromTable": "Capacidad_Prestamo",
+        "fromColumn": "sk_cuenta",
+        "toTable": "Dim_Cuenta",
+        "toColumn": "sk_cuenta"
+      },
+      {
+        "name": "0f29a033-b491-5aaa-8eda-f88285dd76b1",
+        "fromTable": "Capacidad_Prestamo",
+        "fromColumn": "sk_cliente",
+        "toTable": "Dim_Cliente",
+        "toColumn": "sk_cliente"
+      },
+      {
+        "name": "790c1c98-dbd0-57b7-91bc-115b4517f4a2",
+        "fromTable": "Capacidad_Prestamo",
+        "fromColumn": "sk_distrito",
+        "toTable": "Dim_Distrito",
+        "toColumn": "sk_distrito"
+      },
+      {
+        "name": "4d53a5c9-f3cf-5aec-a856-6a2db10999a5",
+        "fromTable": "Recomendacion_Producto",
+        "fromColumn": "producto",
+        "toTable": "Dim_Producto",
+        "toColumn": "producto"
+      },
+      {
+        "name": "4c6520aa-4420-56a6-a956-86a931a723d8",
+        "fromTable": "Adopcion_Producto",
+        "fromColumn": "producto",
+        "toTable": "Dim_Producto",
+        "toColumn": "producto"
       }
     ],
     "expressions": [

@@ -312,6 +312,10 @@ REGLAS: tasas con intervalo de Wilson (z = 1); promedios con ±1σ exacta;
 '_Medidas'[Cliente Titular Alerta] =
     IF([Indice Saturacion] > 0.5, CALCULATE(SELECTEDVALUE(Dim_Cliente[Cliente]), Fact_Saldo_Cuenta_Mensual))
 
+// Cuenta del titular en alerta
+'_Medidas'[Cuenta Alerta] =
+    IF([Indice Saturacion] > 0.5, CALCULATE(SELECTEDVALUE(Dim_Cuenta[Cuenta]), Fact_Saldo_Cuenta_Mensual))
+
 // ==============================================================================
 // 5. FICHAS D1 Y D2, RECOMENDACIONES Y TÍTULOS DINÁMICOS
 // ==============================================================================
@@ -375,3 +379,175 @@ REGLAS: tasas con intervalo de Wilson (z = 1); promedios con ±1σ exacta;
 // Monto a 36 meses con esa cuota (Informe 04)   [formato "$"#,0]
 '_Medidas'[Monto Maximo Prudente] =
     SUM(Recomendacion_Cuenta[prestamo_monto_maximo_36m])
+
+// ==============================================================================
+// 6. RECOMENDADORES (R1–R3; sistemas elegidos en el Informe 04, script 43)
+// ==============================================================================
+
+// Productos en el top 3 del recomendador demográfico (el más preciso: Hit@1 66.0%)   [formato #,0]
+'_Medidas'[Recomendaciones Demograficas] =
+    CALCULATE(COUNTROWS(Recomendacion_Producto), Recomendacion_Producto[sistema] = "Demográfico")
+
+// Veces que el producto es la primera recomendación   [formato #,0]
+'_Medidas'[Primera Opcion] =
+    CALCULATE([Recomendaciones Demograficas], Recomendacion_Producto[posicion] = 1)
+
+// Productos en el top 3 del kNN por perfil exógeno   [formato #,0]
+'_Medidas'[Recomendaciones kNN] =
+    CALCULATE(COUNTROWS(Recomendacion_Producto), Recomendacion_Producto[sistema] = "kNN perfil")
+
+// Ofertas del kNN que el demográfico no tiene en su top 3 (2,731)   [formato #,0]
+'_Medidas'[Descubrimientos kNN] =
+    CALCULATE([Recomendaciones kNN], Recomendacion_Producto[es_descubrimiento] = TRUE())
+
+// Titulares con al menos una recomendación   [formato #,0]
+'_Medidas'[Clientes con Recomendacion] =
+    CALCULATE(DISTINCTCOUNT(Recomendacion_Producto[sk_cuenta]), Recomendacion_Producto[sistema] = "Demográfico")
+
+// Cuentas que ya usan el producto (adopción actual)   [formato #,0]
+'_Medidas'[Cuentas que ya lo Usan] =
+    COUNTROWS(Adopcion_Producto)
+
+// Titulares (una cuenta cada uno: 4,500)   [formato #,0]
+'_Medidas'[Titulares] =
+    COUNTROWS(Capacidad_Prestamo)
+
+// Cuentas que ya usan el producto / titulares del contexto   [formato 0.00%]
+'_Medidas'[Penetracion Actual] =
+    DIVIDE([Cuentas que ya lo Usan], [Titulares])
+
+// Primera recomendación más frecuente en el contexto
+'_Medidas'[Producto Mas Recomendado] =
+    VAR x = TOPN(1, VALUES(Dim_Producto[producto]), [Primera Opcion], DESC) RETURN CONCATENATEX(x, Dim_Producto[producto] & " · " & FORMAT([Primera Opcion], "#,0"), ", ")
+
+// Primera recomendación del titular
+'_Medidas'[Recomendacion 1] =
+    CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = "Demográfico", Recomendacion_Producto[posicion] = 1)
+
+// Segunda recomendación del titular
+'_Medidas'[Recomendacion 2] =
+    CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = "Demográfico", Recomendacion_Producto[posicion] = 2)
+
+// Tercera recomendación del titular
+'_Medidas'[Recomendacion 3] =
+    CALCULATE(SELECTEDVALUE(Recomendacion_Producto[producto]), Recomendacion_Producto[sistema] = "Demográfico", Recomendacion_Producto[posicion] = 3)
+
+// Productos que el kNN añade para el titular
+'_Medidas'[Descubrimiento kNN] =
+    CALCULATE(CONCATENATEX(VALUES(Recomendacion_Producto[producto]), Recomendacion_Producto[producto], ", "), Recomendacion_Producto[sistema] = "kNN perfil", Recomendacion_Producto[es_descubrimiento] = TRUE())
+
+// Hit@1 del demográfico (66.0%, semilla 42)   [formato 0.00%]
+'_Medidas'[Acierto Elegido] =
+    CALCULATE(MAX(Evaluacion_Recomendador[hit_1]), Evaluacion_Recomendador[modelo] = "Demográfico (arquetipo)")
+
+// Hit@1 de recomendar lo más popular (58.5%): la línea base   [formato 0.00%]
+'_Medidas'[Acierto Popularidad] =
+    CALCULATE(MAX(Evaluacion_Recomendador[hit_1]), Evaluacion_Recomendador[modelo] = "Popularidad")
+
+// Hit@1 del kNN en productos poco comunes (37.2%)   [formato 0.00%]
+'_Medidas'[Acierto Cola Larga kNN] =
+    CALCULATE(MAX(Evaluacion_Recomendador[hit_1_cola_larga]), Evaluacion_Recomendador[modelo] = "kNN usuario-usuario (perfil exógeno)")
+
+// Hit@1 de la popularidad en productos poco comunes (6.3%)   [formato 0.00%]
+'_Medidas'[Acierto Cola Larga Popularidad] =
+    CALCULATE(MAX(Evaluacion_Recomendador[hit_1_cola_larga]), Evaluacion_Recomendador[modelo] = "Popularidad")
+
+// Hit@1 del modelo (gráfico comparativo)   [formato 0.00%]
+'_Medidas'[Acierto Hit1] =
+    SUM(Evaluacion_Recomendador[hit_1])
+
+// Hit@1 en la cola larga (gráfico comparativo)   [formato 0.00%]
+'_Medidas'[Acierto Cola Larga] =
+    SUM(Evaluacion_Recomendador[hit_1_cola_larga])
+
+// Rango recíproco medio   [formato 0.000]
+'_Medidas'[MRR Modelo] =
+    SUM(Evaluacion_Recomendador[mrr])
+
+// MRR con la semilla 2026   [formato 0.000]
+'_Medidas'[MRR Confirmacion] =
+    SUM(Evaluacion_Recomendador[mrr_confirmacion])
+
+// 3,818   [formato #,0]
+'_Medidas'[Titulares sin Prestamo] =
+    CALCULATE([Titulares], Capacidad_Prestamo[tiene_prestamo] = FALSE())
+
+// Titulares con préstamo en su top 3 (1,721)   [formato #,0]
+'_Medidas'[Prestamos Prudentes Recomendados] =
+    CALCULATE([Titulares], Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// 5.7% del saldo promedio, mediana de los titulares sin préstamo (1,873)   [formato "$"#,0.00]
+'_Medidas'[Cuota Prudente Mediana] =
+    CALCULATE(MEDIAN(Capacidad_Prestamo[cuota_prudente]), Capacidad_Prestamo[tiene_prestamo] = FALSE())
+
+// Titulares sin préstamo cuya cuota prudente cubre la cuota mediana otorgada (71)   [formato #,0]
+'_Medidas'[Pueden Pagar Prestamo Tipico] =
+    CALCULATE([Titulares], Capacidad_Prestamo[puede_pagar_prestamo_tipico] = TRUE())
+
+// Suma de montos máximos a 36 meses de los préstamos recomendados   [formato "$"#,0]
+'_Medidas'[Monto Prudente Ofrecible 36m] =
+    CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_36m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// Saldo promedio del titular con préstamo recomendado   [formato "$"#,0]
+'_Medidas'[Saldo Promedio Oferta] =
+    CALCULATE(SUM(Capacidad_Prestamo[saldo_promedio]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// Cuota prudente del titular con préstamo recomendado   [formato "$"#,0]
+'_Medidas'[Cuota Prudente Oferta] =
+    CALCULATE(SUM(Capacidad_Prestamo[cuota_prudente]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// Monto máximo a 12 meses   [formato "$"#,0]
+'_Medidas'[Monto 12m Oferta] =
+    CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_12m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// Monto máximo a 36 meses   [formato "$"#,0]
+'_Medidas'[Monto 36m Oferta] =
+    CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_36m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// Monto máximo a 60 meses   [formato "$"#,0]
+'_Medidas'[Monto 60m Oferta] =
+    CALCULATE(SUM(Capacidad_Prestamo[monto_maximo_60m]), Capacidad_Prestamo[prestamo_recomendado] = TRUE())
+
+// AUC de la regla para predecir el impago   [formato 0.000]
+'_Medidas'[AUC Regla] =
+    MAX(Regla_Capacidad[auc])
+
+// 0.717   [formato 0.000]
+'_Medidas'[AUC Regla Elegida] =
+    CALCULATE([AUC Regla], Regla_Capacidad[regla] = "Carta v8: cuota / saldo previo")
+
+// 0.659   [formato 0.000]
+'_Medidas'[AUC Regla Anterior] =
+    CALCULATE([AUC Regla], Regla_Capacidad[regla] = "Anterior: cuota / salario del distrito")
+
+// De quienes tienen el producto de origen, % que también tiene el de destino   [formato 0.00%]
+'_Medidas'[P Destino dado Origen] =
+    SUM(Asociacion_Producto[p_destino_dado_origen])
+
+// Lift: > 1 van juntos más de lo esperado por azar   [formato 0.00]
+'_Medidas'[Lift Asociacion] =
+    SUM(Asociacion_Producto[lift])
+
+// Par con mayor lift (al menos 100 cuentas), en la dirección de mayor P(j|i): Seguro → Transferencias 99.8%
+'_Medidas'[Regla Mas Fuerte] =
+    VAR x = TOPN(1, FILTER(Asociacion_Producto, Asociacion_Producto[cuentas_ambos] >= 100), Asociacion_Producto[lift], DESC, Asociacion_Producto[p_destino_dado_origen], DESC) RETURN CONCATENATEX(x, Asociacion_Producto[producto_origen] & " → " & Asociacion_Producto[producto_destino] & " · " & FORMAT(Asociacion_Producto[p_destino_dado_origen], "0.0%"), ", ")
+
+// ==============================================================================
+// 7. COLORES CONDICIONALES (formato por valor de campo)
+// ==============================================================================
+
+// Treemap de P2: escala secuencial blanco → bermellón por tasa de mora
+'_Medidas'[Color Mora] =
+    VAR x = [Tasa Mora Vigente] RETURN SWITCH(TRUE(), ISBLANK(x), "#FFFFFF", x < 0.05, "#FBE3D3", x < 0.10, "#F2B48C", x < 0.15, "#E5813F", "#D55E00")
+
+// Dispersión de P5: bermellón > 1, naranja > 0.5, gris el resto
+'_Medidas'[Color Saturacion] =
+    VAR x = [Indice Saturacion] RETURN IF(x > 1, "#D55E00", IF(x > 0.5, "#E69F00", "#7F7F7F"))
+
+// R1: modelos elegidos en azul, el resto en gris
+'_Medidas'[Color Modelo] =
+    IF(SELECTEDVALUE(Evaluacion_Recomendador[elegido]) = TRUE(), "#0072B2", "#BDBDBD")
+
+// R2: regla elegida en azul
+'_Medidas'[Color Regla] =
+    IF(SELECTEDVALUE(Regla_Capacidad[regla]) = "Carta v8: cuota / saldo previo", "#0072B2", "#BDBDBD")

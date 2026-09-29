@@ -288,6 +288,113 @@ CREATE TABLE Recomendacion_Cuenta (
 );
 GO
 
+-- >>> RECOMENDADORES DASHBOARD
+-- Tablas de las páginas R1–R3 del dashboard (Guía 07 v5). Las carga scripts/43_recomendadores_dashboard.py
+-- con los sistemas que el Informe 04 v2 eligió como los mejores; el script toma estas definiciones de aquí.
+
+-- Catálogo de los 8 productos (nombre en español, penetración actual).
+CREATE TABLE Dim_Producto (
+    producto VARCHAR(40) NOT NULL PRIMARY KEY,
+    codigo VARCHAR(20) NOT NULL UNIQUE,
+    descripcion VARCHAR(80) NOT NULL,
+    penetracion DECIMAL(6,4) NOT NULL,
+    orden INT NOT NULL
+);
+GO
+
+-- Top 3 por cuenta de cada sistema elegido. Grano: cuenta x sistema x posición.
+CREATE TABLE Recomendacion_Producto (
+    sk_cuenta INT NOT NULL,
+    sk_cliente INT NOT NULL,
+    sk_distrito INT NOT NULL,                        -- Distrito de la cuenta (lo filtra el segmentador de zona)
+    sistema VARCHAR(20) NOT NULL,                    -- 'Demográfico' | 'kNN perfil'
+    producto VARCHAR(40) NOT NULL,
+    posicion TINYINT NOT NULL,
+    puntaje DECIMAL(9,4) NOT NULL,
+    es_descubrimiento BIT NOT NULL,                  -- kNN lo propone y el demográfico no lo tiene en su top 3
+    CONSTRAINT PK_Recomendacion_Producto PRIMARY KEY (sk_cuenta, sistema, posicion),
+    CONSTRAINT FK_RecProd_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+    CONSTRAINT FK_RecProd_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente),
+    CONSTRAINT FK_RecProd_Distrito FOREIGN KEY (sk_distrito) REFERENCES Dim_Distrito(sk_distrito),
+    CONSTRAINT FK_RecProd_Producto FOREIGN KEY (producto) REFERENCES Dim_Producto(producto)
+);
+GO
+
+-- Productos que cada cuenta ya usa. Grano: cuenta x producto.
+CREATE TABLE Adopcion_Producto (
+    sk_cuenta INT NOT NULL,
+    sk_cliente INT NOT NULL,
+    sk_distrito INT NOT NULL,
+    producto VARCHAR(40) NOT NULL,
+    CONSTRAINT PK_Adopcion_Producto PRIMARY KEY (sk_cuenta, producto),
+    CONSTRAINT FK_Adop_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+    CONSTRAINT FK_Adop_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente),
+    CONSTRAINT FK_Adop_Distrito FOREIGN KEY (sk_distrito) REFERENCES Dim_Distrito(sk_distrito),
+    CONSTRAINT FK_Adop_Producto FOREIGN KEY (producto) REFERENCES Dim_Producto(producto)
+);
+GO
+
+-- Capacidad de pago de cada titular (regla de la Carta v8). Grano: una fila por cuenta.
+CREATE TABLE Capacidad_Prestamo (
+    sk_cuenta INT NOT NULL PRIMARY KEY,
+    sk_cliente INT NOT NULL,
+    sk_distrito INT NOT NULL,
+    tiene_prestamo BIT NOT NULL,
+    saldo_promedio DECIMAL(12,2) NOT NULL,
+    cuota_prudente DECIMAL(12,2) NOT NULL,           -- 5.7% del saldo promedio (límite de la banda Baja)
+    monto_maximo_12m DECIMAL(14,2) NOT NULL,
+    monto_maximo_36m DECIMAL(14,2) NOT NULL,
+    monto_maximo_60m DECIMAL(14,2) NOT NULL,
+    tramo_monto_36m VARCHAR(20) NOT NULL,
+    orden_tramo INT NOT NULL,
+    puede_pagar_prestamo_tipico BIT NOT NULL,        -- cuota prudente >= cuota mediana otorgada (3,934)
+    prestamo_recomendado BIT NOT NULL,               -- el préstamo está en su top 3 demográfico
+    CONSTRAINT FK_Cap_Cuenta FOREIGN KEY (sk_cuenta) REFERENCES Dim_Cuenta(sk_cuenta),
+    CONSTRAINT FK_Cap_Cliente FOREIGN KEY (sk_cliente) REFERENCES Dim_Cliente(sk_cliente),
+    CONSTRAINT FK_Cap_Distrito FOREIGN KEY (sk_distrito) REFERENCES Dim_Distrito(sk_distrito)
+);
+GO
+
+-- Métricas del protocolo común de evaluación (Informe 04): una fila por modelo.
+CREATE TABLE Evaluacion_Recomendador (
+    modelo VARCHAR(80) NOT NULL PRIMARY KEY,
+    familia VARCHAR(30) NOT NULL,
+    rol VARCHAR(40) NOT NULL,                        -- Elegido: ... | Línea base | Descartado
+    hit_1 DECIMAL(6,4) NOT NULL,
+    hit_3 DECIMAL(6,4) NOT NULL,
+    mrr DECIMAL(6,4) NOT NULL,
+    hit_1_cola_larga DECIMAL(6,4) NOT NULL,
+    mrr_confirmacion DECIMAL(6,4) NULL,              -- semilla 2026
+    orden INT NOT NULL,
+    elegido BIT NOT NULL
+);
+GO
+
+-- Venta cruzada: P(destino | origen) y lift entre los 8 productos.
+CREATE TABLE Asociacion_Producto (
+    producto_origen VARCHAR(40) NOT NULL,
+    producto_destino VARCHAR(40) NOT NULL,
+    p_destino_dado_origen DECIMAL(6,4) NOT NULL,
+    lift DECIMAL(8,4) NOT NULL,
+    cuentas_ambos INT NOT NULL,
+    CONSTRAINT PK_Asociacion_Producto PRIMARY KEY (producto_origen, producto_destino)
+);
+GO
+
+-- Comparación de las dos reglas de capacidad (Informe 04, utilidad financiera).
+CREATE TABLE Regla_Capacidad (
+    regla VARCHAR(60) NOT NULL,
+    tramo VARCHAR(20) NOT NULL,
+    orden INT NOT NULL,
+    prestamos INT NOT NULL,
+    impagos INT NOT NULL,
+    tasa_impago DECIMAL(6,4) NOT NULL,
+    auc DECIMAL(6,4) NOT NULL,
+    CONSTRAINT PK_Regla_Capacidad PRIMARY KEY (regla, tramo)
+);
+GO
+-- <<< RECOMENDADORES DASHBOARD
+
 -- ==============================================================================
 -- 4. AUDITORÍA DE CARGAS (Carta v8, sección 12.3)
 -- ==============================================================================

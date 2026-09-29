@@ -32,6 +32,7 @@
 > | 5 | Migración Kimball → MongoDB, validadores `$jsonSchema`, reconciliación por desgloses (33/33) y respaldo `Financial_mongo_dump.gz` | ✅ | [`05`](05_Especificacion_Tecnica_Kimball_MongoDB.md), [`scripts/35`](scripts/35_migrar_kimball_a_mongodb.py), [`scripts/36`](scripts/36_reconciliacion_kimball_mongo.py) |
 > | 6 | Sistemas de recomendación (Informe 04 v2): catálogo real de 8 productos, protocolo de evaluación común con popularidad, cola larga y confirmación, fugas de información corregidas y recomendaciones para 4,500 titulares. El `.docx` y el `.pdf` siguen siendo de la versión 1 | ✅ (solo `.md`) | [`04`](04_Informe_Sistemas_de_Recomendacion.md), [`scripts/37`](scripts/37_rs_preparacion.py) a [`41`](scripts/41_rs_figuras.py) |
 > | 7 | Dashboard (Guía 07 v4): recomendaciones cargadas en los dos motores, vista por categoría, 85 medidas DAX, conector MongoDB alineado y los dos `.pbip` con 9 páginas y KPIs en todas. El modelo Kimball se abrió en Power BI Desktop y sus medidas se verificaron en el motor (Guía 07, sección 10.1). Quedan los ajustes manuales listados en el README de cada proyecto | ✅ (los dos verificados; Mongo requiere Python de python.org con las versiones del README del proyecto) | [`07`](07_Guia_Dashboards_Articulados_PowerBI.md), [`sql/04`](sql/04_Vistas_PowerBI_Kimball.sql), [`sql/05`](sql/05_Medidas_DAX_PowerBI.dax), [`scripts/26`](scripts/26_powerbi_mongo_dashboard.py), [`scripts/30`](scripts/30_generar_powerbi_pbip.py), [`scripts/42`](scripts/42_cargar_recomendaciones.py), `dashboards/` |
+> | 7b | Dashboard v5 para el gerente: panel de filtros globales sincronizados (año, zona, segmento), drill-through a las fichas que conserva los filtros, y tres páginas de recomendación (R1 qué ofrecer, R2 préstamo prudente, R3 venta cruzada) con los sistemas que ganaron cada tarea en el Informe 04 | ✅ | [`scripts/43`](scripts/43_recomendadores_dashboard.py), [`07`](07_Guia_Dashboards_Articulados_PowerBI.md) (sección 5) |
 > | 8 | Evidencia estadística de los títulos del dashboard (Carta v8) | ✅ | [`scripts/27`](scripts/27_evidencia_estadistica_dashboard.py), `metricas_dashboard_07.json` |
 > | 9 | Guía 06, dossier 08 y demo HTML | ⏳ | `06_*`, `08_*`, `demo_dashboard.html` |
 > | 10 | Este README (resto de secciones) | ⏳ | — |
@@ -52,6 +53,7 @@
 > python scripts/35_migrar_kimball_a_mongodb.py
 > python scripts/36_reconciliacion_kimball_mongo.py
 > python scripts/42_cargar_recomendaciones.py      # después de los scripts 37 a 41 del Informe 04
+> python scripts/43_recomendadores_dashboard.py   # páginas R1–R3 (SQL Server y MongoDB)
 > python scripts/30_generar_powerbi_pbip.py        # proyectos .pbip y sql/05
 > ```
 

@@ -22,6 +22,9 @@ nombres de columnas, para que las medidas DAX sean idénticas:
   m_trans_anual   54,298   (vw_PBI_Trans_Anual_Cuenta: agregado en MongoDB con $group)
   m_saldo_mensual 185,615  (Fact_Saldo_Cuenta_Mensual)
   m_recomendaciones 4,500  (Recomendacion_Cuenta)
+  Recomendadores del dashboard (páginas R1–R3, script 43):
+  m_dim_producto 8 · m_recomendacion_producto 26,986 · m_adopcion_producto 8,604 ·
+  m_capacidad_prestamo 4,500 · m_evaluacion_recomendador 8 · m_asociacion_producto 56 · m_regla_capacidad 7
 ==============================================================================
 """
 import pandas as pd
@@ -109,8 +112,23 @@ m_recomendaciones = pd.DataFrame([{
     "prestamo_cuota_maxima": r["prestamo_cuota_maxima"], "prestamo_monto_maximo_36m": r["prestamo_monto_maximo_36m"],
 } for r in db.recomendaciones.find({})])
 
+# ---- Recomendadores del dashboard (script 43): mismas columnas que las tablas de Kimball ----
+def coleccion(nombre):
+    return pd.DataFrame(list(db[nombre].find({}, {"_id": 0})))
+
+
+m_dim_producto = coleccion("dim_producto")
+m_recomendacion_producto = coleccion("recomendacion_producto")
+m_adopcion_producto = coleccion("adopcion_producto")
+m_capacidad_prestamo = coleccion("capacidad_prestamo")
+m_evaluacion_recomendador = coleccion("evaluacion_recomendador")
+m_asociacion_producto = coleccion("asociacion_producto")
+m_regla_capacidad = coleccion("regla_capacidad")
+
 # El puente Python de Power BI no reconoce StringDtype (pandas >= 3) ni fechas en microsegundos
-for df in (m_meses, m_distritos, m_clientes, m_cuentas, m_prestamos, m_ordenes, m_trans_anual, m_saldo_mensual, m_recomendaciones):
+for df in (m_meses, m_distritos, m_clientes, m_cuentas, m_prestamos, m_ordenes, m_trans_anual, m_saldo_mensual, m_recomendaciones,
+           m_dim_producto, m_recomendacion_producto, m_adopcion_producto, m_capacidad_prestamo, m_evaluacion_recomendador,
+           m_asociacion_producto, m_regla_capacidad):
     for col in df.columns:
         if pd.api.types.is_string_dtype(df[col]) and not pd.api.types.is_object_dtype(df[col]):
             df[col] = df[col].astype(object)
@@ -121,5 +139,7 @@ client.close()
 
 print("Tablas MongoDB listas para Power BI:")
 for nombre in ["m_distritos", "m_clientes", "m_cuentas", "m_anios", "m_meses", "m_prestamos", "m_ordenes",
-               "m_trans_anual", "m_saldo_mensual", "m_recomendaciones"]:
-    print(f"  - {nombre:<18} {len(globals()[nombre]):>8,} filas")
+               "m_trans_anual", "m_saldo_mensual", "m_recomendaciones", "m_dim_producto", "m_recomendacion_producto",
+               "m_adopcion_producto", "m_capacidad_prestamo", "m_evaluacion_recomendador", "m_asociacion_producto",
+               "m_regla_capacidad"]:
+    print(f"  - {nombre:<26} {len(globals()[nombre]):>8,} filas")

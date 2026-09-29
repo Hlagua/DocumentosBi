@@ -19,30 +19,26 @@ Fuente: SQL Server `DM_Financial_Kimball_v2`. Diseño: Guía 07 v4. Generado con
 | Volumen · movimientos | $6.26bn · 1,056,320 |
 | Impago banda Baja · Alta | 2.92% · 23.26% |
 
-### Ajustes finales en Power BI Desktop (≈ 15 minutos, una sola vez; luego Ctrl+S)
-El formato heredado `report.json` no guarda de forma fiable estas opciones; se configuran a mano:
+### Cómo lo usa el gerente
+* **Panel izquierdo (en todas las páginas):** navegación a Inicio, P1–P6 y R1–R3, y los filtros **Año**, **Zona**
+  (macro-región › región › distrito) y **Segmento de edad**. Están sincronizados: lo que elija sigue activo al
+  cambiar de página.
+* **Clic en un gráfico:** filtra los demás gráficos de esa misma página (comportamiento estándar de Power BI).
+* **Clic derecho en un cliente o distrito → Obtener detalles:** abre la ficha D2 (cliente) o D1 (distrito)
+  **con todos los filtros aplicados**; el botón *Atrás* vuelve a la página de origen. D1 y D2 están ocultas en
+  las pestañas porque solo tienen sentido para un cliente o distrito concreto.
 
-1. **Tema:** ya viene incrustado (Okabe e Ito). Si no se aplicara: *Vista → Temas → Buscar temas* →
-   `tema_financial.json` (esta carpeta). Los colores con significado (estados, bandas, alertas, propósitos)
-   están fijados en cada visual.
-2. **Drill-through:** en *D1 Distrito* arrastra `Dim_Distrito[nombre_distrito]` a *Obtener detalles*; en *D2 Cliente 360* arrastra
-   `Dim_Cliente[Cliente]` **y** `Dim_Cuenta[Cuenta]` (P5 llega por cuenta; P2, P6 y D1 por cliente). Luego clic derecho en las
-   pestañas D1 y D2 → *Ocultar página*.
-3. **Árbol de descomposición (P2):** clic en **+** → `region` → **+** → `nombre_distrito` → **+** → `Cliente`
-   (o *Valor alto* en cada nivel).
-4. **Barras de error** (*Análisis → Barras de error*, límites superior/inferior):
-   - P1 línea y P2 columnas de tasa de mora → `Mora Wilson Superior` / `Mora Wilson Inferior`
-   - P4 ticket promedio → `Ticket Limite Superior` / `Ticket Limite Inferior`
-   - P6 bandas → `Impago Wilson Superior/Inferior`; P6 edad → `Incumplimiento Wilson Superior/Inferior`
-   (Los mismos límites ya están en el tooltip de cada gráfico.)
-5. **Treemap (P2):** *Formato → Colores → fx* → degradado por `Tasa Mora Vigente`, mínimo `#FFFFFF`, máximo `#D55E00`.
-6. **Dispersión (P5):** *Análisis → Sombreado de simetría* = activado. *Formato → Marcadores → Color → fx* →
-   reglas por `Indice Saturacion`: > 1 → `#D55E00`, > 0.5 → `#E69F00`, resto `#7F7F7F`.
-7. **Múltiplos pequeños (P4):** en el gráfico de líneas de volumen, mueve `categoria_analitica` de *Leyenda* a
-   *Múltiplos pequeños* (un panel por categoría, sin colores).
-8. **Formato condicional:** matrices de P1 y P4 → *Color de fondo* escala `#FFFFFF` → `#D55E00`; matriz de P1 →
-   clic derecho en `Estado` → *Mostrar elementos sin datos*. Tabla de P2 → *Barras de datos* en `Tasa`.
-   Tabla de P5 → *Iconos* en `Índice de saturación` (> 1 bermellón, > 0.5 naranja).
-9. **Combinados con referencia (P2, P3, P6):** la línea "Banco" usa el mismo eje que las columnas (eje Y
-   secundario desactivado). Si Power BI lo muestra en otra escala, *Formato → Eje Y secundario → Desactivado*.
-10. **Opcional (sección 8 de la guía):** página de tooltip *TT Distrito* y marcador *Restablecer filtros*.
+### Ya configurado desde el código (no hay que tocarlo)
+Tema Okabe–Ito incrustado; drill-through de D1 (`Dim_Distrito[nombre_distrito]`) y D2 (`Dim_Cliente[Cliente]`) manteniendo los filtros;
+filtros sincronizados; color por tasa de mora en el treemap de P2; semáforo del índice de saturación en la
+dispersión de P5; mapas de calor en las matrices de P1, P4, R1 y R3; colores de estados, bandas y modelos.
+
+### Ajustes opcionales en Power BI Desktop (el formato `report.json` no los guarda de forma fiable)
+1. **Árbol de descomposición (P2):** clic en **+** → región → distrito → cliente (o *Valor alto* en cada nivel).
+2. **Barras de error** (*Análisis → Barras de error*): P1 y P2 → `Mora Wilson Inferior/Superior`;
+   P4 → `Ticket Limite Inferior/Superior`; P6 y R2 → `Impago Wilson Inferior/Superior`; P6 edad →
+   `Incumplimiento Wilson Inferior/Superior`. Los mismos límites ya aparecen en el tooltip de cada gráfico.
+3. **Dispersión (P5):** *Análisis → Sombreado de simetría* = activado.
+4. **Múltiplos pequeños (P4):** mover la categoría de *Leyenda* a *Múltiplos pequeños* en el gráfico de volumen.
+5. **Tablas:** barras de datos en la tasa de P2; *Mostrar elementos sin datos* en el estado de la matriz de P1.
+6. Si algún combinado con referencia ("Banco") muestra un eje secundario: *Formato → Eje Y secundario → Desactivado*.

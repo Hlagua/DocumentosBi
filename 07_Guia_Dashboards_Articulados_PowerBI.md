@@ -9,7 +9,7 @@
 
 **Autores:** Alison Marcela Cobos Taco / Henry Daniel Lagua Flores  
 **Docente:** Ing. Ruben Nogales, Mg.  
-**Versión:** 4.0 (28/09/2026) — rediseño a partir de la Carta de Diseño v8, del Data Mart cargado y verificado (Informes 09 y 10), de la réplica MongoDB (Informe 05) y de la investigación de gráficos de Power BI realizada por el equipo  
+**Versión:** 5.0 (29/09/2026) — añade las páginas de recomendación R1–R3, el panel de filtros globales y el drill-through que conserva los filtros. Versión 4.0 (28/09/2026): rediseño a partir de la Carta de Diseño v8, del Data Mart cargado y verificado (Informes 09 y 10), de la réplica MongoDB (Informe 05) y de la investigación de gráficos de Power BI realizada por el equipo  
 **Entregables:** `dashboards/Dashboard_Financial_Kimball` y `dashboards/Dashboard_Financial_Mongo` (proyectos `.pbip` idénticos en diseño, distinta fuente)
 
 > **Qué cambia respecto a la versión 3.1.** La v3.1 respondía las preguntas de la Carta anterior. La Carta v8 cambió tres cosas que el tablero debe mostrar: (1) la mora crece por **volumen**, no por deterioro; (2) el impago depende de la **capacidad de pago**; (3) la liquidez se mide sobre la **cartera vigente** (40.73%, no 52.38%) con un saldo **mensual** y sin ambigüedad. Además, el Data Mart ahora tiene la foto mensual de saldos, las 4 categorías de operación, el concepto completado de cada transacción, la capacidad de pago y las recomendaciones del Informe 04.
@@ -58,7 +58,7 @@ El ejemplo del Ing. ("producto más vendido → su proveedor → lo que ofrece e
 | Decisión | Elegido | Alternativas descartadas | Fundamento |
 | :--- | :--- | :--- | :--- |
 | **Segmentación de edad** | **3 grupos del Data Mart**: Joven (< 30), Adulto (30–50), Adulto Mayor (> 50) — `Dim_Cliente[segmento_edad]` | 4 grupos calculados en DAX (≤ 25, 26–40, 41–60, > 60) | (1) Una sola definición en el Data Mart (fuente única, la misma del Informe 04). (2) Con 4 grupos, el grupo > 60 tiene solo 10 préstamos cerrados y 2 celdas quedan con frecuencia esperada < 5 (regla de Cochran incumplida). Con 3 grupos, los tres tienen 56 a 107 préstamos cerrados y ninguna celda < 5 (χ² = 2.28, p = 0.32). |
-| **Recomendaciones del Informe 04** | **Sí**, en la ficha del cliente (D2) | Página propia de recomendaciones | La Carta v8 quiere mejorar el otorgamiento con la capacidad de pago: la ficha muestra el top 3 del recomendador y, si incluye préstamo, la cuota y el monto máximo prudentes. Cierra el ciclo "analizar → actuar". No se hace una página aparte porque no hay una pregunta de la Carta sobre recomendaciones. |
+| **Recomendaciones del Informe 04** | **Tres páginas (R1–R3)**, una por decisión comercial, y la oferta de cada cliente en su ficha (D2) | Solo en la ficha (v4) | El gerente decide *qué ofrecer*, *a quién prestar y cuánto* y *qué más ofrecer*. Cada página usa el sistema que ganó esa tarea con el protocolo común del Informe 04 (sección 5, R1–R3). Cierra el ciclo "analizar → actuar". |
 | **KPI de liquidez** | **Ratio de absorción de cartera vigente (40.73%)** | Cartera total / saldo (52.38%) | Los préstamos cerrados ya no inmovilizan fondos (Carta v8, sección 7). El 52.38% aparece solo en el tooltip como referencia histórica. |
 | **Saldo en el tiempo** | Foto mensual (`Fact_Saldo_Cuenta_Mensual`): **saldo promedio por cuenta activa** y saldo total | Suma de `saldo_cuenta` de las transacciones | El saldo es semiaditivo; sumar movimientos no tiene sentido. Además, el saldo total crece de $0.66M (enero 1993) a $197.14M (diciembre 1998) sobre todo porque se abren cuentas: mostrar solo el total sugiere un crecimiento que no es por cliente. |
 | **Intervalo de las tasas** | **Wilson** con z = 1 (equivalente a ±1 EE) | ±1 EE de Wald recortado en 0 | Con tasas cercanas a 0 (north Bohemia 0/41, banda Baja 5/171) el intervalo de Wald colapsa a ancho 0 y aparenta certeza total. Wilson da un intervalo con sentido (Wilson, 1927; Agresti y Coull, 1998). |
@@ -108,7 +108,9 @@ Estos valores se guardan en `tema_financial.json`, **incrustado en cada informe*
 
 ## 5. PÁGINAS Y MATRIZ DE TRAZABILIDAD
 
-Nueve páginas: **Inicio**, seis de preguntas (**P1–P6**, una por pregunta de la Carta v8) y dos de detalle por *drill-through* (**D1** distrito, **D2** cliente). Todas comparten los segmentadores **Año** y **Macro-región** (botones, sincronizados).
+Doce páginas: **Inicio**, seis de preguntas (**P1–P6**, una por pregunta de la Carta v8), tres de recomendación (**R1–R3**) y dos de detalle por *drill-through* (**D1** distrito, **D2** cliente, ocultas en las pestañas).
+
+**Panel lateral fijo (150 px, en todas las páginas):** navegación a las diez páginas visibles y tres filtros **sincronizados** —**Año**, **Zona** (jerarquía macro-región › región › distrito) y **Segmento de edad**—. Lo que el gerente elige en ese panel se mantiene al cambiar de página, de modo que puede recorrer P1 → P6 → R1–R3 con la misma zona o segmento y decidir con el mismo recorte. El área de gráficos se comprime proporcionalmente al ancho restante.
 
 ### Inicio — "¿Cómo está el banco?"
 
@@ -197,6 +199,48 @@ Nueve páginas: **Inicio**, seis de preguntas (**P1–P6**, una por pregunta de 
 | Órdenes | Tabla | Órdenes de la cuenta por propósito |
 | **Qué ofrecerle** | Tabla | Top 3 del recomendador (Informe 04) y, si hay préstamo, cuota y monto máximo prudentes |
 
+### R1 — ¿Qué producto ofrecer a cada cliente? (recomendador demográfico)
+
+| Visual | Gráfico | Contenido | Por qué |
+| :--- | :--- | :--- | :--- |
+| Cabecera | Tarjeta | Titulares con recomendación 4,500 · Acierto del recomendador 66.0% · Acierto de ofrecer lo más popular 58.5% · Primera oferta más frecuente (Transferencias a otros bancos, 1,817) | La precisión del sistema frente a la línea base, a la vista |
+| Oportunidad | Columnas agrupadas | Por producto: cuentas que ya lo usan (gris) y cuentas a las que se les recomienda (naranja) | Muestra dónde crecer; responde a los filtros de zona y segmento |
+| Perfil | Matriz con mapa de calor | Arquetipo (zona × edad) × producto: veces que es la primera oferta | El modelo es demográfico: la matriz *es* el modelo, explicable al gerente |
+| Justificación | Barras horizontales | Acierto (Hit@1) de los 8 recomendadores evaluados; azul = elegidos, gris = descartados; tooltip: MRR, cola larga, MRR de confirmación | Por qué este sistema y no otro (regla del Ing.: fundamentar) |
+| Acción | Tabla | Cliente, 1.ª/2.ª/3.ª oferta, cuota máxima de préstamo; *drill-through* a D2 | Lista de trabajo para la fuerza comercial |
+
+### R2 — ¿A quién prestar y hasta cuánto? (regla de capacidad de pago)
+
+| Visual | Gráfico | Contenido | Por qué |
+| :--- | :--- | :--- | :--- |
+| Cabecera | Tarjeta | Titulares sin préstamo 3,818 · Préstamo recomendado 1,721 · Cuota prudente mediana 1,873 · Pueden pagar la cuota típica 71 | Tamaño real de la oportunidad de crédito prudente |
+| Validación | Columnas + línea | Impago por banda de capacidad con Wilson (2.9% → 23.3%) | Por qué se ofrece solo la cuota de la banda Baja |
+| Comparación | Columnas | AUC de la regla elegida (0.717) frente a la anterior (0.659) | La regla nueva anticipa mejor el impago |
+| Distribución | Columnas | Titulares sin préstamo por tramo de monto máximo a 36 meses | Cuánto se puede prestar, no el monto típico del banco |
+| Dónde | Columnas | Monto prudente ofrecible por región | Asignación de metas comerciales por zona |
+| Acción | Tabla | Cliente, saldo promedio, cuota máxima, montos a 12, 36 y 60 meses; *drill-through* a D2 | Oferta concreta y prudente por cliente |
+
+### R3 — ¿Qué más ofrecer? (venta cruzada y descubrimiento)
+
+| Visual | Gráfico | Contenido | Por qué |
+| :--- | :--- | :--- | :--- |
+| Cabecera | Tarjeta | Ofertas nuevas del kNN 2,731 · Acierto del kNN en productos poco comunes 37.2% · …y de ofrecer lo más popular 6.3% · Venta cruzada más fuerte (Seguro → Transferencias, 99.8%) | El valor del segundo sistema en una línea |
+| Venta cruzada | Matriz con mapa de calor | P(j \| i): de quienes tienen el producto de la fila, % que también tiene el de la columna | Reglas explicables para campañas ("a quien paga seguro, ofrecer transferencias") |
+| Descubrimiento | Barras | Ofertas del kNN por producto que el demográfico no propone | Productos menos obvios que la popularidad nunca sugiere |
+| Acción | Tabla | Cliente, oferta principal (demográfico) y oferta adicional (kNN); *drill-through* a D2 | Segunda oferta por cliente |
+
+**Sistemas elegidos (Informe 04, protocolo común: un producto oculto por cuenta, semilla 42 para elegir y 2026 para confirmar):**
+
+| Decisión | Sistema | Evidencia | Descartados y por qué |
+| :--- | :--- | :--- | :--- |
+| Qué ofrecer | Demográfico (arquetipo) | Mayor acierto: Hit@1 66.0%, MRR 0.776; confirmado 0.764 | Popularidad 58.5% (línea base); contenidos 20.1%; kNN por productos 18.7% |
+| Qué más ofrecer | kNN usuario-usuario por perfil exógeno | Mejor en la cola larga: 37.2% (popularidad 6.3%); casi empata en global (65.3%) | Coseno, ITF y Pearson (≈ 13% en cola larga) |
+| Venta cruzada | Ítem a ítem P(j \| i) | Asociaciones significativas con χ² y corrección de Holm (20 de 28 pares) | Coseno ajustado sobre intensidad (p = 0.64) |
+| A quién prestar y cuánto | Regla cuota / saldo previo (Carta v8) | AUC 0.717 frente a 0.659; χ² = 38.58 | Regla cuota / salario del distrito |
+| — | Slope One | No se usa: para estimar montos la media del producto lo supera (MAE 0.285 frente a 0.330) | — |
+
+Los datos los calcula y carga `scripts/43_recomendadores_dashboard.py` en los dos motores (7 tablas: `Dim_Producto`, `Recomendacion_Producto`, `Adopcion_Producto`, `Capacidad_Prestamo`, `Evaluacion_Recomendador`, `Asociacion_Producto`, `Regla_Capacidad`); el demográfico reproduce la lista final del Informe 04 en las 4,500 cuentas.
+
 ### Matriz de trazabilidad
 
 | Problema (Carta v8) | Pregunta | Página | Visual principal | Medida o prueba que sustenta el título |
@@ -275,9 +319,10 @@ Errores que se evitan: filtrar la tabla de hechos completa con `FILTER` (lento);
 
 | Herramienta | Uso | Por qué |
 | :--- | :--- | :--- |
-| Segmentadores **desplegables** (Año, Macro-región), sincronizados | Páginas Inicio y P1–P6 | Mismo filtro en todo el tablero; el desplegable muestra el valor activo. Se probaron botones: 6 años + 3 macro-regiones necesitan ~700 px y no caben junto a la navegación |
+| **Panel lateral de filtros globales** (Año, Zona jerárquica, Segmento de edad), sincronizados | Todas las páginas | El gerente filtra una vez y el filtro lo acompaña en P1–P6 y R1–R3; así compara problemas y oportunidades del mismo recorte |
+| Clic en un gráfico (filtro cruzado) | Dentro de cada página | Explorar sin cambiar de página. En Power BI el clic en un gráfico no viaja a otras páginas: para eso están el panel y el *drill-through* |
 | Árbol de descomposición | P2 | Recorrido "el mayor → dentro de ese → …" |
-| *Drill-through* | Distrito → D1; cliente → D2; con botón Atrás | Detalle sin perder el contexto |
+| *Drill-through* (configurado en el código, **conserva todos los filtros**) | Clic derecho en un distrito → D1; en un cliente → D2 (desde P2, P5, P6, R1–R3 y D1); botón Atrás | El detalle hereda la zona, el segmento, el año y los clics de la página de origen |
 | Tooltip de página | Distritos (P2, P3) | Detalle sin cambiar de página |
 | Marcador "Restablecer filtros" | Botón en la barra | Volver al estado inicial |
 | Formato condicional | Semáforo del índice de saturación; mapa de calor en matrices; barras de datos en tasas | Alertas legibles sin leer cada número |
@@ -313,6 +358,7 @@ No se usan **parámetros de campo** para cambiar la métrica de un gráfico: cad
 | 6 | Recalcular la evidencia estadística de cada título con la Carta v8 (Wilson, 3 grupos de edad, bandas, absorción vigente, foto mensual): χ² cosecha p = 0.93, bandas χ² = 38.58 y AUC 0.717, edad χ² = 2.28 (p = 0.32), 193 cuentas pasaron por sobregiro (máx. 43 en nov-1998) | `scripts/27_evidencia_estadistica_dashboard.py`, `metricas_dashboard_07.json` | ✅ |
 | 7 | Abrir ambos proyectos en Power BI Desktop, verificar las cifras de control y hacer los ajustes que no se pueden guardar desde el código | `dashboards/*/README.md` | Kimball y Mongo verificados (sección 10.1); ajustes manuales pendientes |
 | 8 | Actualizar el Dossier 08, la demo HTML y el README | `08_*`, `demo_dashboard.html` | Pendiente |
+| 9 | Páginas de recomendación R1–R3, panel de filtros globales y *drill-through* que conserva los filtros (v5) | `scripts/43_recomendadores_dashboard.py`, `scripts/26`, `scripts/30` | ✅ |
 
 ### 10.1 Verificación en el motor de Power BI Desktop
 
