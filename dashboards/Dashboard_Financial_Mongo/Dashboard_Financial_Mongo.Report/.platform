@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Dashboard_Financial_Mongo"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "463f1e32-957b-4033-aa49-b500b4b5a358"
+  }
+}

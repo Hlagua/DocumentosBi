@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Dashboard_Financial_Kimball"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "6007a6b5-4d09-4276-ac7b-a29af41667c3"
+  }
+}
