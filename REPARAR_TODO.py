@@ -33,6 +33,12 @@ import subprocess
 import sys
 import time
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except Exception:
+        pass
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = os.path.join(RAIZ, "scripts")
 SERVIDOR = r"(localdb)\MSSQLLocalDB"
@@ -273,10 +279,10 @@ def paso_verificacion(hay_mongo):
         print(f"MongoDB: las {len(CONTROL_MONGO) + len(CONTROL_MONGO_DASHBOARD)} colecciones del dashboard están completas.")
 
     titulo("LISTO")
-    print("Dashboard Kimball:  abra dashboards/Dashboard_Financial_Kimball/Dashboard_Financial_Kimball.pbip → Inicio → Actualizar.")
+    print("Dashboard Kimball:  abra dashboards/Dashboard_Financial_Kimball/Dashboard_Financial_Kimball.pbip -> Inicio -> Actualizar.")
     if hay_mongo:
-        print("Dashboard MongoDB:  abra dashboards/Dashboard_Financial_Mongo/Dashboard_Financial_Mongo.pbip → Actualizar.\n"
-              "  Requisito de Power BI: Archivo → Opciones → Scripts de Python → un Python de python.org (NO el de la\n"
+        print("Dashboard MongoDB:  abra dashboards/Dashboard_Financial_Mongo/Dashboard_Financial_Mongo.pbip -> Actualizar.\n"
+              "  Requisito de Power BI: Archivo -> Opciones -> Scripts de Python -> un Python de python.org (NO el de la\n"
               "  Microsoft Store) con: python -m pip install pandas==3.0.5 pymongo==4.18.1 matplotlib==3.10.7")
         if "WindowsApps" in sys.executable:
             print("  AVISO: este Python es el de la Microsoft Store; Power BI no puede usarlo para el dashboard MongoDB.")
