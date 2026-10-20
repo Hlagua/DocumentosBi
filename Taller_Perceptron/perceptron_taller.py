@@ -1,6 +1,7 @@
 """
 Taller: Desarrollo y entrenamiento de un perceptrón para clasificación binaria
-Asignatura: Inteligencia de Negocios
+Asignatura: Inteligencia de Negocios - Carrera de Software, 6to "A"
+Autores: Lagua Flores Henry Daniel / Cobos Taco Alison Marcela
 
 Implementación desde cero (sin scikit-learn) del seudocódigo de la diapositiva 4
 de ANN.pdf:
@@ -17,6 +18,8 @@ de ANN.pdf:
 
 Donde f(x) = w_0 * 1 + w_1*x_1 + w_2*x_2 + w_3*x_3 y la salida es la función
 escalón: +1 (Hombre) si f(x) >= 0, -1 (Mujer) en otro caso.
+
+Ejecución (terminal de Visual Studio Code):  python perceptron_taller.py
 """
 
 from pathlib import Path
@@ -36,6 +39,17 @@ SALIDA.mkdir(exist_ok=True)
 EPOCAS = 200          # al menos 200 épocas (instrucción 6)
 PROPORCION_TEST = 0.2
 SEMILLA = 42
+COLUMNAS = ["Caracteristica_1", "Caracteristica_2", "Caracteristica_3"]
+COLORES = {"Hombre": "#1f77b4", "Mujer": "#d62728"}
+
+plt.rcParams.update({"font.family": "Times New Roman", "font.size": 12,
+                     "axes.titlesize": 13, "savefig.dpi": 200})
+
+
+def titulo(texto):
+    print("\n" + "=" * 64)
+    print(texto)
+    print("=" * 64)
 
 
 # ----------------------------------------------------------------------------
@@ -65,7 +79,7 @@ def dividir_estratificado(df, proporcion_test, semilla):
 
 def matriz_aumentada(df):
     """Agrega la entrada constante x0 = 1 que multiplica al sesgo w0."""
-    X = df[["Caracteristica_1", "Caracteristica_2", "Caracteristica_3"]].to_numpy()
+    X = df[COLUMNAS].to_numpy()
     return np.hstack([np.ones((len(X), 1)), X])
 
 
@@ -85,20 +99,24 @@ def escalon(z):
 def entrenar_perceptron(X, y, epocas):
     w = np.zeros(X.shape[1])                 # paso 2: pesos y sesgo en 0
     historial = []
+    ajustes = []
     epoca_convergencia = None
     for epoca in range(1, epocas + 1):       # paso 3: repetir
         errores = 0
-        for xi, yi in zip(X, y):             # paso 4: para cada ejemplo
+        for i, (xi, yi) in enumerate(zip(X, y)):   # paso 4: para cada ejemplo
             if yi * f(w, xi) <= 0:           # paso 5: ¿error?
+                antes = w.copy()
                 w = w + yi * xi              # paso 6: ajustar los pesos
                 errores += 1
+                ajustes.append({"Epoca": epoca, "Ejemplo": i + 1, "x": xi[1:],
+                                "y": yi, "w_antes": antes, "w_despues": w.copy()})
         exactitud = np.mean(escalon(X @ w) == y)
         historial.append({"Epoca": epoca, "Errores": errores,
                           "Exactitud_entrenamiento": exactitud,
                           "w0": w[0], "w1": w[1], "w2": w[2], "w3": w[3]})
         if errores == 0 and epoca_convergencia is None:
             epoca_convergencia = epoca
-    return w, pd.DataFrame(historial), epoca_convergencia
+    return w, pd.DataFrame(historial), ajustes, epoca_convergencia
 
 
 # ----------------------------------------------------------------------------
@@ -128,107 +146,193 @@ def metricas(mc):
             "F1": f1}
 
 
+# ----------------------------------------------------------------------------
+# Gráficos
+# ----------------------------------------------------------------------------
+def graficar_distribuciones(df, ruta):
+    fig, ejes = plt.subplots(1, 3, figsize=(9, 3.3), sharey=True)
+    for ax, col in zip(ejes, COLUMNAS):
+        for clase, color in COLORES.items():
+            ax.hist(df.loc[df["Clase"] == clase, col], bins=40, range=(-1, 1),
+                    alpha=0.6, color=color, label=clase)
+        ax.set_title(col.replace("_", " "))
+        ax.set_xlabel("Valor")
+        ax.grid(alpha=0.3)
+    ejes[0].set_ylabel("Frecuencia")
+    ejes[0].legend()
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
+def graficar_3d(df, w, ruta):
+    fig = plt.figure(figsize=(6.5, 5.2))
+    ax = fig.add_subplot(projection="3d")
+    muestra = df.sample(1500, random_state=SEMILLA)
+    for clase, color in COLORES.items():
+        sub = muestra[muestra["Clase"] == clase]
+        ax.scatter(sub[COLUMNAS[0]], sub[COLUMNAS[1]], sub[COLUMNAS[2]], s=5,
+                   alpha=0.5, color=color, label=clase)
+    g1, g2 = np.meshgrid(np.linspace(-1, 1, 120), np.linspace(-1, 1, 120))
+    g3 = -(w[0] + w[1] * g1 + w[2] * g2) / w[3]
+    g3 = np.where(np.abs(g3) <= 1, g3, np.nan)
+    ax.plot_surface(g1, g2, g3, color="gray", alpha=0.35, linewidth=0)
+    for eje in (ax.set_xticks, ax.set_yticks, ax.set_zticks):
+        eje([-1, -0.5, 0, 0.5, 1])
+    ax.set_xlabel("x1")
+    ax.set_ylabel("x2")
+    ax.set_zlabel("x3")
+    ax.set_zlim(-1, 1)
+    ax.view_init(elev=18, azim=-60)
+    ax.legend(loc="upper left")
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
 def graficar_convergencia(hist, ruta):
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot(hist["Epoca"], hist["Errores"], marker="o", markersize=3)
-    ax.set_xlabel("Época")
-    ax.set_ylabel("Ejemplos mal clasificados (actualizaciones)")
-    ax.set_title("Convergencia del perceptrón")
-    ax.set_xlim(0.5, 20.5)
-    ax.set_xticks(range(1, 21))
-    ax.grid(alpha=0.3)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9, 3.4))
+    a1.bar(hist["Epoca"], hist["Errores"], color="#1f77b4")
+    a1.set_xlim(0.3, 20.7)
+    a1.set_xticks(range(1, 21))
+    a1.set_xlabel("Época")
+    a1.set_ylabel("Ejemplos mal clasificados")
+    a1.set_title("Errores por época (épocas 1 a 20)")
+    a1.grid(alpha=0.3, axis="y")
+    for nombre, estilo in [("w0", "--"), ("w1", "-"), ("w2", "-"), ("w3", "-")]:
+        a2.plot(hist["Epoca"], hist[nombre], estilo, lw=2, label=nombre)
+    a2.set_xlabel("Época")
+    a2.set_ylabel("Valor del peso")
+    a2.set_title(f"Evolución de los pesos ({len(hist)} épocas)")
+    a2.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.2), frameon=False)
+    a2.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(ruta, dpi=150)
+    fig.savefig(ruta)
     plt.close(fig)
 
 
-def graficar_matriz(mc, titulo, ruta):
-    fig, ax = plt.subplots(figsize=(4.8, 4))
-    ax.imshow(mc.to_numpy(), cmap="Blues")
-    for i in range(2):
-        for j in range(2):
-            v = mc.iloc[i, j]
-            ax.text(j, i, str(v), ha="center", va="center", fontsize=14,
-                    color="white" if v > mc.to_numpy().max() / 2 else "black")
-    ax.set_xticks([0, 1], mc.columns)
-    ax.set_yticks([0, 1], mc.index)
-    ax.set_title(titulo)
+def graficar_matrices(matrices, ruta):
+    fig, ejes = plt.subplots(1, 2, figsize=(8.6, 3.8))
+    for ax, (nombre, mc) in zip(ejes, matrices.items()):
+        valores = mc.to_numpy()
+        ax.imshow(valores, cmap="Blues")
+        for i in range(2):
+            for j in range(2):
+                ax.text(j, i, str(valores[i, j]), ha="center", va="center",
+                        fontsize=16,
+                        color="white" if valores[i, j] > valores.max() / 2 else "black")
+        ax.set_xticks([0, 1], mc.columns)
+        ax.set_yticks([0, 1], mc.index)
+        ax.set_title(f"Conjunto de {nombre.lower()} (n = {valores.sum()})")
     fig.tight_layout()
-    fig.savefig(ruta, dpi=150)
+    fig.savefig(ruta)
     plt.close(fig)
 
 
-def graficar_frontera(df, w, ruta):
-    """Proyección x1–x3 con la frontera w0 + w1x1 + w2x2 + w3x3 = 0 (x2 en su media)."""
-    fig, ax = plt.subplots(figsize=(6, 5))
-    for clase, color in [("Hombre", "tab:blue"), ("Mujer", "tab:red")]:
-        sub = df[df["Clase"] == clase]
-        ax.scatter(sub["Caracteristica_1"], sub["Caracteristica_3"], s=6,
-                   alpha=0.4, color=color, label=clase)
-    x1 = np.linspace(-1, 1, 50)
-    x2 = df["Caracteristica_2"].mean()
-    x3 = -(w[0] + w[1] * x1 + w[2] * x2) / w[3]
-    ax.plot(x1, x3, color="black", lw=2, label="Frontera de decisión")
-    ax.set_xlim(-1.05, 1.05)
-    ax.set_ylim(-1.05, 1.05)
-    ax.set_xlabel("Característica 1 (x1)")
-    ax.set_ylabel("Característica 3 (x3)")
-    ax.set_title("Clases y frontera del perceptrón")
-    ax.legend(loc="lower right")
-    fig.tight_layout()
-    fig.savefig(ruta, dpi=150)
+def graficar_proyecciones(df, w, ruta):
+    """Proyecciones 2D con la frontera; la variable no graficada se fija en su media."""
+    pares = [(0, 1), (0, 2), (1, 2)]
+    medias = df[COLUMNAS].mean().to_numpy()
+    fig, ejes = plt.subplots(1, 3, figsize=(9.6, 3.7))
+    for ax, (a, b) in zip(ejes, pares):
+        c = 3 - a - b
+        for clase, color in COLORES.items():
+            sub = df[df["Clase"] == clase]
+            ax.scatter(sub[COLUMNAS[a]], sub[COLUMNAS[b]], s=4, alpha=0.35,
+                       color=color, label=clase)
+        xa = np.linspace(-1, 1, 50)
+        xb = -(w[0] + w[a + 1] * xa + w[c + 1] * medias[c]) / w[b + 1]
+        ax.plot(xa, xb, color="black", lw=2, label="Frontera")
+        ax.set_xlim(-1.05, 1.05)
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_xlabel(f"x{a + 1}")
+        ax.set_ylabel(f"x{b + 1}")
+        ax.set_title(f"Plano x{a + 1}–x{b + 1}")
+        ax.grid(alpha=0.3)
+    manejadores, etiquetas = ejes[0].get_legend_handles_labels()
+    fig.legend(manejadores, etiquetas, loc="lower center", ncol=3, markerscale=3)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.savefig(ruta)
     plt.close(fig)
 
 
 def main():
+    titulo("1. CARGA Y PREPARACIÓN DE LOS DATOS")
     df = cargar_datos(ARCHIVO)
-    print("Registros:", len(df), "| Valores nulos:", int(df.isna().sum().sum()))
-    print(df["Clase"].value_counts().to_string(), "\n")
+    print(f"Archivo: {ARCHIVO.name}")
+    print(f"Registros: {len(df)} | Columnas: {df.shape[1] - 1} | "
+          f"Nulos: {int(df.isna().sum().sum())} | Duplicados: {int(df.duplicated().sum())}")
+    print("Codificación: Hombre = 1, Mujer = -1")
+    print(df.groupby("Clase")[COLUMNAS].mean().round(3).to_string())
 
     train, test = dividir_estratificado(df, PROPORCION_TEST, SEMILLA)
     X_train, y_train = matriz_aumentada(train), train["y"].to_numpy()
     X_test, y_test = matriz_aumentada(test), test["y"].to_numpy()
-    print(f"Entrenamiento: {len(train)}  |  Prueba: {len(test)}\n")
+    print(f"Entrenamiento: {len(train)} registros | Prueba: {len(test)} registros")
 
-    w, hist, ep_conv = entrenar_perceptron(X_train, y_train, EPOCAS)
+    titulo("2. ENTRENAMIENTO (w = 0, sesgo = 0, 200 épocas)")
+    w, hist, ajustes, ep_conv = entrenar_perceptron(X_train, y_train, EPOCAS)
+    for a in ajustes:
+        print(f"Época {a['Epoca']}, ejemplo {a['Ejemplo']}: x = {np.round(a['x'], 3)}, "
+              f"y = {a['y']:+d}")
+        print(f"   w antes = {np.round(a['w_antes'], 3)} -> w después = "
+              f"{np.round(a['w_despues'], 3)}")
+    print(hist[["Epoca", "Errores", "Exactitud_entrenamiento"]].head(5)
+          .to_string(index=False))
+    print(f"Épocas ejecutadas: {EPOCAS} | Convergencia (0 errores): época {ep_conv}")
+    print(f"Total de actualizaciones de pesos: {len(ajustes)}")
 
-    print("Pesos finales")
+    titulo("3. PESOS FINALES")
     for nombre, valor in zip(["w0 (sesgo)", "w1", "w2", "w3"], w):
         print(f"  {nombre:<11}= {valor:.4f}")
-    print(f"\nÉpoca de convergencia (0 errores): {ep_conv}")
-    print("Errores en las primeras épocas:",
-          hist["Errores"].head(10).tolist(), "\n")
+    print(f"Frontera: {w[0]:.3f} + {w[1]:.3f}*x1 + {w[2]:.3f}*x2 + {w[3]:.3f}*x3 = 0")
 
-    resultados = []
+    titulo("4. EVALUACIÓN")
+    resultados, matrices = [], {}
     for nombre, X, y in [("Entrenamiento", X_train, y_train),
                          ("Prueba", X_test, y_test)]:
         y_pred = escalon(X @ w)
         mc = matriz_confusion(y, y_pred)
-        m = metricas(mc)
-        resultados.append({"Conjunto": nombre, "n": len(y), **m})
+        matrices[nombre] = mc
+        resultados.append({"Conjunto": nombre, "n": len(y), **metricas(mc)})
         print(f"Matriz de confusión - {nombre}")
-        print(mc.to_string(), "\n")
+        print(mc.to_string())
         mc.to_csv(SALIDA / f"matriz_confusion_{nombre.lower()}.csv",
                   encoding="utf-8-sig")
-        graficar_matriz(mc, f"Matriz de confusión - {nombre}",
-                        SALIDA / f"matriz_confusion_{nombre.lower()}.png")
-
     tabla = pd.DataFrame(resultados)
-    print("Tabla de resultados")
+    print("\nTabla de resultados")
     print(tabla.round(4).to_string(index=False))
+
+    margen = (y_train * (X_train @ w)) / np.linalg.norm(w[1:])
+    print(f"Distancia mínima de un punto a la frontera: {margen.min():.4f}")
+
+    titulo("5. EJEMPLOS DE PREDICCIÓN (conjunto de prueba)")
+    muestra = test.groupby("Clase").head(3)
+    z = matriz_aumentada(muestra) @ w
+    salida = muestra[COLUMNAS + ["Clase"]].copy()
+    salida["f(x)"] = z.round(3)
+    salida["Predicción"] = np.where(escalon(z) == 1, "Hombre", "Mujer")
+    salida.columns = ["x1", "x2", "x3", "Clase real", "f(x)", "Predicción"]
+    print(salida.to_string(index=False))
 
     tabla.to_csv(SALIDA / "tabla_resultados.csv", index=False, encoding="utf-8-sig")
     hist.to_csv(SALIDA / "historial_entrenamiento.csv", index=False,
                 encoding="utf-8-sig")
+    salida.to_csv(SALIDA / "ejemplos_prediccion.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame({"Parametro": ["w0", "w1", "w2", "w3"], "Valor": w}).to_csv(
         SALIDA / "pesos_finales.csv", index=False, encoding="utf-8-sig")
-    graficar_convergencia(hist, SALIDA / "convergencia.png")
-    graficar_frontera(df, w, SALIDA / "frontera_decision.png")
+    pd.DataFrame([{"Epoca": a["Epoca"], "Ejemplo": a["Ejemplo"], "y": a["y"],
+                   **{f"x{k + 1}": v for k, v in enumerate(a["x"])},
+                   **{f"w{k}_despues": v for k, v in enumerate(a["w_despues"])}}
+                  for a in ajustes]).to_csv(SALIDA / "ajustes_pesos.csv", index=False,
+                                            encoding="utf-8-sig")
 
-    # Ejemplo de uso del modelo con un registro nuevo
-    nuevo = np.array([1, 0.5, 0.3, 0.6])
-    print(f"\nEjemplo x=(0.5, 0.3, 0.6) -> f(x)={f(w, nuevo):.3f} -> "
-          f"{'Hombre' if escalon(f(w, nuevo)) == 1 else 'Mujer'}")
+    graficar_distribuciones(df, SALIDA / "distribucion_caracteristicas.png")
+    graficar_3d(df, w, SALIDA / "frontera_3d.png")
+    graficar_convergencia(hist, SALIDA / "convergencia.png")
+    graficar_matrices(matrices, SALIDA / "matrices_confusion.png")
+    graficar_proyecciones(df, w, SALIDA / "frontera_proyecciones.png")
+    print(f"\nGráficos y tablas guardados en: {SALIDA}")
 
 
 if __name__ == "__main__":
