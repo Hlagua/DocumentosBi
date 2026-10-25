@@ -58,6 +58,8 @@ coseno = float(w_gen @ wb / (np.linalg.norm(w_gen) * np.linalg.norm(wb)))
 angulo = float(np.degrees(np.arccos(coseno)))
 desplazamiento = float(abs(gen["w0"]) / np.linalg.norm(w_gen))
 act_media = float(hist_gen["Actualizaciones"].mean())
+actualizaciones_totales = int(hist_gen["Actualizaciones"].sum())
+iteraciones_totales = int(gen["Epocas"] * gen["Entrenamiento"])
 VP, FN = mc_gen.iloc[0]
 FP, VN = mc_gen.iloc[1]
 versiones = {"Python": sys.version.split()[0], "NumPy": np.__version__, "pandas": pd.__version__,
@@ -393,15 +395,16 @@ inf.texto("El error vale 0 cuando la predicción es correcta, +1 cuando el model
 inf.ecuacion(r("w←w+η·") + tx("error") + r("·x") + tx(",      ") + sub(r("w"), r("0")) + r("←") +
              sub(r("w"), r("0")) + r("+η·") + tx("error") + tx(",      ") + r("η=0.1"),
              clave="actualizacion")
-inf.tabla("Correspondencia entre las diapositivas 13 a 15 y el código",
-          ["Diapositiva", "Código en perceptron_bayes.py"], [
-              ["13: pesos en cero", "w = np.zeros(3); w0 = 0.0"],
-              ["13: suma ponderada", "z = np.dot(w, X[i]) + w0"],
-              ["15: salida escalón explícita", "y_pred = 1 if z >= 0 else 0"],
-              ["15: error = y − predicción", "error = y[i] - y_pred"],
-              ["14 y 15: ajuste con η = 0.1", "w = w + eta * error * X[i]; w0 = w0 + eta * error"],
-              ["13: detener si no hay errores", "if errores == 0: break"],
-          ], clave="codigo", anchos=[5.6, 9.4], alinear=[WD_ALIGN_PARAGRAPH.LEFT] * 2)
+inf.tabla("Pasos del algoritmo según las diapositivas 13 a 15",
+          ["Diapositiva", "Paso aplicado en el entrenamiento"], [
+              ["13", "Los pesos w~1~, w~2~, w~3~ y el sesgo w~0~ comienzan en cero."],
+              ["13", "Para cada observación se calcula la suma ponderada z."],
+              ["15", "La salida escalón explícita da ŷ = 1 si z ≥ 0 y ŷ = 0 en otro caso."],
+              ["15", "Se calcula error = y − ŷ, que puede valer −1, 0 o 1."],
+              ["14 y 15", "Si el error no es cero, se corrigen pesos y sesgo con η = 0.1."],
+              ["13", "Si en una época no hay correcciones, el algoritmo se detiene."],
+          ], clave="pasos", anchos=[2.6, 12.4], alinear=[WD_ALIGN_PARAGRAPH.CENTER,
+                                                           WD_ALIGN_PARAGRAPH.LEFT])
 inf.titulo("Conservar el mejor perceptrón")
 inf.texto(f"Cuando las clases se superponen no existe un plano sin errores, así que el perceptrón "
           f"nunca deja de actualizarse: con los datos generados hizo en promedio "
@@ -520,6 +523,14 @@ inf.texto(f"En el CSV del taller todos los errores son cero: el perceptrón conv
           f"{pct(gen['Accuracy_perceptron'])}, la misma que la del clasificador de Bayes. Además, "
           f"E~in~ = {pct(gen['E_in'])} y E~out~ = {pct(gen['E_out'])} difieren solo en "
           f"{pct(abs(gen['E_in'] - gen['E_out']))}: el modelo generaliza.")
+inf.texto("La Ilustración {fig:figura1gen} reproduce la Figura 1 del ejemplo presentado en clase "
+          "en MATLAB: la clase 0 (Mujer) con círculos, la clase 1 (Hombre) con equis y la frontera "
+          "aprendida por el perceptrón. Igual que en ese ejemplo, las dos nubes se tocan en una "
+          "franja alrededor de la frontera, donde están los pocos errores del modelo.")
+inf.imagen(RES / "figura1_clases_generado.png", 12.5,
+           "Clases de los datos generados y frontera del perceptrón (equivalente a la Figura 1 "
+           "del ejemplo en MATLAB).", clave="figura1gen",
+           fuente="Elaboración propia con Python y Matplotlib.")
 inf.tabla("Pesos del mejor perceptrón y del clasificador de Bayes (datos generados)",
           ["Modelo", "w0", "w1", "w2", "w3"], [
               ["Perceptrón (época " + str(int(gen["Mejor_epoca"])) + ")", num(gen["w0"], 4),
@@ -553,6 +564,26 @@ inf.texto(f"En los datos generados el perceptrón se equivocó en {FP + FN} de "
           f"de la clase Mujer; aun así, el error total es el mismo que el de Bayes.")
 
 inf.titulo("2.7.4 Historial del error y del mejor perceptrón")
+inf.texto(f"La Ilustración {{fig:figura2gen}} reproduce la Figura 2 del ejemplo en MATLAB: el error "
+          f"de entrenamiento en función del número de iteraciones. Cada iteración es la revisión de "
+          f"una observación; en total hubo {miles(iteraciones_totales)} iteraciones (200 épocas de "
+          f"{miles(gen['Entrenamiento'])} observaciones) y {miles(actualizaciones_totales)} "
+          f"correcciones de pesos. La curva azul («Historial de error») es el error de "
+          f"entrenamiento de los pesos actuales, que cambia cada vez que el perceptrón corrige una "
+          f"observación; la roja («Historial del mejor perceptrón») es el error de entrenamiento "
+          f"del perceptrón guardado como el mejor según la validación. Con los pesos en cero el "
+          f"error inicial es 50 %, porque toda observación se predice como clase 1; el eje se "
+          f"recortó para que se vea la zona en la que oscila el error.")
+inf.imagen(RES / "figura2_historial_iteraciones_generado.png", 15.0,
+           "Historial de error y del mejor perceptrón por número de iteraciones (equivalente a la "
+           "Figura 2 del ejemplo en MATLAB).", clave="figura2gen",
+           fuente="Elaboración propia con Python y Matplotlib.")
+inf.texto("La curva azul nunca se estabiliza: como las clases se superponen, siempre hay "
+          "observaciones mal clasificadas que provocan nuevas correcciones, y algunas de ellas "
+          "suben el error por momentos hasta cerca de 11 %. La curva roja, en cambio, baja en las "
+          "primeras iteraciones y se mantiene cerca de 0.7 %, que es el nivel del error de Bayes. "
+          "La Ilustración {fig:historial} muestra lo mismo resumido por época, junto con el error "
+          "de validación con el que se eligió el mejor perceptrón.")
 inf.imagen(RES / "historial_generado.png", 15.0,
            "Historial del error de entrenamiento, del error de validación y del mejor perceptrón "
            "(datos generados).", clave="historial",
@@ -582,8 +613,9 @@ inf.texto("El error del perceptrón sigue la curva del error de Bayes en todo el
           "La diferencia entre E~in~ y E~out~ es siempre menor a un punto porcentual.")
 
 inf.titulo("2.7.6 Resultados con el CSV del taller")
-inf.imagen(RES / "clases_csv.png", 12.0,
-           "CSV del taller (proyección x1–x2) con la frontera del perceptrón y la de Bayes.",
+inf.imagen(RES / "figura1_clases_csv.png", 12.0,
+           "Clases del CSV del taller y frontera del perceptrón (equivalente a la Figura 1 del "
+           "ejemplo en MATLAB).",
            clave="clasescsv", fuente="Elaboración propia con Python y Matplotlib.")
 inf.texto(f"Las dos clases del CSV forman grupos compactos y muy separados (α ≈ "
           f"{num(csv['alpha'], 2)}), por lo que cualquier plano entre ellos clasifica sin errores. "
@@ -667,7 +699,8 @@ for ref in referencias:
 
 seccion("2.12 Anexos")
 inf.texto("Las capturas de ejecución, las matrices de confusión y las tablas de resultados se "
-          "presentan en la sección 2.7. Se adjuntan la lista de archivos y el código fuente.")
+          "presentan en la sección 2.7. El código fuente se entrega como archivo aparte "
+          "(perceptron_bayes.py) y no se incluye en este informe.")
 inf.titulo("Anexo A. Archivos entregados")
 inf.tabla("Archivos que forman parte de la entrega", ["Archivo", "Contenido"], [
     ["perceptron_bayes.py", "Script completo para ejecutar en Visual Studio Code."],
@@ -678,10 +711,10 @@ inf.tabla("Archivos que forman parte de la entrega", ["Archivo", "Contenido"], [
     ["resultados/barrido_alpha.csv / barrido_alpha.png", "Resultados para cada valor de α."],
     ["resultados/historial_*.csv / historial_*.png", "Error por época y mejor perceptrón."],
     ["resultados/matriz_confusion_*.csv / matrices_confusion.png", "Matrices de confusión."],
+    ["resultados/historial_iteraciones_*.csv", "Error de entrenamiento por iteración."],
+    ["resultados/figura1_*.png / figura2_*.png", "Figuras 1 y 2 equivalentes a las de MATLAB."],
     ["resultados/clases_*.png / distribucion_*.png", "Clases, fronteras y distribución."],
 ], clave="archivos", anchos=[7.5, 7.5], alinear=[WD_ALIGN_PARAGRAPH.LEFT] * 2)
-inf.titulo("Anexo B. Código fuente (perceptron_bayes.py)")
-inf.codigo((TALLER / "perceptron_bayes.py").read_text(encoding="utf-8"))
 
 # ----------------------------------------------------------------------------
 # Formato global y guardado

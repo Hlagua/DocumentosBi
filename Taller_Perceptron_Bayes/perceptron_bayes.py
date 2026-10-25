@@ -132,16 +132,25 @@ def tasa_error(w, w0, X, y):
     return float(np.mean(predecir(w, w0, X) != y))
 
 
-def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla):
-    """Perceptrón con clases 0/1 y conservación del mejor perceptrón (validación)."""
+def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla, registrar=False):
+    """Perceptrón con clases 0/1 y conservación del mejor perceptrón (validación).
+
+    Con registrar=True también guarda, iteración por iteración, el error de
+    entrenamiento de los pesos actuales y el del mejor perceptrón (Figura 2 de
+    MATLAB). Solo mide errores: no cambia el entrenamiento ni sus resultados.
+    """
     rng = np.random.default_rng(semilla)
     w = np.zeros(X.shape[1])
     w0 = 0.0
     mejor = {"w": w.copy(), "w0": w0, "epoca": 0, "error_val": 1.0}
     historial = []
+    iteracion = 0
+    error_actual = error_mejor = tasa_error(w, w0, X, y)
+    por_iteracion = [(0, error_actual, error_mejor)]
     for epoca in range(1, epocas + 1):
         errores = 0
         for i in rng.permutation(len(X)):            # recorrer las observaciones
+            iteracion += 1
             z = np.dot(w, X[i]) + w0                 # suma ponderada
             y_pred = 1 if z >= 0 else 0              # salida escalón
             error = y[i] - y_pred                    # error = y - predicción
@@ -149,16 +158,24 @@ def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla):
                 w = w + eta * error * X[i]
                 w0 = w0 + eta * error
                 errores += 1
+                if registrar:
+                    error_actual = tasa_error(w, w0, X, y)
+                    por_iteracion.append((iteracion, error_actual, error_mejor))
         e_tr = tasa_error(w, w0, X, y)
         e_va = tasa_error(w, w0, X_val, y_val)
         if e_va < mejor["error_val"]:
             mejor = {"w": w.copy(), "w0": w0, "epoca": epoca, "error_val": e_va}
+            error_mejor = e_tr
+        if registrar:
+            por_iteracion.append((iteracion, e_tr, error_mejor))
         historial.append({"Epoca": epoca, "Actualizaciones": errores,
                           "Error_entrenamiento": e_tr, "Error_validacion": e_va,
                           "Mejor_error_validacion": mejor["error_val"]})
         if errores == 0:                              # convergencia (diapositiva 13)
             break
-    return mejor, pd.DataFrame(historial)
+    iteraciones = pd.DataFrame(por_iteracion, columns=[
+        "Iteracion", "Error_entrenamiento", "Error_entrenamiento_mejor_perceptron"])
+    return mejor, pd.DataFrame(historial), iteraciones
 
 
 # ----------------------------------------------------------------------------
@@ -218,7 +235,8 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     partes = particionar(X, y, PARTICION, SEMILLA)
     (X_tr, y_tr), (X_va, y_va), (X_te, y_te) = (partes["entrenamiento"],
                                                 partes["validacion"], partes["prueba"])
-    mejor, hist = entrenar_perceptron(X_tr, y_tr, X_va, y_va, ETA, EPOCAS, SEMILLA)
+    mejor, hist, hist_iter = entrenar_perceptron(X_tr, y_tr, X_va, y_va, ETA, EPOCAS, SEMILLA,
+                                                 registrar=mostrar)
     w, w0 = mejor["w"], mejor["w0"]
 
     if bayes_real is not None:
@@ -271,7 +289,10 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
 
         hist.to_csv(SALIDA / f"historial_{etiqueta}.csv", index=False, encoding="utf-8-sig")
         mc.to_csv(SALIDA / f"matriz_confusion_{etiqueta}.csv", encoding="utf-8-sig")
-    return res, hist, mc, (X, y, w, w0, wb, wb0)
+    if mostrar:
+        hist_iter.to_csv(SALIDA / f"historial_iteraciones_{etiqueta}.csv", index=False,
+                         encoding="utf-8-sig")
+    return res, hist, hist_iter, mc, (X, y, w, w0, wb, wb0)
 
 
 # ----------------------------------------------------------------------------
@@ -342,6 +363,56 @@ def graficar_historial(hist, error_bayes, titulo_fig, ruta):
     plt.close(fig)
 
 
+def graficar_figura1(X, y, w, w0, titulo_fig, ruta):
+    """Figura 1 del ejemplo en MATLAB: Class 0 (o), Class 1 (x) y la frontera aprendida.
+
+    Se grafica el plano x1-x2; la frontera es el corte del plano del perceptrón con
+    x3 fijo en su media.
+    """
+    fig, ax = plt.subplots(figsize=(6.4, 5.4))
+    ax.scatter(*X[y == 0][:, :2].T, s=22, marker="o", facecolors="none",
+               edgecolors="#0000ff", linewidths=0.6, alpha=0.7, label="Class 0 (Mujer)")
+    ax.scatter(*X[y == 1][:, :2].T, s=18, marker="x", color="#d9472b", linewidths=0.6,
+               alpha=0.7, label="Class 1 (Hombre)")
+    lim = np.ceil(np.abs(X[:, :2]).max())
+    xs = np.linspace(-lim, lim, 50)
+    x3 = X[:, 2].mean()
+    ax.plot(xs, -(w0 + w[0] * xs + w[2] * x3) / w[1], color="black", lw=1.2,
+            label="Frontera del perceptrón")
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
+    ax.set_xlabel("x1")
+    ax.set_ylabel("x2")
+    ax.set_title(titulo_fig)
+    ax.legend(loc="upper right", fontsize=10, markerscale=1.5)
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
+def graficar_figura2(hist_iter, titulo_fig, ruta):
+    """Figura 2 del ejemplo en MATLAB: error de entrenamiento por número de iteraciones."""
+    fig, ax = plt.subplots(figsize=(7.5, 4.6))
+    ax.step(hist_iter["Iteracion"], hist_iter["Error_entrenamiento"], where="post",
+            color="#1f5fbf", lw=0.6, label="Historial de error")
+    ax.step(hist_iter["Iteracion"], hist_iter["Error_entrenamiento_mejor_perceptron"],
+            where="post", color="#d62728", lw=1.6, label="Historial del mejor perceptrón")
+    ax.set_xlim(0, hist_iter["Iteracion"].max())
+    # Con pesos en cero todo se predice como clase 1 (error 0.5 en la iteración 0);
+    # se recorta el eje para que se vea la zona donde oscila el error.
+    tope = 1.15 * hist_iter.loc[hist_iter["Iteracion"] > 0, "Error_entrenamiento"].max()
+    ax.set_ylim(0, tope)
+    ax.set_xlabel("Número de iteraciones")
+    ax.set_ylabel("Error de entrenamiento")
+    ax.set_title(titulo_fig)
+    ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+    ax.grid(alpha=0.3)
+    ax.legend(loc="upper right", fontsize=10)
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
 def graficar_matrices(matrices, ruta):
     fig, ejes = plt.subplots(1, 2, figsize=(8.6, 3.8))
     for ax, (nombre, mc) in zip(ejes, matrices.items()):
@@ -391,13 +462,16 @@ def main():
     for nombre, df, real, etiqueta in [
             ("CSV del taller", df_csv, None, "csv"),
             (f"Datos generados (p0 = {P0}, alpha = {ALPHA:g})", df_gen, param, "generado")]:
-        res, hist, mc, (X, y, w, w0, wb, wb0) = experimento(nombre, df, real, etiqueta)
+        res, hist, hist_iter, mc, (X, y, w, w0, wb, wb0) = experimento(nombre, df, real,
+                                                                       etiqueta)
         resultados.append(res)
         matrices[nombre.split(" (")[0]] = mc
         graficar_clases_2d(X, y, w, w0, wb, wb0, nombre, SALIDA / f"clases_{etiqueta}.png")
         graficar_distribucion(X, y, wb, wb0, res["alpha"], SALIDA / f"distribucion_{etiqueta}.png")
         graficar_historial(hist, res["Error_Bayes_teorico"], f"Historial de error - {nombre}",
                            SALIDA / f"historial_{etiqueta}.png")
+        graficar_figura1(X, y, w, w0, nombre, SALIDA / f"figura1_clases_{etiqueta}.png")
+        graficar_figura2(hist_iter, nombre, SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png")
     graficar_matrices(matrices, SALIDA / "matrices_confusion.png")
 
     tabla = pd.DataFrame(resultados)
