@@ -1,5 +1,5 @@
 """
-Taller: Perceptrón frente al clasificador de Bayes
+Práctica: Perceptrón frente al clasificador de Bayes
 Asignatura: Inteligencia de Negocios - Carrera de Software, 6to "A"
 Autores: Lagua Flores Henry Daniel / Cobos Taco Alison Marcela
 
@@ -14,10 +14,11 @@ Se entrena un perceptrón con clases 0/1 y salida escalón explícita:
 y se compara su error con el error de Bayes en dos conjuntos de datos:
   1. El dataset CSV proporcionado (clases casi perfectamente separadas).
   2. Datos generados con dos clases normales, probabilidad p0 = 0.5 y una
-     separación alpha = 5 entre los centros, medida en desviaciones estándar.
+     separación alpha = 2.5 entre los centros, medida en desviaciones estándar.
      Mientras menor es alpha, más se superponen las distribuciones.
 
-Partición de los datos: 70 % entrenamiento, 15 % validación y 15 % prueba.
+Partición de los datos: 60 % entrenamiento, 20 % validación y 20 % prueba. Se eligió
+después de comparar cuatro divisiones con cinco semillas (comparar_particiones).
 La validación se usa para conservar el mejor perceptrón (los pesos con menor
 error de validación); la prueba solo se usa al final para medir E_out.
 
@@ -36,19 +37,23 @@ import matplotlib.pyplot as plt
 
 CARPETA = Path(__file__).resolve().parent
 ARCHIVO_CSV = CARPETA / "dataset_Perceptron_5000_continuo_menos1_a_1.csv"
-ARCHIVO_GENERADO = CARPETA / "dataset_generado_p0_0.5_alpha_5.csv"
+ARCHIVO_GENERADO = CARPETA / "dataset_generado_p0_0.5_alpha_2.5.csv"
 SALIDA = CARPETA / "resultados"
 SALIDA.mkdir(exist_ok=True)
 
 COLUMNAS = ["Caracteristica_1", "Caracteristica_2", "Caracteristica_3"]
 P0 = 0.5                 # probabilidad a priori de la clase Mujer (0)
-ALPHA = 5.0              # separación entre las clases en desviaciones estándar
+ALPHA = 2.5              # separación entre las clases en desviaciones estándar
 N_GENERADO = 20000       # registros generados
-PARTICION = (0.70, 0.15, 0.15)
+PARTICION = (0.60, 0.20, 0.20)
+PARTICIONES_COMPARADAS = [(0.60, 0.20, 0.20), (0.70, 0.15, 0.15), (0.70, 0.20, 0.10),
+                          (0.80, 0.10, 0.10)]
+SEMILLAS_COMPARACION = [42, 7, 123, 2024, 99]
 ETA = 0.1                # tasa de aprendizaje
 EPOCAS = 200
 SEMILLA = 42
-ALPHAS_BARRIDO = [1, 2, 3, 4, 5, 6, 8]
+ALPHAS_BARRIDO = [1, 2, 2.5, 3, 4, 5, 6, 8]
+EPOCAS_FIGURA2 = 10       # épocas que se dibujan en la figura por iteraciones
 COLORES = {1: "#d62728", 0: "#1f77b4"}
 NOMBRES = {1: "Hombre (1)", 0: "Mujer (0)"}
 
@@ -272,7 +277,7 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     if mostrar:
         titulo(f"{nombre.upper()}")
         print(f"Registros: {len(y)} | p0 (Mujer) = {p0:.2f} | alpha = {delta:.2f}")
-        print(f"Partición 70/15/15 -> entrenamiento: {len(y_tr)} | validación: {len(y_va)} "
+        print(f"Partición {nombre_division(PARTICION)} -> entrenamiento: {len(y_tr)} | validación: {len(y_va)} "
               f"| prueba: {len(y_te)}")
         print(f"Bayes calculado con {origen}")
         print(f"Épocas ejecutadas: {len(hist)} | mejor perceptrón en la época {mejor['epoca']}")
@@ -394,8 +399,12 @@ def graficar_figura1(X, y, w, w0, titulo_fig, ruta):
     plt.close(fig)
 
 
-def graficar_figura2(hist_iter, titulo_fig, ruta):
-    """Figura 2 del ejemplo en MATLAB: error de entrenamiento por número de iteraciones."""
+def graficar_figura2(hist_iter, titulo_fig, ruta, max_iteraciones=None):
+    """Error de entrenamiento por número de iteraciones (historial de error y del mejor
+    perceptrón). Con max_iteraciones solo se dibujan las primeras iteraciones, para que
+    las oscilaciones se distingan en lugar de formar una mancha continua."""
+    if max_iteraciones:
+        hist_iter = hist_iter[hist_iter["Iteracion"] <= max_iteraciones]
     fig, ax = plt.subplots(figsize=(7.5, 4.6))
     ax.step(hist_iter["Iteracion"], hist_iter["Error_entrenamiento"], where="post",
             color="#1f5fbf", lw=0.6, label="Historial de error")
@@ -453,23 +462,94 @@ def graficar_barrido(tabla, ruta):
     plt.close(fig)
 
 
+
+def nombre_division(division):
+    return "/".join(f"{100 * d:.0f}" for d in division)
+
+
+def comparar_particiones(divisiones, semillas):
+    """Entrena el mismo perceptrón con cada división y varias semillas (datos, partición y
+    orden distintos) para ver con cuál el modelo elegido queda más cerca del error de Bayes."""
+    filas = []
+    for division in divisiones:
+        for semilla in semillas:
+            df, param = generar_datos(N_GENERADO, P0, ALPHA, semilla)
+            X, y = cargar(df)
+            partes = particionar(X, y, division, semilla)
+            (X_tr, y_tr), (X_va, y_va), (X_te, y_te) = (partes["entrenamiento"],
+                                                        partes["validacion"], partes["prueba"])
+            mejor, _, _ = entrenar_perceptron(X_tr, y_tr, X_va, y_va, ETA, EPOCAS, semilla)
+            wb, wb0, _ = bayes_lineal(param["mu0"], param["mu1"], param["cov"], param["p0"])
+            filas.append({"Division": nombre_division(division), "Semilla": semilla,
+                          "E_in": tasa_error(mejor["w"], mejor["w0"], X_tr, y_tr),
+                          "Error_validacion": mejor["error_val"],
+                          "E_out": tasa_error(mejor["w"], mejor["w0"], X_te, y_te),
+                          "Error_Bayes_prueba": tasa_error(wb, wb0, X_te, y_te)})
+    detalle = pd.DataFrame(filas)
+    detalle["Exceso_sobre_Bayes"] = detalle["E_out"] - detalle["Error_Bayes_prueba"]
+    detalle["Optimismo_validacion"] = detalle["E_out"] - detalle["Error_validacion"]
+    detalle["Diferencia_Ein_Eout"] = (detalle["E_in"] - detalle["E_out"]).abs()
+    columnas = ["E_in", "Error_validacion", "E_out", "Exceso_sobre_Bayes",
+                "Optimismo_validacion", "Diferencia_Ein_Eout"]
+    resumen = detalle.groupby("Division", sort=False)[columnas].agg(["mean", "std"])
+    resumen.columns = [f"{c}_{e}" for c, e in resumen.columns]
+    return detalle, resumen.reset_index()
+
+
+def graficar_particiones(resumen, ruta):
+    fig, ax = plt.subplots(figsize=(7.5, 4))
+    x = np.arange(len(resumen))
+    for k, (col, etiqueta, color) in enumerate([
+            ("Exceso_sobre_Bayes", "E_out − error de Bayes (prueba)", "#1f77b4"),
+            ("Optimismo_validacion", "E_out − error de validación", "#ff7f0e"),
+            ("Diferencia_Ein_Eout", "|E_in − E_out|", "#2ca02c")]):
+        ax.bar(x + (k - 1) * 0.26, 100 * resumen[f"{col}_mean"], 0.26,
+               yerr=100 * resumen[f"{col}_std"], capsize=3, color=color, label=etiqueta)
+    ax.axhline(0, color="black", lw=0.8)
+    ax.set_xticks(x, resumen["Division"])
+    ax.set_xlabel("División entrenamiento/validación/prueba")
+    ax.set_ylabel("Puntos porcentuales")
+    ax.set_title(f"Comparación de divisiones (α = {ALPHA:g}, {len(SEMILLAS_COMPARACION)} semillas)")
+    ax.grid(alpha=0.3, axis="y")
+    ax.legend(fontsize=10)
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
 def main():
-    # 1. Datos generados con p0 = 0.5 y alpha = 5
+    # 1. Datos generados con p0 = 0.5 y alpha = 2.5
     df_gen, param = generar_datos(N_GENERADO, P0, ALPHA, SEMILLA)
     df_gen.to_csv(ARCHIVO_GENERADO, index=False, encoding="utf-8-sig")
     print(f"Datos generados: {ARCHIVO_GENERADO.name} ({len(df_gen)} registros)")
 
-    # 2. Dataset CSV proporcionado
+    # 2. Elección de la división: mismas condiciones, cuatro divisiones y cinco semillas
+    titulo(f"COMPARACIÓN DE PARTICIONES (alpha = {ALPHA:g}, "
+           f"{len(SEMILLAS_COMPARACION)} semillas por división)")
+    detalle, resumen = comparar_particiones(PARTICIONES_COMPARADAS, SEMILLAS_COMPARACION)
+    detalle.to_csv(SALIDA / "comparacion_particiones_detalle.csv", index=False, encoding="utf-8-sig")
+    resumen.to_csv(SALIDA / "comparacion_particiones.csv", index=False, encoding="utf-8-sig")
+    graficar_particiones(resumen, SALIDA / "comparacion_particiones.png")
+    print(f"{'División':<10}{'E_in':>9}{'E_val':>9}{'E_out':>9}{'E_out-Bayes':>13}"
+          f"{'E_out-E_val':>13}{'|E_in-E_out|':>14}")
+    for _, f in resumen.iterrows():
+        marca = "  <- elegida" if f["Division"] == nombre_division(PARTICION) else ""
+        print(f"{f['Division']:<10}{100 * f['E_in_mean']:8.2f}%{100 * f['Error_validacion_mean']:8.2f}%"
+              f"{100 * f['E_out_mean']:8.2f}%{100 * f['Exceso_sobre_Bayes_mean']:12.2f}%"
+              f"{100 * f['Optimismo_validacion_mean']:12.2f}%{100 * f['Diferencia_Ein_Eout_mean']:13.2f}%"
+              f"{marca}")
+
+    # 3. Dataset CSV proporcionado
     df_csv = pd.read_csv(ARCHIVO_CSV, encoding="utf-8-sig")
 
     resultados, matrices = [], {}
     for nombre, df, real, etiqueta in [
-            ("CSV del taller", df_csv, None, "csv"),
+            ("Dataset CSV", df_csv, None, "csv"),
             (f"Datos generados (p0 = {P0}, alpha = {ALPHA:g})", df_gen, param, "generado")]:
         res, hist, hist_iter, mc, (X, y, w, w0, wb, wb0) = experimento(nombre, df, real,
                                                                        etiqueta)
         resultados.append(res)
-        titulo_grafico = "Dataset CSV" if etiqueta == "csv" else nombre
+        titulo_grafico = nombre
         matrices[titulo_grafico.split(" (")[0]] = mc
         graficar_clases_2d(X, y, w, w0, wb, wb0, titulo_grafico, SALIDA / f"clases_{etiqueta}.png")
         graficar_distribucion(X, y, wb, wb0, res["alpha"], SALIDA / f"distribucion_{etiqueta}.png")
@@ -478,7 +558,8 @@ def main():
                            SALIDA / f"historial_{etiqueta}.png")
         graficar_figura1(X, y, w, w0, titulo_grafico, SALIDA / f"figura1_clases_{etiqueta}.png")
         graficar_figura2(hist_iter, titulo_grafico,
-                         SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png")
+                         SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png",
+                         max_iteraciones=EPOCAS_FIGURA2 * res["Entrenamiento"])
     graficar_matrices(matrices, SALIDA / "matrices_confusion.png")
 
     tabla = pd.DataFrame(resultados)
@@ -491,14 +572,14 @@ def main():
     resumen["alpha"] = resumen["alpha"].map(lambda v: f"{v:.2f}")
     print(resumen.to_string(index=False))
 
-    # 3. Barrido de alpha: cómo cambian los errores cuando las clases se superponen
+    # 4. Barrido de alpha: cómo cambian los errores cuando las clases se superponen
     titulo("BARRIDO DE ALPHA (p0 = 0.5, datos generados)")
     barrido = []
     for a in ALPHAS_BARRIDO:
         df_a, param_a = generar_datos(N_GENERADO, P0, a, SEMILLA)
         res_a = experimento(f"alpha = {a}", df_a, param_a, f"alpha_{a}", mostrar=False)[0]
         barrido.append(res_a)
-        print(f"alpha = {a}: Bayes teórico = {100 * res_a['Error_Bayes_teorico']:6.2f} % | "
+        print(f"alpha = {a:<3g}: Bayes teórico = {100 * res_a['Error_Bayes_teorico']:6.2f} % | "
               f"Bayes prueba = {100 * res_a['Error_Bayes_prueba']:6.2f} % | "
               f"E_in = {100 * res_a['E_in']:6.2f} % | E_out = {100 * res_a['E_out']:6.2f} %")
     tabla_b = pd.DataFrame(barrido)
