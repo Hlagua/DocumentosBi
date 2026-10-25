@@ -3,19 +3,24 @@ Práctica: Perceptrón frente al clasificador de Bayes
 Asignatura: Inteligencia de Negocios - Carrera de Software, 6to "A"
 Autores: Lagua Flores Henry Daniel / Cobos Taco Alison Marcela
 
-Se entrena un perceptrón con clases 0/1 y salida escalón explícita:
+Se entrena un perceptrón simple con el seudocódigo de la diapositiva 4 de ANN.pdf,
+con la clase codificada como Hombre = +1 y Mujer = -1:
 
-    y_pred = 1 si z >= 0, en otro caso 0
-    error  = y - y_pred
-    si error != 0:
-        w  = w  + 0.1 * error * x
-        w0 = w0 + 0.1 * error
+    Inicializar w_j = 0 para todo j (pesos y sesgo en cero)
+    Repetir (200 épocas)
+        Para cada ejemplo x_i
+            si y_i * f(x_i) <= 0:          # ¿error?
+                w_j = w_j + y_i * x_ij      # ajustar los pesos (x_i0 = 1 para el sesgo)
 
-y se compara su error con el error de Bayes en dos conjuntos de datos:
-  1. El dataset CSV proporcionado (clases casi perfectamente separadas).
-  2. Datos generados con dos clases normales, probabilidad p0 = 0.5 y una
-     separación alpha = 2.5 entre los centros, medida en desviaciones estándar.
+donde f(x) = w0 + w1*x1 + w2*x2 + w3*x3 y la salida es +1 si f(x) >= 0 y -1 en otro caso.
+Como mejora, en cada época se mide el error en un conjunto de validación y se conserva
+el mejor perceptrón (algoritmo "pocket").
+
+Su error se compara con el error de Bayes en dos conjuntos de datos:
+  1. Datos generados aleatoriamente con dos clases normales, probabilidad p0 = 0.5 y
+     una separación alpha = 2.5 entre los centros, medida en desviaciones estándar.
      Mientras menor es alpha, más se superponen las distribuciones.
+  2. El dataset CSV proporcionado (clases casi perfectamente separadas).
 
 Partición de los datos: 60 % entrenamiento, 20 % validación y 20 % prueba. Se eligió
 después de comparar cuatro divisiones con cinco semillas (comparar_particiones).
@@ -42,20 +47,19 @@ SALIDA = CARPETA / "resultados"
 SALIDA.mkdir(exist_ok=True)
 
 COLUMNAS = ["Caracteristica_1", "Caracteristica_2", "Caracteristica_3"]
-P0 = 0.5                 # probabilidad a priori de la clase Mujer (0)
+P0 = 0.5                 # probabilidad a priori de la clase Mujer (-1)
 ALPHA = 2.5              # separación entre las clases en desviaciones estándar
 N_GENERADO = 20000       # registros generados
 PARTICION = (0.60, 0.20, 0.20)
 PARTICIONES_COMPARADAS = [(0.60, 0.20, 0.20), (0.70, 0.15, 0.15), (0.70, 0.20, 0.10),
                           (0.80, 0.10, 0.10)]
 SEMILLAS_COMPARACION = [42, 7, 123, 2024, 99]
-ETA = 0.1                # tasa de aprendizaje
 EPOCAS = 200
 SEMILLA = 42
 ALPHAS_BARRIDO = [1, 2, 2.5, 3, 4, 5, 6, 8]
 EPOCAS_FIGURA2 = 10       # épocas que se dibujan en la figura por iteraciones
-COLORES = {1: "#d62728", 0: "#1f77b4"}
-NOMBRES = {1: "Hombre (1)", 0: "Mujer (0)"}
+COLORES = {1: "#d62728", -1: "#1f77b4"}
+NOMBRES = {1: "Hombre (+1)", -1: "Mujer (−1)"}
 
 plt.rcParams.update({"font.family": "Times New Roman", "font.size": 12,
                      "axes.titlesize": 13, "savefig.dpi": 200})
@@ -87,7 +91,7 @@ def generar_datos(n, p0, alpha, semilla):
     n0 = int(round(n * p0))
     X = np.vstack([rng.normal(mu0, 1.0, size=(n0, 3)),
                    rng.normal(mu1, 1.0, size=(n - n0, 3))])
-    y = np.concatenate([np.zeros(n0, dtype=int), np.ones(n - n0, dtype=int)])
+    y = np.concatenate([-np.ones(n0, dtype=int), np.ones(n - n0, dtype=int)])
     orden = rng.permutation(n)
     df = pd.DataFrame(X[orden].round(4), columns=COLUMNAS)
     df["Clase"] = np.where(y[orden] == 1, "Hombre", "Mujer")
@@ -96,9 +100,9 @@ def generar_datos(n, p0, alpha, semilla):
 
 
 def cargar(df):
-    """Codificación de la clase: Hombre = 1, Mujer = 0."""
+    """Codificación de la clase: Hombre = +1, Mujer = -1."""
     X = df[COLUMNAS].to_numpy(dtype=float)
-    y = (df["Clase"] == "Hombre").astype(int).to_numpy()
+    y = np.where(df["Clase"] == "Hombre", 1, -1)
     return X, y
 
 
@@ -110,7 +114,7 @@ def particionar(X, y, proporciones, semilla):
     """
     rng = np.random.default_rng(semilla)
     partes = {"entrenamiento": [], "validacion": [], "prueba": []}
-    for clase in (0, 1):
+    for clase in (-1, 1):
         idx = np.flatnonzero(y == clase)
         rng.shuffle(idx)
         n_tr = int(round(len(idx) * proporciones[0]))
@@ -126,11 +130,11 @@ def particionar(X, y, proporciones, semilla):
 
 
 # ----------------------------------------------------------------------------
-# Perceptrón con clases 0/1
+# Perceptrón (diapositiva 4)
 # ----------------------------------------------------------------------------
 def escalon(z):
-    """Salida escalón explícita: 1 si z >= 0, en otro caso 0."""
-    return np.where(z >= 0, 1, 0)
+    """Función escalón: +1 (Hombre) si z >= 0, -1 (Mujer) en otro caso."""
+    return np.where(z >= 0, 1, -1)
 
 
 def predecir(w, w0, X):
@@ -141,12 +145,13 @@ def tasa_error(w, w0, X, y):
     return float(np.mean(predecir(w, w0, X) != y))
 
 
-def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla, registrar=False):
-    """Perceptrón con clases 0/1 y conservación del mejor perceptrón (validación).
+def entrenar_perceptron(X, y, X_val, y_val, epocas, semilla, registrar=False):
+    """Perceptrón de la diapositiva 4 con conservación del mejor perceptrón (validación).
 
-    Con registrar=True también guarda, iteración por iteración, el error de
-    entrenamiento de los pesos actuales y el del mejor perceptrón (Figura 2 de
-    MATLAB). Solo mide errores: no cambia el entrenamiento ni sus resultados.
+    Siempre recorre todas las épocas (al menos 200); la primera época sin errores se
+    guarda como época de convergencia. Con registrar=True también guarda el error de
+    entrenamiento iteración por iteración y las primeras correcciones; solo mide, no
+    cambia el entrenamiento.
     """
     rng = np.random.default_rng(semilla)
     w = np.zeros(X.shape[1])
@@ -156,16 +161,20 @@ def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla, registrar=Fals
     iteracion = 0
     error_actual = error_mejor = tasa_error(w, w0, X, y)
     por_iteracion = [(0, error_actual, error_mejor)]
-    for epoca in range(1, epocas + 1):
+    primeros_ajustes = []
+    convergencia = None
+    for epoca in range(1, epocas + 1):               # paso 3: repetir
         errores = 0
-        for i in rng.permutation(len(X)):            # recorrer las observaciones
+        for i in rng.permutation(len(X)):            # paso 4: para cada ejemplo
             iteracion += 1
-            z = np.dot(w, X[i]) + w0                 # suma ponderada
-            y_pred = 1 if z >= 0 else 0              # salida escalón
-            error = y[i] - y_pred                    # error = y - predicción
-            if error != 0:                           # solo se corrige si falla
-                w = w + eta * error * X[i]
-                w0 = w0 + eta * error
+            z = np.dot(w, X[i]) + w0                 # f(x_i) = w0 + w1x1 + w2x2 + w3x3
+            if y[i] * z <= 0:                        # paso 5: ¿error?
+                if registrar and len(primeros_ajustes) < 3:
+                    primeros_ajustes.append({"Iteracion": iteracion, "x": X[i].copy(),
+                                             "y": int(y[i]), "f": float(z), "w0": w0,
+                                             "w": w.copy()})
+                w = w + y[i] * X[i]                  # paso 6: w_j = w_j + y_i * x_ij
+                w0 = w0 + y[i]                       # sesgo (x_i0 = 1)
                 errores += 1
                 if registrar:
                     error_actual = tasa_error(w, w0, X, y)
@@ -180,11 +189,14 @@ def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla, registrar=Fals
         historial.append({"Epoca": epoca, "Actualizaciones": errores,
                           "Error_entrenamiento": e_tr, "Error_validacion": e_va,
                           "Mejor_error_validacion": mejor["error_val"]})
-        if errores == 0:                              # convergencia: época sin errores
-            break
+        if errores == 0 and convergencia is None:     # primera época sin errores
+            convergencia = epoca
     iteraciones = pd.DataFrame(por_iteracion, columns=[
         "Iteracion", "Error_entrenamiento", "Error_entrenamiento_mejor_perceptron"])
-    return mejor, pd.DataFrame(historial), iteraciones
+    historial = pd.DataFrame(historial)
+    historial.attrs["convergencia"] = convergencia
+    historial.attrs["primeros_ajustes"] = primeros_ajustes
+    return mejor, historial, iteraciones
 
 
 # ----------------------------------------------------------------------------
@@ -210,20 +222,20 @@ def error_bayes_teorico(delta, p0):
 
 def estimar_bayes(X, y):
     """Bayes con parámetros estimados (medias, covarianza común y p0 de los datos)."""
-    mu0, mu1 = X[y == 0].mean(axis=0), X[y == 1].mean(axis=0)
-    cov = (np.cov(X[y == 0].T) * (np.sum(y == 0) - 1) +
+    mu0, mu1 = X[y == -1].mean(axis=0), X[y == 1].mean(axis=0)
+    cov = (np.cov(X[y == -1].T) * (np.sum(y == -1) - 1) +
            np.cov(X[y == 1].T) * (np.sum(y == 1) - 1)) / (len(y) - 2)
-    return bayes_lineal(mu0, mu1, cov, float(np.mean(y == 0)))
+    return bayes_lineal(mu0, mu1, cov, float(np.mean(y == -1)))
 
 
 # ----------------------------------------------------------------------------
 # Evaluación
 # ----------------------------------------------------------------------------
 def matriz_confusion(y, y_pred):
-    return pd.DataFrame([[int(np.sum((y == 1) & (y_pred == 1))), int(np.sum((y == 1) & (y_pred == 0)))],
-                         [int(np.sum((y == 0) & (y_pred == 1))), int(np.sum((y == 0) & (y_pred == 0)))]],
-                        index=["Real Hombre (1)", "Real Mujer (0)"],
-                        columns=["Pred. Hombre (1)", "Pred. Mujer (0)"])
+    return pd.DataFrame([[int(np.sum((y == 1) & (y_pred == 1))), int(np.sum((y == 1) & (y_pred == -1)))],
+                         [int(np.sum((y == -1) & (y_pred == 1))), int(np.sum((y == -1) & (y_pred == -1)))]],
+                        index=["Real Hombre (+1)", "Real Mujer (-1)"],
+                        columns=["Pred. Hombre (+1)", "Pred. Mujer (-1)"])
 
 
 def intervalo_confianza(error, n, z=1.96):
@@ -244,7 +256,7 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     partes = particionar(X, y, PARTICION, SEMILLA)
     (X_tr, y_tr), (X_va, y_va), (X_te, y_te) = (partes["entrenamiento"],
                                                 partes["validacion"], partes["prueba"])
-    mejor, hist, hist_iter = entrenar_perceptron(X_tr, y_tr, X_va, y_va, ETA, EPOCAS, SEMILLA,
+    mejor, hist, hist_iter = entrenar_perceptron(X_tr, y_tr, X_va, y_va, EPOCAS, SEMILLA,
                                                  registrar=mostrar)
     w, w0 = mejor["w"], mejor["w0"]
 
@@ -255,7 +267,7 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     else:
         wb, wb0, delta = estimar_bayes(X_tr, y_tr)
         origen = "parámetros estimados con los datos de entrenamiento"
-    p0 = float(np.mean(y == 0))
+    p0 = float(np.mean(y == -1))
 
     res = {
         "Datos": nombre, "Registros": len(y), "Entrenamiento": len(y_tr),
@@ -266,6 +278,7 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
         "Error_validacion": tasa_error(w, w0, X_va, y_va),
         "E_out": tasa_error(w, w0, X_te, y_te),
         "Mejor_epoca": mejor["epoca"], "Epocas": len(hist),
+        "Epoca_convergencia": hist.attrs["convergencia"],
         "w0": w0, "w1": w[0], "w2": w[1], "w3": w[2],
     }
     res["Accuracy_Bayes"] = 1 - res["Error_Bayes_prueba"]
@@ -273,6 +286,9 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     li, ls, margen = intervalo_confianza(res["E_out"], len(y_te))
     res.update({"IC95_inferior": li, "IC95_superior": ls, "IC95_margen": margen})
     mc = matriz_confusion(y_te, predecir(w, w0, X_te))
+    vp, fn = mc.iloc[0]
+    fp, vn = mc.iloc[1]
+    res.update({"Sensibilidad": vp / (vp + fn), "Especificidad": vn / (vn + fp)})
 
     if mostrar:
         titulo(f"{nombre.upper()}")
@@ -280,7 +296,13 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
         print(f"Partición {nombre_division(PARTICION)} -> entrenamiento: {len(y_tr)} | validación: {len(y_va)} "
               f"| prueba: {len(y_te)}")
         print(f"Bayes calculado con {origen}")
-        print(f"Épocas ejecutadas: {len(hist)} | mejor perceptrón en la época {mejor['epoca']}")
+        conv = hist.attrs["convergencia"]
+        print(f"Épocas: {len(hist)} | primera época sin errores: "
+              f"{conv if conv else 'ninguna (clases superpuestas)'} | "
+              f"mejor perceptrón en la época {mejor['epoca']}")
+        for a in hist.attrs["primeros_ajustes"]:
+            print(f"  Corrección en la iteración {a['Iteracion']}: x = {np.round(a['x'], 3)}, "
+                  f"y = {a['y']:+d}, f(x) = {a['f']:.3f} -> y*f(x) <= 0")
         print(f"Pesos del mejor perceptrón: w0 = {w0:.4f}, w = {np.round(w, 4)}")
         print(f"Error de Bayes (teórico)      = {100 * res['Error_Bayes_teorico']:.4f} %")
         print(f"Error de Bayes (prueba)       = {100 * res['Error_Bayes_prueba']:.2f} %")
@@ -289,6 +311,8 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
         print(f"Error de salida   E_out       = {100 * res['E_out']:.2f} %  (error del perceptrón en prueba)")
         print(f"Accuracy de Bayes             = {100 * res['Accuracy_Bayes']:.2f} %")
         print(f"Accuracy del perceptrón       = {100 * res['Accuracy_perceptron']:.2f} %")
+        print(f"Sensibilidad / especificidad  = {100 * res['Sensibilidad']:.2f} % / "
+              f"{100 * res['Especificidad']:.2f} %")
         detalle = (f"E_out ± {100 * margen:.2f} %" if res["E_out"] > 0
                    else "sin errores: regla del tres, 3/n")
         print(f"Intervalo de confianza 95 %   = [{100 * li:.2f} %, {100 * ls:.2f} %] ({detalle})")
@@ -310,7 +334,7 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
 def graficar_clases_2d(X, y, w, w0, wb, wb0, titulo_fig, ruta):
     """Proyección x1-x2 como la Figura 1 de MATLAB; x3 se fija en su media."""
     fig, ax = plt.subplots(figsize=(6.4, 5.2))
-    for clase, marcador in [(0, "o"), (1, "x")]:
+    for clase, marcador in [(-1, "o"), (1, "x")]:
         sub = X[y == clase]
         ax.scatter(sub[:, 0], sub[:, 1], s=8, marker=marcador, alpha=0.35,
                    color=COLORES[clase], label=NOMBRES[clase],
@@ -338,7 +362,7 @@ def graficar_distribucion(X, y, wb, wb0, alpha, ruta):
     proy = (X @ wb + wb0) / np.linalg.norm(wb)
     fig, ax = plt.subplots(figsize=(7.5, 3.8))
     bins = np.linspace(proy.min(), proy.max(), 70)
-    for clase in (0, 1):
+    for clase in (-1, 1):
         ax.hist(proy[y == clase], bins=bins, alpha=0.55, color=COLORES[clase],
                 label=NOMBRES[clase], density=True)
     ax.axvline(0, color="black", lw=2, label="Umbral de Bayes")
@@ -373,16 +397,16 @@ def graficar_historial(hist, error_bayes, titulo_fig, ruta):
 
 
 def graficar_figura1(X, y, w, w0, titulo_fig, ruta):
-    """Figura 1 del ejemplo en MATLAB: Class 0 (o), Class 1 (x) y la frontera aprendida.
+    """Figura 1: clase -1 (o), clase +1 (x) y la frontera aprendida.
 
     Se grafica el plano x1-x2; la frontera es el corte del plano del perceptrón con
     x3 fijo en su media.
     """
     fig, ax = plt.subplots(figsize=(6.4, 5.4))
-    ax.scatter(*X[y == 0][:, :2].T, s=22, marker="o", facecolors="none",
-               edgecolors="#0000ff", linewidths=0.6, alpha=0.7, label="Class 0 (Mujer)")
+    ax.scatter(*X[y == -1][:, :2].T, s=22, marker="o", facecolors="none",
+               edgecolors="#0000ff", linewidths=0.6, alpha=0.7, label="Clase −1 (Mujer)")
     ax.scatter(*X[y == 1][:, :2].T, s=18, marker="x", color="#d9472b", linewidths=0.6,
-               alpha=0.7, label="Class 1 (Hombre)")
+               alpha=0.7, label="Clase +1 (Hombre)")
     lim = np.ceil(np.abs(X[:, :2]).max())
     xs = np.linspace(-lim, lim, 50)
     x3 = X[:, 2].mean()
@@ -411,7 +435,7 @@ def graficar_figura2(hist_iter, titulo_fig, ruta, max_iteraciones=None):
     ax.step(hist_iter["Iteracion"], hist_iter["Error_entrenamiento_mejor_perceptron"],
             where="post", color="#d62728", lw=1.6, label="Historial del mejor perceptrón")
     ax.set_xlim(0, hist_iter["Iteracion"].max())
-    # Con pesos en cero todo se predice como clase 1 (error 0.5 en la iteración 0);
+    # Con pesos en cero todo se predice como clase +1 (error 0.5 en la iteración 0);
     # se recorta el eje para que se vea la zona donde oscila el error.
     tope = 1.15 * hist_iter.loc[hist_iter["Iteracion"] > 0, "Error_entrenamiento"].max()
     ax.set_ylim(0, tope)
@@ -478,7 +502,7 @@ def comparar_particiones(divisiones, semillas):
             partes = particionar(X, y, division, semilla)
             (X_tr, y_tr), (X_va, y_va), (X_te, y_te) = (partes["entrenamiento"],
                                                         partes["validacion"], partes["prueba"])
-            mejor, _, _ = entrenar_perceptron(X_tr, y_tr, X_va, y_va, ETA, EPOCAS, semilla)
+            mejor, _, _ = entrenar_perceptron(X_tr, y_tr, X_va, y_va, EPOCAS, semilla)
             wb, wb0, _ = bayes_lineal(param["mu0"], param["mu1"], param["cov"], param["p0"])
             filas.append({"Division": nombre_division(division), "Semilla": semilla,
                           "E_in": tasa_error(mejor["w"], mejor["w0"], X_tr, y_tr),
@@ -539,13 +563,13 @@ def main():
               f"{100 * f['Optimismo_validacion_mean']:12.2f}%{100 * f['Diferencia_Ein_Eout_mean']:13.2f}%"
               f"{marca}")
 
-    # 3. Dataset CSV proporcionado
+    # 3. Entrenamiento y evaluación: datos generados (principal) y dataset CSV
     df_csv = pd.read_csv(ARCHIVO_CSV, encoding="utf-8-sig")
 
     resultados, matrices = [], {}
     for nombre, df, real, etiqueta in [
-            ("Dataset CSV", df_csv, None, "csv"),
-            (f"Datos generados (p0 = {P0}, alpha = {ALPHA:g})", df_gen, param, "generado")]:
+            (f"Datos generados (p0 = {P0}, alpha = {ALPHA:g})", df_gen, param, "generado"),
+            ("Dataset CSV", df_csv, None, "csv")]:
         res, hist, hist_iter, mc, (X, y, w, w0, wb, wb0) = experimento(nombre, df, real,
                                                                        etiqueta)
         resultados.append(res)
