@@ -58,6 +58,14 @@ coseno = float(w_gen @ wb / (np.linalg.norm(w_gen) * np.linalg.norm(wb)))
 angulo = float(np.degrees(np.arccos(coseno)))
 desplazamiento = float(abs(gen["w0"]) / np.linalg.norm(w_gen))
 act_media = float(hist_gen["Actualizaciones"].mean())
+
+
+def conteo_por_clase(df):
+    partes = pb.particionar(*pb.cargar(df), pb.PARTICION, pb.SEMILLA)
+    return {k: (int((y == 1).sum()), int((y == 0).sum())) for k, (_, y) in partes.items()}
+
+
+conteo_csv, conteo_gen = conteo_por_clase(df_csv), conteo_por_clase(df_gen)
 actualizaciones_totales = int(hist_gen["Actualizaciones"].sum())
 iteraciones_totales = int(gen["Epocas"] * gen["Entrenamiento"])
 VP, FN = mc_gen.iloc[0]
@@ -176,10 +184,10 @@ def indicadora(e):
 # ----------------------------------------------------------------------------
 seccion("2.1 Objetivos")
 inf.titulo("General:", antes=2)
-inf.texto("Entrenar un perceptrón de una sola neurona con clases 0 y 1, siguiendo las diapositivas "
-          "13 a 15, y comparar su error con el error mínimo posible, el del clasificador de Bayes, "
-          "tanto en el dataset del taller anterior como en datos generados con p~0~ = 0.5 y α = 5, "
-          "validando la exactitud del modelo con datos de prueba que conservan su clase verdadera.")
+inf.texto("Entrenar un perceptrón de una sola neurona con clases 0 y 1 y comparar su error con el "
+          "error mínimo posible, el del clasificador de Bayes, con el dataset y también con datos "
+          "generados con p~0~ = 0.5 y α = 5, validando la exactitud del modelo con datos de prueba "
+          "que conservan su clase verdadera.")
 inf.titulo("Específicos:", antes=4)
 inf.lista([
     "Generar datos de dos clases normales cuya superposición se controla con α y describir la "
@@ -201,12 +209,11 @@ inf.texto("No presenciales: 30 minutos para organizar el informe y anexos.")
 seccion("2.4 Instrucciones")
 inf.texto("Las indicaciones dadas en clase para esta práctica fueron las siguientes:")
 inf.lista([
-    "Utilizar el CSV del taller «Programar perceptrón» (dataset_Perceptron_5000_continuo_menos1_a_1.csv).",
+    "Utilizar el CSV (dataset_Perceptron_5000_continuo_menos1_a_1.csv).",
     "Se pueden crear datos: distribución de clases con p~0~ = 0.5 y α = 5, donde α controla cuánto "
     "se superponen las distribuciones.",
     "El grupo decide la división de los datos (por ejemplo 70/20/10). En este trabajo se usó "
-    "70 % entrenamiento, 15 % validación y 15 % prueba.",
-    "Implementar el perceptrón de las diapositivas 13, 14 y 15 (clases 0 y 1, η = 0.1).",
+    "70 % entrenamiento, 15 % validación y 15 % prueba (la justificación está en la Actividad 2).",
     "Validar la exactitud del modelo con los datos de prueba, que conservan su y verdadera.",
     "Reportar el error de Bayes, el clasificador, las clases bien definidas, el error del "
     "perceptrón, el error de entrada, el error de salida y la distribución de las clases.",
@@ -217,8 +224,7 @@ inf.texto("Listado de equipos y materiales generales empleados en la guía prác
 inf.lista(["Computador con Windows 11 Pro.",
            "Visual Studio Code (editor y terminal integrada).",
            "Python 3 con las bibliotecas pandas, NumPy y Matplotlib.",
-           "Dataset dataset_Perceptron_5000_continuo_menos1_a_1.csv y datos generados por el script.",
-           "Documentos ANN.pdf y Perceptron_Explicacion_IF_Paso_a_Paso.pdf (diapositivas 13 a 15)."])
+           "Dataset dataset_Perceptron_5000_continuo_menos1_a_1.csv y datos generados por el script."])
 inf.texto("TAC (Tecnologías para el Aprendizaje y Conocimiento) empleados en la guía práctica:",
           despues=2)
 casillas([(False, "Plataformas educativas"), (False, "Simuladores y laboratorios virtuales"),
@@ -227,7 +233,7 @@ casillas([(False, "Plataformas educativas"), (False, "Simuladores y laboratorios
 inf.texto("Otros (Especifique): Python 3 y Visual Studio Code", sangria=Cm(1.27))
 inf.titulo("Software utilizado en la práctica:", antes=8)
 inf.texto("El código se escribió y ejecutó en Visual Studio Code, desde su terminal integrada "
-          "(PowerShell); no se usó Jupyter Notebook, Google Colab ni MATLAB. La Tabla {tab:software} "
+          "(PowerShell). La Tabla {tab:software} "
           "resume las versiones con las que se obtuvieron los resultados.")
 inf.tabla("Software y bibliotecas utilizados", ["Software", "Versión", "Uso en la práctica"], [
     ["Windows 11 Pro", "10.0.26300", "Sistema operativo del equipo de trabajo."],
@@ -238,6 +244,13 @@ inf.tabla("Software y bibliotecas utilizados", ["Software", "Versión", "Uso en 
     ["Matplotlib", versiones["Matplotlib"], "Gráficos de clases, historial y barrido de α."],
     ["Microsoft Word", "16.0", "Redacción y maquetación del informe."],
 ], clave="software", anchos=[3.6, 2.6, 8.8])
+inf.titulo("Reproducibilidad de los resultados:", antes=8)
+inf.texto("Para obtener exactamente los resultados de este informe basta con tener Python 3 con "
+          "NumPy, pandas y Matplotlib, colocar perceptron_bayes.py en la misma carpeta que "
+          "dataset_Perceptron_5000_continuo_menos1_a_1.csv y ejecutar python perceptron_bayes.py. "
+          "El script genera los datos sintéticos, hace la partición, entrena, evalúa y guarda las "
+          "tablas y las figuras en la carpeta resultados/ en aproximadamente 80 segundos. Como todas "
+          "las operaciones aleatorias usan la semilla 42, cada ejecución produce los mismos números.")
 
 # ----------------------------------------------------------------------------
 # 2.6 Actividades
@@ -290,9 +303,10 @@ inf.ecuacion(r("α=") + raiz(sup(delim(MU1 + r("−") + MU0), r("T")) + SIGMA_IN
                             delim(MU1 + r("−") + MU0)), clave="alpha")
 inf.ecuacion(sub(r("E"), tx("Bayes")) + r("=Φ") + delim(r("−") + frac(r("α"), r("2"))) +
              tx(",      con ") + sub(r("p"), r("0")) + r("=0.5"), clave="errorbayes")
-inf.texto(f"Con α = 5 se obtiene E~Bayes~ = Φ(−2.5) = {pct(gen['Error_Bayes_teorico'], 4)}, el "
-          f"mismo «Error de Bayes = 0.62» que mostró el ejemplo en MATLAB presentado en clase. Esto "
-          f"confirma que α es la separación entre las clases en unidades de desviación estándar.")
+inf.texto(f"Con α = 5 se obtiene E~Bayes~ = Φ(−2.5) = {pct(gen['Error_Bayes_teorico'], 4)}: aun "
+          f"con el mejor clasificador posible, alrededor de 6 de cada 1 000 observaciones quedan del "
+          f"lado equivocado de la frontera, porque la clase que les corresponde es menos probable "
+          f"en ese punto que la otra.")
 inf.titulo("Error de entrada y error de salida")
 inf.texto("El **error de entrada** E~in~ es la proporción de observaciones de entrenamiento mal "
           "clasificadas (Ecuación ({eq:ein})), donde I[·] vale 1 si la condición se cumple y 0 en "
@@ -314,7 +328,7 @@ actividad("Actividad 2. Preparación y generación de los datos")
 inf.titulo("Objetivo de la actividad", antes=2)
 inf.texto("Preparar los dos conjuntos de datos del experimento, describir la distribución de sus "
           "clases y dividirlos en entrenamiento, validación y prueba.")
-inf.titulo("Dataset del taller anterior")
+inf.titulo("Dataset")
 inf.texto(f"El CSV tiene {miles(len(df_csv))} registros, tres características continuas y la clase "
           f"(2 500 Hombre y 2 500 Mujer, p~0~ = 0.5). Al estimar las medias y la covarianza común de "
           f"cada clase y aplicar la Ecuación ({{eq:alpha}}), la separación resulta α ≈ "
@@ -323,14 +337,14 @@ inf.texto(f"El CSV tiene {miles(len(df_csv))} registros, tres características c
           f"tocan, por lo que con este dataset no es posible observar la diferencia entre el error "
           f"del perceptrón y el error de Bayes. Por eso se generaron datos adicionales.")
 inf.titulo("Datos generados con p~0~ = 0.5 y α = 5")
-inf.texto(f"Se generaron {miles(len(df_gen))} registros con tres características, para mantener la "
-          f"misma estructura del dataset del taller. Cada clase sigue una normal con covarianza "
+inf.texto(f"Se generaron {miles(len(df_gen))} registros con tres características y la columna Clase, "
+          f"la misma estructura del dataset CSV. Cada clase sigue una normal con covarianza "
           f"identidad (desviación estándar 1 en cada eje) y sus centros se colocan sobre la diagonal "
           f"(1, 1, 1), uno a cada lado del origen (Ecuación ({{eq:generacion}})). Con esa elección la "
           f"distancia de Mahalanobis entre las clases es exactamente α. La mitad de los registros es "
           f"de cada clase (p~0~ = 0.5) y se usó la semilla 42 para que los datos sean reproducibles. "
-          f"Los datos se guardaron en dataset_generado_p0_0.5_alpha_5.csv con el mismo formato de "
-          f"columnas del CSV original.")
+          f"El script vuelve a generar exactamente estos datos cada vez que se ejecuta y los guarda "
+          f"en dataset_generado_p0_0.5_alpha_5.csv, con el mismo formato de columnas del CSV.")
 inf.ecuacion(X + r("∣") + delim(r("y=k")) + r("∼") + r("N") +
              delim(sub(r("μ"), r("k")) + tx(", ") + r("I")) + tx(",      ") + MU0 + r("=−") +
              frac(r("α"), r("2")) + r("u") + tx(",   ") + MU1 + r("=") + frac(r("α"), r("2")) +
@@ -345,10 +359,12 @@ inf.texto(f"Con estos parámetros, la Ecuación ({{eq:bayeslineal}}) da los peso
 inf.imagen(RES / "distribucion_generado.png", 14.5,
            "Distribución de las clases de los datos generados sobre la dirección que las separa.",
            clave="distgen", fuente="Elaboración propia con Python y Matplotlib.")
-inf.titulo("Codificación de la clase y partición de los datos")
-inf.texto("Siguiendo la diapositiva 15, la clase se codificó como Hombre = 1 y Mujer = 0. Ambos "
-          "conjuntos se dividieron con una partición estratificada 70/15/15 (Tabla {tab:particion}), "
-          "que mantiene la proporción 50/50 en cada parte:")
+inf.titulo("Codificación de la clase")
+inf.texto("La clase se codificó como Hombre = 1 y Mujer = 0, que son los valores que produce la "
+          "salida escalón del perceptrón (Ecuación ({eq:escalon})).")
+inf.titulo("Partición de los datos")
+inf.texto("Ambos conjuntos se dividieron en tres partes con una partición estratificada 70/15/15 "
+          "(Tabla {tab:particion}), con la semilla 42 para que sea reproducible:")
 inf.lista([
     "**Entrenamiento (70 %):** el perceptrón ajusta sus pesos con estos datos; aquí se mide E~in~.",
     "**Validación (15 %):** al final de cada época se mide el error con estos datos y se guarda el "
@@ -356,26 +372,102 @@ inf.lista([
     "**Prueba (15 %):** solo se usa al final, con la clase verdadera, para estimar E~out~ y la "
     "exactitud del modelo.",
 ])
-inf.tabla("Partición de los datos (70/15/15, estratificada, semilla 42)",
-          ["Conjunto de datos", "Total", "Entrenamiento", "Validación", "Prueba"], [
-              ["CSV del taller", miles(csv["Registros"]), miles(csv["Entrenamiento"]),
-               miles(csv["Validacion"]), miles(csv["Prueba"])],
-              ["Datos generados (α = 5)", miles(gen["Registros"]), miles(gen["Entrenamiento"]),
-               miles(gen["Validacion"]), miles(gen["Prueba"])],
-          ], clave="particion", anchos=[4.6, 2.2, 3.0, 2.6, 2.4])
-inf.texto("Se eligió 70/15/15 porque deja la mayor parte de los datos para aprender y reserva dos "
-          "partes iguales para elegir el modelo y para medirlo. Con 20 000 registros generados, el "
-          "conjunto de prueba tiene 3 000 observaciones: suficiente para estimar un error cercano al "
-          "0.6 % con un intervalo de confianza razonable.")
+filas = []
+for nombre, conteo in [("Dataset CSV", conteo_csv), ("Datos generados (α = 5)", conteo_gen)]:
+    for parte, etiqueta in [("entrenamiento", "Entrenamiento"), ("validacion", "Validación"),
+                            ("prueba", "Prueba")]:
+        h, m = conteo[parte]
+        filas.append([nombre if parte == "entrenamiento" else "", etiqueta, miles(h), miles(m),
+                      miles(h + m), f"{100 * h / (h + m):.0f} / {100 * m / (h + m):.0f}"])
+inf.tabla("Partición estratificada 70/15/15: observaciones por clase en cada parte",
+          ["Conjunto de datos", "Parte", "Hombre (1)", "Mujer (0)", "Total", "% Hombre / Mujer"],
+          filas, clave="particion", anchos=[3.6, 2.6, 2.1, 2.1, 1.9, 2.7],
+          alinear=[WD_ALIGN_PARAGRAPH.LEFT] + [WD_ALIGN_PARAGRAPH.CENTER] * 5)
+inf.titulo("Por qué cada parte tiene 50 % de cada clase")
+inf.texto("La partición es estratificada: el 70/15/15 se aplica por separado a los Hombres y a las "
+          "Mujeres, y luego se unen las partes. Por eso el entrenamiento de los datos generados "
+          "tiene exactamente 7 000 observaciones de cada clase, y lo mismo ocurre en validación, en "
+          "prueba y en el dataset CSV. Este balance es necesario por tres razones:")
+inf.lista([
+    "**Evita que el perceptrón se incline hacia una respuesta.** El perceptrón solo corrige sus "
+    "pesos con las observaciones que clasifica mal. Si una clase fuera más frecuente en el "
+    "entrenamiento, aportaría más correcciones, el plano se desplazaría hacia la clase minoritaria "
+    "y el modelo tendería a responder la clase mayoritaria aunque los datos no lo justifiquen.",
+    "**Mantiene la misma regla de Bayes.** En la Ecuación ({eq:bayeslineal}) el término "
+    "ln(p~1~/p~0~) desplaza la frontera. Con p~0~ = 0.5 vale ln(1) = 0 y la frontera queda en el "
+    "punto medio entre las clases. Si el entrenamiento tuviera, por ejemplo, 70 % de una clase, "
+    "ese término valdría ln(0.7/0.3) = 0.85 y la frontera se correría 0.85/α = 0.17 desviaciones "
+    "estándar: el perceptrón aprendería una frontera distinta de la que se quiere comparar.",
+    "**La exactitud no se infla.** Con prueba balanceada, la exactitud es el promedio de la "
+    "sensibilidad y la especificidad, y un clasificador que siempre responde la misma clase "
+    "obtiene 50 %, no más. Así un 99.33 % refleja que el modelo distingue las dos clases.",
+])
+inf.titulo("Por qué se eligió 70/15/15")
+inf.texto("La división se eligió por la precisión con la que hay que medir el error, no por "
+          "costumbre. El error que se quiere medir es muy pequeño (el de Bayes es 0.62 %), y el "
+          "intervalo de confianza de la Ecuación ({eq:ic}) usa la aproximación normal de la "
+          "binomial, que solo es confiable si se esperan suficientes errores en la muestra. Con el "
+          "criterio conservador de al menos 10 errores esperados [12], el conjunto de prueba debe "
+          "cumplir la Ecuación ({eq:mminimo}).")
+inf.ecuacion(r("M·") + sub(r("E"), tx("Bayes")) + r("≥10") + tx("   ⟹   ") + r("M≥") +
+             frac(r("10"), r("0.00621")) + r("≈1 611"), clave="mminimo")
+inf.texto("La Tabla {tab:divisiones} compara cuatro divisiones posibles de los 20 000 registros "
+          "generados. Para cada una se calcula el número esperado de errores en prueba (M·0.0062) y "
+          "el semiancho del intervalo de confianza del 95 % para un error de 0.62 %.")
+filas = []
+for etiqueta, (tr, va, te) in [("60/20/20", (0.6, 0.2, 0.2)), ("70/15/15", (0.7, 0.15, 0.15)),
+                               ("70/20/10", (0.7, 0.2, 0.1)), ("80/10/10", (0.8, 0.1, 0.1))]:
+    m = int(pb.N_GENERADO * te)
+    filas.append([etiqueta, miles(pb.N_GENERADO * tr), miles(pb.N_GENERADO * va), miles(m),
+                  f"{m * gen['Error_Bayes_teorico']:.1f}",
+                  f"± {pct(1.96 * np.sqrt(gen['Error_Bayes_teorico'] * (1 - gen['Error_Bayes_teorico']) / m))}"])
+inf.tabla("Comparación de divisiones posibles (N = 20 000, error esperado de 0.62 %)",
+          ["División", "Entrenamiento", "Validación", "Prueba", "Errores esperados en prueba",
+           "Semiancho IC 95 %"], filas, clave="divisiones",
+          anchos=[2.2, 2.6, 2.3, 1.9, 3.0, 3.0], alinear=[WD_ALIGN_PARAGRAPH.CENTER] * 6)
+inf.lista([
+    "**80/10/10 y 70/20/10** dejan solo 2 000 observaciones de prueba: se esperan unos 12 errores, "
+    "apenas por encima del mínimo, y el intervalo de ±0.34 % es mayor que la mitad del error de "
+    "Bayes (0.31 %), así que no se podría distinguir bien un error de 0.62 % de uno de 0.3 % o de "
+    "0.9 %.",
+    "**60/20/20** mejora el intervalo solo de ±0.28 % a ±0.24 %, a cambio de quitar 2 000 "
+    "observaciones al entrenamiento.",
+    "**70/15/15** da 3 000 observaciones tanto a validación como a prueba (unos 19 errores "
+    "esperados en cada una) y un intervalo de ±0.28 %, menor que la mitad del error que se mide. "
+    "Validación y prueba tienen el mismo tamaño porque elegir el mejor perceptrón exige la misma "
+    "precisión que medirlo.",
+])
+inf.texto("El 70 % de entrenamiento también es suficiente. El perceptrón en tres dimensiones tiene "
+          "cuatro parámetros (w~0~ a w~3~), es decir, una dimensión VC de d~VC~ = 4, y la regla "
+          "práctica N ≥ 10·d~VC~ = 40 [4] se cumple con mucha holgura con 14 000 observaciones; el "
+          "tamaño del entrenamiento no es lo que limita el resultado. Por último, el número de "
+          "registros generados se fijó en función de esta división: para tener M ≥ 1 611 con el "
+          "15 % de prueba se necesitan al menos 1 611/0.15 ≈ 10 740 registros, y se usaron 20 000 "
+          "(casi el doble) para tener margen. En el dataset CSV se usó la misma división para "
+          "comparar ambos conjuntos en igualdad de condiciones; allí el error es cero y el "
+          "intervalo se calcula con la regla del tres (Ecuación ({eq:ic})).")
+inf.titulo("Parámetros del experimento")
+inf.tabla("Parámetros utilizados y su justificación", ["Parámetro", "Valor", "Justificación"], [
+    ["Registros generados", miles(pb.N_GENERADO), "Garantiza al menos 1 611 observaciones de prueba (Ecuación ({eq:mminimo}))."],
+    ["Probabilidad p~0~", str(pb.P0), "Indicación de la práctica; clases equiprobables."],
+    ["Separación α", f"{pb.ALPHA:g}", "Indicación de la práctica; error de Bayes de 0.62 %."],
+    ["Covarianza", "Identidad", "La distancia de Mahalanobis coincide con la euclidiana."],
+    ["Partición", "70/15/15", "Estratificada, 50 % de cada clase (Tablas {tab:particion} y {tab:divisiones})."],
+    ["Tasa de aprendizaje η", str(pb.ETA), "Con pesos iniciales en cero, η no cambia las predicciones (ver Actividad 3)."],
+    ["Pesos iniciales", "0", "Punto de partida neutro: no favorece a ninguna clase."],
+    ["Épocas", str(pb.EPOCAS), f"El mejor perceptrón apareció en la época {int(gen['Mejor_epoca'])}; las últimas {pb.EPOCAS - int(gen['Mejor_epoca'])} no lo mejoraron."],
+    ["Semilla aleatoria", str(pb.SEMILLA), "Hace reproducibles los datos, la partición y el orden de entrenamiento."],
+], clave="parametros", anchos=[3.6, 2.2, 9.2], alinear=[WD_ALIGN_PARAGRAPH.LEFT,
+                                                         WD_ALIGN_PARAGRAPH.CENTER,
+                                                         WD_ALIGN_PARAGRAPH.LEFT])
 
 # Actividad 3 --------------------------------------------------------------
-actividad("Actividad 3. Perceptrón con clases 0 y 1 (diapositivas 13 a 15)")
+actividad("Actividad 3. Perceptrón con clases 0 y 1")
 inf.titulo("Objetivo de la actividad", antes=2)
-inf.texto("Implementar el perceptrón tal como lo presentan las diapositivas 13 a 15 y adaptarlo a "
-          "datos cuyas clases se superponen.")
+inf.texto("Implementar el perceptrón y adaptarlo a datos cuyas clases se superponen.")
 inf.titulo("Por qué no sirve la condición y·z ≤ 0 con clases 0 y 1")
-inf.texto("En el taller anterior las clases eran +1 y −1, y el perceptrón se actualizaba cuando "
-          "y~i~·z ≤ 0. La diapositiva 15 advierte que esa condición no funciona con clases 0 y 1: si "
+inf.texto("En la formulación clásica del perceptrón las clases se codifican como +1 y −1, y los pesos "
+          "se corrigen cuando y~i~·z ≤ 0. Esa condición no funciona con clases 0 y 1: si "
           "y = 0, el producto 0·z es 0 para cualquier z, la condición siempre se cumple y el ajuste "
           "tampoco corrige esa clase. La solución es usar una salida escalón explícita "
           "(Ecuación ({eq:escalon})) y calcular el error como la diferencia entre la clase real y la "
@@ -390,21 +482,24 @@ inf.ecuacion(tx("error") + r("=") + r("y−") + YH + r("∈") + delim(r("−1, 0
 inf.texto("El error vale 0 cuando la predicción es correcta, +1 cuando el modelo dijo 0 y la clase "
           "era 1, y −1 en el caso contrario. Solo cuando el error es distinto de cero se corrigen "
           "los pesos con la regla de la Ecuación ({eq:actualizacion}), que usa la tasa de aprendizaje "
-          "η = 0.1 de la diapositiva 14. El signo del error decide si el plano se acerca o se aleja "
+          "η = 0.1. El signo del error decide si el plano se acerca o se aleja "
           "de la observación mal clasificada.")
 inf.ecuacion(r("w←w+η·") + tx("error") + r("·x") + tx(",      ") + sub(r("w"), r("0")) + r("←") +
              sub(r("w"), r("0")) + r("+η·") + tx("error") + tx(",      ") + r("η=0.1"),
              clave="actualizacion")
-inf.tabla("Pasos del algoritmo según las diapositivas 13 a 15",
-          ["Diapositiva", "Paso aplicado en el entrenamiento"], [
-              ["13", "Los pesos w~1~, w~2~, w~3~ y el sesgo w~0~ comienzan en cero."],
-              ["13", "Para cada observación se calcula la suma ponderada z."],
-              ["15", "La salida escalón explícita da ŷ = 1 si z ≥ 0 y ŷ = 0 en otro caso."],
-              ["15", "Se calcula error = y − ŷ, que puede valer −1, 0 o 1."],
-              ["14 y 15", "Si el error no es cero, se corrigen pesos y sesgo con η = 0.1."],
-              ["13", "Si en una época no hay correcciones, el algoritmo se detiene."],
-          ], clave="pasos", anchos=[2.6, 12.4], alinear=[WD_ALIGN_PARAGRAPH.CENTER,
-                                                           WD_ALIGN_PARAGRAPH.LEFT])
+inf.tabla("Pasos del algoritmo", ["Paso aplicado en el entrenamiento"], [
+              ["Los pesos w~1~, w~2~, w~3~ y el sesgo w~0~ comienzan en cero."],
+              ["Para cada observación se calcula la suma ponderada z."],
+              ["La salida escalón explícita da ŷ = 1 si z ≥ 0 y ŷ = 0 en otro caso."],
+              ["Se calcula error = y − ŷ, que puede valer −1, 0 o 1."],
+              ["Si el error no es cero, se corrigen pesos y sesgo con η = 0.1."],
+              ["Si en una época no hay correcciones, el algoritmo se detiene."],
+          ], clave="pasos", anchos=[15.0], alinear=[WD_ALIGN_PARAGRAPH.LEFT])
+inf.texto("La tasa η = 0.1 controla el tamaño de cada corrección. Como los pesos comienzan en cero, "
+          "después de cualquier número de correcciones el vector de pesos es η veces la suma de los "
+          "términos error·x acumulados. Multiplicar todos los pesos por η > 0 no cambia el signo de "
+          "z, así que las predicciones, los errores y la frontera son los mismos para cualquier η; "
+          "solo cambia la escala de los pesos, que es la que aparece en la Tabla {tab:pesos}.")
 inf.titulo("Conservar el mejor perceptrón")
 inf.texto(f"Cuando las clases se superponen no existe un plano sin errores, así que el perceptrón "
           f"nunca deja de actualizarse: con los datos generados hizo en promedio "
@@ -413,7 +508,8 @@ inf.texto(f"Cuando las clases se superponen no existe un plano sin errores, así
           f"por lo que el error oscila de una época a otra. Para no quedarse con los pesos de la "
           f"última época, que pueden ser malos, se guarda el perceptrón con menor error de "
           f"validación (Ecuación ({{eq:pocket}})). Es la idea del algoritmo «pocket» [5] y "
-          f"corresponde a la curva «Historial del mejor perceptrón» del ejemplo presentado en clase.")
+          f"corresponde a la curva roja «Historial del mejor perceptrón» de la Ilustración "
+          f"{{fig:figura2gen}}.")
 inf.ecuacion(sup(r("w"), r("∗")) + r("=") +
              func_lim("arg min", r("t=1,…,T"), sub(r("E"), tx("val")) + delim(sub(r("w"), r("t")))),
              clave="pocket")
@@ -482,7 +578,7 @@ if capturas:
               f"errores." if len(capturas) > 1 else
               "La ejecución se muestra en la Ilustración {fig:captura1} y terminó sin errores.")
     descripciones = {
-        1: "inicio de la ejecución, resultados con el CSV del taller y con los datos generados",
+        1: "inicio de la ejecución, resultados con el dataset CSV y con los datos generados",
         2: "resultados con los datos generados (p0 = 0.5, α = 5) y matriz de confusión",
         3: "resumen de los dos experimentos y barrido de α",
     }
@@ -513,9 +609,9 @@ for etiqueta, col, formato_valor in [
         filas.append([etiqueta, f"{int(csv['Mejor_epoca'])} / {int(csv['Epocas'])}",
                       f"{int(gen['Mejor_epoca'])} / {int(gen['Epocas'])}"])
 inf.tabla("Errores y exactitud del perceptrón y del clasificador de Bayes",
-          ["Indicador", "CSV del taller", "Datos generados (α = 5)"], filas, clave="resultados",
+          ["Indicador", "Dataset CSV", "Datos generados (α = 5)"], filas, clave="resultados",
           anchos=[6.4, 4.0, 4.6])
-inf.texto(f"En el CSV del taller todos los errores son cero: el perceptrón convergió en la segunda "
+inf.texto(f"En el dataset CSV todos los errores son cero: el perceptrón convergió en la segunda "
           f"época, sin ninguna actualización, y clasificó bien los 750 registros de prueba. En los "
           f"datos generados el perceptrón alcanzó E~out~ = {pct(gen['E_out'])}, igual al error de "
           f"Bayes medido en la misma muestra de prueba ({pct(gen['Error_Bayes_prueba'])}) y muy "
@@ -523,13 +619,12 @@ inf.texto(f"En el CSV del taller todos los errores son cero: el perceptrón conv
           f"{pct(gen['Accuracy_perceptron'])}, la misma que la del clasificador de Bayes. Además, "
           f"E~in~ = {pct(gen['E_in'])} y E~out~ = {pct(gen['E_out'])} difieren solo en "
           f"{pct(abs(gen['E_in'] - gen['E_out']))}: el modelo generaliza.")
-inf.texto("La Ilustración {fig:figura1gen} reproduce la Figura 1 del ejemplo presentado en clase "
-          "en MATLAB: la clase 0 (Mujer) con círculos, la clase 1 (Hombre) con equis y la frontera "
-          "aprendida por el perceptrón. Igual que en ese ejemplo, las dos nubes se tocan en una "
-          "franja alrededor de la frontera, donde están los pocos errores del modelo.")
+inf.texto("La Ilustración {fig:figura1gen} muestra las dos clases de los datos generados en el plano "
+          "x1–x2: la clase 0 (Mujer) con círculos, la clase 1 (Hombre) con equis y la frontera "
+          "aprendida por el perceptrón. Las dos nubes se tocan en una franja alrededor de la "
+          "frontera, donde están los pocos errores del modelo.")
 inf.imagen(RES / "figura1_clases_generado.png", 12.5,
-           "Clases de los datos generados y frontera del perceptrón (equivalente a la Figura 1 "
-           "del ejemplo en MATLAB).", clave="figura1gen",
+           "Clases de los datos generados y frontera del perceptrón.", clave="figura1gen",
            fuente="Elaboración propia con Python y Matplotlib.")
 inf.tabla("Pesos del mejor perceptrón y del clasificador de Bayes (datos generados)",
           ["Modelo", "w0", "w1", "w2", "w3"], [
@@ -548,7 +643,7 @@ inf.imagen(RES / "clases_generado.png", 12.5,
 
 inf.titulo("2.7.3 Matrices de confusión")
 filas = []
-for nombre, mc in [("CSV del taller", mc_csv), ("Datos generados (α = 5)", mc_gen)]:
+for nombre, mc in [("Dataset CSV", mc_csv), ("Datos generados (α = 5)", mc_gen)]:
     filas.append([nombre, mc.iloc[0, 0], mc.iloc[1, 1], mc.iloc[1, 0], mc.iloc[0, 1],
                   miles(mc.to_numpy().sum())])
 inf.tabla("Matrices de confusión del conjunto de prueba (clase positiva: Hombre = 1)",
@@ -564,8 +659,8 @@ inf.texto(f"En los datos generados el perceptrón se equivocó en {FP + FN} de "
           f"de la clase Mujer; aun así, el error total es el mismo que el de Bayes.")
 
 inf.titulo("2.7.4 Historial del error y del mejor perceptrón")
-inf.texto(f"La Ilustración {{fig:figura2gen}} reproduce la Figura 2 del ejemplo en MATLAB: el error "
-          f"de entrenamiento en función del número de iteraciones. Cada iteración es la revisión de "
+inf.texto(f"La Ilustración {{fig:figura2gen}} muestra el error de entrenamiento en función del "
+          f"número de iteraciones. Cada iteración es la revisión de "
           f"una observación; en total hubo {miles(iteraciones_totales)} iteraciones (200 épocas de "
           f"{miles(gen['Entrenamiento'])} observaciones) y {miles(actualizaciones_totales)} "
           f"correcciones de pesos. La curva azul («Historial de error») es el error de "
@@ -575,8 +670,7 @@ inf.texto(f"La Ilustración {{fig:figura2gen}} reproduce la Figura 2 del ejemplo
           f"error inicial es 50 %, porque toda observación se predice como clase 1; el eje se "
           f"recortó para que se vea la zona en la que oscila el error.")
 inf.imagen(RES / "figura2_historial_iteraciones_generado.png", 15.0,
-           "Historial de error y del mejor perceptrón por número de iteraciones (equivalente a la "
-           "Figura 2 del ejemplo en MATLAB).", clave="figura2gen",
+           "Historial de error y del mejor perceptrón por número de iteraciones.", clave="figura2gen",
            fuente="Elaboración propia con Python y Matplotlib.")
 inf.texto("La curva azul nunca se estabiliza: como las clases se superponen, siempre hay "
           "observaciones mal clasificadas que provocan nuevas correcciones, y algunas de ellas "
@@ -612,22 +706,21 @@ inf.texto("El error del perceptrón sigue la curva del error de Bayes en todo el
           "muestra de prueba y queda muy cerca del valor teórico. "
           "La diferencia entre E~in~ y E~out~ es siempre menor a un punto porcentual.")
 
-inf.titulo("2.7.6 Resultados con el CSV del taller")
+inf.titulo("2.7.6 Resultados con el dataset CSV")
 inf.imagen(RES / "figura1_clases_csv.png", 12.0,
-           "Clases del CSV del taller y frontera del perceptrón (equivalente a la Figura 1 del "
-           "ejemplo en MATLAB).",
+           "Clases del dataset CSV y frontera del perceptrón.",
            clave="clasescsv", fuente="Elaboración propia con Python y Matplotlib.")
 inf.texto(f"Las dos clases del CSV forman grupos compactos y muy separados (α ≈ "
           f"{num(csv['alpha'], 2)}), por lo que cualquier plano entre ellos clasifica sin errores. "
-          f"El perceptrón con clases 0/1 y η = 0.1 convergió en la segunda época, igual que en el "
-          f"taller anterior con clases ±1.")
+          f"El perceptrón con clases 0/1 y η = 0.1 convergió en la segunda época: en ella recorrió "
+          f"los 3 500 registros de entrenamiento sin ninguna corrección.")
 
 inf.titulo("2.7.7 Cumplimiento de las indicaciones")
 inf.tabla("Verificación de las indicaciones de la práctica", ["Indicación", "Cómo se cumplió"], [
-    ["Usar el CSV del taller", "Se evaluó el perceptrón con el CSV original (sección 2.7.2)."],
+    ["Usar el CSV", "Se evaluó el perceptrón con el dataset CSV (secciones 2.7.2 y 2.7.6)."],
     ["Crear datos con p~0~ = 0.5 y α = 5", "Se generaron 20 000 registros (Ecuación ({eq:generacion}))."],
-    ["Elegir la división de los datos", "Partición estratificada 70/15/15 con semilla 42."],
-    ["Diapositivas 13, 14 y 15", "Clases 0/1, salida escalón, error = y − ŷ y η = 0.1."],
+    ["Elegir la división de los datos", "70/15/15 estratificada, justificada en la Actividad 2."],
+    ["Entrenamiento balanceado", "50 % de cada clase en cada parte (Tabla {tab:particion})."],
     ["Validar con la y verdadera de prueba", "E~out~, exactitud, matriz de confusión e IC 95 %."],
     ["Error de Bayes y error del perceptrón", "Teórico y en prueba, comparados en la Tabla {tab:resultados}."],
     ["Error de entrada y de salida", "E~in~ ≈ E~out~ en todos los experimentos."],
@@ -646,20 +739,22 @@ seccion("2.9 Conclusiones")
 inf.lista([
     f"**Sobre el clasificador de Bayes y la superposición:** el error de Bayes es el mínimo que "
     f"puede alcanzar cualquier clasificador y depende únicamente de cuánto se superponen las clases. "
-    f"Con p~0~ = 0.5 y α = 5 su valor teórico es Φ(−2.5) = {pct(gen['Error_Bayes_teorico'])}, el mismo "
-    f"que se mostró en clase. En el CSV del taller la separación es α ≈ {num(csv['alpha'], 1)}, las "
+    f"Con p~0~ = 0.5 y α = 5 su valor teórico es Φ(−2.5) = {pct(gen['Error_Bayes_teorico'])}. En el "
+    f"dataset CSV la separación es α ≈ {num(csv['alpha'], 1)}, las "
     f"clases están perfectamente definidas y el error de Bayes es prácticamente cero; por eso fue "
     f"necesario generar datos con traslape para que la comparación tuviera sentido.",
-    f"**Sobre el desempeño del perceptrón:** el perceptrón con clases 0/1 de las diapositivas 13 a "
-    f"15, con η = 0.1 y conservando el mejor modelo según la validación, obtuvo E~in~ = "
+    f"**Sobre el desempeño del perceptrón:** el perceptrón con clases 0/1, con η = 0.1 y conservando el mejor modelo según la validación, obtuvo E~in~ = "
     f"{pct(gen['E_in'])} y E~out~ = {pct(gen['E_out'])} en los datos generados, con exactitud de "
     f"{pct(gen['Accuracy_perceptron'])}. Ese error es igual al de Bayes en la misma muestra de prueba "
     f"y su intervalo de confianza del 95 % contiene al error de Bayes teórico. Como la frontera "
     f"óptima es lineal, el perceptrón llegó prácticamente al mejor resultado posible, y que "
     f"E~in~ ≈ E~out~ confirma que generaliza.",
-    f"**Sobre la validación:** con clases superpuestas el perceptrón nunca converge (unas {act_media:.0f} "
-    f"correcciones por época) y su error oscila. Separar un conjunto de validación permitió elegir el "
-    "mejor perceptrón sin tocar los datos de prueba, que se usaron solo para la medición final.",
+    f"**Sobre la partición y la validación:** con clases superpuestas el perceptrón nunca converge "
+    f"(unas {act_media:.0f} correcciones por época) y su error oscila. La partición 70/15/15, "
+    f"estratificada para que cada parte tenga 50 % de cada clase, dejó 14 000 observaciones para "
+    f"entrenar sin sesgo hacia ninguna clase y 3 000 para validar y 3 000 para probar, suficientes "
+    f"para medir un error del 0.6 % con un margen de ±0.28 %. Así se eligió el mejor perceptrón sin "
+    f"tocar los datos de prueba, que se usaron solo para la medición final.",
 ], numerada=True)
 
 seccion("2.10 Recomendaciones")
@@ -673,9 +768,9 @@ inf.texto("Se recomienda repetir el experimento con clases de distinta probabili
 
 seccion("2.11 Referencias bibliográficas")
 referencias = [
-    '[1] Material docente, "Artificial Neural Networks", ANN.pdf, diapositivas 1–8, 2026.',
+    '[1] Material docente, "Artificial Neural Networks", ANN.pdf, 2026.',
     '[2] Material docente, "Algoritmo del perceptrón: cómo interpretar el pseudocódigo", '
-    'Perceptron_Explicacion_IF_Paso_a_Paso.pdf, diapositivas 13–15, 2026.',
+    'Perceptron_Explicacion_IF_Paso_a_Paso.pdf, 2026.',
     '[3] R. O. Duda, P. E. Hart y D. G. Stork, Pattern Classification, 2.ª ed. New York, NY, USA: '
     'Wiley, 2001.',
     '[4] Y. S. Abu-Mostafa, M. Magdon-Ismail y H.-T. Lin, Learning From Data. Pasadena, CA, USA: '
@@ -692,6 +787,8 @@ referencias = [
     'Engineering, vol. 9, no. 3, pp. 90–95, 2007.',
     '[11] Dataset sintético, "dataset_Perceptron_5000_continuo_menos1_a_1.csv", material de clase, '
     'Inteligencia de Negocios, Universidad Técnica de Ambato, 2026.',
+    '[12] D. C. Montgomery y G. C. Runger, Applied Statistics and Probability for Engineers, 7.ª ed. '
+    'Hoboken, NJ, USA: Wiley, 2018.',
 ]
 for ref in referencias:
     inf.texto(ref, alineacion=WD_ALIGN_PARAGRAPH.LEFT, sangria=Cm(1.27), primera=Cm(-0.63),
@@ -700,21 +797,7 @@ for ref in referencias:
 seccion("2.12 Anexos")
 inf.texto("Las capturas de ejecución, las matrices de confusión y las tablas de resultados se "
           "presentan en la sección 2.7. El código fuente se entrega como archivo aparte "
-          "(perceptron_bayes.py) y no se incluye en este informe.")
-inf.titulo("Anexo A. Archivos entregados")
-inf.tabla("Archivos que forman parte de la entrega", ["Archivo", "Contenido"], [
-    ["perceptron_bayes.py", "Script completo para ejecutar en Visual Studio Code."],
-    ["dataset_Perceptron_5000_continuo_menos1_a_1.csv", "Dataset del taller anterior."],
-    ["dataset_generado_p0_0.5_alpha_5.csv", "Datos generados con p0 = 0.5 y α = 5."],
-    ["capturas/", "Capturas reales de la ejecución en Visual Studio Code."],
-    ["resultados/tabla_resultados.csv", "Errores, exactitud, pesos e intervalos de confianza."],
-    ["resultados/barrido_alpha.csv / barrido_alpha.png", "Resultados para cada valor de α."],
-    ["resultados/historial_*.csv / historial_*.png", "Error por época y mejor perceptrón."],
-    ["resultados/matriz_confusion_*.csv / matrices_confusion.png", "Matrices de confusión."],
-    ["resultados/historial_iteraciones_*.csv", "Error de entrenamiento por iteración."],
-    ["resultados/figura1_*.png / figura2_*.png", "Figuras 1 y 2 equivalentes a las de MATLAB."],
-    ["resultados/clases_*.png / distribucion_*.png", "Clases, fronteras y distribución."],
-], clave="archivos", anchos=[7.5, 7.5], alinear=[WD_ALIGN_PARAGRAPH.LEFT] * 2)
+          "(perceptron_bayes.py).")
 
 # ----------------------------------------------------------------------------
 # Formato global y guardado

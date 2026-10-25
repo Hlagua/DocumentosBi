@@ -3,7 +3,7 @@ Taller: Perceptrón frente al clasificador de Bayes
 Asignatura: Inteligencia de Negocios - Carrera de Software, 6to "A"
 Autores: Lagua Flores Henry Daniel / Cobos Taco Alison Marcela
 
-Se entrena un perceptrón con clases 0/1 tal como indican las diapositivas 13-15:
+Se entrena un perceptrón con clases 0/1 y salida escalón explícita:
 
     y_pred = 1 si z >= 0, en otro caso 0
     error  = y - y_pred
@@ -12,7 +12,7 @@ Se entrena un perceptrón con clases 0/1 tal como indican las diapositivas 13-15
         w0 = w0 + 0.1 * error
 
 y se compara su error con el error de Bayes en dos conjuntos de datos:
-  1. El CSV del taller anterior (clases casi perfectamente separadas).
+  1. El dataset CSV proporcionado (clases casi perfectamente separadas).
   2. Datos generados con dos clases normales, probabilidad p0 = 0.5 y una
      separación alpha = 5 entre los centros, medida en desviaciones estándar.
      Mientras menor es alpha, más se superponen las distribuciones.
@@ -45,7 +45,7 @@ P0 = 0.5                 # probabilidad a priori de la clase Mujer (0)
 ALPHA = 5.0              # separación entre las clases en desviaciones estándar
 N_GENERADO = 20000       # registros generados
 PARTICION = (0.70, 0.15, 0.15)
-ETA = 0.1                # tasa de aprendizaje (diapositiva 14)
+ETA = 0.1                # tasa de aprendizaje
 EPOCAS = 200
 SEMILLA = 42
 ALPHAS_BARRIDO = [1, 2, 3, 4, 5, 6, 8]
@@ -91,14 +91,18 @@ def generar_datos(n, p0, alpha, semilla):
 
 
 def cargar(df):
-    """Codificación de la diapositiva 15: Hombre = 1, Mujer = 0."""
+    """Codificación de la clase: Hombre = 1, Mujer = 0."""
     X = df[COLUMNAS].to_numpy(dtype=float)
     y = (df["Clase"] == "Hombre").astype(int).to_numpy()
     return X, y
 
 
 def particionar(X, y, proporciones, semilla):
-    """Partición estratificada entrenamiento / validación / prueba."""
+    """Partición estratificada entrenamiento / validación / prueba.
+
+    Cada clase se divide por separado, así las tres partes conservan 50 % de cada clase y
+    el entrenamiento no se inclina hacia ninguna respuesta.
+    """
     rng = np.random.default_rng(semilla)
     partes = {"entrenamiento": [], "validacion": [], "prueba": []}
     for clase in (0, 1):
@@ -117,7 +121,7 @@ def particionar(X, y, proporciones, semilla):
 
 
 # ----------------------------------------------------------------------------
-# Perceptrón (diapositivas 13 a 15)
+# Perceptrón con clases 0/1
 # ----------------------------------------------------------------------------
 def escalon(z):
     """Salida escalón explícita: 1 si z >= 0, en otro caso 0."""
@@ -171,7 +175,7 @@ def entrenar_perceptron(X, y, X_val, y_val, eta, epocas, semilla, registrar=Fals
         historial.append({"Epoca": epoca, "Actualizaciones": errores,
                           "Error_entrenamiento": e_tr, "Error_validacion": e_va,
                           "Mejor_error_validacion": mejor["error_val"]})
-        if errores == 0:                              # convergencia (diapositiva 13)
+        if errores == 0:                              # convergencia: época sin errores
             break
     iteraciones = pd.DataFrame(por_iteracion, columns=[
         "Iteracion", "Error_entrenamiento", "Error_entrenamiento_mejor_perceptron"])
@@ -455,7 +459,7 @@ def main():
     df_gen.to_csv(ARCHIVO_GENERADO, index=False, encoding="utf-8-sig")
     print(f"Datos generados: {ARCHIVO_GENERADO.name} ({len(df_gen)} registros)")
 
-    # 2. CSV del taller anterior
+    # 2. Dataset CSV proporcionado
     df_csv = pd.read_csv(ARCHIVO_CSV, encoding="utf-8-sig")
 
     resultados, matrices = [], {}
@@ -465,13 +469,16 @@ def main():
         res, hist, hist_iter, mc, (X, y, w, w0, wb, wb0) = experimento(nombre, df, real,
                                                                        etiqueta)
         resultados.append(res)
-        matrices[nombre.split(" (")[0]] = mc
-        graficar_clases_2d(X, y, w, w0, wb, wb0, nombre, SALIDA / f"clases_{etiqueta}.png")
+        titulo_grafico = "Dataset CSV" if etiqueta == "csv" else nombre
+        matrices[titulo_grafico.split(" (")[0]] = mc
+        graficar_clases_2d(X, y, w, w0, wb, wb0, titulo_grafico, SALIDA / f"clases_{etiqueta}.png")
         graficar_distribucion(X, y, wb, wb0, res["alpha"], SALIDA / f"distribucion_{etiqueta}.png")
-        graficar_historial(hist, res["Error_Bayes_teorico"], f"Historial de error - {nombre}",
+        graficar_historial(hist, res["Error_Bayes_teorico"],
+                           f"Historial de error - {titulo_grafico}",
                            SALIDA / f"historial_{etiqueta}.png")
-        graficar_figura1(X, y, w, w0, nombre, SALIDA / f"figura1_clases_{etiqueta}.png")
-        graficar_figura2(hist_iter, nombre, SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png")
+        graficar_figura1(X, y, w, w0, titulo_grafico, SALIDA / f"figura1_clases_{etiqueta}.png")
+        graficar_figura2(hist_iter, titulo_grafico,
+                         SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png")
     graficar_matrices(matrices, SALIDA / "matrices_confusion.png")
 
     tabla = pd.DataFrame(resultados)
