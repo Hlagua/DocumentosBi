@@ -145,13 +145,14 @@ def tasa_error(w, w0, X, y):
     return float(np.mean(predecir(w, w0, X) != y))
 
 
-def entrenar_perceptron(X, y, X_val, y_val, epocas, semilla, registrar=False):
+def entrenar_perceptron(X, y, X_val, y_val, epocas, semilla, registrar=False, prueba=None):
     """Perceptrón de la diapositiva 4 con conservación del mejor perceptrón (validación).
 
     Siempre recorre todas las épocas (al menos 200); la primera época sin errores se
     guarda como época de convergencia. Con registrar=True también guarda el error de
-    entrenamiento iteración por iteración y las primeras correcciones; solo mide, no
-    cambia el entrenamiento.
+    entrenamiento iteración por iteración y las primeras correcciones. Con prueba=(X, y)
+    se anota el error de prueba de cada época solo para documentarlo: nunca se usa para
+    elegir el modelo ni cambia el entrenamiento.
     """
     rng = np.random.default_rng(semilla)
     w = np.zeros(X.shape[1])
@@ -186,9 +187,14 @@ def entrenar_perceptron(X, y, X_val, y_val, epocas, semilla, registrar=False):
             error_mejor = e_tr
         if registrar:
             por_iteracion.append((iteracion, e_tr, error_mejor))
-        historial.append({"Epoca": epoca, "Actualizaciones": errores,
-                          "Error_entrenamiento": e_tr, "Error_validacion": e_va,
-                          "Mejor_error_validacion": mejor["error_val"]})
+        fila = {"Epoca": epoca, "Actualizaciones": errores,
+                "Error_entrenamiento": e_tr, "Error_validacion": e_va,
+                "Mejor_error_validacion": mejor["error_val"]}
+        if prueba is not None:
+            fila["Error_prueba"] = tasa_error(w, w0, *prueba)
+            fila["Mejor_error_entrenamiento"] = tasa_error(mejor["w"], mejor["w0"], X, y)
+            fila["Mejor_error_prueba"] = tasa_error(mejor["w"], mejor["w0"], *prueba)
+        historial.append(fila)
         if errores == 0 and convergencia is None:     # primera época sin errores
             convergencia = epoca
     iteraciones = pd.DataFrame(por_iteracion, columns=[
@@ -257,7 +263,8 @@ def experimento(nombre, df, bayes_real, etiqueta, mostrar=True):
     (X_tr, y_tr), (X_va, y_va), (X_te, y_te) = (partes["entrenamiento"],
                                                 partes["validacion"], partes["prueba"])
     mejor, hist, hist_iter = entrenar_perceptron(X_tr, y_tr, X_va, y_va, EPOCAS, SEMILLA,
-                                                 registrar=mostrar)
+                                                 registrar=mostrar,
+                                                 prueba=(X_te, y_te) if mostrar else None)
     w, w0 = mejor["w"], mejor["w0"]
 
     if bayes_real is not None:
@@ -391,6 +398,28 @@ def graficar_historial(hist, error_bayes, titulo_fig, ruta):
     ax.set_title(titulo_fig)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=10)
+    fig.tight_layout()
+    fig.savefig(ruta)
+    plt.close(fig)
+
+
+def graficar_entrenamiento_vs_prueba(hist, error_bayes, titulo_fig, ruta):
+    """Error de entrenamiento frente a error de prueba por época (solo documentación)."""
+    fig, ax = plt.subplots(figsize=(7.5, 4))
+    ax.plot(hist["Epoca"], 100 * hist["Error_entrenamiento"], lw=1, alpha=0.6,
+            color="#1f77b4", label="E_in de los pesos de cada época")
+    ax.plot(hist["Epoca"], 100 * hist["Error_prueba"], lw=1, alpha=0.6, color="#d62728",
+            label="E_out de los pesos de cada época")
+    ax.plot(hist["Epoca"], 100 * hist["Mejor_error_entrenamiento"], lw=2.2, color="#1f77b4",
+            label="E_in del mejor perceptrón")
+    ax.plot(hist["Epoca"], 100 * hist["Mejor_error_prueba"], lw=2.2, color="#d62728",
+            label="E_out del mejor perceptrón")
+    ax.axhline(100 * error_bayes, color="#2ca02c", ls="--", lw=2, label="Error de Bayes")
+    ax.set_xlabel("Época")
+    ax.set_ylabel("Error (%)")
+    ax.set_title(titulo_fig)
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=9, ncol=2)
     fig.tight_layout()
     fig.savefig(ruta)
     plt.close(fig)
@@ -580,6 +609,9 @@ def main():
         graficar_historial(hist, res["Error_Bayes_teorico"],
                            f"Historial de error - {titulo_grafico}",
                            SALIDA / f"historial_{etiqueta}.png")
+        graficar_entrenamiento_vs_prueba(hist, res["Error_Bayes_teorico"],
+                                         f"Entrenamiento frente a prueba - {titulo_grafico}",
+                                         SALIDA / f"entrenamiento_vs_prueba_{etiqueta}.png")
         graficar_figura1(X, y, w, w0, titulo_grafico, SALIDA / f"figura1_clases_{etiqueta}.png")
         graficar_figura2(hist_iter, titulo_grafico,
                          SALIDA / f"figura2_historial_iteraciones_{etiqueta}.png",

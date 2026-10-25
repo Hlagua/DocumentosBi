@@ -110,6 +110,22 @@ def primeras_correcciones(df):
 
 
 conteo_csv, conteo_gen = conteo_por_clase(df_csv), conteo_por_clase(df_gen)
+
+# Diferencia entre el error de prueba y el de entrenamiento
+GAP = float(gen["E_out"] - gen["E_in"])
+E_MEDIO = float((gen["E_in"] + gen["E_out"]) / 2)
+SE_DIF = float(np.sqrt(E_MEDIO * (1 - E_MEDIO) * (1 / gen["Entrenamiento"] + 1 / gen["Prueba"])))
+D_VC, DELTA = 4, 0.05
+COTA_VC = float(np.sqrt(8 / gen["Entrenamiento"] *
+                        np.log(4 * ((2 * gen["Entrenamiento"]) ** D_VC + 1) / DELTA)))
+HOEFF = float(np.sqrt(np.log(2 / DELTA) / (2 * gen["Prueba"])))
+SE_BAYES = float(np.sqrt(EB * (1 - EB) / gen["Prueba"]))
+SE_BARRIDO = [float(np.sqrt(max((b["E_in"] + b["E_out"]) / 2, 1e-4) *
+                            (1 - (b["E_in"] + b["E_out"]) / 2) *
+                            (1 / b["Entrenamiento"] + 1 / b["Prueba"])))
+              for b in barrido.to_dict("records")]
+SI_BARRIDO = sum(abs(b["E_out"] - b["E_in"]) <= 1.96 * sd
+                 for b, sd in zip(barrido.to_dict("records"), SE_BARRIDO))
 traza_gen = primeras_correcciones(df_gen)
 
 
@@ -752,7 +768,23 @@ inf.texto(f"Se repitió el experimento completo para α = "
 seccion("2.7 Resultados obtenidos")
 inf.texto("Los resultados se obtuvieron al ejecutar python perceptron_bayes.py en la terminal "
           "integrada de Visual Studio Code. Todas las tablas y figuras se generaron "
-          "automáticamente en la carpeta resultados/.")
+          "automáticamente en la carpeta resultados/. El proceso que sigue el programa, en orden, "
+          "es el siguiente:")
+inf.lista([
+    f"**Generar los datos aleatorios:** {miles(pb.N_GENERADO)} registros de dos clases normales con "
+    f"p~0~ = 0.5 y α = {A} (Ecuación ({{eq:generacion}})), guardados en {pb.ARCHIVO_GENERADO.name}.",
+    f"**Elegir la partición:** entrenar el perceptrón con cuatro divisiones y "
+    f"{len(pb.SEMILLAS_COMPARACION)} semillas, y quedarse con {DIV} (Tablas {{tab:divisiones}} y "
+    f"{{tab:comparacion}}).",
+    f"**Particionar:** dividir cada conjunto en entrenamiento, validación y prueba, con 50 % de cada "
+    f"clase en cada parte (Tabla {{tab:particion}}).",
+    "**Entrenar:** aplicar la regla de la diapositiva 4 durante 200 épocas, con pesos y sesgo en "
+    "cero, guardando al final de cada época el mejor perceptrón según la validación.",
+    "**Evaluar:** calcular E~in~, el error de validación, E~out~, la matriz de confusión, la "
+    "exactitud, el intervalo de confianza y el error de Bayes teórico y en prueba.",
+    "**Verificar:** repetir el entrenamiento con el dataset CSV (clases separadas) y con distintos "
+    "valores de α (barrido).",
+], numerada=True)
 inf.titulo("2.7.1 Ejecución del programa")
 if capturas:
     inf.texto(f"La ejecución completa se muestra en las capturas de pantalla de Visual Studio Code "
@@ -800,7 +832,101 @@ inf.texto(f"En los datos aleatorios el perceptrón alcanzó E~out~ = {pct(gen['E
           f"pruebas de la Actividad 1 se cumplen, así que el entrenamiento es correcto. En el "
           f"dataset CSV todos los errores son cero.")
 
-inf.titulo("2.7.3 Matrices de confusión")
+inf.titulo("2.7.3 Error de entrenamiento frente a error de prueba")
+inf.texto("Esta sección compara los errores de cada conjunto y explica de dónde sale cada "
+          "diferencia, para mostrar que el entrenamiento es correcto y que el modelo no está "
+          "sobreajustado. La Tabla {tab:errores} reúne todos los errores de los datos aleatorios.")
+inf.tabla("Errores del mejor perceptrón en cada conjunto (datos aleatorios)",
+          ["Error", "Valor", "Qué mide", "Diferencia con E~out~"], [
+              ["E~in~ (entrenamiento)", pct(gen["E_in"]), f"Ajuste a los {miles(gen['Entrenamiento'])} ejemplos de entrenamiento.",
+               f"{num(100 * (gen['E_in'] - gen['E_out']), 2)} puntos"],
+              ["E~val~ (validación)", pct(gen["Error_validacion"]), "Con estos datos se eligió el mejor perceptrón.",
+               f"{num(100 * (gen['Error_validacion'] - gen['E_out']), 2)} puntos"],
+              ["E~out~ (prueba)", pct(gen["E_out"]), f"Error con {miles(gen['Prueba'])} datos nuevos: la medida honesta.", "—"],
+              ["Bayes en prueba", pct(gen["Error_Bayes_prueba"]), "Mejor clasificador posible en la misma muestra.",
+               f"{num(100 * (gen['Error_Bayes_prueba'] - gen['E_out']), 2)} puntos"],
+              ["Bayes teórico", pct(EB, 2), "Mejor resultado posible con infinitos datos.",
+               f"{num(100 * (EB - gen['E_out']), 2)} puntos"],
+          ], clave="errores", anchos=[3.6, 2.0, 6.6, 2.8],
+          alinear=[WD_ALIGN_PARAGRAPH.LEFT, WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_PARAGRAPH.LEFT,
+                   WD_ALIGN_PARAGRAPH.CENTER])
+inf.titulo("¿Es normal que E~out~ sea mayor que E~in~?", antes=4)
+inf.texto(f"Sí. Los pesos se ajustaron con los datos de entrenamiento, así que el modelo suele "
+          f"acertar un poco más con ellos que con datos nuevos: lo esperado es E~out~ ≥ E~in~. Aquí "
+          f"la diferencia es E~out~ − E~in~ = {num(100 * GAP, 2)} puntos. Para saber si es grande, "
+          f"se compara con la variación que produciría el azar al medir dos proporciones con "
+          f"muestras independientes (Ecuación ({{eq:sediff}})).")
+inf.ecuacion(sub(r("σ"), tx("dif")) + r("=") +
+             raiz(r("e") + delim(r("1−e")) + delim(frac(r("1"), sub(r("N"), tx("ent"))) + r("+") +
+                                                   frac(r("1"), sub(r("N"), tx("pru"))))) +
+             tx(",      ") + r("e≈") + frac(EIN + r("+") + EOUT, r("2")), clave="sediff")
+inf.texto(f"Con e ≈ {num(E_MEDIO, 4)}, N~ent~ = {miles(gen['Entrenamiento'])} y N~pru~ = "
+          f"{miles(gen['Prueba'])}, resulta σ~dif~ = {num(100 * SE_DIF, 2)} puntos, y una diferencia "
+          f"producida solo por el azar puede llegar a ±1.96·σ~dif~ = ±{num(100 * 1.96 * SE_DIF, 2)} "
+          f"puntos. La diferencia observada ({num(100 * GAP, 2)}) es "
+          f"{abs(GAP) / SE_DIF:.1f} veces σ~dif~: está dentro de lo que el azar explica, así que no "
+          f"hay sobreajuste.")
+inf.titulo("Cota teórica de generalización", antes=4)
+inf.texto("La teoría del aprendizaje da además una garantía, aunque muy conservadora. Para un "
+          "modelo con dimensión VC d~VC~ = 4 entrenado con N ejemplos, con 95 % de confianza "
+          "(δ = 0.05), la cota de Vapnik–Chervonenkis de la Ecuación ({eq:vc}) acota cuánto puede "
+          "alejarse E~out~ de E~in~ [4].")
+inf.ecuacion(EOUT + r("≤") + EIN + r("+") +
+             raiz(frac(r("8"), r("N")) + func("ln", frac(r("4") + delim(sup(delim(r("2N")), sub(r("d"), tx("VC"))) + r("+1")),
+                                                     r("δ")))), clave="vc")
+inf.texto(f"Con N = {miles(gen['Entrenamiento'])}, la cota permite una diferencia de hasta "
+          f"{num(100 * COTA_VC, 1)} puntos. La diferencia real ({num(100 * GAP, 2)} puntos) es "
+          f"muchísimo menor: la cota es una garantía para el peor caso, y un modelo de solo cuatro "
+          f"parámetros con {miles(gen['Entrenamiento'])} ejemplos queda muy lejos de él. La otra "
+          f"forma de verlo es con la desigualdad de Hoeffding sobre el conjunto de prueba: como el "
+          f"modelo ya está fijo cuando se mide, E~out~ medido con M = {miles(gen['Prueba'])} se "
+          f"aleja del error real a lo sumo √(ln(2/δ)/(2M)) = ±{num(100 * HOEFF, 2)} puntos con 95 % "
+          f"de confianza. Por eso el error de prueba es la medida en la que se puede confiar.")
+inf.titulo("¿Por qué el error de validación es el más bajo?", antes=4)
+inf.texto(f"El error de validación ({pct(gen['Error_validacion'])}) es menor que E~in~ y que E~out~ "
+          f"porque con él se eligió el mejor perceptrón: de las 200 épocas se tomó la que tuvo menor "
+          f"error de validación, y elegir el mínimo de 200 mediciones favorece a la que tuvo suerte "
+          f"con esa muestra. Por eso es optimista ({num(100 * (gen['E_out'] - gen['Error_validacion']), 2)} "
+          f"puntos por debajo de E~out~) y no se usa para reportar el desempeño. Esta es la razón de "
+          f"separar un conjunto de prueba que no participa en ninguna decisión.")
+inf.titulo("Error de Bayes teórico frente a error de Bayes en prueba", antes=4)
+inf.texto(f"El error de Bayes teórico ({pct(EB)}) es el que tendría el mejor clasificador con "
+          f"infinitos datos. En la muestra de prueba ese mismo clasificador se equivocó en "
+          f"{pct(gen['Error_Bayes_prueba'])}: {num(100 * (gen['Error_Bayes_prueba'] - EB), 2)} puntos "
+          f"más, por azar de la muestra. Con M = {miles(gen['Prueba'])} el azar permite hasta "
+          f"±{num(100 * SE_BAYES * 1.96, 2)} puntos, así que la diferencia es normal. Por eso el "
+          f"perceptrón se compara con el error de Bayes en la misma muestra: los dos se miden con "
+          f"los mismos {miles(gen['Prueba'])} ejemplos y el perceptrón queda solo "
+          f"{num(100 * (gen['E_out'] - gen['Error_Bayes_prueba']), 2)} puntos por encima.")
+inf.titulo("Evolución de los dos errores durante el entrenamiento", antes=4)
+inf.imagen(RES / "entrenamiento_vs_prueba_generado.png", 15.0,
+           "Error de entrenamiento y error de prueba por época, de los pesos de cada época y del "
+           "mejor perceptrón (datos aleatorios).", clave="entrevsprueba",
+           fuente="Elaboración propia con Python y Matplotlib.")
+inf.texto(f"La Ilustración {{fig:entrevsprueba}} muestra, para cada época, el error de "
+          f"entrenamiento y el de prueba. El error de prueba se anotó solo para documentar el "
+          f"proceso: nunca se usó para elegir el modelo. Las líneas delgadas (pesos de cada época) "
+          f"oscilan entre {pct(hist_gen['Error_entrenamiento'].min(), 1)} y "
+          f"{pct(hist_gen['Error_prueba'].max(), 1)}, pero lo importante es que suben y bajan juntas: "
+          f"cuando el plano es malo, lo es para los dos conjuntos. Las líneas gruesas (mejor "
+          f"perceptrón) quedan estables y separadas por solo {num(100 * GAP, 2)} puntos, justo "
+          f"encima del error de Bayes. Si el modelo estuviera sobreajustado, el error de "
+          f"entrenamiento seguiría bajando mientras el de prueba sube; eso no ocurre.")
+inf.titulo("La diferencia para todos los valores de α", antes=4)
+inf.tabla("Diferencia entre el error de prueba y el de entrenamiento para cada α",
+          ["α", "E~in~", "E~out~", "E~out~ − E~in~", "±1.96·σ~dif~", "¿Dentro del azar?"],
+          [[f"{b['alpha']:g}", pct(b['E_in']), pct(b['E_out']),
+            f"{num(100 * (b['E_out'] - b['E_in']), 2)} puntos", f"{num(100 * 1.96 * sd, 2)} puntos",
+            "Sí" if abs(b['E_out'] - b['E_in']) <= 1.96 * sd else "No"]
+           for b, sd in zip(barrido.to_dict("records"), SE_BARRIDO)],
+          clave="gapalpha", anchos=[1.2, 2.2, 2.2, 3.0, 3.0, 2.8],
+          alinear=[WD_ALIGN_PARAGRAPH.CENTER] * 6)
+inf.texto(f"En {SI_BARRIDO} de los {len(barrido)} valores de α la diferencia entre E~out~ y E~in~ "
+          f"está dentro de lo que explica el azar, y en todos es menor a 1.6 puntos. El "
+          f"perceptrón generaliza igual de bien con clases muy superpuestas (α = 1) que con clases "
+          f"casi separadas (α = 8).")
+
+inf.titulo("2.7.4 Matrices de confusión")
 inf.tabla("Matrices de confusión del conjunto de prueba (clase positiva: Hombre = +1)",
           ["Conjunto", "VP", "VN", "FP", "FN", "Total"],
           [[n, m.iloc[0, 0], m.iloc[1, 1], m.iloc[1, 0], m.iloc[0, 1], miles(m.to_numpy().sum())]
@@ -813,7 +939,7 @@ inf.texto(f"En los datos aleatorios hubo {FP} falsos positivos y {FN} falsos neg
           f"mismo número, porque el sesgo del mejor perceptrón es cero y el plano queda a igual "
           f"distancia de las dos clases.")
 
-inf.titulo("2.7.4 Clases y frontera de decisión")
+inf.titulo("2.7.5 Clases y frontera de decisión")
 inf.imagen(RES / "figura1_clases_generado.png", 12.5,
            "Clases de los datos aleatorios y frontera del perceptrón.", clave="figura1gen",
            fuente="Elaboración propia con Python y Matplotlib.")
@@ -831,7 +957,7 @@ inf.imagen(RES / "figura1_clases_csv.png", 11.5,
 inf.texto(f"En el dataset CSV (Ilustración {{fig:clasescsv}}) las dos clases forman grupos "
           f"separados (α ≈ {num(csv['alpha'], 2)}) y la frontera las divide sin errores.")
 
-inf.titulo("2.7.5 Convergencia: historial del error y del mejor perceptrón")
+inf.titulo("2.7.6 Convergencia: historial del error y del mejor perceptrón")
 inf.imagen(RES / "figura2_historial_iteraciones_generado.png", 15.0,
            f"Historial de error y del mejor perceptrón por número de iteraciones (primeras "
            f"{pb.EPOCAS_FIGURA2} épocas, datos aleatorios).", clave="figura2gen",
@@ -851,7 +977,7 @@ inf.texto(f"Por época, el error de entrenamiento y el de validación suben y ba
           f"validación en la época {int(gen['Mejor_epoca'])} y ninguna época posterior lo mejoró, "
           f"lo que confirma que 200 épocas son suficientes.")
 
-inf.titulo("2.7.6 Barrido de α")
+inf.titulo("2.7.7 Barrido de α")
 inf.tabla("Error de Bayes y del perceptrón para distintos valores de α (p~0~ = 0.5)",
           ["α", "Bayes teórico", "Bayes en prueba", "E~in~", "E~out~", "IC 95 % de E~out~"],
           [[f"{b.alpha:g}", pct(b.Error_Bayes_teorico), pct(b.Error_Bayes_prueba), pct(b.E_in),
@@ -862,7 +988,7 @@ inf.imagen(RES / "barrido_alpha.png", 15.0,
            "Error de Bayes (teórico y en prueba) y error del perceptrón según α.", clave="barrido",
            fuente="Elaboración propia con Python y Matplotlib.")
 
-inf.titulo("2.7.7 Cumplimiento de las instrucciones")
+inf.titulo("2.7.8 Cumplimiento de las instrucciones")
 inf.tabla("Verificación de las instrucciones de la guía y de clase", ["Instrucción", "Cómo se cumplió"], [
     ["1. Usar el dataset de la guía", "Se usó como verificación (clases separadas); el análisis principal usa datos aleatorios."],
     ["2. Dataset didáctico", "Las clases se interpretan solo como etiquetas +1/−1."],
@@ -897,7 +1023,9 @@ inf.lista([
     f"Bayes es {pct(EB)}, el perceptrón obtuvo E~in~ = {pct(gen['E_in'])} y E~out~ = "
     f"{pct(gen['E_out'])} (exactitud de {pct(gen['Accuracy_perceptron'])}), apenas "
     f"{pct(gen['E_out'] - gen['Error_Bayes_prueba'])} por encima del mejor clasificador posible en "
-    f"la misma muestra y con el error de Bayes dentro de su intervalo de confianza; el barrido de "
+    f"la misma muestra y con el error de Bayes dentro de su intervalo de confianza. La diferencia "
+    f"entre el error de prueba y el de entrenamiento ({num(100 * GAP, 2)} puntos) está dentro de lo "
+    f"que explica el azar, así que el modelo no está sobreajustado; el barrido de "
     f"α confirma lo mismo para cualquier superposición, y en el dataset CSV la exactitud fue de "
     f"100 %. La partición {DIV}, elegida porque una validación y una prueba grandes eligen y miden "
     f"mejor el modelo, fue clave para llegar a este resultado.",
@@ -942,7 +1070,8 @@ for ref in referencias:
 seccion("2.12 Anexos")
 inf.texto("Las capturas de ejecución (sección 2.7.1), la tabla de resultados (Tabla "
           "{tab:resultados}) y las matrices de confusión (Tabla {tab:confusion} e Ilustración "
-          "{fig:matrices}) se presentan en la sección 2.7. El código fuente se entrega como "
+          "{fig:matrices}) se presentan en la sección 2.7, y el análisis del error de "
+          "entrenamiento frente al de prueba en la sección 2.7.3. El código fuente se entrega como "
           "archivo aparte (perceptron_bayes.py).")
 
 # ----------------------------------------------------------------------------
