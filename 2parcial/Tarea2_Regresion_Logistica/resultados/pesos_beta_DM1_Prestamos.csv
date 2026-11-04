@@ -1,0 +1,18 @@
+﻿Data_Mart,Parametro,Variable,Peso_Gradiente_Descendente,Peso_Optimizador_SciPy_BFGS,Importancia_Relativa_Pct
+DM1_Prestamos,beta_0,Sesgo (x0 = 1),0.1219,0.179655,0.0
+DM1_Prestamos,beta_1,monto_prestamo,1.200288,1.765557,21.44
+DM1_Prestamos,beta_2,plazo_meses,-0.465295,-0.692564,8.31
+DM1_Prestamos,beta_3,pago_mensual,-0.327703,-0.701969,5.85
+DM1_Prestamos,beta_4,saldo_promedio_previo,-0.447626,-0.379967,7.99
+DM1_Prestamos,beta_5,ratio_cuota_saldo_previo,0.840994,1.165416,15.02
+DM1_Prestamos,beta_6,meses_transcurridos_al_corte,0.483418,0.427386,8.63
+DM1_Prestamos,beta_7,saldo_pendiente_estimado,-0.143893,-0.359444,2.57
+DM1_Prestamos,beta_8,edad_cliente,-0.059191,-0.066196,1.06
+DM1_Prestamos,beta_9,sexo_num,0.044447,0.050691,0.79
+DM1_Prestamos,beta_10,poblacion_distrito,0.040578,1.333238,0.72
+DM1_Prestamos,beta_11,salario_distrito,0.018614,0.000449,0.33
+DM1_Prestamos,beta_12,desempleo_distrito,-0.232274,-0.280954,4.15
+DM1_Prestamos,beta_13,crimen_distrito,-0.457807,-1.784499,8.18
+DM1_Prestamos,beta_14,SERVICIOS_HOGAR,-0.538726,-0.540913,9.62
+DM1_Prestamos,beta_15,TRANSF_SALIENTE,-0.014194,-0.010301,0.25
+DM1_Prestamos,beta_16,INGRESO_TRANSF,-0.283828,-0.258408,5.07

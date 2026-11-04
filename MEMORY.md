@@ -80,6 +80,19 @@ Cualquier IA que interactúe con el entorno debe utilizar estos parámetros exac
    * Reparto exacto de guion entre Henry y Alison, preparación 20 min antes, preguntas difíciles del tribunal y plan de contingencia.
 8. **Automatizador Integral `REPARAR_TODO.py`:**
    * Script en la raíz que verifica dependencias, inicia motores, carga vistas, valida cifras de control y deja cualquier equipo listo para abrir los tableros.
+9. **Talleres del 2do Parcial — Perceptrón y Clasificador de Bayes (`Taller_Perceptron/`, `Taller_Perceptron_Bayes/`, scripts `45`, `46`):**
+   * `Taller_Perceptron/`: Perceptrón desde cero sobre dataset sintético de 5,000 filas (partición 80/20, convergencia en época 2, exactitud 100%, informe `.docx`).
+   * `Taller_Perceptron_Bayes/`: Comparación Perceptrón vs. Bayes en datos normales ($\alpha = 2.5$, $p_0 = 0.5$, $E_{\text{Bayes}} = 10.56\%$, partición 60/20/20, informe `.docx`).
+10. **Datasets y Tareas 1 y 2 del 2do Parcial sobre los 4 Data Marts (`2parcial/`, scripts `44`, `47`, `48`):**
+    * `scripts/44_generar_datasets_2parcial.py`: Genera los 4 CSVs etiquetados libres de fuga de datos (*data leakage*) en `2parcial/`:
+      * `01_dm_prestamos.csv` (`Fact_Prestamos`, $N = 682$, $n = 16$ vars, Mora `B,D` vs. Sano `A,C` y multiclase `A,B,C,D`).
+      * `02_dm_saldo_mensual.csv` (`Fact_Saldo_Cuenta_Mensual`, grano cuenta $\times$ mes, $N = 5,000$ con los 708 casos reales de sobregiro en el mes siguiente $t+1$, $n = 15$ vars del mes $t$).
+      * `03_dm_ordenes.csv` (`Fact_Ordenes`, $N = 5,092$, $n = 10$ vars, Obligación financiera vs. Hogar `SIPO` y multiclase 4 tipos de orden).
+      * `04_dm_transacciones.csv` (`Fact_Transacciones`, $N = 20,000$ sin intereses, $n = 11$ vars sin signo ni códigos que delaten la dirección, Egreso vs. Ingreso).
+    * **Tarea 1 (`2parcial/Tarea1_Reduccion_MNIST_2D/reduccion_mnist_2d.py` + `scripts/47_generar_informe_tarea1.py`):**
+      * Reducción $\mathbb{R}^n \to [v_1, v_2] \in \mathbb{R}^2$ con **t-SNE** y **PCA**, demostración de referencia con **MNIST** (10 clases y binario 0 vs. 1), mapas 2D binarios y multiclase reales de los 4 Data Marts e informe Word `Informe_Tarea1_Reduccion_MNIST_2D.docx`.
+    * **Tarea 2 (`2parcial/Tarea2_Regresion_Logistica/regresion_logistica.py` + `scripts/48_generar_informe_tarea2.py`):**
+      * Regresión Logística Binaria programada desde cero (sin `LogisticRegression` de `sklearn`) usando **Entropía Cruzada** y **Gradiente Descendente** (verificado contra `scipy.optimize.minimize` BFGS), orden estricto Partición 80/20 $\to$ Balanceo $\to$ Escalado $z$-score en Train, entregando el vector de pesos $\beta$, `Acc. Train`, `Acc. Test`, fronteras 2D con PCA e informe Word `Informe_Tarea2_Regresion_Logistica.docx`.
 
 ---
 

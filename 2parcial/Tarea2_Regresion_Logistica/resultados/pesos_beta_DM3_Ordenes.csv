@@ -1,0 +1,12 @@
+﻿Data_Mart,Parametro,Variable,Peso_Gradiente_Descendente,Peso_Optimizador_SciPy_BFGS,Importancia_Relativa_Pct
+DM3_Ordenes,beta_0,Sesgo (x0 = 1),0.044622,0.044646,0.0
+DM3_Ordenes,beta_1,monto_orden,-0.939492,-0.939756,30.34
+DM3_Ordenes,beta_2,edad_cliente,-0.404882,-0.404588,13.08
+DM3_Ordenes,beta_3,sexo_num,0.009168,0.009965,0.3
+DM3_Ordenes,beta_4,poblacion,0.033568,0.316084,1.08
+DM3_Ordenes,beta_5,salario_promedio,0.040868,0.033021,1.32
+DM3_Ordenes,beta_6,tasa_desempleo,-0.01224,-0.020927,0.4
+DM3_Ordenes,beta_7,tasa_criminalidad_1996,-0.075693,-0.356104,2.44
+DM3_Ordenes,beta_8,deposito_mensual,0.061951,0.062295,2.0
+DM3_Ordenes,beta_9,retiro_mensual,1.301625,1.305081,42.04
+DM3_Ordenes,beta_10,saldo_promedio,-0.216806,-0.219249,7.0

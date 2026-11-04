@@ -1,0 +1,121 @@
+{
+  "01_dm_prestamos.csv": {
+    "datamart": "Fact_Prestamos",
+    "filas": 682,
+    "n_features": 16,
+    "features": [
+      "monto_prestamo",
+      "plazo_meses",
+      "pago_mensual",
+      "saldo_promedio_previo",
+      "ratio_cuota_saldo_previo",
+      "meses_transcurridos_al_corte",
+      "saldo_pendiente_estimado",
+      "edad_cliente",
+      "sexo_num",
+      "poblacion_distrito",
+      "salario_distrito",
+      "desempleo_distrito",
+      "crimen_distrito",
+      "SERVICIOS_HOGAR",
+      "TRANSF_SALIENTE",
+      "INGRESO_TRANSF"
+    ],
+    "nulos": 0,
+    "clases_binarias": {
+      "Sano (A, C)": 606,
+      "Mora (B, D)": 76
+    },
+    "clases_multiclase": {
+      "C - Vigente Sano": 403,
+      "A - Terminado Sano": 203,
+      "D - Vigente Mora": 45,
+      "B - Terminado Mora": 31
+    },
+    "balanceo": "Sobremuestreo (oversampling) solo en Train tras partir 80/20"
+  },
+  "02_dm_saldo_mensual.csv": {
+    "datamart": "Fact_Saldo_Cuenta_Mensual",
+    "filas_totales_datamart": 185615,
+    "filas_con_mes_siguiente": 181115,
+    "filas_csv": 5000,
+    "n_features": 15,
+    "features": [
+      "anio",
+      "mes",
+      "saldo_fin_mes",
+      "saldo_promedio_mes",
+      "saldo_min_mes",
+      "saldo_max_mes",
+      "cambio_saldo_mes",
+      "num_movimientos_mes",
+      "monto_medio_mov",
+      "edad_corte",
+      "sexo_num",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "nulos": 0,
+    "clases_binarias": {
+      "Sin sobregiro mes siguiente (0)": 4292,
+      "Sobregiro mes siguiente (1)": 708
+    },
+    "balanceo": "Submuestreo (undersampling 708 vs 708) tras partir 80/20"
+  },
+  "03_dm_ordenes.csv": {
+    "datamart": "Fact_Ordenes",
+    "filas": 5092,
+    "n_features": 10,
+    "features": [
+      "monto_orden",
+      "edad_cliente",
+      "sexo_num",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad_1996",
+      "deposito_mensual",
+      "retiro_mensual",
+      "saldo_promedio"
+    ],
+    "nulos": 0,
+    "clases_binarias": {
+      "Pago de Hogar SIPO (0)": 3502,
+      "Obligacion Financiera (1)": 1590
+    },
+    "clases_multiclase": {
+      "SIPO - Pago de Hogar": 3502,
+      "UVER - Pago de Prestamo": 717,
+      "POJISTNE - Seguro": 532,
+      "LEASING - Arrendamiento": 341
+    },
+    "balanceo": "Submuestreo (undersampling 1590 vs 1590) tras partir 80/20"
+  },
+  "04_dm_transacciones.csv": {
+    "datamart": "Fact_Transacciones",
+    "filas_totales_sin_intereses": 871629,
+    "filas_csv": 20000,
+    "n_features": 11,
+    "features": [
+      "monto_transaccion",
+      "saldo_cuenta",
+      "anio",
+      "mes",
+      "dia",
+      "edad_cliente",
+      "sexo_num",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo_1996",
+      "tasa_criminalidad_1996"
+    ],
+    "nulos": 0,
+    "clases_binarias": {
+      "Ingreso (0)": 10000,
+      "Egreso (1)": 10000
+    },
+    "balanceo": "Submuestreo balanceado (10,000 vs 10,000) con partición 80/20"
+  }
+}

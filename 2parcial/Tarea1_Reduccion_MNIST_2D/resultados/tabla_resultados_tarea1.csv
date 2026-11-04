@@ -1,0 +1,5 @@
+﻿Data_Mart,Tabla_Hechos,Descripcion,N_Total_CSV,N_Proyectado,Train_80,Test_20,n_Caracteristicas,KL_tSNE,Acc_2D_tSNE,Dist_Centroides_tSNE,Varianza_PCA_2D,Acc_2D_PCA,Dist_Centroides_PCA,Acc_Multiclase_tSNE
+DM1_Prestamos,Fact_Prestamos,DM1: Préstamos (Mora vs. Sano),682,682,970,136,16,0.8821,0.9062,5.4027,0.3851,0.8856,0.5123,0.8079
+DM2_Saldo_Mensual,Fact_Saldo_Cuenta_Mensual,DM2: Saldo Mensual (Sobregiro t+1),5000,1416,1132,284,15,1.0481,0.9138,13.2579,0.5099,0.8595,2.6003,
+DM3_Ordenes,Fact_Ordenes,DM3: Órdenes (Obligación vs. Hogar),5092,2000,1600,400,10,0.9395,0.792,4.9476,0.5699,0.732,0.9218,0.679
+DM4_Transacciones,Fact_Transacciones,DM4: Transacciones (Egreso vs. Ingreso),20000,2000,1600,400,11,1.2625,0.804,6.2982,0.4496,0.7495,1.0136,
