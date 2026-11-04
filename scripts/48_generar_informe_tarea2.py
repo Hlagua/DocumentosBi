@@ -1,7 +1,6 @@
 """
 Genera el informe en Word de la Tarea 2 del 2do Parcial:
   - 2parcial/Tarea2_Regresion_Logistica/Informe_Tarea2_Regresion_Logistica.docx
-  - Copia también en: 2parcial/Informe_Tarea2_Regresion_Logistica.docx
 
 Sigue exactamente la plantilla y el formato de Informe_Final_Perceptron.docx
 (Times New Roman 12, interlineado 1.5, ecuaciones OMML numeradas, tablas con bordes
@@ -53,7 +52,6 @@ RES = TAREA2 / "resultados"
 CAP = TAREA2 / "capturas"
 PLANTILLA = RAIZ / "scripts" / "plantillas" / "Taller_Perceptron_plantilla.docx"
 SALIDA = TAREA2 / "Informe_Tarea2_Regresion_Logistica.docx"
-SALIDA_COPIA = DIR_2P / "Informe_Tarea2_Regresion_Logistica.docx"
 
 tabla_res = pd.read_csv(RES / "tabla_resultados_tarea2.csv", encoding="utf-8-sig")
 pesos_todos = pd.read_csv(RES / "vectores_pesos_beta_todos.csv", encoding="utf-8-sig")
@@ -190,13 +188,14 @@ inf.lista([
     "Formular matemáticamente el modelo de Regresión Logística Binaria (combinación lineal "
     "z = x̃^T^β, función de activación sigmoide σ(z), función de costo de Entropía Cruzada "
     "J(β) y vector gradiente ∇J(β)).",
-    "Aplicar en los cuatro Data Marts el flujo de preprocesamiento libre de fuga de datos: "
-    "partición estratificada 80 % entrenamiento y 20 % prueba primero, balanceo de clases "
-    "(sobremuestreo solo en entrenamiento para Préstamos y submuestreo 50/50 para los demás) "
-    "y escalado z-score ajustado exclusivamente con la media y desviación del entrenamiento.",
+    "Aplicar en los cuatro Data Marts el preprocesamiento libre de fuga de datos: partición "
+    "estratificada 80 % entrenamiento y 20 % prueba, balanceo de clases (en Préstamos, "
+    "sobremuestreo solo en el entrenamiento después de partir; en los demás, submuestreo 50/50 "
+    "antes de partir) y escalado z-score ajustado exclusivamente con el entrenamiento.",
     "Programar en Python el algoritmo de Gradiente Descendente sobre la Entropía Cruzada (sin "
-    "utilizar la clase LogisticRegression de scikit-learn) y verificar la convergencia del "
-    "vector de pesos β frente al optimizador numérico de SciPy sobre la misma función J(β).",
+    "utilizar la clase LogisticRegression de scikit-learn) hasta que la norma del gradiente "
+    "sea menor que 10^−6^, y comprobar que llega al mismo mínimo que un optimizador numérico "
+    "de SciPy usado solo como verificación.",
     "Reportar e interpretar para los cuatro Data Marts el vector de pesos final β = [β~0~, "
     "β~1~, ..., β~n~]^T^, Acc. Train, Acc. Test, matrices de confusión, intervalos de confianza "
     "y fronteras de decisión 2D de apoyo proyectadas con PCA.",
@@ -230,8 +229,8 @@ inf.texto("Listado de equipos y materiales generales empleados en la guía prác
 inf.lista([
     "Computador con Python 3 (Windows 11 Pro).",
     "Visual Studio Code (editor y terminal integrada PowerShell).",
-    "Bibliotecas NumPy, pandas, SciPy (expit y optimize.minimize), scikit-learn (solo PCA "
-    "para la gráfica 2D de apoyo) y Matplotlib.",
+    "Bibliotecas NumPy, pandas, SciPy (expit, y optimize.minimize solo como verificación), "
+    "scikit-learn (solo PCA para la gráfica 2D de apoyo) y Matplotlib.",
     "Cuatro datasets etiquetados libres de fuga en 2parcial/: 01_dm_prestamos.csv, "
     "02_dm_saldo_mensual.csv, 03_dm_ordenes.csv y 04_dm_transacciones.csv.",
     "Apuntes de clase (Pizarra 2: Regresión Logística, Entropía Cruzada y entregables).",
@@ -374,8 +373,8 @@ inf.texto(
     "(Acc. Train) y la exactitud de prueba (Acc. Test), y dado que la función convexa J(β) "
     "converge de manera monótona sin requerir selección heurística de época por bolsillo, se "
     "adoptó la partición estratificada **80 % entrenamiento / 20 % prueba** utilizada en el "
-    "taller del Perceptrón. El balanceo de clases se ejecutó respetando el tamaño muestral de "
-    "cada Data Mart (Tabla {tab:particion2}):"
+    "taller del Perceptrón. El balanceo de clases se ejecutó de dos formas según el tamaño "
+    "muestral de cada Data Mart (Tabla {tab:particion2}):"
 )
 inf.lista([
     "**Fact_Prestamos (N = 682; 76 en mora vs. 606 sanos):** si se realizara submuestreo antes "
@@ -385,16 +384,22 @@ inf.lista([
     "(oversampling) exclusivamente en el entrenamiento** (485 sanos y 485 en mora = 970 filas "
     "de entrenamiento).",
     "**Fact_Saldo_Cuenta_Mensual (708 con sobregiro en t+1 vs. 708 sin sobregiro = 1 416):** "
-    "como sobran meses sin sobregiro (180 407), se aplicó **submuestreo** 50/50 y partición "
-    "estratificada 80/20, obteniendo 1 132 observaciones de entrenamiento (566 por clase) y "
-    "284 de prueba (142 por clase).",
+    "como sobran meses sin sobregiro (180 407), se aplicó **submuestreo** 50/50 de todo el "
+    "conjunto **antes** de la partición estratificada 80/20, obteniendo 1 132 observaciones de "
+    "entrenamiento (566 por clase) y 284 de prueba (142 por clase).",
     "**Fact_Ordenes (1 590 obligaciones financieras vs. 1 590 pagos SIPO = 3 180):** mediante "
-    "**submuestreo** 50/50 y partición 80/20 se obtuvieron 2 544 filas de entrenamiento "
+    "**submuestreo** 50/50 antes de partir 80/20 se obtuvieron 2 544 filas de entrenamiento "
     "(1 272 por clase) y 636 de prueba (318 por clase).",
     "**Fact_Transacciones (10 000 egresos vs. 10 000 ingresos = 20 000):** mediante "
-    "**submuestreo** 50/50 y partición 80/20 se obtuvieron 16 000 filas de entrenamiento "
+    "**submuestreo** 50/50 antes de partir 80/20 se obtuvieron 16 000 filas de entrenamiento "
     "(8 000 por clase) y 4 000 de prueba (2 000 por clase).",
 ])
+inf.texto(
+    "En consecuencia, en Saldo Mensual, Órdenes y Transacciones también la prueba está "
+    "balanceada y su línea base (responder siempre una misma clase) es 50 %. En Préstamos la "
+    "prueba conserva la proporción real (15 en mora y 121 sanos), por lo que su línea base es "
+    "88.97 %: este valor debe tenerse presente al leer la exactitud de ese Data Mart."
+)
 
 filas_part = []
 for row in tabla_res.itertuples():
@@ -441,20 +446,29 @@ inf.ecuacion(
     clave="gradiente",
 )
 inf.texto(
-    "Partiendo de pesos iniciales nulos β^(0)^ = 0, en cada época t = 0, 1, ..., T − 1 el "
+    "Partiendo de pesos iniciales nulos β^(0)^ = 0, en cada época t = 0, 1, 2, ... el "
     "algoritmo de Gradiente Descendente actualiza el vector de pesos completo en sentido "
-    "opuesto al gradiente con tasa de aprendizaje η = 0.15 durante T = 1 500 épocas "
-    "(Ecuación ({eq:gd})):"
+    "opuesto al gradiente con tasa de aprendizaje η = 1.0 (Ecuación ({eq:gd})), y se detiene "
+    "cuando la norma del gradiente ‖∇J(β)‖ es menor que 10^−6^, es decir, cuando ya está en "
+    "el mínimo (como máximo 50 000 épocas):"
 )
 inf.ecuacion(
     sup(r("β"), delim(r("t+1"))) + r("=") + sup(r("β"), delim(r("t"))) + r("−η·∇J") + delim(sup(r("β"), delim(r("t")))),
     clave="gd",
 )
 inf.texto(
-    "Adicionalmente, para verificar con rigor numérico que nuestro bucle de Gradiente "
-    "Descendente alcanza el mínimo global exacto de la Entropía Cruzada, se contrastó el "
-    "resultado con scipy.optimize.minimize (método cuasi-Newton BFGS) alimentado únicamente con "
-    "nuestras funciones entropia_cruzada y gradiente_entropia_cruzada."
+    "La tasa η = 1.0 es estable porque es menor que 2/L, donde L = λ~máx~(X̃^T^X̃)/(4N) es la "
+    "constante de Lipschitz del gradiente de la Entropía Cruzada; con los datos estandarizados, "
+    "2/L vale entre 1.79 y 2.58 en los cuatro Data Marts. Con una tasa menor (por ejemplo "
+    "η = 0.15 y 1 500 épocas) el algoritmo se detiene antes de llegar al mínimo y los pesos "
+    "quedan lejos del óptimo, aunque la pérdida parezca casi igual."
+)
+inf.texto(
+    "Solo como verificación —el vector β entregado es siempre el del Gradiente Descendente— "
+    "se minimizó la misma función con scipy.optimize.minimize (método cuasi-Newton BFGS), "
+    "alimentado únicamente con nuestras funciones entropia_cruzada y "
+    "gradiente_entropia_cruzada. Si ambos métodos llegan a los mismos pesos, el descenso por "
+    "gradiente realmente convergió al mínimo global."
 )
 
 # Actividad 4
@@ -497,7 +511,7 @@ inf.texto(
 inf.titulo("Por qué la frontera 2D se grafica con PCA y no con t-SNE")
 inf.texto(
     "El modelo principal de cada Data Mart se entrena con **todas** las características "
-    "originales (10 a 16 variables). Para dibujar una figura bidimensional de apoyo con la "
+    "originales (10 a 15 variables). Para dibujar una figura bidimensional de apoyo con la "
     "recta de frontera P(y = 1 | v~1~, v~2~) = 0.5 y proyectar sobre ella el conjunto de "
     "prueba sin fuga de datos, se requiere una transformación paramétrica que aplique la misma "
     "matriz aprendida en el entrenamiento a la malla del plano y a los puntos de prueba. "
@@ -512,7 +526,7 @@ inf.texto(
 seccion("2.7 Resultados obtenidos")
 inf.texto(
     "Los resultados se generaron al ejecutar python 2parcial/Tarea2_Regresion_Logistica/"
-    "regresion_logistica.py en la terminal integrada de Visual Studio Code."
+    "regresion_logistica.py desde la raíz del repositorio."
 )
 
 inf.titulo("2.7.1 Ejecución del programa")
@@ -525,9 +539,9 @@ if capturas:
         inf.imagen(
             ruta,
             15.5,
-            f"Ejecución de regresion_logistica.py en Visual Studio Code (parte {k} de {len(capturas)}).",
+            f"Salida en consola de regresion_logistica.py (parte {k} de {len(capturas)}).",
             clave=f"cap2_{k}",
-            fuente="Captura de la terminal integrada de Visual Studio Code.",
+            fuente="Salida de consola registrada por el propio script durante la ejecución.",
         )
 
 inf.titulo("2.7.2 Tabla consolidada de exactitud y Entropía Cruzada (Acc. Train y Acc. Test)")
@@ -541,6 +555,7 @@ for row in tabla_res.itertuples():
         num(row.Loss_Test, 4),
         pct(row.Acc_Train, 2),
         pct(row.Acc_Test, 2),
+        pct(row.Acc_Clase_Mayoritaria_Test, 2),
         f"{pct(row.Sensibilidad, 1)} / {pct(row.Especificidad, 1)}",
     ])
 inf.tabla(
@@ -553,20 +568,56 @@ inf.tabla(
         "J_test",
         "Acc. Train",
         "Acc. Test",
+        "Línea base",
         "Sens. / Espec.",
     ],
     filas_res2,
     clave="resultados2",
-    anchos=[2.7, 1.1, 1.8, 1.9, 1.6, 1.8, 1.8, 2.3],
+    anchos=[2.5, 1.0, 1.6, 1.7, 1.4, 1.6, 1.6, 1.6, 2.1],
+)
+r1 = tabla_res[tabla_res["Data_Mart"] == "DM1_Prestamos"].iloc[0]
+r2 = tabla_res[tabla_res["Data_Mart"] == "DM2_Saldo_Mensual"].iloc[0]
+r3 = tabla_res[tabla_res["Data_Mart"] == "DM3_Ordenes"].iloc[0]
+r4 = tabla_res[tabla_res["Data_Mart"] == "DM4_Transacciones"].iloc[0]
+inf.texto(
+    f"La Tabla {{tab:resultados2}} muestra, primero, que la Entropía Cruzada alcanzada por el "
+    f"Gradiente Descendente (J~train~ GD) es igual a la de la verificación con BFGS en los "
+    f"cuatro Data Marts, tras {miles(int(tabla_res['Epocas_Usadas'].min()))} a "
+    f"{miles(int(tabla_res['Epocas_Usadas'].max()))} épocas; los pesos de ambos métodos "
+    f"difieren como máximo en {num(tabla_res['Max_Dif_Beta_vs_BFGS'].max(), 4)}. Segundo, la "
+    f"exactitud de prueba es consistente con la de entrenamiento: **{pct(r1['Acc_Test'])}** en "
+    f"Préstamos, **{pct(r2['Acc_Test'])}** en Saldo Mensual, **{pct(r3['Acc_Test'])}** en "
+    f"Órdenes Permanentes y **{pct(r4['Acc_Test'])}** en Transacciones. La columna «Línea "
+    f"base» es la exactitud de responder siempre la clase más frecuente de la prueba."
 )
 inf.texto(
-    "La Tabla {tab:resultados2} demuestra dos hechos fundamentales: primero, la Entropía "
-    "Cruzada alcanzada por nuestro algoritmo de Gradiente Descendente (J~train~ GD) coincide "
-    "hasta el tercer o cuarto decimal con el mínimo exacto de SciPy BFGS en los cuatro Data "
-    "Marts; segundo, la exactitud de prueba (Acc. Test) es consistente con la de entrenamiento "
-    "(Acc. Train) en todos los casos: **75.00 %** en Préstamos, **92.25 %** en Saldo Mensual "
-    "(predicción de sobregiro en t + 1), **74.84 %** en Órdenes Permanentes y **72.38 %** en "
-    "Transacciones."
+    f"**Préstamos requiere una lectura cuidadosa.** Su Acc. Test ({pct(r1['Acc_Test'])}) es "
+    f"**menor** que el {pct(r1['Acc_Clase_Mayoritaria_Test'])} que se obtendría diciendo "
+    f"siempre «sano», porque la prueba conserva la proporción real (15 préstamos en mora de "
+    f"136). Esa línea base, sin embargo, no detecta ningún préstamo en mora. El modelo, "
+    f"entrenado con clases balanceadas, detecta el {pct(r1['Sensibilidad'], 1)} de los "
+    f"morosos (sensibilidad) a cambio de marcar como riesgosos al "
+    f"{pct(1 - r1['Especificidad'], 1)} de los sanos, y su exactitud balanceada (promedio de "
+    f"sensibilidad y especificidad) es {pct(r1['Acc_Balanceada_Test'])}, frente al 50 % de la "
+    f"línea base. Con solo 76 préstamos en mora y variables conocidas al otorgar el crédito, "
+    f"la mora es difícil de predecir, lo que coincide con lo observado en la Tarea 1."
+)
+dm2_csv = pd.read_csv(DIR_2P / "02_dm_saldo_mensual.csv")
+n_pos_dm2 = int((dm2_csv["Clase"] == 1).sum())
+n_persist = int(((dm2_csv["Clase"] == 1) & (dm2_csv["saldo_fin_mes"] < 0)).sum())
+bal_dm2 = pd.concat([
+    dm2_csv[dm2_csv["Clase"] == 1],
+    dm2_csv[dm2_csv["Clase"] == 0].sample(n=n_pos_dm2, random_state=42),
+])
+acc_regla = float(((bal_dm2["saldo_fin_mes"] < 0).astype(int) == bal_dm2["Clase"]).mean())
+inf.texto(
+    f"**Saldo Mensual alcanza la mayor exactitud ({pct(r2['Acc_Test'])}) en parte porque el "
+    f"sobregiro persiste:** {n_persist} de los {n_pos_dm2} meses que terminan en sobregiro en "
+    f"t + 1 ya estaban en sobregiro en el mes t. La sola regla «si hoy está en sobregiro, "
+    f"mañana también» acierta el {pct(acc_regla)} en un conjunto balanceado; el modelo mejora esa regla al combinar el "
+    f"saldo promedio, el saldo mínimo y el movimiento del mes. Además, la proporción de 14 % "
+    f"del archivo es una muestra de trabajo: en la población solo el 0.39 % de los meses "
+    f"termina en sobregiro al mes siguiente."
 )
 
 inf.titulo("2.7.3 Vectores de pesos finales β entregados por cada Data Mart")
@@ -574,11 +625,12 @@ inf.texto(
     "Cumpliendo con el entregable exigido en la pizarra 2, las Tablas {tab:pesos_DM1_Prestamos} "
     "a {tab:pesos_DM4_Transacciones} reportan el vector completo de pesos finales β = [β~0~, "
     "β~1~, ..., β~n~]^T^ aprendido en cada Data Mart mediante Gradiente Descendente, su "
-    "contraste con SciPy BFGS y la importancia relativa porcentual de cada característica."
+    "valor de verificación con SciPy BFGS y la importancia relativa porcentual de cada "
+    "característica."
 )
 
 for dm_id, titulo_dm in [
-    ("DM1_Prestamos", "Data Mart 1 — Fact_Prestamos (Mora vs. Sano, 17 parámetros)"),
+    ("DM1_Prestamos", "Data Mart 1 — Fact_Prestamos (Mora vs. Sano, 15 parámetros)"),
     ("DM2_Saldo_Mensual", "Data Mart 2 — Fact_Saldo_Cuenta_Mensual (Sobregiro t+1, 16 parámetros)"),
     ("DM3_Ordenes", "Data Mart 3 — Fact_Ordenes (Obligación vs. Hogar SIPO, 11 parámetros)"),
     ("DM4_Transacciones", "Data Mart 4 — Fact_Transacciones (Egreso vs. Ingreso, 12 parámetros)"),
@@ -610,15 +662,24 @@ for dm_id, titulo_dm in [
     )
 
 inf.texto(
-    "La inspección de los vectores β confirma la coherencia financiera de los cuatro modelos: "
-    "en **Préstamos**, los mayores pesos corresponden al monto del préstamo, saldo pendiente y "
-    "ratio cuota/saldo previo (mayor carga financiera incrementa la probabilidad de mora); en "
-    "**Saldo Mensual**, los pesos negativos dominantes en saldo mínimo, saldo promedio y saldo "
-    "de fin de mes del período t indican que la caída del colchón de liquidez en el mes actual "
-    "dispara la probabilidad de sobregiro en el mes t + 1; en **Órdenes Permanentes**, el monto "
-    "de la orden y la edad del cliente discriminan las obligaciones financieras frente al pago "
-    "de servicios del hogar; y en **Transacciones**, la magnitud del movimiento y el día del "
-    "mes concentran la mayor capacidad discriminante entre egresos e ingresos."
+    "Como todas las variables están estandarizadas, el signo de cada peso indica si la "
+    "variable aumenta (positivo) o reduce (negativo) la probabilidad de la clase 1, y su valor "
+    "absoluto permite compararlas entre sí. En **Préstamos**, los mayores pesos corresponden al "
+    "ratio cuota/saldo previo (+1.40) y al monto del préstamo (+0.99): una cuota alta frente al "
+    "saldo que la cuenta tenía antes del crédito aumenta la probabilidad de mora, mientras que "
+    "domiciliar servicios del hogar la reduce (−0.52). En **Saldo Mensual**, el peso dominante "
+    "es el saldo promedio del mes t (−3.56): cuanto menor es el colchón de liquidez, mayor es la "
+    "probabilidad de sobregiro en t + 1. En **Órdenes Permanentes**, el retiro mensual de la "
+    "cuenta (+1.31) y el monto de la orden (−0.94) separan las obligaciones financieras del "
+    "pago de servicios del hogar; y en **Transacciones**, la magnitud del movimiento (−1.30) y "
+    "el día del mes (+0.57) concentran la mayor capacidad discriminante entre egresos e ingresos."
+)
+inf.texto(
+    "Las variables distritales población y criminalidad reciben pesos grandes y de signo "
+    "opuesto en varios Data Marts (por ejemplo, +0.96 y −1.30 en Préstamos). Esto no significa "
+    "que influyan mucho por separado: ambas están muy correlacionadas (Praga concentra la mayor "
+    "población y la mayor criminalidad), por lo que sus efectos se compensan entre sí y deben "
+    "interpretarse en conjunto."
 )
 
 inf.titulo("2.7.4 Análisis de generalización: entrenamiento frente a prueba")
@@ -644,17 +705,19 @@ inf.tabla(
     clave="generalizacion2",
     anchos=[2.7, 1.9, 1.9, 2.0, 2.3, 2.1, 2.1],
 )
+n_dentro = sum(1 for f in filas_gen if f[-1] == "Sí")
 inf.texto(
-    "En los cuatro Data Marts la diferencia E~out~ − E~in~ se encuentra completamente dentro "
-    "del margen ±1.96·σ~dif~ explicable por la variación muestral entre entrenamiento y prueba "
-    "(Tabla {tab:generalizacion2}), descartando cualquier síntoma de sobreajuste."
+    f"En {n_dentro} de los 4 Data Marts la diferencia E~out~ − E~in~ se encuentra dentro del "
+    f"margen ±1.96·σ~dif~ explicable por la variación muestral entre entrenamiento y prueba "
+    f"(Tabla {{tab:generalizacion2}}), por lo que no hay síntomas de sobreajuste: un modelo "
+    f"lineal con 11 a 16 parámetros es demasiado simple para memorizar miles de observaciones."
 )
 
 inf.titulo("2.7.5 Curvas de convergencia de la Entropía Cruzada y de la Exactitud")
 inf.imagen(
     RES / "convergencia_entropia_cruzada.png",
     15.2,
-    "Convergencia de la Entropía Cruzada J(β) en entrenamiento y prueba durante las 1 500 épocas de Gradiente Descendente.",
+    "Convergencia de la Entropía Cruzada J(β) en entrenamiento y prueba hasta que ‖∇J(β)‖ < 10^-6 (eje de épocas en escala logarítmica).",
     clave="conv_loss",
     fuente="Elaboración propia con Python, NumPy y Matplotlib.",
 )
@@ -704,7 +767,7 @@ inf.tabla(
     [
         [
             "1. Entrenar Regresión Logística con todas las características y 2 clases",
-            "Entrenada con las 16, 15, 10 y 11 variables de los 4 Data Marts reducidos a Clase en {0, 1}.",
+            "Entrenada con las 14, 15, 10 y 11 variables de los 4 Data Marts reducidos a Clase en {0, 1}.",
         ],
         [
             "2. No usar LogisticRegression de scikit-learn",
@@ -712,7 +775,7 @@ inf.tabla(
         ],
         [
             "3. Usar solo Entropía Cruzada y Gradiente Descendente",
-            "Funciones explícitas entropia_cruzada y gradiente_entropia_cruzada optimizadas por descenso de gradiente y verificadas con scipy.optimize.minimize.",
+            "Funciones explícitas entropia_cruzada y gradiente_entropia_cruzada optimizadas por descenso de gradiente programado a mano; scipy.optimize.minimize se usa solo para verificar el mínimo.",
         ],
         [
             "4. Entregar el vector de pesos final β",
@@ -749,15 +812,21 @@ inf.lista([
     "**Sobre la optimización de la Entropía Cruzada por Gradiente Descendente:** a diferencia "
     "de la regla discontinua del perceptrón, la función de pérdida de Entropía Cruzada Binaria "
     "J(β) es diferenciable y estrictamente convexa, lo que permitió que el descenso por "
-    "gradiente programado desde cero convergiera de forma monótona al mismo mínimo global que "
-    "el optimizador cuasi-Newton BFGS de SciPy en los cuatro Data Marts.",
-    "**Sobre el desempeño y generalización en los 4 Data Marts:** utilizando todas las "
-    "características libres de fuga de datos y respetando el orden Partición 80/20 → Balanceo "
-    "→ Escalado z-score, la Regresión Logística alcanzó exactitudes de prueba (Acc. Test) de "
-    "**75.00 %** en Préstamos (mora crediticia), **92.25 %** en Saldo Mensual (predicción "
-    "anticipada del sobregiro en el mes t + 1), **74.84 %** en Órdenes Permanentes y "
-    "**72.38 %** en Transacciones, con diferencias entre entrenamiento y prueba estadísticamente "
-    "indistinguibles del azar.",
+    "gradiente programado desde cero convergiera de forma monótona al mínimo global en los "
+    "cuatro Data Marts, verificado con el optimizador cuasi-Newton BFGS de SciPy. Para "
+    "llegar realmente al mínimo fue necesario elegir una tasa η menor que 2/L y detener el "
+    "algoritmo por la norma del gradiente, no por un número fijo de épocas.",
+    f"**Sobre el desempeño y generalización en los 4 Data Marts:** utilizando todas las "
+    f"características libres de fuga de datos, la Regresión Logística alcanzó exactitudes de "
+    f"prueba (Acc. Test) de **{pct(r2['Acc_Test'])}** en Saldo Mensual (sobregiro en el mes "
+    f"t + 1), **{pct(r3['Acc_Test'])}** en Órdenes Permanentes y **{pct(r4['Acc_Test'])}** en "
+    f"Transacciones, todas muy por encima del 50 % de la línea base, con diferencias entre "
+    f"entrenamiento y prueba explicables por el azar.",
+    f"**Sobre Préstamos:** la exactitud de prueba ({pct(r1['Acc_Test'])}) no supera el "
+    f"{pct(r1['Acc_Clase_Mayoritaria_Test'])} de responder siempre «sano», pero el modelo "
+    f"detecta el {pct(r1['Sensibilidad'], 1)} de los préstamos en mora, que la línea base no "
+    f"detecta en absoluto. Con 76 casos de mora y solo variables conocidas al otorgar el "
+    f"crédito, la mora es el problema más difícil de los cuatro.",
 ], numerada=True)
 
 seccion("2.10 Recomendaciones")
@@ -794,7 +863,7 @@ for ref in referencias:
 
 seccion("2.12 Anexos")
 inf.texto(
-    "Las capturas de ejecución en Visual Studio Code (sección 2.7.1), la tabla consolidada de "
+    "La salida en consola de la ejecución (sección 2.7.1), la tabla consolidada de "
     "resultados (Tabla {tab:resultados2}), los cuatro vectores completos de pesos finales β "
     "(Tablas {tab:pesos_DM1_Prestamos} a {tab:pesos_DM4_Transacciones}) y las figuras de "
     "convergencia, sigmoide, matrices de confusión y fronteras PCA 2D se encuentran integrados "
@@ -817,9 +886,7 @@ for run in doc.paragraphs[0].runs:
 
 inf.resolver_referencias()
 doc.save(SALIDA)
-shutil.copy2(SALIDA, SALIDA_COPIA)
 print(f"Informe Tarea 2 generado: {SALIDA}")
-print(f"Copia en raíz de 2parcial: {SALIDA_COPIA}")
 print(
     f"Tablas: {inf.contador['tab']} | Ilustraciones: {inf.contador['fig']} | "
     f"Ecuaciones: {inf.contador['eq']}"

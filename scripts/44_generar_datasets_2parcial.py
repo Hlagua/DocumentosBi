@@ -13,19 +13,23 @@ DESCRIPCIÓN:
   1. Data Mart 1 (`Fact_Prestamos`) -> `01_dm_prestamos.csv` (N = 682):
      - Clase binaria: 1 = Mora (estados B, D; n = 76) vs. 0 = Sano (A, C; n = 606).
      - Clase multiclase real (Tarea 1): Estado del préstamo A, B, C, D (4 clases).
-     - X (16 variables): monto, plazo, pago mensual, saldo promedio previo,
-       ratio cuota/saldo previo, meses transcurridos, saldo pendiente, edad,
-       sexo, 4 indicadores distritales y 3 indicadores de uso transaccional.
+     - X (14 variables conocidas al otorgar el préstamo): monto, plazo, pago
+       mensual, saldo promedio previo, ratio cuota/saldo previo, edad, sexo,
+       4 indicadores distritales y 3 indicadores de uso transaccional.
+     - Se excluyen `meses_transcurridos_al_corte` y `saldo_pendiente_estimado`:
+       se miden al corte de 1998, no al otorgar el préstamo, y separan por sí
+       solas los contratos terminados (A, B) de los vigentes (C, D).
 
   2. Data Mart 2 (`Fact_Saldo_Cuenta_Mensual`) -> `02_dm_saldo_mensual.csv`:
      - Grano: cuenta x mes (181,115 meses con mes siguiente conocido, de los
        185,615 snapshots mensuales totales).
      - Clase binaria: 1 = Sobregiro el mes siguiente (saldo_fin_mes[t+1] < 0;
        n = 708) vs. 0 = Sin sobregiro el mes siguiente (n = 180,407).
-     - Se exporta el conjunto completo de positivos (708) más una muestra
-       estratificada de negativos para análisis ágil, y en el preprocesamiento
-       de modelado se parte 80/20 antes de submuestrear y escalar.
-     - X (14 variables medidas estrictamente en el mes t): año, mes,
+     - Se exportan todos los positivos (708) más 4,292 negativos al azar
+       (N = 5,000). Esta proporción (14 %) NO es la real (0.39 %): es solo
+       una muestra de trabajo. En el modelado se submuestrea a 708 vs. 708
+       antes de partir 80/20 (entrenamiento y prueba balanceados).
+     - X (15 variables medidas estrictamente en el mes t): año, mes,
        saldo_fin_mes(t), saldo_promedio_mes(t), saldo_min_mes(t),
        saldo_max_mes(t), cambio_saldo_mes(t), num_movimientos_mes(t),
        monto_medio_mov(t), edad, sexo y variables distritales.
@@ -124,8 +128,6 @@ def generar_datasets():
         "pago_mensual",
         "saldo_promedio_previo",
         "ratio_cuota_saldo_previo",
-        "meses_transcurridos_al_corte",
-        "saldo_pendiente_estimado",
         "edad_cliente",
         "sexo_num",
         "poblacion_distrito",

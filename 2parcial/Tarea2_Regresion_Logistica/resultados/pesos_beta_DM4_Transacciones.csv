@@ -1,13 +1,13 @@
 ﻿Data_Mart,Parametro,Variable,Peso_Gradiente_Descendente,Peso_Optimizador_SciPy_BFGS,Importancia_Relativa_Pct
-DM4_Transacciones,beta_0,Sesgo (x0 = 1),-0.074685,-0.074823,0.0
-DM4_Transacciones,beta_1,monto_transaccion,-1.295317,-1.296922,52.86
-DM4_Transacciones,beta_2,saldo_cuenta,0.222916,0.223896,9.1
-DM4_Transacciones,beta_3,anio,0.07644,0.076108,3.12
-DM4_Transacciones,beta_4,mes,-0.022894,-0.022191,0.93
-DM4_Transacciones,beta_5,dia,0.572884,0.572877,23.38
-DM4_Transacciones,beta_6,edad_cliente,-0.018024,-0.017989,0.74
-DM4_Transacciones,beta_7,sexo_num,-0.000739,-0.001759,0.03
-DM4_Transacciones,beta_8,poblacion,-0.084437,-0.585345,3.45
-DM4_Transacciones,beta_9,salario_promedio,-0.02975,-0.01004,1.21
-DM4_Transacciones,beta_10,tasa_desempleo_1996,-0.002078,0.014277,0.08
-DM4_Transacciones,beta_11,tasa_criminalidad_1996,0.124807,0.617126,5.09
+DM4_Transacciones,beta_0,Sesgo (x0 = 1),-0.074814,-0.074823,0.0
+DM4_Transacciones,beta_1,monto_transaccion,-1.296924,-1.296922,37.74
+DM4_Transacciones,beta_2,saldo_cuenta,0.223893,0.223896,6.51
+DM4_Transacciones,beta_3,anio,0.076066,0.076108,2.21
+DM4_Transacciones,beta_4,mes,-0.022173,-0.022191,0.65
+DM4_Transacciones,beta_5,dia,0.572882,0.572877,16.67
+DM4_Transacciones,beta_6,edad_cliente,-0.018018,-0.017989,0.52
+DM4_Transacciones,beta_7,sexo_num,-0.001768,-0.001759,0.05
+DM4_Transacciones,beta_8,poblacion,-0.584479,-0.585345,17.01
+DM4_Transacciones,beta_9,salario_promedio,-0.010077,-0.01004,0.29
+DM4_Transacciones,beta_10,tasa_desempleo_1996,0.014248,0.014277,0.41
+DM4_Transacciones,beta_11,tasa_criminalidad_1996,0.616277,0.617126,17.93

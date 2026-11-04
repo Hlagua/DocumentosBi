@@ -12,9 +12,14 @@ la pizarra 2 de clase:
          p_i = sigma(z_i) = 1 / (1 + exp(-z_i))
   3. Función de costo de Entropía Cruzada Binaria:
          J(beta) = -(1/N) * sum_{i=1}^N [ y_i * ln(p_i) + (1 - y_i) * ln(1 - p_i) ]
-  4. Optimización por Gradiente Descendente (y verificación con scipy.optimize.minimize):
+  4. Optimización por Gradiente Descendente:
          grad J(beta) = (1/N) * X_tilde^T * (sigma(X_tilde * beta) - y)
          beta^{(t+1)} = beta^{(t)} - eta * grad J(beta^{(t)})
+     con eta = 1.0 (menor que 2/L en los 4 Data Marts, por eso converge) y parada
+     cuando ||grad J|| < 1e-6 (como máximo 50,000 épocas).
+     scipy.optimize.minimize (BFGS) se usa SOLO como verificación de que el
+     gradiente descendente llegó al mismo mínimo; el beta entregado es el del
+     gradiente descendente.
 
 Entregables por cada Data Mart:
   - Vector de pesos final beta = [beta_0, beta_1, ..., beta_n]^T
@@ -49,8 +54,9 @@ CAPTURAS.mkdir(parents=True, exist_ok=True)
 
 SEMILLA = 42
 PROPORCION_TEST = 0.20
-EPOCAS = 1500
-TASA_APRENDIZAJE = 0.15
+EPOCAS_MAX = 50000
+TASA_APRENDIZAJE = 1.0
+TOLERANCIA_GRAD = 1e-6
 
 plt.rcParams.update({
     "font.family": "Times New Roman",
@@ -133,23 +139,29 @@ def predecir_clase(beta, X_aug, umbral=0.5):
     return (predecir_prob(beta, X_aug) >= umbral).astype(int)
 
 
-def entrenar_gradiente_descendente(X_tr_aug, y_tr, X_te_aug, y_te, epocas=EPOCAS, eta=TASA_APRENDIZAJE):
+def entrenar_gradiente_descendente(X_tr_aug, y_tr, X_te_aug, y_te, epocas_max=EPOCAS_MAX,
+                                   eta=TASA_APRENDIZAJE, tol=TOLERANCIA_GRAD):
     """
     Entrena los pesos beta = [beta_0, beta_1, ..., beta_n] inicializados en cero
-    mediante descenso por gradiente sobre la Entropía Cruzada.
+    mediante descenso por gradiente sobre la Entropía Cruzada, hasta que la norma
+    del gradiente sea menor que `tol` (o se alcance `epocas_max`).
+    El historial guarda todas las épocas hasta la 2,000 y luego una de cada 10.
     """
     beta = np.zeros(X_tr_aug.shape[1], dtype=float)
     historial = []
 
-    for epoca in range(1, epocas + 1):
+    for epoca in range(1, epocas_max + 1):
         grad = gradiente_entropia_cruzada(beta, X_tr_aug, y_tr)
         beta = beta - eta * grad
+        norma_grad = float(np.linalg.norm(grad))
+        convergio = norma_grad < tol
+        if not (epoca <= 2000 or epoca % 10 == 0 or convergio or epoca == epocas_max):
+            continue
 
         loss_tr = entropia_cruzada(beta, X_tr_aug, y_tr)
         loss_te = entropia_cruzada(beta, X_te_aug, y_te)
         acc_tr = float(np.mean(predecir_clase(beta, X_tr_aug) == y_tr))
         acc_te = float(np.mean(predecir_clase(beta, X_te_aug) == y_te))
-        norma_grad = float(np.linalg.norm(grad))
 
         historial.append({
             "Epoca": epoca,
@@ -161,8 +173,10 @@ def entrenar_gradiente_descendente(X_tr_aug, y_tr, X_te_aug, y_te, epocas=EPOCAS
             "Error_Test": 1.0 - acc_te,
             "Norma_Gradiente": norma_grad,
         })
+        if convergio:
+            break
 
-    # Verificación adicional con el optimizador BFGS de scipy.optimize sobre la misma Entropía Cruzada
+    # Solo verificación: BFGS de scipy.optimize sobre la misma Entropía Cruzada (no es el beta entregado)
     res_opt = minimize(
         fun=entropia_cruzada,
         x0=np.zeros(X_tr_aug.shape[1], dtype=float),
@@ -176,14 +190,15 @@ def entrenar_gradiente_descendente(X_tr_aug, y_tr, X_te_aug, y_te, epocas=EPOCAS
 
 def partir_balancear_escalar(df, features, estrategia, semilla=SEMILLA):
     """
-    Orden estricto sin fuga de datos (data leakage):
+    Preparación de los datos:
       1. Partición 80 % entrenamiento / 20 % prueba estratificada.
       2. Balanceo de clases:
          - En Préstamos (N=682, 76 en mora): primero se parte 80/20, se realiza
            sobremuestreo (oversampling) de la clase minoritaria solo en el entrenamiento
-           y para la prueba se evalúa sobre las observaciones reales reservadas (y su par
-           balanceado sin reemplazo para evitar sesgo de clase mayoritaria).
-         - En Saldo Mensual, Órdenes y Transacciones: submuestreo 50/50 y partición 80/20.
+           y la prueba conserva los 136 préstamos reales con su proporción original.
+         - En Saldo Mensual, Órdenes y Transacciones (sobran datos): se submuestrea
+           50/50 todo el conjunto ANTES de partir 80/20, por lo que entrenamiento y
+           prueba quedan balanceados.
       3. Escalado z-score ajustado exclusivamente con la media y desviación de Train.
     """
     rng = np.random.default_rng(semilla)
@@ -294,7 +309,7 @@ def dibujar_estructura_logistica(ruta):
 
 
 def guardar_capturas_terminal(lineas_consola):
-    """Genera capturas de la ejecución en consola con estética de Visual Studio Code."""
+    """Guarda como imagen la salida de consola registrada durante la ejecución (no es una captura de pantalla)."""
     fuente_mono = None
     for candidato in ("consola.ttf", "cour.ttf", "lucon.ttf"):
         try:
@@ -320,7 +335,7 @@ def guardar_capturas_terminal(lineas_consola):
         draw.rectangle([0, 0, ancho, 28], fill=(37, 37, 38))
         draw.text(
             (14, 6),
-            f"TERMINAL - PowerShell (Visual Studio Code) - Parte {idx}/{len(bloques)}",
+            f"Salida de consola - regresion_logistica.py - Parte {idx}/{len(bloques)}",
             fill=(200, 200, 200),
             font=fuente_mono,
         )
@@ -386,7 +401,7 @@ def main():
         ) = partir_balancear_escalar(df, features, cfg["estrategia"], SEMILLA)
 
         beta, beta_scipy, hist = entrenar_gradiente_descendente(
-            X_tr_aug, y_tr, X_te_aug, y_te, EPOCAS, TASA_APRENDIZAJE
+            X_tr_aug, y_tr, X_te_aug, y_te
         )
         hist.to_csv(SALIDA / f"historial_{cfg['id']}.csv", index=False, encoding="utf-8-sig")
 
@@ -410,6 +425,9 @@ def main():
 
         acc_tr = float(np.mean(yhat_tr == y_tr))
         acc_te = float(np.mean(yhat_te == y_te))
+        # Línea base: responder siempre la clase más frecuente de la prueba
+        acc_mayoritaria_te = float(np.bincount(y_te).max() / len(y_te))
+        epocas_usadas = int(hist["Epoca"].iloc[-1])
         ein = 1.0 - acc_tr
         eout = 1.0 - acc_te
         loss_tr = entropia_cruzada(beta, X_tr_aug, y_tr)
@@ -435,7 +453,8 @@ def main():
         ax_l.plot(hist["Epoca"], hist["Loss_Test"], label="Prueba J_out(β)", color="#d62728", ls="--", lw=1.8)
         ax_l.axhline(loss_scipy_tr, color="#2ca02c", ls=":", lw=1.4, label=f"Mínimo SciPy BFGS ({loss_scipy_tr:.4f})")
         ax_l.set_title(f"{cfg['nombre']}\nJ_train={loss_tr:.4f} | J_test={loss_te:.4f}")
-        ax_l.set_xlabel("Época (Gradiente Descendente)")
+        ax_l.set_xscale("log")
+        ax_l.set_xlabel("Época (Gradiente Descendente, escala logarítmica)")
         ax_l.set_ylabel("Entropía Cruzada J(β)")
         ax_l.legend(loc="best", fontsize=9)
         ax_l.grid(True, alpha=0.25)
@@ -445,7 +464,8 @@ def main():
         ax_a.plot(hist["Epoca"], 100.0 * hist["Acc_Train"], label=f"Acc. Train ({100*acc_tr:.2f} %)", color="#1f77b4", lw=2.0)
         ax_a.plot(hist["Epoca"], 100.0 * hist["Acc_Test"], label=f"Acc. Test ({100*acc_te:.2f} %)", color="#d62728", ls="--", lw=1.8)
         ax_a.set_title(f"{cfg['nombre']}\nAcc. Train = {100*acc_tr:.2f} % | Acc. Test = {100*acc_te:.2f} %")
-        ax_a.set_xlabel("Época (Gradiente Descendente)")
+        ax_a.set_xscale("log")
+        ax_a.set_xlabel("Época (Gradiente Descendente, escala logarítmica)")
         ax_a.set_ylabel("Exactitud (%)")
         ax_a.legend(loc="lower right", fontsize=9)
         ax_a.grid(True, alpha=0.25)
@@ -456,7 +476,7 @@ def main():
         Z_te_pca = pca.transform(X_te)
         Z_tr_pca_aug = np.hstack([np.ones((len(Z_tr_pca), 1)), Z_tr_pca])
         Z_te_pca_aug = np.hstack([np.ones((len(Z_te_pca), 1)), Z_te_pca])
-        beta_2d, _, _ = entrenar_gradiente_descendente(Z_tr_pca_aug, y_tr, Z_te_pca_aug, y_te, 1000, 0.15)
+        beta_2d, _, _ = entrenar_gradiente_descendente(Z_tr_pca_aug, y_tr, Z_te_pca_aug, y_te)
         acc_pca_te = float(np.mean(predecir_clase(beta_2d, Z_te_pca_aug) == y_te))
 
         ax_p = axes_pca[k]
@@ -543,7 +563,8 @@ def main():
             pesos_str += f", ... (total {len(beta)} parámetros)"
         bloque_txt = [
             f"[{cfg['id']}] Tabla: {cfg['tabla_hechos']} | n = {len(features)} vars | Train = {len(y_tr):,} | Test = {len(y_te):,}",
-            f"  * Entropía Cruzada -> J_train = {loss_tr:.4f} (SciPy BFGS = {loss_scipy_tr:.4f}) | J_test = {loss_te:.4f}",
+            f"  * Entropía Cruzada -> J_train = {loss_tr:.4f} (SciPy BFGS = {loss_scipy_tr:.4f}) | J_test = {loss_te:.4f} | Épocas = {epocas_usadas:,}",
+            f"  * Línea base       -> Clase mayoritaria en Test = {100*acc_mayoritaria_te:.2f} % | Acc. balanceada Test = {100*bal_acc_te:.2f} %",
             f"  * Exactitud        -> Acc. Train = {100*acc_tr:.2f} % | Acc. Test = {100*acc_te:.2f} % (Sens={100*sens:.1f} %, Esp={100*espec:.1f} %)",
             f"  * Vector de pesos final beta: [{pesos_str}]",
         ]
@@ -566,6 +587,9 @@ def main():
             "Acc_Test": round(acc_te, 4),
             "Acc_SciPy_Test": round(acc_scipy_te, 4),
             "Acc_Balanceada_Test": round(bal_acc_te, 4),
+            "Acc_Clase_Mayoritaria_Test": round(acc_mayoritaria_te, 4),
+            "Epocas_Usadas": epocas_usadas,
+            "Max_Dif_Beta_vs_BFGS": round(float(np.abs(beta - beta_scipy).max()), 6),
             "E_in": round(ein, 4),
             "E_out": round(eout, 4),
             "Sensibilidad": round(sens, 4),

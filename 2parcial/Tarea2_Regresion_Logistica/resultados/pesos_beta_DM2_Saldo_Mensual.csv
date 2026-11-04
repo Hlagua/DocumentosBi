@@ -1,17 +1,17 @@
 ﻿Data_Mart,Parametro,Variable,Peso_Gradiente_Descendente,Peso_Optimizador_SciPy_BFGS,Importancia_Relativa_Pct
-DM2_Saldo_Mensual,beta_0,Sesgo (x0 = 1),-0.111528,-0.107585,0.0
-DM2_Saldo_Mensual,beta_1,anio,-0.044856,-0.048432,0.56
-DM2_Saldo_Mensual,beta_2,mes,0.545806,0.550436,6.81
-DM2_Saldo_Mensual,beta_3,saldo_fin_mes,-1.046069,-0.047546,13.06
-DM2_Saldo_Mensual,beta_4,saldo_promedio_mes,-1.237127,-3.56236,15.44
-DM2_Saldo_Mensual,beta_5,saldo_min_mes,-1.471878,-0.814342,18.37
-DM2_Saldo_Mensual,beta_6,saldo_max_mes,-0.591056,0.077885,7.38
-DM2_Saldo_Mensual,beta_7,cambio_saldo_mes,-0.47618,-0.521038,5.94
-DM2_Saldo_Mensual,beta_8,num_movimientos_mes,0.385325,0.435121,4.81
-DM2_Saldo_Mensual,beta_9,monto_medio_mov,1.421139,1.494912,17.74
-DM2_Saldo_Mensual,beta_10,edad_corte,-0.246828,-0.249965,3.08
-DM2_Saldo_Mensual,beta_11,sexo_num,-0.017288,-0.018179,0.22
-DM2_Saldo_Mensual,beta_12,poblacion,0.047305,1.683478,0.59
-DM2_Saldo_Mensual,beta_13,salario_promedio,0.270431,0.252837,3.38
-DM2_Saldo_Mensual,beta_14,tasa_desempleo,0.064945,-0.005142,0.81
-DM2_Saldo_Mensual,beta_15,tasa_criminalidad,-0.144073,-1.816811,1.8
+DM2_Saldo_Mensual,beta_0,Sesgo (x0 = 1),-0.107586,-0.107585,0.0
+DM2_Saldo_Mensual,beta_1,anio,-0.048437,-0.048432,0.42
+DM2_Saldo_Mensual,beta_2,mes,0.550421,0.550436,4.76
+DM2_Saldo_Mensual,beta_3,saldo_fin_mes,-0.047872,-0.047546,0.41
+DM2_Saldo_Mensual,beta_4,saldo_promedio_mes,-3.561522,-3.56236,30.78
+DM2_Saldo_Mensual,beta_5,saldo_min_mes,-0.814448,-0.814342,7.04
+DM2_Saldo_Mensual,beta_6,saldo_max_mes,0.077468,0.077885,0.67
+DM2_Saldo_Mensual,beta_7,cambio_saldo_mes,-0.521035,-0.521038,4.5
+DM2_Saldo_Mensual,beta_8,num_movimientos_mes,0.435126,0.435121,3.76
+DM2_Saldo_Mensual,beta_9,monto_medio_mov,1.494952,1.494912,12.92
+DM2_Saldo_Mensual,beta_10,edad_corte,-0.249948,-0.249965,2.16
+DM2_Saldo_Mensual,beta_11,sexo_num,-0.018165,-0.018179,0.16
+DM2_Saldo_Mensual,beta_12,poblacion,1.679599,1.683478,14.52
+DM2_Saldo_Mensual,beta_13,salario_promedio,0.252878,0.252837,2.19
+DM2_Saldo_Mensual,beta_14,tasa_desempleo,-0.005022,-0.005142,0.04
+DM2_Saldo_Mensual,beta_15,tasa_criminalidad,-1.812905,-1.816811,15.67

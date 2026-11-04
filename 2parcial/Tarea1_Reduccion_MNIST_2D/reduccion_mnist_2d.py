@@ -12,8 +12,10 @@ Implementa la formulación de clase (pizarra 1):
     para graficar los grupos coloreando cada observación según su clase real.
 
 Incluye:
-  1. Demostración de referencia sobre el dataset de dígitos manuscritos MNIST
-     (10 clases: dígitos 0 al 9, y caso binario 0 frente a 1), comparando t-SNE y PCA.
+  1. Demostración de referencia sobre el dataset MNIST real (OpenML `mnist_784`:
+     70,000 imágenes de 28 x 28 = 784 píxeles). Se usa una muestra estratificada de
+     3,000 imágenes (300 por dígito) para que t-SNE corra en pocos minutos.
+     10 clases (dígitos 0 al 9) y caso binario 0 frente a 1, comparando t-SNE y PCA.
   2. Reducción a [v_1, v_2] con t-SNE y PCA para los 4 Data Marts de DM_Financial_Kimball_v2
      libres de fuga de datos (data leakage), tanto en su formulación binaria balanceada
      como en sus clases múltiples reales (Estado del préstamo A, B, C, D y Tipo de orden
@@ -32,9 +34,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
-from sklearn.datasets import load_digits
+from sklearn.datasets import fetch_openml
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 
 CARPETA = Path(__file__).resolve().parent
@@ -48,6 +51,7 @@ SEMILLA = 42
 PROPORCION_TEST = 0.20
 PERPLEXITY = 30.0
 MAX_PUNTOS_TSNE = 2000  # muestra balanceada máxima para visualización nítida en t-SNE
+MNIST_POR_DIGITO = 300  # 300 x 10 = 3,000 imágenes reales de MNIST
 
 plt.rcParams.update({
     "font.family": "Times New Roman",
@@ -98,17 +102,20 @@ DATASETS_CONFIG = [
 
 def partir_balancear_escalar(df, features, estrategia, semilla=SEMILLA):
     """
-    Orden metodológico sin fuga de datos:
-      1. Partir 80/20 estratificado.
-      2. Balancear clases (sobremuestreo solo en Train para Préstamos;
-         submuestreo 50/50 para los demás Data Marts donde sobran datos).
-      3. Ajustar el escalador z-score únicamente con la media y desviación de Train.
+    Orden metodológico:
+      - Préstamos (N = 682): se parte 80/20 estratificado y se sobremuestrea la
+        clase minoritaria solo en Train; la prueba conserva la proporción real.
+      - Saldo Mensual, Órdenes y Transacciones (sobran datos): se submuestrea
+        50/50 todo el conjunto ANTES de partir 80/20, de modo que entrenamiento
+        y prueba quedan balanceados.
+      - En ambos casos el escalador z-score se ajusta solo con la media y la
+        desviación de Train.
     """
     rng = np.random.default_rng(semilla)
     idx_train, idx_test = [], []
 
     if estrategia == "submuestreo":
-        # Submuestreo estratificado 50/50 sobre las clases reales y luego partición 80/20
+        # Submuestreo 50/50 de todo el conjunto y luego partición 80/20 (Train y Test balanceados)
         n_min = int(df["Clase"].value_counts().min())
         n_usar = min(n_min, MAX_PUNTOS_TSNE // 2)
         partes = []
@@ -155,10 +162,15 @@ def partir_balancear_escalar(df, features, estrategia, semilla=SEMILLA):
 
 
 def evaluar_proyeccion_2d(Z, y):
-    """Mide exactitud 1-NN en el plano 2D [v1, v2] y distancia entre centroides."""
-    knn = KNeighborsClassifier(n_neighbors=5)
-    knn.fit(Z, y)
-    acc_2d = float(knn.score(Z, y))
+    """
+    Mide qué tan separadas quedan las clases en el plano 2D [v1, v2]:
+      - Exactitud de un kNN (k = 5) con validación cruzada estratificada de 5
+        pliegues: cada punto se clasifica con vecinos de OTROS pliegues, así que
+        no se evalúa sobre los mismos puntos con los que se ajustó.
+      - Distancia euclidiana entre los centroides de las clases.
+    """
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEMILLA)
+    acc_2d = float(cross_val_score(KNeighborsClassifier(n_neighbors=5), Z, y, cv=cv).mean())
     clases = np.unique(y)
     centroides = [Z[y == c].mean(axis=0) for c in clases]
     if len(centroides) == 2:
@@ -174,23 +186,30 @@ def evaluar_proyeccion_2d(Z, y):
 
 
 def ejecutar_mnist_referencia(lineas_consola):
-    """Ejecuta la demostración de referencia con dígitos MNIST (10 clases y 2 clases)."""
-    digits = load_digits()
-    X_raw = digits.data.astype(float)
-    y = digits.target
-    mu = X_raw.mean(axis=0)
-    sigma = np.where(X_raw.std(axis=0) < 1e-8, 1.0, X_raw.std(axis=0))
-    X = (X_raw - mu) / sigma
+    """Ejecuta la demostración de referencia con MNIST real (10 clases y 2 clases)."""
+    # MNIST real desde OpenML (se descarga una vez y queda en caché en ~/scikit_learn_data)
+    mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="auto")
+    X_todo = mnist.data.astype(float)
+    y_todo = mnist.target.astype(int)
+    rng = np.random.default_rng(SEMILLA)
+    idx = np.concatenate([
+        rng.choice(np.flatnonzero(y_todo == d), size=MNIST_POR_DIGITO, replace=False)
+        for d in range(10)
+    ])
+    X_raw = X_todo[idx] / 255.0  # intensidad de cada píxel en [0, 1]
+    y = y_todo[idx]
+    imagenes = X_raw.reshape(-1, 28, 28)
+    X = X_raw  # los 784 píxeles ya comparten escala [0, 1]
 
     # 1. Muestra de imágenes MNIST
     fig, axes = plt.subplots(2, 5, figsize=(9.5, 4.0))
     for digito, ax in enumerate(axes.ravel()):
-        img = digits.images[y == digito][0]
+        img = imagenes[y == digito][0]
         ax.imshow(img, cmap="gray_r", interpolation="nearest")
         ax.set_title(f"Dígito y = {digito}", fontsize=10)
         ax.axis("off")
     fig.suptitle(
-        "Muestra del dataset de referencia MNIST: imágenes de dígitos (n = 64 características -> R^2)",
+        "Muestra del dataset MNIST real: imágenes de 28 x 28 píxeles (n = 784 características -> R^2)",
         fontsize=12,
     )
     fig.tight_layout()
@@ -259,7 +278,7 @@ def ejecutar_mnist_referencia(lineas_consola):
     plt.close(fig)
 
     msg = (
-        f"[Referencia MNIST] N = {len(X):,} imágenes | n = {X.shape[1]} características -> [v1, v2] en R^2\n"
+        f"[Referencia MNIST] N = {len(X):,} imágenes (de {len(X_todo):,}) | n = {X.shape[1]} características -> [v1, v2] en R^2\n"
         f"  * 10 Clases (0..9) -> t-SNE: KL = {kl_10:.4f}, Acc 2D = {100*acc_tsne_10:.2f} % | "
         f"PCA: Varianza = {100*var_pca:.2f} %, Acc 2D = {100*acc_pca_10:.2f} %\n"
         f"  * Binario (0 vs 1) -> N = {len(X_bin)} | t-SNE Acc 2D = {100*acc_tsne_bin:.2f} % | "
@@ -270,6 +289,7 @@ def ejecutar_mnist_referencia(lineas_consola):
 
     return {
         "N_total": int(len(X)),
+        "N_mnist_completo": int(len(X_todo)),
         "n_features": int(X.shape[1]),
         "kl_10": kl_10,
         "acc_tsne_10": acc_tsne_10,
@@ -282,7 +302,7 @@ def ejecutar_mnist_referencia(lineas_consola):
 
 
 def guardar_capturas_terminal(lineas_consola):
-    """Genera capturas de la salida de consola con estética de terminal integrada de VS Code."""
+    """Guarda como imagen la salida de consola registrada durante la ejecución (no es una captura de pantalla)."""
     fuente_mono = None
     for candidato in ("consola.ttf", "cour.ttf", "lucon.ttf"):
         try:
@@ -302,7 +322,7 @@ def guardar_capturas_terminal(lineas_consola):
         img = Image.new("RGB", (ancho, alto), (24, 24, 24))
         draw = ImageDraw.Draw(img)
         draw.rectangle([0, 0, ancho, 28], fill=(37, 37, 38))
-        draw.text((14, 6), f"TERMINAL - PowerShell (Visual Studio Code) - Parte {idx}/{len(bloques)}",
+        draw.text((14, 6), f"Salida de consola - reduccion_mnist_2d.py - Parte {idx}/{len(bloques)}",
                   fill=(200, 200, 200), font=fuente_mono)
         y_pos = 36
         for lin in bloque:
@@ -477,6 +497,7 @@ def main():
             "Acc_2D_PCA": round(acc_pca, 4),
             "Dist_Centroides_PCA": round(dist_pca, 4),
             "Acc_Multiclase_tSNE": round(acc_multi_tsne, 4) if not np.isnan(acc_multi_tsne) else np.nan,
+            "Acc_Clase_Mayoritaria": round(float(np.bincount(y_bin).max() / len(y_bin)), 4),
         })
 
     fig_mosaico_bin.suptitle(

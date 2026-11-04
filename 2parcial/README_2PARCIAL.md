@@ -2,16 +2,49 @@
 
 Esta carpeta contiene los **4 datasets etiquetados** (uno por cada Data Mart de hechos del modelo dimensional `DM_Financial_Kimball_v2`) libres de fuga de datos (*data leakage*), junto con las dos entregas prácticas solicitadas:
 
-1. **Tarea 1 (`Tarea1_Reduccion_MNIST_2D/`):** Reducción de dimensionalidad a un plano euclidiano bidimensional $\mathbb{R}^n \to [v_1, v_2]$ con **t-SNE** (y demostración de referencia con el dataset **MNIST**), graficando la separación por clases binarias y multiclase reales de los 4 Data Marts.
-2. **Tarea 2 (`Tarea2_Regresion_Logistica/`):** Entrenamiento desde cero de **Regresión Logística Binaria** empleando únicamente la función de pérdida de **Entropía Cruzada** y optimización por **Gradiente Descendente** (sin usar `LogisticRegression` de `scikit-learn`), reportando el vector de pesos final $\beta$, la exactitud de entrenamiento (`Acc. Train`), la exactitud de prueba (`Acc. Test`) y las fronteras de decisión proyectadas en 2D mediante **PCA**.
+1. **Tarea 1 (`Tarea1_Reduccion_MNIST_2D/`):** reducción de dimensionalidad a un plano euclidiano bidimensional $\mathbb{R}^n \to [v_1, v_2]$ con **t-SNE** y **PCA**, con una demostración de referencia sobre el **MNIST real** (OpenML `mnist_784`: 70,000 imágenes de 28 × 28; se usa una muestra estratificada de 3,000) y los mapas por clase de los 4 Data Marts.
+2. **Tarea 2 (`Tarea2_Regresion_Logistica/`):** **Regresión Logística Binaria** programada desde cero (sin `LogisticRegression` de `scikit-learn`) con **Entropía Cruzada** y **Gradiente Descendente** ($\eta = 1.0$, parada cuando $\lVert\nabla J\rVert < 10^{-6}$). Se entrega el vector de pesos final $\beta$, `Acc. Train`, `Acc. Test` y las figuras. `scipy.optimize.minimize` (BFGS) se usa solo para verificar que el gradiente descendente llegó al mínimo.
+
+Cada tarea tiene su informe Word dentro de su carpeta.
 
 ---
 
 ## Resumen de los 4 Datasets por Data Mart
 
-| Archivo CSV | Data Mart Kimball | Filas | Variables $X$ | Variable Objetivo Binaria (`Clase`) | Versión Multiclase Real (Tarea 1) | Estrategia de Balanceo (tras partir 80/20) |
+| Archivo CSV | Data Mart Kimball | Filas | Variables $X$ | Variable Objetivo Binaria (`Clase`) | Versión Multiclase Real (Tarea 1) | Balanceo |
 | :--- | :--- | :---: | :---: | :--- | :--- | :--- |
-| `01_dm_prestamos.csv` | `Fact_Prestamos` | 682 | 16 | `1` = Mora (`B, D`: 76) vs. `0` = Sano (`A, C`: 606) | Estado del préstamo: `A`, `B`, `C`, `D` (4 clases) | Sobremuestreo (*oversampling*) solo en entrenamiento |
-| `02_dm_saldo_mensual.csv` | `Fact_Saldo_Cuenta_Mensual` | 5,000 *(de 181,115 meses)* | 15 | `1` = Sobregiro el mes siguiente ($t+1$: 708) vs. `0` = Sin sobregiro (4,292) | Binaria (2 clases) | Submuestreo (*undersampling* 708 vs. 708) |
-| `03_dm_ordenes.csv` | `Fact_Ordenes` | 5,092 | 10 | `1` = Obligación financiera (`UVER, POJISTNE, LEASING`: 1,590) vs. `0` = Hogar (`SIPO`: 3,502) | Tipo de orden: `SIPO`, `UVER`, `POJISTNE`, `LEASING` (4 clases) | Submuestreo (*undersampling* 1,590 vs. 1,590) |
-| `04_dm_transacciones.csv` | `Fact_Transacciones` | 20,000 *(de 871,629 sin intereses)* | 11 | `1` = Egreso (10,000) vs. `0` = Ingreso (10,000) | Binaria (2 clases) | Balanceado 50/50 por submuestreo estratificado |
+| `01_dm_prestamos.csv` | `Fact_Prestamos` | 682 | 14 | `1` = Mora (`B, D`: 76) vs. `0` = Sano (`A, C`: 606) | Estado del préstamo: `A`, `B`, `C`, `D` (4 clases) | Se parte 80/20 y luego se sobremuestrea **solo el entrenamiento**; la prueba conserva la proporción real |
+| `02_dm_saldo_mensual.csv` | `Fact_Saldo_Cuenta_Mensual` | 5,000 *(de 181,115 meses)* | 15 | `1` = Sobregiro el mes siguiente ($t+1$: 708) vs. `0` = Sin sobregiro (4,292) | Binaria (2 clases) | Submuestreo 708 vs. 708 **antes** de partir 80/20 |
+| `03_dm_ordenes.csv` | `Fact_Ordenes` | 5,092 | 10 | `1` = Obligación financiera (`UVER, POJISTNE, LEASING`: 1,590) vs. `0` = Hogar (`SIPO`: 3,502) | Tipo de orden: `SIPO`, `UVER`, `POJISTNE`, `LEASING` (4 clases) | Submuestreo 1,590 vs. 1,590 **antes** de partir 80/20 |
+| `04_dm_transacciones.csv` | `Fact_Transacciones` | 20,000 *(de 871,629 sin intereses)* | 11 | `1` = Egreso (10,000) vs. `0` = Ingreso (10,000) | Binaria (2 clases) | Ya balanceado 50/50 en el CSV |
+
+En los tres Data Marts submuestreados la prueba también queda balanceada (línea base 50 %). En Préstamos la línea base de la prueba es 88.97 % (responder siempre «sano»).
+
+**Notas importantes:**
+
+- En Préstamos se excluyeron `meses_transcurridos_al_corte` y `saldo_pendiente_estimado`: se miden al corte de 1998, no al otorgar el crédito, y separan por sí solas los contratos terminados (A, B) de los vigentes (C, D).
+- En Saldo Mensual el CSV guarda **todos** los positivos (708) y 4,292 negativos al azar. La proporción de 14 % es una muestra de trabajo: en la población solo el 0.39 % de los meses termina en sobregiro al mes siguiente. Además, 388 de los 708 positivos ya estaban en sobregiro en el mes $t$ (el sobregiro persiste).
+- La exactitud 2D de la Tarea 1 es un kNN ($k = 5$) con validación cruzada de 5 pliegues, comparada con la clase mayoritaria.
+
+## Resultados de la Tarea 2
+
+| Data Mart | Acc. Train | Acc. Test | Línea base Test | Sensibilidad / Especificidad |
+| :--- | :---: | :---: | :---: | :---: |
+| Préstamos | 74.74 % | 73.53 % | 88.97 % | 53.3 % / 76.0 % |
+| Saldo Mensual | 90.19 % | 92.61 % | 50.00 % | 92.3 % / 93.0 % |
+| Órdenes | 75.55 % | 74.53 % | 50.00 % | 74.8 % / 74.2 % |
+| Transacciones | 72.89 % | 72.05 % | 50.00 % | 75.1 % / 69.0 % |
+
+## Cómo reproducir
+
+Desde la raíz del repositorio:
+
+```bash
+python scripts/44_generar_datasets_2parcial.py
+python 2parcial/Tarea1_Reduccion_MNIST_2D/reduccion_mnist_2d.py
+python 2parcial/Tarea2_Regresion_Logistica/regresion_logistica.py
+python scripts/47_generar_informe_tarea1.py
+python scripts/48_generar_informe_tarea2.py
+```
+
+La primera ejecución de la Tarea 1 descarga MNIST desde OpenML (queda en caché en `~/scikit_learn_data`).

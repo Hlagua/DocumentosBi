@@ -2,15 +2,13 @@
   "01_dm_prestamos.csv": {
     "datamart": "Fact_Prestamos",
     "filas": 682,
-    "n_features": 16,
+    "n_features": 14,
     "features": [
       "monto_prestamo",
       "plazo_meses",
       "pago_mensual",
       "saldo_promedio_previo",
       "ratio_cuota_saldo_previo",
-      "meses_transcurridos_al_corte",
-      "saldo_pendiente_estimado",
       "edad_cliente",
       "sexo_num",
       "poblacion_distrito",

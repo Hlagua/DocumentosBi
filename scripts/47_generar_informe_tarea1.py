@@ -1,7 +1,6 @@
 """
 Genera el informe en Word de la Tarea 1 del 2do Parcial:
   - 2parcial/Tarea1_Reduccion_MNIST_2D/Informe_Tarea1_Reduccion_MNIST_2D.docx
-  - Copia también en: 2parcial/Informe_Tarea1_Reduccion_MNIST_2D.docx
 
 Sigue exactamente la plantilla y el formato de Informe_Final_Perceptron.docx
 (Times New Roman 12, interlineado 1.5, ecuaciones OMML numeradas, tablas con bordes
@@ -52,7 +51,6 @@ RES = TAREA1 / "resultados"
 CAP = TAREA1 / "capturas"
 PLANTILLA = RAIZ / "scripts" / "plantillas" / "Taller_Perceptron_plantilla.docx"
 SALIDA = TAREA1 / "Informe_Tarea1_Reduccion_MNIST_2D.docx"
-SALIDA_COPIA = DIR_2P / "Informe_Tarea1_Reduccion_MNIST_2D.docx"
 
 tabla_res = pd.read_csv(RES / "tabla_resultados_tarea1.csv", encoding="utf-8-sig")
 mnist_info = json.load(open(RES / "resumen_mnist_tarea1.json", encoding="utf-8"))
@@ -192,12 +190,13 @@ inf.lista([
     "(Fact_Prestamos, Fact_Saldo_Cuenta_Mensual, Fact_Ordenes y Fact_Transacciones), eliminando "
     "toda variable con fuga de datos (data leakage) y aplicando el orden correcto de partición "
     "80/20, balanceo de clases y estandarización z-score.",
-    "Desarrollar la demostración de referencia sobre el conjunto de imágenes de dígitos "
-    "manuscritos MNIST (n = 64 características hacia [v~1~, v~2~]) tanto con sus 10 clases "
-    "(dígitos 0 al 9) como en su versión binaria (0 frente a 1).",
+    "Desarrollar la demostración de referencia sobre el conjunto real de dígitos manuscritos "
+    "MNIST (imágenes de 28 × 28 píxeles, n = 784 características hacia [v~1~, v~2~]) tanto con "
+    "sus 10 clases (dígitos 0 al 9) como en su versión binaria (0 frente a 1).",
     "Visualizar e interpretar geométricamente los grupos formados en el plano [v~1~, v~2~] para "
     "las clases binarias y multiclase reales de los cuatro Data Marts, cuantificando la "
-    "separabilidad mediante la exactitud de vecindad en 2D y la distancia entre centroides.",
+    "separabilidad mediante la exactitud de un clasificador kNN en 2D evaluado con validación "
+    "cruzada de 5 pliegues, comparada siempre con la exactitud de la clase mayoritaria.",
 ])
 
 seccion("2.2 Modalidad")
@@ -231,7 +230,7 @@ inf.texto("Listado de equipos y materiales generales empleados en la guía prác
 inf.lista([
     "Computador con Python 3 (Windows 11 Pro).",
     "Visual Studio Code (editor y terminal integrada PowerShell).",
-    "Bibliotecas NumPy, pandas, Matplotlib y scikit-learn (TSNE, PCA y dataset MNIST).",
+    "Bibliotecas NumPy, pandas, Matplotlib y scikit-learn (TSNE, PCA, kNN y descarga de MNIST desde OpenML).",
     "Cuatro datasets etiquetados de los Data Marts en la carpeta 2parcial/: "
     "01_dm_prestamos.csv, 02_dm_saldo_mensual.csv, 03_dm_ordenes.csv y 04_dm_transacciones.csv.",
     "Apuntes de clase (Pizarra 1: reducción de características X_i a [v_1, v_2]).",
@@ -260,7 +259,7 @@ inf.tabla(
         ["Python", versiones["Python"], "Lenguaje principal de programación."],
         ["NumPy", versiones["NumPy"], "Estandarización matricial y álgebra lineal."],
         ["pandas", versiones["pandas"], "Lectura y estructuración de los 4 Data Marts."],
-        ["scikit-learn", versiones["scikit-learn"], "Proyección t-SNE, PCA y dataset MNIST de referencia."],
+        ["scikit-learn", versiones["scikit-learn"], "Proyección t-SNE y PCA, kNN de evaluación y descarga de MNIST (OpenML)."],
         ["Matplotlib", versiones["Matplotlib"], "Generación de mapas 2D [v1, v2] por clase."],
         ["Microsoft Word", "16.0", "Edición del informe técnico de la práctica."],
     ],
@@ -305,7 +304,7 @@ inf.ecuacion(
 )
 inf.texto(
     "Cuando el número de características es mayor a tres (en nuestros Data Marts bancarios n "
-    "varía entre 10 y 16 variables, y en imágenes MNIST n = 64 o 784), no es posible visualizar "
+    "varía entre 10 y 15 variables, y en las imágenes de MNIST n = 784), no es posible visualizar "
     "directamente la geometría de las clases. El operador de reducción transforma cada vector "
     "x~i~ en R^n^ en un par de coordenadas dentro del plano euclidiano bidimensional R^2^ "
     "(Ecuación ({eq:proyeccion})):"
@@ -392,13 +391,18 @@ inf.texto(
 inf.lista([
     "**Data Mart 1 — Préstamos (Fact_Prestamos, N = 682):** predice el estado real de mora del "
     "crédito (Clase 1 = estados B y D con impago, 76 préstamos; Clase 0 = estados A y C al día, "
-    "606 préstamos) a partir de 16 variables financieras, demográficas y distritales previas. "
-    "Además, conserva los 4 estados reales (A, B, C, D) para la visualización multiclase.",
+    "606 préstamos) a partir de 14 variables financieras, demográficas y distritales conocidas "
+    "al otorgar el crédito. Se excluyeron meses_transcurridos_al_corte y "
+    "saldo_pendiente_estimado porque se miden al corte de 1998 (no al otorgar el préstamo) y "
+    "separan por sí solas los contratos terminados (A, B) de los vigentes (C, D). Además, "
+    "conserva los 4 estados reales (A, B, C, D) para la visualización multiclase.",
     "**Data Mart 2 — Saldo Mensual (Fact_Saldo_Cuenta_Mensual, grano cuenta × mes):** sobre los "
     "181 115 cierres mensuales que cuentan con mes siguiente observado, predice si la cuenta "
     "caerá en **sobregiro el mes siguiente (t + 1)** (Clase 1 = 708 eventos reales de sobregiro "
     "en t + 1; Clase 0 = sin sobregiro en t + 1) empleando únicamente las 15 variables medidas "
-    "hasta el cierre del mes actual t.",
+    "hasta el cierre del mes actual t. El CSV guarda los 708 positivos y 4 292 negativos al "
+    "azar (N = 5 000); esa proporción de 14 % es una muestra de trabajo, porque en la población "
+    "real solo el 0.39 % de los meses termina en sobregiro al mes siguiente.",
     "**Data Mart 3 — Órdenes Permanentes (Fact_Ordenes, N = 5 092):** filtra las órdenes con "
     "símbolo bancario real y clasifica las obligaciones financieras (Clase 1 = préstamo UVER, "
     "seguro POJISTNE o arrendamiento LEASING, 1 590 órdenes) frente a pagos de hogar SIPO "
@@ -419,7 +423,7 @@ inf.tabla(
             "01_dm_prestamos.csv",
             "Fact_Prestamos",
             "682",
-            "16",
+            "14",
             "Mora B,D (76) vs. Sano A,C (606)",
             "Estados A, B, C, D (4)",
         ],
@@ -451,16 +455,18 @@ inf.tabla(
     clave="datamarts",
     anchos=[3.3, 3.3, 1.4, 1.3, 3.2, 2.5],
 )
-inf.titulo("Orden metodológico: Partición 80/20 → Balanceo → Escalado z-score")
+inf.titulo("Balanceo de clases, partición 80/20 y escalado z-score")
 inf.texto(
-    "Para evitar que estadísticas del conjunto de prueba se filtren al entrenamiento y para que "
-    "variables expresadas en decenas de miles de coronas checas (como población o monto del "
-    "préstamo) no dominen la distancia euclidiana frente a variables binarias o tasas, se "
-    "aplicó el siguiente protocolo estricto: primero se divide 80 % entrenamiento y 20 % prueba "
-    "de forma estratificada; segundo, se balancean las clases (submuestreo 50/50 en Saldo "
-    "Mensual, Órdenes y Transacciones, y sobremuestreo solo en el entrenamiento para Préstamos); "
-    "tercero, se calculan la media μ~j~ y desviación estándar σ~j~ **únicamente sobre el "
-    "entrenamiento** y se estandariza cada característica según la Ecuación ({eq:zscore}):"
+    "El balanceo se aplicó de dos formas según la cantidad de datos disponible. En Préstamos "
+    "(solo 76 créditos en mora) primero se dividió 80 % entrenamiento y 20 % prueba de forma "
+    "estratificada y después se sobremuestreó la clase minoritaria **solo en el entrenamiento**; "
+    "la prueba conserva los 136 préstamos reales con su proporción original. En Saldo Mensual, "
+    "Órdenes y Transacciones, donde sobran datos, se submuestreó 50/50 todo el conjunto **antes** "
+    "de dividir 80/20, por lo que el entrenamiento y la prueba quedan balanceados. En todos los "
+    "casos, para que variables expresadas en decenas de miles de coronas checas (como población "
+    "o monto del préstamo) no dominen la distancia euclidiana frente a variables binarias o "
+    "tasas, la media μ~j~ y la desviación estándar σ~j~ se calculan **únicamente sobre el "
+    "entrenamiento** y cada característica se estandariza según la Ecuación ({eq:zscore}):"
 )
 inf.ecuacion(
     sub(acento(r("x"), "̃"), r("ij")) + r("=") +
@@ -478,18 +484,21 @@ inf.texto(
 )
 inf.titulo("Desarrollo sobre MNIST")
 inf.texto(
-    f"Se cargaron las {miles(mnist_info['N_total'])} imágenes de dígitos manuscritos del "
-    f"conjunto MNIST integrado en scikit-learn, donde cada imagen es una cuadrícula de "
-    f"intensidades en escala de grises que conforma un vector de n = {mnist_info['n_features']} "
-    f"características por observación. Tras estandarizar las características, se redujo la "
-    f"matriz completa desde R^64^ hacia R^2^ (x~i~^(1)^ = [v~1~, v~2~]) con t-SNE (perplejidad "
-    f"30) y con PCA. En las 10 clases, t-SNE alcanzó una divergencia KL = "
-    f"{num(mnist_info['kl_10'], 4)} y agrupó limpiamente los 10 dígitos con una exactitud de "
-    f"vecindad en 2D de **{pct(mnist_info['acc_tsne_10'])}**, superando ampliamente al plano "
-    f"lineal de PCA (**{pct(mnist_info['acc_pca_10'])}**, que solo retiene el "
-    f"{pct(mnist_info['var_pca_10'])} de la varianza total en dos ejes). Al restringir el "
-    f"conjunto a dos clases (dígito 0 frente a dígito 1, N = {mnist_info['N_bin']}), tanto "
-    f"t-SNE como PCA lograron una separabilidad de **{pct(mnist_info['acc_tsne_bin'])}** en 2D."
+    f"Se descargó el conjunto MNIST original desde OpenML (mnist_784 [2]), que contiene "
+    f"{miles(mnist_info['N_mnist_completo'])} imágenes de dígitos manuscritos de 28 × 28 "
+    f"píxeles; cada imagen se aplana en un vector de n = {mnist_info['n_features']} intensidades "
+    f"en escala de grises, divididas para 255 para dejarlas en [0, 1]. Como t-SNE calcula "
+    f"distancias entre todos los pares de puntos, se tomó una muestra estratificada de "
+    f"{miles(mnist_info['N_total'])} imágenes (300 por dígito). Esa matriz se redujo desde "
+    f"R^784^ hacia R^2^ (x~i~^(1)^ = [v~1~, v~2~]) con t-SNE (perplejidad 30) y con PCA. En las "
+    f"10 clases, t-SNE alcanzó una divergencia KL = {num(mnist_info['kl_10'], 4)} y agrupó los "
+    f"10 dígitos con una exactitud kNN en 2D (validación cruzada de 5 pliegues) de "
+    f"**{pct(mnist_info['acc_tsne_10'])}**, muy por encima de PCA "
+    f"(**{pct(mnist_info['acc_pca_10'])}**, que solo retiene el "
+    f"{pct(mnist_info['var_pca_10'])} de la varianza total en dos ejes) y del 10 % que se "
+    f"obtendría al azar con 10 clases equilibradas. Al restringir el conjunto a dos clases "
+    f"(dígito 0 frente a dígito 1, N = {mnist_info['N_bin']}), t-SNE logró "
+    f"**{pct(mnist_info['acc_tsne_bin'])}** y PCA **{pct(mnist_info['acc_pca_bin'])}** en 2D."
 )
 
 # Actividad 4
@@ -522,19 +531,28 @@ r_dm2 = tabla_res[tabla_res["Data_Mart"] == "DM2_Saldo_Mensual"].iloc[0]
 r_dm3 = tabla_res[tabla_res["Data_Mart"] == "DM3_Ordenes"].iloc[0]
 r_dm4 = tabla_res[tabla_res["Data_Mart"] == "DM4_Transacciones"].iloc[0]
 inf.texto(
-    f"Los resultados muestran una graduación clara de separabilidad según la naturaleza "
-    f"financiera de cada Data Mart: el mayor aislamiento entre grupos se alcanza en "
-    f"**Fact_Saldo_Cuenta_Mensual** (exactitud en 2D con t-SNE de **{pct(r_dm2['Acc_2D_tSNE'])}** "
-    f"y con PCA de **{pct(r_dm2['Acc_2D_PCA'])}**), porque las cuentas próximas a caer en "
-    f"sobregiro en t + 1 comparten saldos mínimos y promedios deteriorados en el mes t. Le sigue "
-    f"**Fact_Prestamos** (**{pct(r_dm1['Acc_2D_tSNE'])}** en t-SNE y **{pct(r_dm1['Acc_2D_PCA'])}** "
-    f"en PCA; **{pct(r_dm1['Acc_Multiclase_tSNE'])}** en los 4 estados A, B, C, D), donde los "
-    f"créditos en mora se concentran en la región de alto ratio cuota/saldo previo. Finalmente, "
-    f"**Fact_Ordenes** (**{pct(r_dm3['Acc_2D_tSNE'])}** binario y "
-    f"**{pct(r_dm3['Acc_Multiclase_tSNE'])}** en los 4 tipos de orden) y **Fact_Transacciones** "
-    f"(**{pct(r_dm4['Acc_2D_tSNE'])}** en t-SNE) presentan un traslape moderado y natural "
-    f"(entre 20 % y 25 % de frontera compartida), típico de datos transaccionales reales sin "
-    f"fuga de información."
+    "La separabilidad en el plano se midió con un clasificador kNN (k = 5) evaluado con "
+    "validación cruzada estratificada de 5 pliegues: cada punto se clasifica con vecinos de "
+    "otros pliegues, de modo que no se evalúa sobre los mismos puntos con los que se ajustó. "
+    "Cada exactitud se compara con la de la clase mayoritaria, que es lo que se obtendría "
+    "respondiendo siempre la clase más frecuente."
+)
+inf.texto(
+    f"El mayor aislamiento entre grupos se alcanza en **Fact_Saldo_Cuenta_Mensual** (exactitud "
+    f"en 2D de **{pct(r_dm2['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm2['Acc_2D_PCA'])}** con "
+    f"PCA, frente a {pct(r_dm2['Acc_Clase_Mayoritaria'])} de la clase mayoritaria), porque el "
+    f"sobregiro tiende a persistir: 388 de los 708 meses que terminan en sobregiro en t + 1 ya "
+    f"estaban en sobregiro en el mes t. En **Fact_Ordenes** "
+    f"(**{pct(r_dm3['Acc_2D_tSNE'])}** con t-SNE) y **Fact_Transacciones** "
+    f"(**{pct(r_dm4['Acc_2D_tSNE'])}**) las clases se separan de forma parcial, con un traslape "
+    f"visible, frente al 50 % de la clase mayoritaria. En **Fact_Prestamos**, en cambio, la "
+    f"exactitud en 2D (**{pct(r_dm1['Acc_2D_tSNE'])}** con t-SNE y "
+    f"**{pct(r_dm1['Acc_2D_PCA'])}** con PCA) **no supera** al "
+    f"{pct(r_dm1['Acc_Clase_Mayoritaria'])} que se obtiene diciendo siempre «sano»: los 76 "
+    f"créditos en mora quedan mezclados con los sanos en el plano. Es un hallazgo y no un "
+    f"error: con las variables disponibles al otorgar el préstamo, la mora no forma un grupo "
+    f"propio, lo que anticipa que la Regresión Logística de la Tarea 2 tendrá dificultad en "
+    f"este Data Mart."
 )
 
 # ----------------------------------------------------------------------------
@@ -543,22 +561,22 @@ inf.texto(
 seccion("2.7 Resultados obtenidos")
 inf.texto(
     "Los resultados se obtuvieron al ejecutar python 2parcial/Tarea1_Reduccion_MNIST_2D/"
-    "reduccion_mnist_2d.py en la terminal integrada de Visual Studio Code."
+    "reduccion_mnist_2d.py desde la raíz del repositorio."
 )
 
 inf.titulo("2.7.1 Ejecución del programa")
 if capturas:
     inf.texto(
-        f"La ejecución completa del script se presenta en las Ilustraciones {{fig:cap1}} a "
-        f"{{fig:cap{len(capturas)}}} y finalizó sin errores."
+        f"La salida en consola de la ejecución se presenta en las Ilustraciones {{fig:cap1}} a "
+        f"{{fig:cap{len(capturas)}}}; el script finalizó sin errores."
     )
     for k, ruta in enumerate(capturas, 1):
         inf.imagen(
             ruta,
             15.5,
-            f"Ejecución de reduccion_mnist_2d.py en Visual Studio Code (parte {k} de {len(capturas)}).",
+            f"Salida en consola de reduccion_mnist_2d.py (parte {k} de {len(capturas)}).",
             clave=f"cap{k}",
-            fuente="Captura de la terminal integrada de Visual Studio Code.",
+            fuente="Salida de consola registrada por el propio script durante la ejecución.",
         )
 
 inf.titulo("2.7.2 Tabla consolidada de resultados de reducción a 2D")
@@ -573,6 +591,7 @@ for row in tabla_res.itertuples():
         pct(row.Acc_2D_tSNE, 2),
         pct(row.Varianza_PCA_2D, 1),
         pct(row.Acc_2D_PCA, 2),
+        pct(row.Acc_Clase_Mayoritaria, 1),
         multi_str,
     ])
 inf.tabla(
@@ -585,23 +604,30 @@ inf.tabla(
         "Acc 2D t-SNE",
         "Var. PCA 2D",
         "Acc 2D PCA",
+        "Clase mayor.",
         "Acc Multiclase",
     ],
     filas_t1,
     clave="resultados_t1",
-    anchos=[2.8, 1.4, 1.5, 1.6, 2.0, 1.8, 1.9, 2.0],
+    anchos=[2.6, 1.2, 1.3, 1.4, 1.8, 1.6, 1.7, 1.6, 1.8],
 )
+mejoras = [(r.Data_Mart, 100 * (r.Acc_2D_tSNE - r.Acc_2D_PCA)) for r in tabla_res.itertuples()]
+gana_tsne = [d for d, m in mejoras if m > 0]
 inf.texto(
-    "En los cuatro Data Marts, la reducción no lineal con t-SNE supera entre 2.1 y 6.0 puntos "
-    "porcentuales la separabilidad en 2D alcanzada por la proyección lineal PCA (Tabla "
-    "{tab:resultados_t1}), ya que t-SNE adapta la métrica local a las densidades de cada grupo."
+    f"La reducción no lineal con t-SNE supera a PCA en {len(gana_tsne)} de los 4 Data Marts "
+    f"(Tabla {{tab:resultados_t1}}), con diferencias de hasta "
+    f"{num(max(m for _, m in mejoras), 1)} puntos porcentuales, porque adapta la métrica local "
+    f"a las densidades de cada grupo. En Préstamos ambas proyecciones quedan por debajo de la "
+    f"clase mayoritaria, ya que la mora no forma un grupo separado. La columna «Clase mayor.» "
+    f"indica la exactitud de responder siempre la clase más frecuente y sirve de referencia "
+    f"mínima para leer las demás."
 )
 
 inf.titulo("2.7.3 Demostración de referencia con el dataset MNIST")
 inf.imagen(
     RES / "mnist_muestra_digitos.png",
     14.0,
-    "Muestra de imágenes de dígitos manuscritos del dataset MNIST de referencia (n = 64 -> R^2).",
+    "Muestra de imágenes de dígitos manuscritos del dataset MNIST (28 × 28 píxeles, n = 784 -> R^2).",
     clave="mnist_muestra",
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
@@ -620,11 +646,12 @@ inf.imagen(
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
 inf.texto(
-    "Las Ilustraciones {fig:mnist_muestra}, {fig:mnist_10} y {fig:mnist_bin} verifican el "
-    "concepto expuesto en la pizarra de clase: al proyectar vectores de alta dimensión hacia "
-    "el plano bidimensional [v~1~, v~2~], t-SNE descubre las diez islas correspondientes a los "
-    "dígitos 0..9 con un 97.83 % de pureza local, y cuando el problema se restringe a dos "
-    "clases (0 frente a 1), ambos grupos quedan completamente separados en dos nubes disjuntas."
+    f"Las Ilustraciones {{fig:mnist_muestra}}, {{fig:mnist_10}} y {{fig:mnist_bin}} verifican "
+    f"el concepto expuesto en la pizarra de clase: al proyectar vectores de 784 píxeles hacia "
+    f"el plano bidimensional [v~1~, v~2~], t-SNE forma diez grupos correspondientes a los "
+    f"dígitos 0..9 (exactitud kNN en 2D de {pct(mnist_info['acc_tsne_10'])}), con traslapes "
+    f"entre dígitos de trazo parecido; cuando el problema se restringe a dos clases (0 frente "
+    f"a 1), ambos grupos quedan separados en dos nubes disjuntas."
 )
 
 inf.titulo("2.7.4 Mapas bidimensionales [v1, v2] de los 4 Data Marts (Clases Binarias)")
@@ -657,12 +684,18 @@ inf.imagen(
     clave="mosaico_multi",
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
+dm1_csv = pd.read_csv(DIR_2P / "01_dm_prestamos.csv")
+may_estado = dm1_csv["Clase_Multiclase"].value_counts(normalize=True).max()
 inf.texto(
-    "En la Ilustración {fig:mosaico_multi} se observa que los cuatro estados reales del "
-    "préstamo (A: terminado sano, B: terminado en mora, C: vigente sano, D: vigente en mora) "
-    "y las cuatro categorías reales de órdenes permanentes (SIPO, UVER, POJISTNE, LEASING) "
-    "forman agrupaciones diferenciables en el plano [v~1~, v~2~] sin recurrir a ninguna "
-    "variable sintética."
+    f"En la Ilustración {{fig:mosaico_multi}} los cuatro estados reales del préstamo (A: "
+    f"terminado sano, B: terminado en mora, C: vigente sano, D: vigente en mora) se traslapan "
+    f"casi por completo: la exactitud kNN en 2D es {pct(r_dm1['Acc_Multiclase_tSNE'])}, apenas "
+    f"por encima del {pct(may_estado)} del estado más frecuente (C). Es lo esperado una vez "
+    f"retiradas las variables medidas al corte de 1998, que eran las que separaban los "
+    f"contratos terminados de los vigentes. Las cuatro categorías de órdenes permanentes "
+    f"(SIPO, UVER, POJISTNE, LEASING) se separan solo parcialmente "
+    f"({pct(r_dm3['Acc_Multiclase_tSNE'])}), ya que la muestra proyectada contiene la mitad de "
+    f"órdenes SIPO y la otra mitad repartida entre las tres obligaciones financieras."
 )
 
 inf.titulo("2.7.6 Cumplimiento de las instrucciones")
@@ -676,15 +709,15 @@ inf.tabla(
         ],
         [
             "2. Cero fuga de datos (data leakage)",
-            "Se eliminaron las etiquetas calculadas por reglas y las columnas que delataban la clase; verificado con árboles de decisión.",
+            "Se eliminaron las etiquetas calculadas por reglas, las columnas que delataban la clase y las medidas después del evento (meses transcurridos y saldo pendiente en Préstamos).",
         ],
         [
             "3. Demostración con MNIST",
-            "Incluida en 10 clases (0..9) y en 2 clases (0 vs. 1) con figuras comparativas t-SNE y PCA.",
+            "MNIST real de OpenML (muestra de 3 000 imágenes de 28 × 28) en 10 clases (0..9) y en 2 clases (0 vs. 1), con figuras t-SNE y PCA.",
         ],
         [
             "4. Reducción X_i -> [v1, v2] en R^2",
-            "Vectores de 10 a 16 características reducidos a dos coordenadas y exportados a CSV y PNG.",
+            "Vectores de 10 a 15 características reducidos a dos coordenadas y exportados a CSV y PNG.",
         ],
         [
             "5. Graficación por grupos de clase",
@@ -717,14 +750,16 @@ inf.lista([
     f"**Sobre la reducción de dimensionalidad a [v~1~, v~2~]:** la proyección desde R^n^ hacia "
     f"R^2^ mediante t-SNE preserva la estructura de vecindad local mucho mejor que una "
     f"proyección lineal plana cuando las clases siguen variedades curvas. En el dataset de "
-    f"referencia MNIST (n = 64), t-SNE separó los 10 dígitos con una exactitud en 2D de "
-    f"{pct(mnist_info['acc_tsne_10'])} frente a {pct(mnist_info['acc_pca_10'])} de PCA; de "
-    f"manera consistente, en los cuatro Data Marts bancarios t-SNE alcanzó exactitudes en 2D "
-    f"de {pct(r_dm1['Acc_2D_tSNE'])} (Préstamos), {pct(r_dm2['Acc_2D_tSNE'])} (Saldo Mensual), "
-    f"{pct(r_dm3['Acc_2D_tSNE'])} (Órdenes) y {pct(r_dm4['Acc_2D_tSNE'])} (Transacciones).",
+    f"referencia MNIST (n = 784), t-SNE separó los 10 dígitos con una exactitud en 2D de "
+    f"{pct(mnist_info['acc_tsne_10'])} frente a {pct(mnist_info['acc_pca_10'])} de PCA. En los "
+    f"Data Marts bancarios los grupos son mucho menos nítidos: t-SNE alcanzó "
+    f"{pct(r_dm2['Acc_2D_tSNE'])} en Saldo Mensual, {pct(r_dm3['Acc_2D_tSNE'])} en Órdenes y "
+    f"{pct(r_dm4['Acc_2D_tSNE'])} en Transacciones (frente a 50 % de la clase mayoritaria), "
+    f"mientras que en Préstamos ({pct(r_dm1['Acc_2D_tSNE'])}) no superó el "
+    f"{pct(r_dm1['Acc_Clase_Mayoritaria'])} de responder siempre «sano».",
     "**Sobre la preparación de los datos sin fuga de información:** la eliminación de etiquetas "
-    "artificiales y la aplicación estricta del orden Partición 80/20 → Balanceo → Escalado "
-    "z-score ajustado solo en el entrenamiento garantizan que los grupos visualizados en el "
+    "artificiales y de variables medidas después del evento, el balanceo de clases y el "
+    "escalado z-score ajustado solo en el entrenamiento garantizan que los grupos visualizados en el "
     "plano [v~1~, v~2~] reflejen patrones reales de negocio (mora crediticia, sobregiro en el "
     "mes t + 1, obligaciones financieras y dirección de flujo transaccional) y dejan listos "
     "los cuatro conjuntos para el entrenamiento de la Regresión Logística en la Tarea 2.",
@@ -762,7 +797,7 @@ for ref in referencias:
 
 seccion("2.12 Anexos")
 inf.texto(
-    "Las capturas de ejecución en Visual Studio Code (sección 2.7.1), la tabla consolidada de "
+    "La salida en consola de la ejecución (sección 2.7.1), la tabla consolidada de "
     "métricas 2D (Tabla {tab:resultados_t1}) y los mapas bidimensionales de MNIST y de los "
     "cuatro Data Marts (Ilustraciones {fig:mnist_muestra} a {fig:mosaico_multi}) se integran en "
     "la sección 2.7. El código fuente se entrega en reduccion_mnist_2d.py."
@@ -784,9 +819,7 @@ for run in doc.paragraphs[0].runs:
 
 inf.resolver_referencias()
 doc.save(SALIDA)
-shutil.copy2(SALIDA, SALIDA_COPIA)
 print(f"Informe Tarea 1 generado: {SALIDA}")
-print(f"Copia en raíz de 2parcial: {SALIDA_COPIA}")
 print(
     f"Tablas: {inf.contador['tab']} | Ilustraciones: {inf.contador['fig']} | "
     f"Ecuaciones: {inf.contador['eq']}"
