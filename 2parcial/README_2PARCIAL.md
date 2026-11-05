@@ -2,7 +2,7 @@
 
 Esta carpeta contiene los **4 datasets etiquetados** (uno por cada Data Mart de hechos del modelo dimensional `DM_Financial_Kimball_v2`) libres de fuga de datos (*data leakage*), junto con las dos entregas prácticas solicitadas:
 
-1. **Tarea 1 (`Tarea1_Reduccion_MNIST_2D/`):** reducción de dimensionalidad a un plano euclidiano bidimensional $\mathbb{R}^n \to [v_1, v_2]$ con **t-SNE** y **PCA**, con una demostración de referencia sobre el **MNIST real** (OpenML `mnist_784`: 70,000 imágenes de 28 × 28; se usa una muestra estratificada de 3,000) y los mapas por clase de los 4 Data Marts.
+1. **Tarea 1 (`Tarea1_Reduccion_MNIST_2D/`):** reducción de dimensionalidad a un plano euclidiano bidimensional $\mathbb{R}^n \to [v_1, v_2]$ con **t-SNE** e **Isomap**, usando **todas las características y todas las observaciones** de cada dataset (un punto por observación, sin balancear), con una demostración de referencia sobre el **MNIST real** (OpenML `mnist_784`: 70,000 imágenes de 28 × 28; se usa una muestra estratificada de 3,000).
 2. **Tarea 2 (`Tarea2_Regresion_Logistica/`):** **Regresión Logística Binaria** programada desde cero (sin `LogisticRegression` de `scikit-learn`) con **Entropía Cruzada** y **Gradiente Descendente** ($\eta = 1.0$, parada cuando $\lVert\nabla J\rVert < 10^{-6}$). Se entrega el vector de pesos final $\beta$, `Acc. Train`, `Acc. Test` y las figuras. `scipy.optimize.minimize` (BFGS) se usa solo para verificar que el gradiente descendente llegó al mínimo.
 
 Cada tarea tiene su informe Word dentro de su carpeta.
@@ -24,7 +24,7 @@ En los tres Data Marts submuestreados la prueba también queda balanceada (líne
 
 - En Préstamos se excluyeron `meses_transcurridos_al_corte` y `saldo_pendiente_estimado`: se miden al corte de 1998, no al otorgar el crédito, y separan por sí solas los contratos terminados (A, B) de los vigentes (C, D).
 - En Saldo Mensual el CSV guarda **todos** los positivos (708) y 4,292 negativos al azar. La proporción de 14 % es una muestra de trabajo: en la población solo el 0.39 % de los meses termina en sobregiro al mes siguiente. Además, 388 de los 708 positivos ya estaban en sobregiro en el mes $t$ (el sobregiro persiste).
-- La exactitud 2D de la Tarea 1 es un kNN ($k = 5$) con validación cruzada de 5 pliegues, comparada con la clase mayoritaria.
+- La exactitud 2D de la Tarea 1 es un kNN ($k = 5$) con validación cruzada de 5 pliegues, comparada con la clase mayoritaria. El balanceo solo se aplica al entrenar (Tarea 2).
 
 ## Resultados de la Tarea 2
 

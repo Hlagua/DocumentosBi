@@ -1,5 +1,5 @@
-﻿Data_Mart,Tabla_Hechos,Descripcion,N_Total_CSV,N_Proyectado,Train_80,Test_20,n_Caracteristicas,KL_tSNE,Acc_2D_tSNE,Dist_Centroides_tSNE,Varianza_PCA_2D,Acc_2D_PCA,Dist_Centroides_PCA,Acc_Multiclase_tSNE,Acc_Clase_Mayoritaria
-DM1_Prestamos,Fact_Prestamos,DM1: Préstamos (Mora vs. Sano),682,682,970,136,14,0.7127,0.8651,8.2073,0.4003,0.8754,0.6228,0.6437,0.8886
-DM2_Saldo_Mensual,Fact_Saldo_Cuenta_Mensual,DM2: Saldo Mensual (Sobregiro t+1),5000,1416,1132,284,15,1.0481,0.8679,13.2579,0.5099,0.8171,2.6003,,0.5
-DM3_Ordenes,Fact_Ordenes,DM3: Órdenes (Obligación vs. Hogar),5092,2000,1600,400,10,0.9395,0.7015,4.9476,0.5699,0.59,0.9218,0.534,0.5
-DM4_Transacciones,Fact_Transacciones,DM4: Transacciones (Egreso vs. Ingreso),20000,2000,1600,400,11,1.2625,0.6805,6.2982,0.4496,0.6175,1.0136,,0.5
+﻿Data_Mart,Tabla_Hechos,Descripcion,N_Observaciones,n_Caracteristicas,Conteo_Clases,KL_tSNE,Acc_2D_tSNE,Dist_Centroides_tSNE,Acc_2D_Isomap,Dist_Centroides_Isomap,Error_Reconstruccion_Isomap,Componentes_Grafo_Isomap,Acc_Clase_Mayoritaria,Acc_Multiclase_tSNE,Acc_Multiclase_Isomap
+DM1_Prestamos,Fact_Prestamos,DM1: Préstamos (Mora vs. Sano),682,14,606 / 76,0.7867,0.8783,6.8428,0.8827,0.5546,8.9742,1,0.8886,0.6407,0.5367
+DM2_Saldo_Mensual,Fact_Saldo_Cuenta_Mensual,DM2: Saldo Mensual (Sobregiro t+1),5000,15,4292 / 708,1.5778,0.9468,24.1741,0.8828,1.2545,10.8916,1,0.8584,,
+DM3_Ordenes,Fact_Ordenes,DM3: Órdenes (Obligación vs. Hogar),5092,10,3502 / 1590,1.1822,0.7357,13.1027,0.6728,0.8396,5.4465,1,0.6877,0.6711,0.6494
+DM4_Transacciones,Fact_Transacciones,DM4: Transacciones (Egreso vs. Ingreso),20000,11,10000 / 10000,2.1857,0.6973,17.7921,0.615,0.8613,6.9055,2,0.5,,

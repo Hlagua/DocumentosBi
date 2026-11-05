@@ -101,7 +101,7 @@ pie_pagina_numerado(doc)
 portada = [
     (
         "Tema:",
-        "Reducción de dimensionalidad a un plano euclidiano 2D (t-SNE, PCA y referencia MNIST) "
+        "Reducción de dimensionalidad a un plano euclidiano 2D (t-SNE, Isomap y referencia MNIST) "
         "y visualización de grupos por clase en los 4 Data Marts de Financial_ijs",
     ),
     ("Unidad de Organización Curricular:", "Profesional"),
@@ -177,19 +177,20 @@ inf.titulo("General:", antes=2)
 inf.texto(
     "Reducir el espacio de características multidimensional de cada uno de los cuatro Data Marts "
     "del modelo dimensional DM_Financial_Kimball_v2 (y del conjunto de referencia MNIST) hacia un "
-    "plano euclidiano bidimensional [v~1~, v~2~] mediante t-SNE y Análisis de Componentes "
-    "Principales (PCA), graficando la distribución de los grupos según sus etiquetas verdaderas "
-    "libres de fuga de datos."
+    "plano euclidiano bidimensional [v~1~, v~2~] mediante t-SNE e Isomap, usando todas las "
+    "características y graficando un punto por cada observación real coloreado según su "
+    "etiqueta verdadera libre de fuga de datos."
 )
 inf.titulo("Específicos:", antes=4)
 inf.lista([
     "Formular matemáticamente la proyección de vectores de características x~i~ en R^n^ (n > 2) "
     "hacia un plano bidimensional x~i~^(1)^ = [v~1~, v~2~] en R^2^ utilizando t-SNE (minimización "
-    "de la divergencia de Kullback–Leibler) y PCA (descomposición espectral de la covarianza).",
+    "de la divergencia de Kullback–Leibler) e Isomap (distancias geodésicas y escalamiento "
+    "multidimensional clásico).",
     "Auditar y depurar los cuatro datasets correspondientes a los cuatro Data Marts de hechos "
     "(Fact_Prestamos, Fact_Saldo_Cuenta_Mensual, Fact_Ordenes y Fact_Transacciones), eliminando "
-    "toda variable con fuga de datos (data leakage) y aplicando el orden correcto de partición "
-    "80/20, balanceo de clases y estandarización z-score.",
+    "toda variable con fuga de datos (data leakage) y estandarizando cada característica con "
+    "z-score.",
     "Desarrollar la demostración de referencia sobre el conjunto real de dígitos manuscritos "
     "MNIST (imágenes de 28 × 28 píxeles, n = 784 características hacia [v~1~, v~2~]) tanto con "
     "sus 10 clases (dígitos 0 al 9) como en su versión binaria (0 frente a 1).",
@@ -212,8 +213,8 @@ inf.lista([
     "Partir de un conjunto de datos etiquetado X = {(x~1~, y~1~), ..., (x~N~, y~N~)} por cada "
     "Data Mart, donde cada observación tiene un vector de características x~i~ = [x~i1~, x~i2~, "
     "..., x~in~] con n > 2 y una clase verdadera y~i~ en {1, 2, ..., S}.",
-    "Utilizar la técnica de reducción asociada al caso de estudio MNIST (t-SNE y comparativa "
-    "con PCA) para disminuir la dimensionalidad de cada vector de características desde R^n^ "
+    "Utilizar la técnica de reducción asociada al caso de estudio MNIST (t-SNE, comparada con "
+    "Isomap) para disminuir la dimensionalidad de cada vector de características desde R^n^ "
     "hasta un plano euclidiano bidimensional x~i~^(1)^ = [v~1~, v~2~].",
     "Graficar las observaciones proyectadas en el plano [v~1~, v~2~] asignando un color y "
     "marcador distinto a cada clase verdadera para visualizar la formación de los grupos.",
@@ -230,7 +231,7 @@ inf.texto("Listado de equipos y materiales generales empleados en la guía prác
 inf.lista([
     "Computador con Python 3 (Windows 11 Pro).",
     "Visual Studio Code (editor y terminal integrada PowerShell).",
-    "Bibliotecas NumPy, pandas, Matplotlib y scikit-learn (TSNE, PCA, kNN y descarga de MNIST desde OpenML).",
+    "Bibliotecas NumPy, pandas, Matplotlib y scikit-learn (TSNE, Isomap, kNN y descarga de MNIST desde OpenML).",
     "Cuatro datasets etiquetados de los Data Marts en la carpeta 2parcial/: "
     "01_dm_prestamos.csv, 02_dm_saldo_mensual.csv, 03_dm_ordenes.csv y 04_dm_transacciones.csv.",
     "Apuntes de clase (Pizarra 1: reducción de características X_i a [v_1, v_2]).",
@@ -259,7 +260,7 @@ inf.tabla(
         ["Python", versiones["Python"], "Lenguaje principal de programación."],
         ["NumPy", versiones["NumPy"], "Estandarización matricial y álgebra lineal."],
         ["pandas", versiones["pandas"], "Lectura y estructuración de los 4 Data Marts."],
-        ["scikit-learn", versiones["scikit-learn"], "Proyección t-SNE y PCA, kNN de evaluación y descarga de MNIST (OpenML)."],
+        ["scikit-learn", versiones["scikit-learn"], "Proyección t-SNE e Isomap, kNN de evaluación y descarga de MNIST (OpenML)."],
         ["Matplotlib", versiones["Matplotlib"], "Generación de mapas 2D [v1, v2] por clase."],
         ["Microsoft Word", "16.0", "Edición del informe técnico de la práctica."],
     ],
@@ -271,8 +272,8 @@ inf.titulo("Reproducibilidad de los resultados:")
 inf.texto(
     "Para reproducir íntegramente los datasets y las gráficas de este informe basta con ejecutar "
     "en la raíz del repositorio python scripts/44_generar_datasets_2parcial.py seguido de "
-    "python 2parcial/Tarea1_Reduccion_MNIST_2D/reduccion_mnist_2d.py. Todas las particiones, "
-    "submuestreos e inicializaciones de t-SNE y PCA utilizan la semilla fija 42."
+    "python 2parcial/Tarea1_Reduccion_MNIST_2D/reduccion_mnist_2d.py. La muestra de MNIST, "
+    "la inicialización de t-SNE y la validación cruzada utilizan la semilla fija 42."
 )
 
 # ----------------------------------------------------------------------------
@@ -286,7 +287,8 @@ inf.titulo("Objetivo de la actividad", antes=2)
 inf.texto(
     "Comprender cómo un conjunto de vectores de características de dimensión n > 2 se proyecta "
     "hacia un plano euclidiano de dos coordenadas [v~1~, v~2~] preservando la estructura de "
-    "vecindad local (t-SNE) o la máxima varianza global (PCA)."
+    "vecindad local (t-SNE) o las distancias medidas a lo largo de la variedad de los datos "
+    "(Isomap)."
 )
 inf.titulo("Planteamiento del problema de reducción (Pizarra 1)")
 inf.texto(
@@ -358,19 +360,39 @@ inf.ecuacion(
     suma(r("i≠j"), r(""), sub(r("p"), r("ij")) + func("ln", frac(sub(r("p"), r("ij")), sub(r("q"), r("ij"))))),
     clave="kl",
 )
-inf.titulo("Reducción lineal mediante PCA (Análisis de Componentes Principales)")
+inf.titulo("Reducción no lineal mediante Isomap (Isometric Mapping)")
 inf.texto(
-    "Como contraste paramétrico y lineal, PCA proyecta los datos estandarizados X̃ sobre los "
-    "dos vectores propios unitarios u~1~ y u~2~ asociados a los dos mayores valores propios "
-    "(λ~1~ ≥ λ~2~) de la matriz de covarianza muestral Σ = (1/N) X̃^T^ X̃ (Ecuación ({eq:pca})). "
-    "A diferencia de t-SNE, PCA define una matriz de proyección explícita U~2~ = [u~1~, u~2~] "
-    "que permite transformar nuevos datos de prueba y trazar fronteras lineales en la Tarea 2:"
+    "Isomap, propuesto por Tenenbaum, de Silva y Langford [7], parte de la idea de que los "
+    "datos viven sobre una superficie curva (variedad) dentro de R^n^, y que la distancia "
+    "relevante entre dos observaciones no es la línea recta sino el camino que recorre esa "
+    "superficie. Para estimarla, conecta cada observación con sus k vecinos más cercanos "
+    "(k = 20 en los Data Marts y k = 10 en MNIST) y calcula la **distancia geodésica** "
+    "d~G~(x~i~, x~j~) como el camino más corto dentro de ese grafo (Ecuación ({eq:geodesica})):"
+)
+inf.ecuacion(
+    sub(r("d"), r("G")) + delim(sub(r("x"), r("i")) + r(", ") + sub(r("x"), r("j"))) + r("=") +
+    tx("min") + suma(r("(a,b)∈camino(i→j)"), r(""),
+                     delim(sub(r("x"), r("a")) + r("−") + sub(r("x"), r("b")), "‖", "‖")),
+    clave="geodesica",
+)
+inf.texto(
+    "Luego aplica escalamiento multidimensional clásico: con la matriz D~G~^(2)^ de distancias "
+    "geodésicas al cuadrado y la matriz de centrado J = I − (1/N)11^T^, obtiene "
+    "B = −½ J D~G~^(2)^ J y toma sus dos mayores valores propios λ~1~ ≥ λ~2~ con sus vectores "
+    "propios u~1~ y u~2~. Las coordenadas de cada observación en el plano son "
+    "(Ecuación ({eq:isomap})):"
 )
 inf.ecuacion(
     delim(sub(r("v"), r("i1")) + r(", ") + sub(r("v"), r("i2")), "[", "]") + r("=") +
-    sub(acento(r("x"), "̃"), r("i")) + sup(r(""), r("T")) +
-    delim(sub(r("u"), r("1")) + r(", ") + sub(r("u"), r("2")), "[", "]"),
-    clave="pca",
+    delim(raiz(sub(r("λ"), r("1"))) + sub(r("u"), r("1i")) + r(", ") +
+          raiz(sub(r("λ"), r("2"))) + sub(r("u"), r("2i")), "[", "]"),
+    clave="isomap",
+)
+inf.texto(
+    "A diferencia de t-SNE, que solo cuida que los vecinos cercanos sigan cerca, Isomap intenta "
+    "conservar también las distancias grandes, por lo que su gráfica refleja mejor la forma "
+    "global de los datos. Ninguno de los dos se usa para clasificar: solo sirven para ver los "
+    "grupos."
 )
 
 # Actividad 2
@@ -455,22 +477,24 @@ inf.tabla(
     clave="datamarts",
     anchos=[3.3, 3.3, 1.4, 1.3, 3.2, 2.5],
 )
-inf.titulo("Balanceo de clases, partición 80/20 y escalado z-score")
+inf.titulo("Todas las observaciones, todas las características y escalado z-score")
 inf.texto(
-    "El balanceo se aplicó de dos formas según la cantidad de datos disponible. En Préstamos "
-    "(solo 76 créditos en mora) primero se dividió 80 % entrenamiento y 20 % prueba de forma "
-    "estratificada y después se sobremuestreó la clase minoritaria **solo en el entrenamiento**; "
-    "la prueba conserva los 136 préstamos reales con su proporción original. En Saldo Mensual, "
-    "Órdenes y Transacciones, donde sobran datos, se submuestreó 50/50 todo el conjunto **antes** "
-    "de dividir 80/20, por lo que el entrenamiento y la prueba quedan balanceados. En todos los "
-    "casos, para que variables expresadas en decenas de miles de coronas checas (como población "
-    "o monto del préstamo) no dominen la distancia euclidiana frente a variables binarias o "
-    "tasas, la media μ~j~ y la desviación estándar σ~j~ se calculan **únicamente sobre el "
-    "entrenamiento** y cada característica se estandariza según la Ecuación ({eq:zscore}):"
+    "En esta tarea se grafica **un punto por cada observación real** de cada CSV, usando "
+    "**todas sus características**: 682 préstamos, 5 000 cierres mensuales, 5 092 órdenes y "
+    "20 000 transacciones. No se balancea ni se muestrea, porque el objetivo es ver cómo se "
+    "distribuyen realmente las clases; por eso la leyenda de cada gráfica muestra el conteo "
+    "real de cada clase. El balanceo y la partición 80/20 solo se aplican al entrenar el "
+    "clasificador de la Tarea 2."
+)
+inf.texto(
+    "Para que variables expresadas en decenas de miles de coronas checas (como población o "
+    "monto del préstamo) no dominen la distancia euclidiana frente a variables binarias o "
+    "tasas, cada característica se estandariza con su media μ~j~ y su desviación estándar "
+    "σ~j~ (Ecuación ({eq:zscore})):"
 )
 inf.ecuacion(
     sub(acento(r("x"), "̃"), r("ij")) + r("=") +
-    frac(sub(r("x"), r("ij")) + r("−") + sub(r("μ"), r("j,train")), sub(r("σ"), r("j,train"))),
+    frac(sub(r("x"), r("ij")) + r("−") + sub(r("μ"), r("j")), sub(r("σ"), r("j"))),
     clave="zscore",
 )
 
@@ -480,7 +504,7 @@ inf.titulo("Objetivo de la actividad", antes=2)
 inf.texto(
     "Ejecutar la reducción de dimensionalidad a [v~1~, v~2~] sobre el dataset clásico de "
     "dígitos manuscritos MNIST citado en la pizarra de clase, comparando la capacidad de t-SNE "
-    "y PCA para separar tanto las 10 clases de dígitos (0 al 9) como el caso binario (0 vs. 1)."
+    "e Isomap para separar tanto las 10 clases de dígitos (0 al 9) como el caso binario (0 vs. 1)."
 )
 inf.titulo("Desarrollo sobre MNIST")
 inf.texto(
@@ -490,15 +514,14 @@ inf.texto(
     f"en escala de grises, divididas para 255 para dejarlas en [0, 1]. Como t-SNE calcula "
     f"distancias entre todos los pares de puntos, se tomó una muestra estratificada de "
     f"{miles(mnist_info['N_total'])} imágenes (300 por dígito). Esa matriz se redujo desde "
-    f"R^784^ hacia R^2^ (x~i~^(1)^ = [v~1~, v~2~]) con t-SNE (perplejidad 30) y con PCA. En las "
-    f"10 clases, t-SNE alcanzó una divergencia KL = {num(mnist_info['kl_10'], 4)} y agrupó los "
-    f"10 dígitos con una exactitud kNN en 2D (validación cruzada de 5 pliegues) de "
-    f"**{pct(mnist_info['acc_tsne_10'])}**, muy por encima de PCA "
-    f"(**{pct(mnist_info['acc_pca_10'])}**, que solo retiene el "
-    f"{pct(mnist_info['var_pca_10'])} de la varianza total en dos ejes) y del 10 % que se "
-    f"obtendría al azar con 10 clases equilibradas. Al restringir el conjunto a dos clases "
-    f"(dígito 0 frente a dígito 1, N = {mnist_info['N_bin']}), t-SNE logró "
-    f"**{pct(mnist_info['acc_tsne_bin'])}** y PCA **{pct(mnist_info['acc_pca_bin'])}** en 2D."
+    f"R^784^ hacia R^2^ (x~i~^(1)^ = [v~1~, v~2~]) con t-SNE (perplejidad 30) y con Isomap "
+    f"(k = 10 vecinos). En las 10 clases, t-SNE alcanzó una divergencia KL = "
+    f"{num(mnist_info['kl_10'], 4)} y agrupó los 10 dígitos con una exactitud kNN en 2D "
+    f"(validación cruzada de 5 pliegues) de **{pct(mnist_info['acc_tsne_10'])}**, frente a "
+    f"**{pct(mnist_info['acc_isomap_10'])}** de Isomap y al 10 % que se obtendría al azar con "
+    f"10 clases equilibradas. Al restringir el conjunto a dos clases (dígito 0 frente a "
+    f"dígito 1, N = {mnist_info['N_bin']}), t-SNE logró **{pct(mnist_info['acc_tsne_bin'])}** "
+    f"e Isomap **{pct(mnist_info['acc_isomap_bin'])}** en 2D."
 )
 
 # Actividad 4
@@ -510,12 +533,21 @@ inf.texto(
 )
 inf.titulo("Aplicación a los cuatro Data Marts")
 inf.texto(
-    "En cada Data Mart se proyectaron las observaciones estandarizadas hacia [v~1~, v~2~] "
-    "mediante t-SNE (inicialización PCA, tasa de aprendizaje automática y perplejidad 30) y "
-    "mediante PCA de dos componentes, guardando las coordenadas resultantes en archivos CSV "
-    "dentro de resultados/ y generando tanto las figuras comparativas individuales como los "
-    "mosaicos consolidados de clases binarias y multiclase reales."
+    "En cada Data Mart se proyectaron todas las observaciones estandarizadas hacia "
+    "[v~1~, v~2~] mediante t-SNE (tasa de aprendizaje automática y perplejidad 30) y mediante "
+    "Isomap (k = 20 vecinos; con 10 o 15 vecinos el grafo quedaba dividido en Saldo Mensual y "
+    "Órdenes). Las coordenadas de cada observación se guardaron en archivos CSV dentro de "
+    "resultados/, y se generaron las figuras individuales (t-SNE e Isomap lado a lado) y los "
+    "mosaicos de clases binarias y multiclase reales."
 )
+divididos = [r.Data_Mart for r in tabla_res.itertuples() if r.Componentes_Grafo_Isomap > 1]
+if divididos:
+    inf.texto(
+        f"En {', '.join(divididos)} el grafo de vecinos de Isomap quedó dividido en dos grupos "
+        f"aun con k = 20. Isomap los une por el par de puntos más cercano y, por eso, uno de los "
+        f"grupos aparece en su gráfica como una franja alargada y separada del resto. Esa franja "
+        f"es un efecto del método y no indica una clase distinta."
+    )
 
 # Actividad 5
 actividad("Actividad 5. Interpretación geométrica y separabilidad en el plano 2D (20 min)")
@@ -538,21 +570,24 @@ inf.texto(
     "respondiendo siempre la clase más frecuente."
 )
 inf.texto(
-    f"El mayor aislamiento entre grupos se alcanza en **Fact_Saldo_Cuenta_Mensual** (exactitud "
-    f"en 2D de **{pct(r_dm2['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm2['Acc_2D_PCA'])}** con "
-    f"PCA, frente a {pct(r_dm2['Acc_Clase_Mayoritaria'])} de la clase mayoritaria), porque el "
-    f"sobregiro tiende a persistir: 388 de los 708 meses que terminan en sobregiro en t + 1 ya "
-    f"estaban en sobregiro en el mes t. En **Fact_Ordenes** "
-    f"(**{pct(r_dm3['Acc_2D_tSNE'])}** con t-SNE) y **Fact_Transacciones** "
-    f"(**{pct(r_dm4['Acc_2D_tSNE'])}**) las clases se separan de forma parcial, con un traslape "
-    f"visible, frente al 50 % de la clase mayoritaria. En **Fact_Prestamos**, en cambio, la "
-    f"exactitud en 2D (**{pct(r_dm1['Acc_2D_tSNE'])}** con t-SNE y "
-    f"**{pct(r_dm1['Acc_2D_PCA'])}** con PCA) **no supera** al "
-    f"{pct(r_dm1['Acc_Clase_Mayoritaria'])} que se obtiene diciendo siempre «sano»: los 76 "
-    f"créditos en mora quedan mezclados con los sanos en el plano. Es un hallazgo y no un "
-    f"error: con las variables disponibles al otorgar el préstamo, la mora no forma un grupo "
-    f"propio, lo que anticipa que la Regresión Logística de la Tarea 2 tendrá dificultad en "
-    f"este Data Mart."
+    f"Como se grafican todas las observaciones, las clases conservan su desbalance real "
+    f"y la línea base cambia en cada Data Mart: {pct(r_dm1['Acc_Clase_Mayoritaria'])} en "
+    f"Préstamos, {pct(r_dm2['Acc_Clase_Mayoritaria'])} en Saldo Mensual, "
+    f"{pct(r_dm3['Acc_Clase_Mayoritaria'])} en Órdenes y {pct(r_dm4['Acc_Clase_Mayoritaria'])} "
+    f"en Transacciones. En **Fact_Saldo_Cuenta_Mensual** la exactitud en 2D es "
+    f"**{pct(r_dm2['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm2['Acc_2D_Isomap'])}** con Isomap: "
+    f"los meses que terminan en sobregiro forman zonas propias porque el sobregiro tiende a "
+    f"persistir (388 de los 708 ya estaban en sobregiro en el mes t). En **Fact_Ordenes** "
+    f"(**{pct(r_dm3['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm3['Acc_2D_Isomap'])}** con "
+    f"Isomap) y en **Fact_Transacciones** (**{pct(r_dm4['Acc_2D_tSNE'])}** y "
+    f"**{pct(r_dm4['Acc_2D_Isomap'])}**) las clases se separan de forma parcial, con un "
+    f"traslape visible. En **Fact_Prestamos**, en cambio, la exactitud en 2D "
+    f"(**{pct(r_dm1['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm1['Acc_2D_Isomap'])}** con "
+    f"Isomap) no supera con claridad al {pct(r_dm1['Acc_Clase_Mayoritaria'])} que se obtiene "
+    f"diciendo siempre «sano»: los 76 créditos en mora quedan mezclados con los sanos en el "
+    f"plano. Es un hallazgo y no un error: con las variables disponibles al otorgar el "
+    f"préstamo, la mora no forma un grupo propio, lo que anticipa que la Regresión Logística "
+    f"de la Tarea 2 tendrá dificultad en este Data Mart."
 )
 
 # ----------------------------------------------------------------------------
@@ -582,15 +617,17 @@ if capturas:
 inf.titulo("2.7.2 Tabla consolidada de resultados de reducción a 2D")
 filas_t1 = []
 for row in tabla_res.itertuples():
-    multi_str = pct(row.Acc_Multiclase_tSNE, 1) if not pd.isna(row.Acc_Multiclase_tSNE) else "—"
+    multi_str = (
+        f"{pct(row.Acc_Multiclase_tSNE, 1)} / {pct(row.Acc_Multiclase_Isomap, 1)}"
+        if not pd.isna(row.Acc_Multiclase_tSNE) else "—"
+    )
     filas_t1.append([
         row.Data_Mart,
         str(row.n_Caracteristicas),
-        miles(row.N_Proyectado),
+        miles(row.N_Observaciones),
         num(row.KL_tSNE, 3),
         pct(row.Acc_2D_tSNE, 2),
-        pct(row.Varianza_PCA_2D, 1),
-        pct(row.Acc_2D_PCA, 2),
+        pct(row.Acc_2D_Isomap, 2),
         pct(row.Acc_Clase_Mayoritaria, 1),
         multi_str,
     ])
@@ -599,28 +636,26 @@ inf.tabla(
     [
         "Data Mart",
         "Dim. X (n)",
-        "N Proy.",
+        "N (todas)",
         "KL t-SNE",
         "Acc 2D t-SNE",
-        "Var. PCA 2D",
-        "Acc 2D PCA",
+        "Acc 2D Isomap",
         "Clase mayor.",
-        "Acc Multiclase",
+        "Multiclase t-SNE / Isomap",
     ],
     filas_t1,
     clave="resultados_t1",
-    anchos=[2.6, 1.2, 1.3, 1.4, 1.8, 1.6, 1.7, 1.6, 1.8],
+    anchos=[2.7, 1.2, 1.4, 1.4, 1.8, 1.8, 1.6, 3.0],
 )
-mejoras = [(r.Data_Mart, 100 * (r.Acc_2D_tSNE - r.Acc_2D_PCA)) for r in tabla_res.itertuples()]
+mejoras = [(r.Data_Mart, 100 * (r.Acc_2D_tSNE - r.Acc_2D_Isomap)) for r in tabla_res.itertuples()]
 gana_tsne = [d for d, m in mejoras if m > 0]
 inf.texto(
-    f"La reducción no lineal con t-SNE supera a PCA en {len(gana_tsne)} de los 4 Data Marts "
-    f"(Tabla {{tab:resultados_t1}}), con diferencias de hasta "
-    f"{num(max(m for _, m in mejoras), 1)} puntos porcentuales, porque adapta la métrica local "
-    f"a las densidades de cada grupo. En Préstamos ambas proyecciones quedan por debajo de la "
-    f"clase mayoritaria, ya que la mora no forma un grupo separado. La columna «Clase mayor.» "
-    f"indica la exactitud de responder siempre la clase más frecuente y sirve de referencia "
-    f"mínima para leer las demás."
+    f"t-SNE separa mejor las clases que Isomap en {len(gana_tsne)} de los 4 Data Marts "
+    f"(Tabla {{tab:resultados_t1}}), porque se concentra en mantener juntos a los vecinos "
+    f"cercanos, mientras que Isomap prioriza la forma global de los datos. La columna «Clase "
+    f"mayor.» indica la exactitud de responder siempre la clase más frecuente y sirve de "
+    f"referencia mínima para leer las demás; la exactitud en 2D se mide con un kNN (k = 5) y "
+    f"validación cruzada de 5 pliegues."
 )
 
 inf.titulo("2.7.3 Demostración de referencia con el dataset MNIST")
@@ -632,9 +667,9 @@ inf.imagen(
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
 inf.imagen(
-    RES / "mnist_10clases_tsne_vs_pca.png",
+    RES / "mnist_10clases_tsne_vs_isomap.png",
     15.2,
-    "Proyección del dataset MNIST (10 clases, dígitos 0 al 9) al plano [v1, v2] con t-SNE frente a PCA.",
+    "Proyección del dataset MNIST (10 clases, dígitos 0 al 9) al plano [v1, v2] con t-SNE e Isomap.",
     clave="mnist_10",
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
@@ -671,7 +706,7 @@ for cfg_id, desc in [
     inf.imagen(
         RES / f"reduccion_binaria_{cfg_id}.png",
         15.0,
-        f"Comparación de reducción a 2D ([v1, v2]) con t-SNE frente a PCA en {desc}.",
+        f"Dispersión v1 contra v2 con t-SNE e Isomap, un punto por observación real, en {desc}.",
         clave=f"bin_{cfg_id}",
         fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
     )
@@ -680,12 +715,13 @@ inf.titulo("2.7.5 Mapas bidimensionales [v1, v2] de las Clases Múltiples Reales
 inf.imagen(
     RES / "mosaico_multiclase_reales_tsne.png",
     15.2,
-    "Proyección t-SNE en el plano [v1, v2] de las versiones multiclase reales: Estados del préstamo (A, B, C, D) y Tipos de orden (SIPO, UVER, POJISTNE, LEASING).",
+    "Proyección t-SNE (izquierda) e Isomap (derecha) en el plano [v1, v2] de las versiones multiclase reales: Estados del préstamo (A, B, C, D) y Tipos de orden (SIPO, UVER, POJISTNE, LEASING).",
     clave="mosaico_multi",
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
 dm1_csv = pd.read_csv(DIR_2P / "01_dm_prestamos.csv")
 may_estado = dm1_csv["Clase_Multiclase"].value_counts(normalize=True).max()
+may_orden = pd.read_csv(DIR_2P / "03_dm_ordenes.csv")["Clase_Multiclase"].value_counts(normalize=True).max()
 inf.texto(
     f"En la Ilustración {{fig:mosaico_multi}} los cuatro estados reales del préstamo (A: "
     f"terminado sano, B: terminado en mora, C: vigente sano, D: vigente en mora) se traslapan "
@@ -694,8 +730,8 @@ inf.texto(
     f"retiradas las variables medidas al corte de 1998, que eran las que separaban los "
     f"contratos terminados de los vigentes. Las cuatro categorías de órdenes permanentes "
     f"(SIPO, UVER, POJISTNE, LEASING) se separan solo parcialmente "
-    f"({pct(r_dm3['Acc_Multiclase_tSNE'])}), ya que la muestra proyectada contiene la mitad de "
-    f"órdenes SIPO y la otra mitad repartida entre las tres obligaciones financieras."
+    f"({pct(r_dm3['Acc_Multiclase_tSNE'])} con t-SNE), frente al "
+    f"{pct(may_orden)} de la categoría más frecuente (SIPO)."
 )
 
 inf.titulo("2.7.6 Cumplimiento de las instrucciones")
@@ -713,11 +749,11 @@ inf.tabla(
         ],
         [
             "3. Demostración con MNIST",
-            "MNIST real de OpenML (muestra de 3 000 imágenes de 28 × 28) en 10 clases (0..9) y en 2 clases (0 vs. 1), con figuras t-SNE y PCA.",
+            "MNIST real de OpenML (muestra de 3 000 imágenes de 28 × 28) en 10 clases (0..9) y en 2 clases (0 vs. 1), con figuras t-SNE e Isomap.",
         ],
         [
             "4. Reducción X_i -> [v1, v2] en R^2",
-            "Vectores de 10 a 15 características reducidos a dos coordenadas y exportados a CSV y PNG.",
+            "Todas las características (10 a 15) y todas las observaciones de cada dataset reducidas a dos coordenadas y exportadas a CSV y PNG.",
         ],
         [
             "5. Graficación por grupos de clase",
@@ -748,18 +784,18 @@ casillas([
 seccion("2.9 Conclusiones")
 inf.lista([
     f"**Sobre la reducción de dimensionalidad a [v~1~, v~2~]:** la proyección desde R^n^ hacia "
-    f"R^2^ mediante t-SNE preserva la estructura de vecindad local mucho mejor que una "
-    f"proyección lineal plana cuando las clases siguen variedades curvas. En el dataset de "
-    f"referencia MNIST (n = 784), t-SNE separó los 10 dígitos con una exactitud en 2D de "
-    f"{pct(mnist_info['acc_tsne_10'])} frente a {pct(mnist_info['acc_pca_10'])} de PCA. En los "
+    f"R^2^ mediante t-SNE preserva la estructura de vecindad local, mientras que Isomap "
+    f"conserva mejor la forma global. En el dataset de referencia MNIST (n = 784), t-SNE "
+    f"separó los 10 dígitos con una exactitud en 2D de {pct(mnist_info['acc_tsne_10'])} frente "
+    f"a {pct(mnist_info['acc_isomap_10'])} de Isomap. En los "
     f"Data Marts bancarios los grupos son mucho menos nítidos: t-SNE alcanzó "
     f"{pct(r_dm2['Acc_2D_tSNE'])} en Saldo Mensual, {pct(r_dm3['Acc_2D_tSNE'])} en Órdenes y "
-    f"{pct(r_dm4['Acc_2D_tSNE'])} en Transacciones (frente a 50 % de la clase mayoritaria), "
-    f"mientras que en Préstamos ({pct(r_dm1['Acc_2D_tSNE'])}) no superó el "
+    f"{pct(r_dm4['Acc_2D_tSNE'])} en Transacciones, mientras que en Préstamos "
+    f"({pct(r_dm1['Acc_2D_tSNE'])}) no superó con claridad el "
     f"{pct(r_dm1['Acc_Clase_Mayoritaria'])} de responder siempre «sano».",
     "**Sobre la preparación de los datos sin fuga de información:** la eliminación de etiquetas "
-    "artificiales y de variables medidas después del evento, el balanceo de clases y el "
-    "escalado z-score ajustado solo en el entrenamiento garantizan que los grupos visualizados en el "
+    "artificiales y de variables medidas después del evento, y la graficación de todas las "
+    "observaciones reales con todas sus características, garantizan que los grupos visualizados en el "
     "plano [v~1~, v~2~] reflejen patrones reales de negocio (mora crediticia, sobregiro en el "
     "mes t + 1, obligaciones financieras y dirección de flujo transaccional) y dejan listos "
     "los cuatro conjuntos para el entrenamiento de la Regresión Logística en la Tarea 2.",
@@ -768,9 +804,10 @@ inf.lista([
 seccion("2.10 Recomendaciones")
 inf.texto(
     "Se recomienda emplear t-SNE exclusivamente para la exploración visual y el diagnóstico de "
-    "agrupamientos en el plano [v~1~, v~2~], y utilizar PCA cuando se requiera proyectar datos "
-    "nuevos de prueba o dibujar fronteras de decisión paramétricas en 2D, dado que t-SNE no "
-    "define una matriz de transformación explícita fuera de la muestra."
+    "agrupamientos en el plano [v~1~, v~2~], y complementarlo con Isomap para revisar la forma "
+    "global de los datos. Cuando se requiera proyectar datos nuevos de prueba o dibujar una "
+    "frontera de decisión en 2D (Tarea 2) conviene un método lineal como PCA, porque t-SNE no "
+    "define una transformación aplicable a observaciones nuevas."
 )
 
 seccion("2.11 Referencias bibliográficas")
@@ -785,6 +822,8 @@ referencias = [
     '[5] F. Pedregosa et al., "Scikit-learn: Machine learning in Python," Journal of Machine '
     "Learning Research, vol. 12, pp. 2825–2830, 2011.",
     "[6] R. Kimball y M. Ross, The Data Warehouse Toolkit, 3.ª ed. Indianapolis, IN, USA: Wiley, 2013.",
+    '[7] J. B. Tenenbaum, V. de Silva y J. C. Langford, "A global geometric framework for '
+    'nonlinear dimensionality reduction," Science, vol. 290, no. 5500, pp. 2319–2323, 2000.',
 ]
 for ref in referencias:
     inf.texto(
