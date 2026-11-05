@@ -17,14 +17,15 @@ Criterios:
     se necesita para entrenar un clasificador (Tarea 2), no para visualizar.
   - Cada característica se estandariza (z-score) para que ninguna domine la distancia.
   - Dos reducciones no lineales lado a lado: t-SNE e Isomap.
+  - Se generan los 4 gráficos individuales multiclase (3 a 4 colores por Data Mart,
+    t-SNE frente a Isomap) y los 4 gráficos individuales binarios (2 colores).
 
 Incluye:
   1. Demostración de referencia sobre el dataset MNIST real (OpenML `mnist_784`:
      70,000 imágenes de 28 x 28 = 784 píxeles), con una muestra estratificada de
      3,000 imágenes (300 por dígito): 10 clases y caso binario 0 frente a 1.
-  2. Reducción a [v_1, v_2] de los 4 Data Marts de DM_Financial_Kimball_v2, en su
-     versión binaria y en sus clases múltiples reales (Estado del préstamo A, B, C, D
-     y Tipo de orden SIPO, UVER, POJISTNE, LEASING).
+  2. Reducción a [v_1, v_2] de los 4 Data Marts de DM_Financial_Kimball_v2, tanto en
+     sus clases múltiples reales (3 a 4 clases por Data Mart) como en su versión binaria.
 
 Ejecución (desde la raíz del repositorio):
     python 2parcial/Tarea1_Reduccion_MNIST_2D/reduccion_mnist_2d.py
@@ -72,7 +73,7 @@ plt.rcParams.update({
     "savefig.dpi": 200,
 })
 
-PALETA = {1: "#1f77b4", 2: "#2ca02c", 3: "#d62728", 4: "#ff7f0e"}
+PALETA = {1: "#1f77b4", 2: "#2ca02c", 3: "#d62728", 4: "#ff7f0e", 5: "#9467bd"}
 PALETA_BIN = {0: "#1f77b4", 1: "#d62728"}
 
 DATASETS_CONFIG = [
@@ -89,8 +90,8 @@ DATASETS_CONFIG = [
         "nombre": "DM2: Saldo Mensual (Sobregiro t+1)",
         "archivo": "02_dm_saldo_mensual.csv",
         "tabla_hechos": "Fact_Saldo_Cuenta_Mensual",
-        "tiene_multiclase": False,
-        "titulo_multi": "",
+        "tiene_multiclase": True,
+        "titulo_multi": "DM2: Saldo Mensual por Liquidez en t+1 (Estable, Caída, Sobregiro)",
     },
     {
         "id": "DM3_Ordenes",
@@ -105,8 +106,8 @@ DATASETS_CONFIG = [
         "nombre": "DM4: Transacciones (Egreso vs. Ingreso)",
         "archivo": "04_dm_transacciones.csv",
         "tabla_hechos": "Fact_Transacciones",
-        "tiene_multiclase": False,
-        "titulo_multi": "",
+        "tiene_multiclase": True,
+        "titulo_multi": "DM4: Transacciones por Operación Real (VKLAD, VYBER, PREVOD)",
     },
 ]
 
@@ -181,7 +182,6 @@ def dispersion(ax, Z, y, nombres, paleta, titulo, xlabel="v₁", ylabel="v₂"):
 
 def ejecutar_mnist_referencia(lineas_consola):
     """Ejecuta la demostración de referencia con MNIST real (10 clases y 2 clases)."""
-    # MNIST real desde OpenML (se descarga una vez y queda en caché en ~/scikit_learn_data)
     mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="auto")
     X_todo = mnist.data.astype(float)
     y_todo = mnist.target.astype(int)
@@ -190,7 +190,7 @@ def ejecutar_mnist_referencia(lineas_consola):
         rng.choice(np.flatnonzero(y_todo == d), size=MNIST_POR_DIGITO, replace=False)
         for d in range(10)
     ])
-    X = X_todo[idx] / 255.0  # intensidad de cada píxel en [0, 1]; los 784 píxeles comparten escala
+    X = X_todo[idx] / 255.0
     y = y_todo[idx]
     imagenes = X.reshape(-1, 28, 28)
 
@@ -276,7 +276,7 @@ def ejecutar_mnist_referencia(lineas_consola):
 
 
 def guardar_capturas_terminal(lineas_consola):
-    """Guarda como imagen la salida de consola registrada durante la ejecución (no es una captura de pantalla)."""
+    """Guarda como imagen la salida de consola registrada durante la ejecución."""
     fuente_mono = None
     for candidato in ("consola.ttf", "cour.ttf", "lucon.ttf"):
         try:
@@ -318,7 +318,6 @@ def main():
     for l in lineas_consola[1:]:
         print(l)
 
-    # Borrar figuras de la versión anterior (t-SNE frente a PCA)
     for viejo in ["mnist_10clases_tsne_vs_pca.png"]:
         if (SALIDA / viejo).exists():
             (SALIDA / viejo).unlink()
@@ -331,7 +330,6 @@ def main():
     axes_bin = axes_bin.ravel()
     fig_mosaico_multi, axes_multi = plt.subplots(2, 2, figsize=(13.5, 11.0))
     axes_multi = axes_multi.ravel()
-    idx_multi = 0
 
     for k, cfg in enumerate(DATASETS_CONFIG):
         t0 = time.time()
@@ -361,7 +359,7 @@ def main():
             "Nombre_Multiclase": df["Nombre_Multiclase"].values,
         }).to_csv(SALIDA / f"proyeccion_2d_{cfg['id']}.csv", index=False, encoding="utf-8-sig")
 
-        # Figura individual: t-SNE e Isomap lado a lado (clases binarias)
+        # 1. Figura individual: t-SNE e Isomap lado a lado (clases binarias, 2 colores)
         N = len(X)
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14.0, 5.8))
         dispersion(ax1, Z_tsne, y_bin, nombres_bin, PALETA_BIN,
@@ -378,24 +376,33 @@ def main():
         dispersion(axes_bin[k], Z_tsne, y_bin, nombres_bin, PALETA_BIN,
                    f"{cfg['nombre']}\nn = {len(features)} -> 2D, {N:,} observaciones (Acc 2D = {100*acc_tsne:.1f} %)")
 
-        # Versión multiclase real (Préstamos A/B/C/D y Órdenes SIPO/UVER/POJISTNE/LEASING)
-        acc_multi_tsne = np.nan
-        acc_multi_iso = np.nan
-        if cfg["tiene_multiclase"]:
-            y_multi = df["Clase_Multiclase"].to_numpy(dtype=int)
-            nombres_multi = df.groupby("Clase_Multiclase")["Nombre_Multiclase"].first().to_dict()
-            acc_multi_tsne, _ = evaluar_proyeccion_2d(Z_tsne, y_multi)
-            acc_multi_iso, _ = evaluar_proyeccion_2d(Z_iso, y_multi)
-            dispersion(axes_multi[idx_multi], Z_tsne, y_multi, nombres_multi, PALETA,
-                       f"{cfg['titulo_multi']}\nt-SNE, {N:,} observaciones (Acc 2D = {100*acc_multi_tsne:.1f} %)")
-            dispersion(axes_multi[idx_multi + 1], Z_iso, y_multi, nombres_multi, PALETA,
-                       f"{cfg['titulo_multi']}\nIsomap, {N:,} observaciones (Acc 2D = {100*acc_multi_iso:.1f} %)")
-            idx_multi += 2
+        # 2. Figura individual multiclase (3 a 4 colores reales por Data Mart, t-SNE vs Isomap)
+        y_multi = df["Clase_Multiclase"].to_numpy(dtype=int)
+        nombres_multi = df.groupby("Clase_Multiclase")["Nombre_Multiclase"].first().to_dict()
+        acc_multi_tsne, _ = evaluar_proyeccion_2d(Z_tsne, y_multi)
+        acc_multi_iso, _ = evaluar_proyeccion_2d(Z_iso, y_multi)
+        acc_may_multi = float(np.bincount(y_multi).max() / len(y_multi))
+
+        fig_m, (axm1, axm2) = plt.subplots(1, 2, figsize=(14.0, 5.8))
+        dispersion(axm1, Z_tsne, y_multi, nombres_multi, PALETA,
+                   f"t-SNE, {N:,} de {N:,} observaciones reales (Acc 2D = {100*acc_multi_tsne:.1f} %)")
+        dispersion(axm2, Z_iso, y_multi, nombres_multi, PALETA,
+                   f"Isomap, las {N:,} observaciones reales (Acc 2D = {100*acc_multi_iso:.1f} %)")
+        fig_m.suptitle(f"{cfg['titulo_multi']}: dispersión v₁ contra v₂ con las {len(features)} características, "
+                       f"un color por clase y un punto por observación", fontsize=12.0)
+        fig_m.tight_layout()
+        fig_m.savefig(SALIDA / f"reduccion_multiclase_{cfg['id']}.png", dpi=200)
+        plt.close(fig_m)
+
+        # Panel en el mosaico multiclase 2x2 (los 4 Data Marts con varios colores en t-SNE)
+        dispersion(axes_multi[k], Z_tsne, y_multi, nombres_multi, PALETA,
+                   f"{cfg['titulo_multi']}\nn = {len(features)} -> 2D, {N:,} observaciones (Acc 2D = {100*acc_multi_tsne:.1f} %)")
 
         linea_dm = (
-            f"[{cfg['id']}] {cfg['tabla_hechos']} | N = {N:,} (todas) | n = {len(features)} -> 2D | "
-            f"t-SNE: KL = {kl_val:.3f}, Acc 2D = {100*acc_tsne:.2f} % | Isomap: Acc 2D = {100*acc_iso:.2f} % | "
-            f"Clase mayoritaria = {100*acc_may:.2f} % | {time.time() - t0:.0f} s"
+            f"[{cfg['id']}] {cfg['tabla_hechos']} | N = {N:,} | n = {len(features)} -> 2D | "
+            f"Binario t-SNE/Iso: {100*acc_tsne:.1f}%/{100*acc_iso:.1f}% | "
+            f"Multiclase ({len(nombres_multi)} clases) t-SNE/Iso: {100*acc_multi_tsne:.1f}%/{100*acc_multi_iso:.1f}% | "
+            f"{time.time() - t0:.0f} s"
         )
         print(linea_dm)
         lineas_consola.append(linea_dm)
@@ -406,7 +413,9 @@ def main():
             "Descripcion": cfg["nombre"],
             "N_Observaciones": int(N),
             "n_Caracteristicas": int(len(features)),
+            "Num_Clases_Multi": int(len(nombres_multi)),
             "Conteo_Clases": " / ".join(f"{int((y_bin == c).sum())}" for c in sorted(np.unique(y_bin))),
+            "Conteo_Multiclase": " / ".join(f"{int((y_multi == c).sum())}" for c in sorted(np.unique(y_multi))),
             "KL_tSNE": round(kl_val, 4),
             "Acc_2D_tSNE": round(acc_tsne, 4),
             "Dist_Centroides_tSNE": round(dist_tsne, 4),
@@ -415,8 +424,9 @@ def main():
             "Error_Reconstruccion_Isomap": round(err_iso, 4),
             "Componentes_Grafo_Isomap": n_comp,
             "Acc_Clase_Mayoritaria": round(acc_may, 4),
-            "Acc_Multiclase_tSNE": round(acc_multi_tsne, 4) if not np.isnan(acc_multi_tsne) else np.nan,
-            "Acc_Multiclase_Isomap": round(acc_multi_iso, 4) if not np.isnan(acc_multi_iso) else np.nan,
+            "Acc_Multiclase_tSNE": round(acc_multi_tsne, 4),
+            "Acc_Multiclase_Isomap": round(acc_multi_iso, 4),
+            "Acc_Mayoritaria_Multiclase": round(acc_may_multi, 4),
         })
 
     fig_mosaico_bin.suptitle(
@@ -428,8 +438,11 @@ def main():
     fig_mosaico_bin.savefig(SALIDA / "mosaico_4_datamarts_binario_tsne.png", dpi=200)
     plt.close(fig_mosaico_bin)
 
-    fig_mosaico_multi.suptitle("Clases múltiples reales en el plano [v₁, v₂]: t-SNE (izquierda) e Isomap (derecha)",
-                               fontsize=13)
+    fig_mosaico_multi.suptitle(
+        "Reducción a plano euclidiano 2D (x_i^(1) = [v₁, v₂]) con t-SNE en los 4 Data Marts "
+        "(todas las observaciones, clases múltiples reales de 3 y 4 colores)",
+        fontsize=13,
+    )
     fig_mosaico_multi.tight_layout()
     fig_mosaico_multi.savefig(SALIDA / "mosaico_multiclase_reales_tsne.png", dpi=200)
     plt.close(fig_mosaico_multi)

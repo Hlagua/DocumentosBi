@@ -60,6 +60,11 @@
       "Sin sobregiro mes siguiente (0)": 4292,
       "Sobregiro mes siguiente (1)": 708
     },
+    "clases_multiclase": {
+      "1 Saldo estable/creciente t+1": 2518,
+      "2 Caída de saldo sin sobregiro t+1": 1774,
+      "3 En sobregiro t+1": 708
+    },
     "balanceo": "Submuestreo (undersampling 708 vs 708) tras partir 80/20"
   },
   "03_dm_ordenes.csv": {
@@ -113,6 +118,12 @@
     "clases_binarias": {
       "Ingreso (0)": 10000,
       "Egreso (1)": 10000
+    },
+    "clases_multiclase": {
+      "1 VKLAD - Depósito efectivo": 7078,
+      "2 VYBER - Retiro efectivo/tarjeta": 6804,
+      "3 PREVOD NA UCET - Transf. enviada": 3196,
+      "4 PREVOD Z UCTU - Transf. recibida": 2922
     },
     "balanceo": "Submuestreo balanceado (10,000 vs 10,000) con partición 80/20"
   }

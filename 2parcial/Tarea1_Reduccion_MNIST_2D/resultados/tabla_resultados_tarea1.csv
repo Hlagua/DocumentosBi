@@ -1,5 +1,5 @@
-﻿Data_Mart,Tabla_Hechos,Descripcion,N_Observaciones,n_Caracteristicas,Conteo_Clases,KL_tSNE,Acc_2D_tSNE,Dist_Centroides_tSNE,Acc_2D_Isomap,Dist_Centroides_Isomap,Error_Reconstruccion_Isomap,Componentes_Grafo_Isomap,Acc_Clase_Mayoritaria,Acc_Multiclase_tSNE,Acc_Multiclase_Isomap
-DM1_Prestamos,Fact_Prestamos,DM1: Préstamos (Mora vs. Sano),682,14,606 / 76,0.7867,0.8783,6.8428,0.8827,0.5546,8.9742,1,0.8886,0.6407,0.5367
-DM2_Saldo_Mensual,Fact_Saldo_Cuenta_Mensual,DM2: Saldo Mensual (Sobregiro t+1),5000,15,4292 / 708,1.5778,0.9468,24.1741,0.8828,1.2545,10.8916,1,0.8584,,
-DM3_Ordenes,Fact_Ordenes,DM3: Órdenes (Obligación vs. Hogar),5092,10,3502 / 1590,1.1822,0.7357,13.1027,0.6728,0.8396,5.4465,1,0.6877,0.6711,0.6494
-DM4_Transacciones,Fact_Transacciones,DM4: Transacciones (Egreso vs. Ingreso),20000,11,10000 / 10000,2.1857,0.6973,17.7921,0.615,0.8613,6.9055,2,0.5,,
+﻿Data_Mart,Tabla_Hechos,Descripcion,N_Observaciones,n_Caracteristicas,Num_Clases_Multi,Conteo_Clases,Conteo_Multiclase,KL_tSNE,Acc_2D_tSNE,Dist_Centroides_tSNE,Acc_2D_Isomap,Dist_Centroides_Isomap,Error_Reconstruccion_Isomap,Componentes_Grafo_Isomap,Acc_Clase_Mayoritaria,Acc_Multiclase_tSNE,Acc_Multiclase_Isomap,Acc_Mayoritaria_Multiclase
+DM1_Prestamos,Fact_Prestamos,DM1: Préstamos (Mora vs. Sano),682,14,4,606 / 76,203 / 31 / 403 / 45,0.7867,0.8783,6.8428,0.8827,0.5546,8.9742,1,0.8886,0.6407,0.5367,0.5909
+DM2_Saldo_Mensual,Fact_Saldo_Cuenta_Mensual,DM2: Saldo Mensual (Sobregiro t+1),5000,15,3,4292 / 708,2518 / 1774 / 708,1.5778,0.9468,24.1741,0.8828,1.2545,10.8916,1,0.8584,0.6068,0.5154,0.5036
+DM3_Ordenes,Fact_Ordenes,DM3: Órdenes (Obligación vs. Hogar),5092,10,4,3502 / 1590,3502 / 717 / 532 / 341,1.1822,0.7357,13.1027,0.6728,0.8396,5.4465,1,0.6877,0.6711,0.6494,0.6877
+DM4_Transacciones,Fact_Transacciones,DM4: Transacciones (Egreso vs. Ingreso),20000,11,4,10000 / 10000,7078 / 6804 / 3196 / 2922,2.1857,0.6973,17.7921,0.615,0.8613,6.9055,2,0.5,0.5818,0.466,0.3539

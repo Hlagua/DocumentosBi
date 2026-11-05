@@ -9,7 +9,6 @@ y leyendas automáticas, pie de página "Página X de Y").
 
 import copy
 import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -179,7 +178,7 @@ inf.texto(
     "del modelo dimensional DM_Financial_Kimball_v2 (y del conjunto de referencia MNIST) hacia un "
     "plano euclidiano bidimensional [v~1~, v~2~] mediante t-SNE e Isomap, usando todas las "
     "características y graficando un punto por cada observación real coloreado según su "
-    "etiqueta verdadera libre de fuga de datos."
+    "etiqueta verdadera (tanto multiclase de 3 a 4 categorías como binaria) libre de fuga de datos."
 )
 inf.titulo("Específicos:", antes=4)
 inf.lista([
@@ -195,9 +194,10 @@ inf.lista([
     "MNIST (imágenes de 28 × 28 píxeles, n = 784 características hacia [v~1~, v~2~]) tanto con "
     "sus 10 clases (dígitos 0 al 9) como en su versión binaria (0 frente a 1).",
     "Visualizar e interpretar geométricamente los grupos formados en el plano [v~1~, v~2~] para "
-    "las clases binarias y multiclase reales de los cuatro Data Marts, cuantificando la "
-    "separabilidad mediante la exactitud de un clasificador kNN en 2D evaluado con validación "
-    "cruzada de 5 pliegues, comparada siempre con la exactitud de la clase mayoritaria.",
+    "las cuatro versiones multiclase reales (3 a 4 colores por Data Mart) y las cuatro versiones "
+    "binarias, cuantificando la separabilidad mediante la exactitud de un clasificador kNN en 2D "
+    "evaluado con validación cruzada de 5 pliegues, comparada siempre con la exactitud de la "
+    "clase mayoritaria.",
 ])
 
 seccion("2.2 Modalidad")
@@ -216,12 +216,13 @@ inf.lista([
     "Utilizar la técnica de reducción asociada al caso de estudio MNIST (t-SNE, comparada con "
     "Isomap) para disminuir la dimensionalidad de cada vector de características desde R^n^ "
     "hasta un plano euclidiano bidimensional x~i~^(1)^ = [v~1~, v~2~].",
-    "Graficar las observaciones proyectadas en el plano [v~1~, v~2~] asignando un color y "
-    "marcador distinto a cada clase verdadera para visualizar la formación de los grupos.",
+    "Graficar las observaciones proyectadas en el plano [v~1~, v~2~] asignando un color "
+    "distinto a cada clase verdadera (un punto por observación) para visualizar la formación de "
+    "los grupos.",
     "Aplicar el procedimiento sobre una demostración de referencia con el dataset MNIST real "
     "y sobre los cuatro Data Marts del proyecto bancario (Préstamos, Saldo Mensual, Órdenes "
-    "Permanentes y Transacciones), incluyendo tanto las clases binarias como las multiclase "
-    "reales de negocio.",
+    "Permanentes y Transacciones), generando los cuatro gráficos multiclase reales (3 a 4 colores "
+    "por Data Mart) y los cuatro gráficos binarios.",
     "Garantizar que ninguna característica de entrada X contenga reglas deterministas o "
     "columnas que delaten trivialmente la etiqueta y (cero fuga de datos).",
 ], numerada=True)
@@ -312,7 +313,7 @@ inf.texto(
     "(Ecuación ({eq:proyeccion})):"
 )
 inf.ecuacion(
-     subsup(r("x"), r("i"), r("(1)")) + r("=") +
+    subsup(r("x"), r("i"), r("(1)")) + r("=") +
     delim(sub(r("v"), r("i1")) + r(", ") + sub(r("v"), r("i2")), "[", "]") +
     r("∈") + sup(r("R"), r("2")),
     clave="proyeccion",
@@ -403,79 +404,87 @@ inf.texto(
     "del modelo dimensional DM_Financial_Kimball_v2, garantizando que las variables predictoras "
     "X no contengan reglas derivadas ni columnas que filtren la etiqueta verdadera y."
 )
-inf.titulo("Corrección de fuga de datos (data leakage) en los 4 Data Marts")
+inf.titulo("Corrección de fuga de datos (data leakage) y clases reales en los 4 Data Marts")
 inf.texto(
     "Antes de proyectar o entrenar clasificadores, se verificó que ninguna etiqueta fuera "
-    "calculada como fórmula determinista de las propias columnas de X. Por ello se descartaron "
-    "las etiquetas sintéticas de tramos de monto/plazo y se definieron cuatro objetivos reales "
-    "observados en la operación bancaria (Tabla {tab:datamarts}):"
+    "calculada como fórmula determinista de las propias columnas de X. Cada uno de los cuatro "
+    "Data Marts conserva tanto su **etiqueta multiclase real** (de 3 o 4 categorías para la "
+    "visualización de grupos en la Tarea 1) como su **etiqueta binaria** (para la Regresión "
+    "Logística de la Tarea 2), según se resume en la Tabla {tab:datamarts}:"
 )
 inf.lista([
-    "**Data Mart 1 — Préstamos (Fact_Prestamos, N = 682):** predice el estado real de mora del "
-    "crédito (Clase 1 = estados B y D con impago, 76 préstamos; Clase 0 = estados A y C al día, "
-    "606 préstamos) a partir de 14 variables financieras, demográficas y distritales conocidas "
-    "al otorgar el crédito. Se excluyeron meses_transcurridos_al_corte y "
-    "saldo_pendiente_estimado porque se miden al corte de 1998 (no al otorgar el préstamo) y "
-    "separan por sí solas los contratos terminados (A, B) de los vigentes (C, D). Además, "
-    "conserva los 4 estados reales (A, B, C, D) para la visualización multiclase.",
-    "**Data Mart 2 — Saldo Mensual (Fact_Saldo_Cuenta_Mensual, grano cuenta × mes):** sobre los "
-    "181 115 cierres mensuales que cuentan con mes siguiente observado, predice si la cuenta "
-    "caerá en **sobregiro el mes siguiente (t + 1)** (Clase 1 = 708 eventos reales de sobregiro "
-    "en t + 1; Clase 0 = sin sobregiro en t + 1) empleando únicamente las 15 variables medidas "
-    "hasta el cierre del mes actual t. El CSV guarda los 708 positivos y 4 292 negativos al "
-    "azar (N = 5 000); esa proporción de 14 % es una muestra de trabajo, porque en la población "
-    "real solo el 0.39 % de los meses termina en sobregiro al mes siguiente.",
-    "**Data Mart 3 — Órdenes Permanentes (Fact_Ordenes, N = 5 092):** filtra las órdenes con "
-    "símbolo bancario real y clasifica las obligaciones financieras (Clase 1 = préstamo UVER, "
-    "seguro POJISTNE o arrendamiento LEASING, 1 590 órdenes) frente a pagos de hogar SIPO "
-    "(Clase 0 = 3 502 órdenes) usando 10 características de la cuenta, cliente y distrito. "
-    "Conserva además las 4 categorías reales (SIPO, UVER, POJISTNE, LEASING) como multiclase.",
-    "**Data Mart 4 — Transacciones (Fact_Transacciones, N = 20 000 de 871 629 movimientos):** "
-    "excluye los asientos automáticos de intereses (UROK y SANKC. UROK) y clasifica si el "
-    "movimiento atómico es un **Egreso** (Clase 1) o un **Ingreso** (Clase 0). Se eliminaron "
-    "de X el código de operación, el símbolo k_symbol, el canal, el banco contraparte y el "
-    "saldo previo, dejando el monto en valor absoluto sin signo junto con 10 variables de "
-    "fecha, saldo posterior, cliente y distrito.",
+    "**Data Mart 1 — Préstamos (Fact_Prestamos, N = 682, n = 14):** en su versión **multiclase "
+    "real (4 colores)** distingue los cuatro estados del crédito (A: terminado sano, 203; "
+    "B: terminado en mora, 31; C: vigente sano, 403; D: vigente en mora, 45). En su versión "
+    "binaria agrupa Mora (B, D: 76) frente a Sano (A, C: 606). Se excluyeron "
+    "meses_transcurridos_al_corte y saldo_pendiente_estimado porque se miden al corte de 1998 "
+    "y separan por sí solas los contratos terminados de los vigentes.",
+    "**Data Mart 2 — Saldo Mensual (Fact_Saldo_Cuenta_Mensual, N = 5 000, n = 15):** sobre los "
+    "cierres mensuales que cuentan con mes siguiente observado, emplea únicamente las 15 "
+    "variables medidas hasta el cierre del mes actual t para analizar el estado de liquidez en "
+    "el mes siguiente (t + 1). En su versión **multiclase (3 colores)** distingue: "
+    "1 = Saldo estable o creciente en t + 1, 2 = Caída de saldo sin sobregiro en t + 1, y "
+    "3 = En sobregiro en t + 1 (708 casos). Estas tres clases no las registra el banco: las "
+    "definió el equipo comparando el saldo observado al cierre de t + 1 con el de t, por lo que "
+    "son un resultado real del mes siguiente, pero no una categoría bancaria. En su versión "
+    "binaria separa Sobregiro en t + 1 (708) frente a Sin sobregiro en t + 1 (4 292). El CSV "
+    "guarda los 708 positivos y 4 292 negativos al azar (N = 5 000); esa proporción de 14 % es "
+    "una muestra de trabajo, porque en la población real solo el 0.39 % de los meses termina en "
+    "sobregiro al mes siguiente. Lo mismo vale para las 3 clases de las gráficas.",
+    "**Data Mart 3 — Órdenes Permanentes (Fact_Ordenes, N = 5 092, n = 10):** filtra las órdenes "
+    "con símbolo bancario real y usa 10 características de la cuenta, cliente y distrito. En su "
+    "versión **multiclase real (4 colores)** distingue las cuatro categorías reales de orden "
+    "(SIPO: pago de hogar, 3 502; UVER: préstamo, 717; POJISTNE: seguro, 532; LEASING: "
+    "arrendamiento, 341). En su versión binaria agrupa las obligaciones financieras (UVER, "
+    "POJISTNE, LEASING: 1 590) frente a pagos de hogar SIPO (3 502).",
+    "**Data Mart 4 — Transacciones (Fact_Transacciones, N = 20 000, n = 11):** excluye los "
+    "asientos automáticos de intereses y elimina de X el código de operación, el símbolo, el "
+    "canal, el banco contraparte y el saldo previo, dejando el monto en valor absoluto sin "
+    "signo. En su versión **multiclase real (4 colores)** distingue las cuatro operaciones "
+    "bancarias reales: 1 = VKLAD (depósito en efectivo, 7 078), 2 = VYBER (retiro en efectivo "
+    "o tarjeta, 6 804), 3 = PREVOD NA UCET (transferencia enviada, 3 196) y 4 = PREVOD Z UCTU "
+    "(transferencia recibida, 2 922). En su versión binaria separa Egreso (10 000) frente a "
+    "Ingreso (10 000).",
 ])
 inf.tabla(
     "Especificación de los 4 datasets por Data Mart libres de fuga de datos",
-    ["Archivo CSV", "Data Mart (Tabla de Hechos)", "Filas CSV", "Dim. X (n)", "Clase 1 vs. Clase 0", "Multiclase Real"],
+    ["Archivo CSV", "Data Mart (Tabla de Hechos)", "Filas CSV", "Dim. X (n)", "Multiclase Real (Tarea 1)", "Clase Binaria (Tarea 2)"],
     [
         [
             "01_dm_prestamos.csv",
             "Fact_Prestamos",
             "682",
             "14",
+            "4 estados: A, B, C, D",
             "Mora B,D (76) vs. Sano A,C (606)",
-            "Estados A, B, C, D (4)",
         ],
         [
             "02_dm_saldo_mensual.csv",
             "Fact_Saldo_Cuenta_Mensual",
             "5 000",
             "15",
+            "3 estados t+1 (definidos por el equipo): Estable, Caída, Sobregiro",
             "Sobregiro t+1 (708) vs. Normal (4 292)",
-            "Binaria (2)",
         ],
         [
             "03_dm_ordenes.csv",
             "Fact_Ordenes",
             "5 092",
             "10",
+            "4 tipos: SIPO, UVER, POJISTNE, LEASING",
             "Obligación (1 590) vs. SIPO (3 502)",
-            "SIPO, UVER, POJISTNE, LEASING (4)",
         ],
         [
             "04_dm_transacciones.csv",
             "Fact_Transacciones",
             "20 000",
             "11",
+            "4 operaciones: VKLAD, VYBER, PREVOD (×2)",
             "Egreso (10 000) vs. Ingreso (10 000)",
-            "Binaria (2)",
         ],
     ],
     clave="datamarts",
-    anchos=[3.3, 3.3, 1.4, 1.3, 3.2, 2.5],
+    anchos=[3.2, 3.2, 1.3, 1.2, 3.1, 3.0],
 )
 inf.titulo("Todas las observaciones, todas las características y escalado z-score")
 inf.texto(
@@ -529,7 +538,8 @@ actividad("Actividad 4. Reducción a 2D y graficación en los 4 Data Marts (30 m
 inf.titulo("Objetivo de la actividad", antes=2)
 inf.texto(
     "Proyectar cada uno de los cuatro Data Marts bancarios hacia el plano euclidiano "
-    "[v~1~, v~2~] y graficar los grupos coloreados por su clase verdadera (binaria y multiclase)."
+    "[v~1~, v~2~] y graficar los grupos coloreados por su clase verdadera (tanto en sus 3 a 4 "
+    "clases reales como en su versión binaria)."
 )
 inf.titulo("Aplicación a los cuatro Data Marts")
 inf.texto(
@@ -537,8 +547,9 @@ inf.texto(
     "[v~1~, v~2~] mediante t-SNE (tasa de aprendizaje automática y perplejidad 30) y mediante "
     "Isomap (k = 20 vecinos; con 10 o 15 vecinos el grafo quedaba dividido en Saldo Mensual y "
     "Órdenes). Las coordenadas de cada observación se guardaron en archivos CSV dentro de "
-    "resultados/, y se generaron las figuras individuales (t-SNE e Isomap lado a lado) y los "
-    "mosaicos de clases binarias y multiclase reales."
+    "resultados/, y se generaron tanto las **cuatro figuras individuales multiclase** (3 a 4 "
+    "colores por Data Mart, comparando t-SNE frente a Isomap lado a lado) como las **cuatro "
+    "figuras individuales binarias** (2 colores) y sus respectivos mosaicos 2 × 2."
 )
 divididos = [r.Data_Mart for r in tabla_res.itertuples() if r.Componentes_Grafo_Isomap > 1]
 if divididos:
@@ -570,24 +581,42 @@ inf.texto(
     "respondiendo siempre la clase más frecuente."
 )
 inf.texto(
-    f"Como se grafican todas las observaciones, las clases conservan su desbalance real "
-    f"y la línea base cambia en cada Data Mart: {pct(r_dm1['Acc_Clase_Mayoritaria'])} en "
-    f"Préstamos, {pct(r_dm2['Acc_Clase_Mayoritaria'])} en Saldo Mensual, "
-    f"{pct(r_dm3['Acc_Clase_Mayoritaria'])} en Órdenes y {pct(r_dm4['Acc_Clase_Mayoritaria'])} "
-    f"en Transacciones. En **Fact_Saldo_Cuenta_Mensual** la exactitud en 2D es "
-    f"**{pct(r_dm2['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm2['Acc_2D_Isomap'])}** con Isomap: "
-    f"los meses que terminan en sobregiro forman zonas propias porque el sobregiro tiende a "
-    f"persistir (388 de los 708 ya estaban en sobregiro en el mes t). En **Fact_Ordenes** "
-    f"(**{pct(r_dm3['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm3['Acc_2D_Isomap'])}** con "
-    f"Isomap) y en **Fact_Transacciones** (**{pct(r_dm4['Acc_2D_tSNE'])}** y "
-    f"**{pct(r_dm4['Acc_2D_Isomap'])}**) las clases se separan de forma parcial, con un "
-    f"traslape visible. En **Fact_Prestamos**, en cambio, la exactitud en 2D "
-    f"(**{pct(r_dm1['Acc_2D_tSNE'])}** con t-SNE y **{pct(r_dm1['Acc_2D_Isomap'])}** con "
-    f"Isomap) no supera con claridad al {pct(r_dm1['Acc_Clase_Mayoritaria'])} que se obtiene "
-    f"diciendo siempre «sano»: los 76 créditos en mora quedan mezclados con los sanos en el "
-    f"plano. Es un hallazgo y no un error: con las variables disponibles al otorgar el "
-    f"préstamo, la mora no forma un grupo propio, lo que anticipa que la Regresión Logística "
-    f"de la Tarea 2 tendrá dificultad en este Data Mart."
+    f"En la versión **multiclase** (3 a 4 colores por Data Mart), t-SNE logra una "
+    f"exactitud 2D de **{pct(r_dm1['Acc_Multiclase_tSNE'])}** en Préstamos (4 estados A, B, C, D, "
+    f"frente a {pct(r_dm1['Acc_Mayoritaria_Multiclase'])} de la clase mayoritaria), "
+    f"**{pct(r_dm2['Acc_Multiclase_tSNE'])}** en Saldo Mensual (3 estados en t + 1, frente a "
+    f"{pct(r_dm2['Acc_Mayoritaria_Multiclase'])}), **{pct(r_dm3['Acc_Multiclase_tSNE'])}** en "
+    f"Órdenes (4 tipos de orden, frente a {pct(r_dm3['Acc_Mayoritaria_Multiclase'])}) y "
+    f"**{pct(r_dm4['Acc_Multiclase_tSNE'])}** en Transacciones (4 tipos de operación bancaria, "
+    f"frente a {pct(r_dm4['Acc_Mayoritaria_Multiclase'])}). En la versión **binaria**, "
+    f"**Fact_Saldo_Cuenta_Mensual** alcanza **{pct(r_dm2['Acc_2D_tSNE'])}** con t-SNE y "
+    f"**{pct(r_dm2['Acc_2D_Isomap'])}** con Isomap; **Fact_Ordenes** logra "
+    f"**{pct(r_dm3['Acc_2D_tSNE'])}** y **Fact_Transacciones** **{pct(r_dm4['Acc_2D_tSNE'])}**, "
+    f"mientras que en **Fact_Prestamos** ({pct(r_dm1['Acc_2D_tSNE'])}) los 76 créditos en mora "
+    f"quedan mezclados con los sanos en el plano, anticipando la dificultad de este Data Mart "
+    f"en la Tarea 2."
+)
+sin_separacion = [
+    nom for nom, r in [("Préstamos", r_dm1), ("Saldo Mensual", r_dm2), ("Órdenes", r_dm3), ("Transacciones", r_dm4)]
+    if max(r["Acc_Multiclase_tSNE"], r["Acc_Multiclase_Isomap"]) <= r["Acc_Mayoritaria_Multiclase"]
+]
+if sin_separacion:
+    inf.texto(
+        f"En la versión multiclase de {', '.join(sin_separacion)}, ni t-SNE ni Isomap superan la "
+        f"exactitud de responder siempre la clase más frecuente: en el plano no se forman grupos "
+        f"propios por tipo, sino que las clases quedan mezcladas. En Órdenes esto se explica porque "
+        f"los pagos de hogar (SIPO) son el {pct(r_dm3['Acc_Mayoritaria_Multiclase'])} de las órdenes "
+        f"y se reparten por todo el plano."
+    )
+inf.texto(
+    f"¿Por qué Saldo Mensual se separa tan bien en la versión binaria? Porque el sobregiro tiende "
+    f"a persistir: 388 de los 708 meses que terminan en sobregiro en t + 1 ya estaban en "
+    f"sobregiro en el mes t, y esas cuentas forman zonas propias en el plano. En Préstamos, en "
+    f"cambio, los cuatro estados A, B, C y D se mezclan ({pct(r_dm1['Acc_Multiclase_tSNE'])} con "
+    f"t-SNE frente a {pct(r_dm1['Acc_Mayoritaria_Multiclase'])} del estado más frecuente): las "
+    f"variables que separaban los contratos terminados de los vigentes se midieron al corte de "
+    f"1998 y se retiraron por ser posteriores al otorgamiento, de modo que con la información "
+    f"disponible al otorgar el crédito los estados no forman grupos propios."
 )
 
 # ----------------------------------------------------------------------------
@@ -617,10 +646,7 @@ if capturas:
 inf.titulo("2.7.2 Tabla consolidada de resultados de reducción a 2D")
 filas_t1 = []
 for row in tabla_res.itertuples():
-    multi_str = (
-        f"{pct(row.Acc_Multiclase_tSNE, 1)} / {pct(row.Acc_Multiclase_Isomap, 1)}"
-        if not pd.isna(row.Acc_Multiclase_tSNE) else "—"
-    )
+    multi_str = f"{pct(row.Acc_Multiclase_tSNE, 1)} / {pct(row.Acc_Multiclase_Isomap, 1)} ({int(row.Num_Clases_Multi)} clases)"
     filas_t1.append([
         row.Data_Mart,
         str(row.n_Caracteristicas),
@@ -638,24 +664,24 @@ inf.tabla(
         "Dim. X (n)",
         "N (todas)",
         "KL t-SNE",
-        "Acc 2D t-SNE",
-        "Acc 2D Isomap",
-        "Clase mayor.",
+        "Acc 2D Bin. t-SNE",
+        "Acc 2D Bin. Isomap",
+        "Clase mayor. Bin.",
         "Multiclase t-SNE / Isomap",
     ],
     filas_t1,
     clave="resultados_t1",
-    anchos=[2.7, 1.2, 1.4, 1.4, 1.8, 1.8, 1.6, 3.0],
+    anchos=[2.6, 1.1, 1.4, 1.3, 1.7, 1.7, 1.6, 3.5],
 )
 mejoras = [(r.Data_Mart, 100 * (r.Acc_2D_tSNE - r.Acc_2D_Isomap)) for r in tabla_res.itertuples()]
 gana_tsne = [d for d, m in mejoras if m > 0]
+gana_tsne_multi = [r.Data_Mart for r in tabla_res.itertuples() if r.Acc_Multiclase_tSNE > r.Acc_Multiclase_Isomap]
 inf.texto(
-    f"t-SNE separa mejor las clases que Isomap en {len(gana_tsne)} de los 4 Data Marts "
-    f"(Tabla {{tab:resultados_t1}}), porque se concentra en mantener juntos a los vecinos "
-    f"cercanos, mientras que Isomap prioriza la forma global de los datos. La columna «Clase "
-    f"mayor.» indica la exactitud de responder siempre la clase más frecuente y sirve de "
-    f"referencia mínima para leer las demás; la exactitud en 2D se mide con un kNN (k = 5) y "
-    f"validación cruzada de 5 pliegues."
+    f"t-SNE separa mejor las clases que Isomap en {len(gana_tsne)} de los 4 Data Marts en la "
+    f"versión binaria y en {len(gana_tsne_multi)} de los 4 en la versión multiclase "
+    f"(Tabla {{tab:resultados_t1}}), "
+    f"porque se concentra en mantener juntos a los vecinos cercanos, mientras que Isomap "
+    f"prioriza la forma global de los datos."
 )
 
 inf.titulo("2.7.3 Demostración de referencia con el dataset MNIST")
@@ -689,11 +715,33 @@ inf.texto(
     f"a 1), ambos grupos quedan separados en dos nubes disjuntas."
 )
 
-inf.titulo("2.7.4 Mapas bidimensionales [v1, v2] de los 4 Data Marts (Clases Binarias)")
+inf.titulo("2.7.4 Mapas bidimensionales [v1, v2] de los 4 Data Marts con Clases Múltiples Reales (3 y 4 colores)")
+inf.imagen(
+    RES / "mosaico_multiclase_reales_tsne.png",
+    15.2,
+    "Mosaico de proyecciones t-SNE en el plano [v1, v2] para los 4 Data Marts con sus clases múltiples reales (3 a 4 colores por Data Mart).",
+    clave="mosaico_multi",
+    fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
+)
+for cfg_id, desc in [
+    ("DM1_Prestamos", "Data Mart 1 (Fact_Prestamos: 4 estados reales A, B, C, D)"),
+    ("DM2_Saldo_Mensual", "Data Mart 2 (Fact_Saldo_Cuenta_Mensual: 3 estados de liquidez en t+1)"),
+    ("DM3_Ordenes", "Data Mart 3 (Fact_Ordenes: 4 tipos reales SIPO, UVER, POJISTNE, LEASING)"),
+    ("DM4_Transacciones", "Data Mart 4 (Fact_Transacciones: 4 tipos de operación VKLAD, VYBER, PREVOD NA UCET, PREVOD Z UCTU)"),
+]:
+    inf.imagen(
+        RES / f"reduccion_multiclase_{cfg_id}.png",
+        15.0,
+        f"Dispersión v1 contra v2 con t-SNE e Isomap, un color por clase real y un punto por observación, en {desc}.",
+        clave=f"multi_{cfg_id}",
+        fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
+    )
+
+inf.titulo("2.7.5 Mapas bidimensionales [v1, v2] de los 4 Data Marts con Clases Binarias (2 colores, puente hacia la Tarea 2)")
 inf.imagen(
     RES / "mosaico_4_datamarts_binario_tsne.png",
     15.2,
-    "Mosaico de proyecciones t-SNE en el plano [v1, v2] para los 4 Data Marts (clases binarias).",
+    "Mosaico de proyecciones t-SNE en el plano [v1, v2] para los 4 Data Marts (clases binarias de la Tarea 2).",
     clave="mosaico_bin",
     fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
 )
@@ -706,33 +754,10 @@ for cfg_id, desc in [
     inf.imagen(
         RES / f"reduccion_binaria_{cfg_id}.png",
         15.0,
-        f"Dispersión v1 contra v2 con t-SNE e Isomap, un punto por observación real, en {desc}.",
+        f"Dispersión v1 contra v2 con t-SNE e Isomap (clases binarias), un punto por observación real, en {desc}.",
         clave=f"bin_{cfg_id}",
         fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
     )
-
-inf.titulo("2.7.5 Mapas bidimensionales [v1, v2] de las Clases Múltiples Reales")
-inf.imagen(
-    RES / "mosaico_multiclase_reales_tsne.png",
-    15.2,
-    "Proyección t-SNE (izquierda) e Isomap (derecha) en el plano [v1, v2] de las versiones multiclase reales: Estados del préstamo (A, B, C, D) y Tipos de orden (SIPO, UVER, POJISTNE, LEASING).",
-    clave="mosaico_multi",
-    fuente="Elaboración propia con Python, scikit-learn y Matplotlib.",
-)
-dm1_csv = pd.read_csv(DIR_2P / "01_dm_prestamos.csv")
-may_estado = dm1_csv["Clase_Multiclase"].value_counts(normalize=True).max()
-may_orden = pd.read_csv(DIR_2P / "03_dm_ordenes.csv")["Clase_Multiclase"].value_counts(normalize=True).max()
-inf.texto(
-    f"En la Ilustración {{fig:mosaico_multi}} los cuatro estados reales del préstamo (A: "
-    f"terminado sano, B: terminado en mora, C: vigente sano, D: vigente en mora) se traslapan "
-    f"casi por completo: la exactitud kNN en 2D es {pct(r_dm1['Acc_Multiclase_tSNE'])}, apenas "
-    f"por encima del {pct(may_estado)} del estado más frecuente (C). Es lo esperado una vez "
-    f"retiradas las variables medidas al corte de 1998, que eran las que separaban los "
-    f"contratos terminados de los vigentes. Las cuatro categorías de órdenes permanentes "
-    f"(SIPO, UVER, POJISTNE, LEASING) se separan solo parcialmente "
-    f"({pct(r_dm3['Acc_Multiclase_tSNE'])} con t-SNE), frente al "
-    f"{pct(may_orden)} de la categoría más frecuente (SIPO)."
-)
 
 inf.titulo("2.7.6 Cumplimiento de las instrucciones")
 inf.tabla(
@@ -756,8 +781,8 @@ inf.tabla(
             "Todas las características (10 a 15) y todas las observaciones de cada dataset reducidas a dos coordenadas y exportadas a CSV y PNG.",
         ],
         [
-            "5. Graficación por grupos de clase",
-            "Mapas 2D generados para las 4 tareas binarias y para las 2 tareas multiclase reales.",
+            "5. Graficación por grupos de clase (multiclase y binaria)",
+            "4 figuras individuales multiclase (3 a 4 colores por Data Mart, t-SNE vs. Isomap) y 4 figuras individuales binarias (2 colores), más sus mosaicos.",
         ],
     ],
     clave="cumplimiento_t1",
@@ -787,18 +812,17 @@ inf.lista([
     f"R^2^ mediante t-SNE preserva la estructura de vecindad local, mientras que Isomap "
     f"conserva mejor la forma global. En el dataset de referencia MNIST (n = 784), t-SNE "
     f"separó los 10 dígitos con una exactitud en 2D de {pct(mnist_info['acc_tsne_10'])} frente "
-    f"a {pct(mnist_info['acc_isomap_10'])} de Isomap. En los "
-    f"Data Marts bancarios los grupos son mucho menos nítidos: t-SNE alcanzó "
-    f"{pct(r_dm2['Acc_2D_tSNE'])} en Saldo Mensual, {pct(r_dm3['Acc_2D_tSNE'])} en Órdenes y "
-    f"{pct(r_dm4['Acc_2D_tSNE'])} en Transacciones, mientras que en Préstamos "
-    f"({pct(r_dm1['Acc_2D_tSNE'])}) no superó con claridad el "
-    f"{pct(r_dm1['Acc_Clase_Mayoritaria'])} de responder siempre «sano».",
+    f"a {pct(mnist_info['acc_isomap_10'])} de Isomap. En los cuatro Data Marts bancarios con "
+    f"clases múltiples reales (3 a 4 colores), t-SNE alcanzó {pct(r_dm1['Acc_Multiclase_tSNE'])} "
+    f"en Préstamos, {pct(r_dm2['Acc_Multiclase_tSNE'])} en Saldo Mensual, "
+    f"{pct(r_dm3['Acc_Multiclase_tSNE'])} en Órdenes y {pct(r_dm4['Acc_Multiclase_tSNE'])} en "
+    f"Transacciones.",
     "**Sobre la preparación de los datos sin fuga de información:** la eliminación de etiquetas "
     "artificiales y de variables medidas después del evento, y la graficación de todas las "
     "observaciones reales con todas sus características, garantizan que los grupos visualizados en el "
-    "plano [v~1~, v~2~] reflejen patrones reales de negocio (mora crediticia, sobregiro en el "
-    "mes t + 1, obligaciones financieras y dirección de flujo transaccional) y dejan listos "
-    "los cuatro conjuntos para el entrenamiento de la Regresión Logística en la Tarea 2.",
+    "plano [v~1~, v~2~] reflejen patrones reales de negocio (estados del crédito, liquidez "
+    "futura en el mes t + 1, tipos de orden permanente y tipos de operación transaccional) y "
+    "dejan listos los cuatro conjuntos para el entrenamiento de la Regresión Logística en la Tarea 2.",
 ], numerada=True)
 
 seccion("2.10 Recomendaciones")
@@ -838,7 +862,7 @@ seccion("2.12 Anexos")
 inf.texto(
     "La salida en consola de la ejecución (sección 2.7.1), la tabla consolidada de "
     "métricas 2D (Tabla {tab:resultados_t1}) y los mapas bidimensionales de MNIST y de los "
-    "cuatro Data Marts (Ilustraciones {fig:mnist_muestra} a {fig:mosaico_multi}) se integran en "
+    "cuatro Data Marts (Ilustraciones {fig:mnist_muestra} a {fig:bin_DM4_Transacciones}) se integran en "
     "la sección 2.7. El código fuente se entrega en reduccion_mnist_2d.py."
 )
 

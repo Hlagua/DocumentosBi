@@ -8,7 +8,8 @@ DESCRIPCIÓN:
   Construye en la carpeta `2parcial/` los 4 datasets etiquetados (uno por cada
   Data Mart de hechos del modelo dimensional `DM_Financial_Kimball_v2`),
   garantizando CERO fuga de datos (data leakage) entre las características X
-  y la variable objetivo real `Clase`:
+  y la variable objetivo real `Clase` (binaria para Tarea 2) y `Clase_Multiclase`
+  (multiclase real de 3 a 4 categorías para Tarea 1):
 
   1. Data Mart 1 (`Fact_Prestamos`) -> `01_dm_prestamos.csv` (N = 682):
      - Clase binaria: 1 = Mora (estados B, D; n = 76) vs. 0 = Sano (A, C; n = 606).
@@ -25,6 +26,10 @@ DESCRIPCIÓN:
        185,615 snapshots mensuales totales).
      - Clase binaria: 1 = Sobregiro el mes siguiente (saldo_fin_mes[t+1] < 0;
        n = 708) vs. 0 = Sin sobregiro el mes siguiente (n = 180,407).
+     - Clase multiclase real en t+1 (Tarea 1, 3 clases):
+       1 = Saldo estable/creciente en t+1 (saldo_t+1 >= 0 y delta_t+1 >= 0),
+       2 = Caída de saldo sin sobregiro en t+1 (saldo_t+1 >= 0 y delta_t+1 < 0),
+       3 = En sobregiro en t+1 (saldo_t+1 < 0).
      - Se exportan todos los positivos (708) más 4,292 negativos al azar
        (N = 5,000). Esta proporción (14 %) NO es la real (0.39 %): es solo
        una muestra de trabajo. En el modelado se submuestrea a 708 vs. 708
@@ -48,6 +53,9 @@ DESCRIPCIÓN:
      - Movimientos atómicos reales (excluyendo abonos automáticos de intereses
        `UROK` y cargos por interés moratorio `SANKC. UROK`).
      - Clase binaria: 1 = Egreso (retiro/débito) vs. 0 = Ingreso (abono/crédito).
+     - Clase multiclase real (Tarea 1, 4 clases según `operation` bancaria):
+       1 = VKLAD (Depósito en efectivo), 2 = VYBER (Retiro efectivo/tarjeta),
+       3 = PREVOD NA UCET (Transf. enviada), 4 = PREVOD Z UCTU (Transf. recibida).
      - Se eliminan de X todas las columnas que delatan el tipo de operación
        (`tipo_transaccion`, `operation`, `k_symbol`, `canal`, `bank`, `account`,
        diferencia de saldo). El monto es positivo sin signo.
@@ -57,7 +65,6 @@ DESCRIPCIÓN:
 """
 
 import json
-import os
 from pathlib import Path
 
 import numpy as np
@@ -72,12 +79,10 @@ SEMILLA = 42
 
 
 def generar_datasets():
-    rng = np.random.default_rng(SEMILLA)
     print("=" * 78)
     print("GENERANDO DATASETS DEL 2DO PARCIAL (4 DATA MARTS SIN FUGA DE DATOS)")
     print("=" * 78)
 
-    # Limpiar CSVs antiguos con nombres previos si existen
     for viejo in [
         "01_dm_prestamos_riesgo_credito.csv",
         "02_dm_cuentas_liquidez_sobregiro.csv",
@@ -189,6 +194,8 @@ def generar_datasets():
     ).fillna(0.0)
 
     m_full["en_sobregiro_actual"] = (m_full["saldo_fin_mes"] < 0).astype(int)
+    m_full["saldo_fin_mes_sig"] = m_full.groupby("id_cuenta")["saldo_fin_mes"].shift(-1)
+    m_full["delta_saldo_sig"] = m_full["saldo_fin_mes_sig"] - m_full["saldo_fin_mes"]
     # Etiqueta real futura: ¿estará en sobregiro el mes siguiente (t + 1)?
     m_full["Clase"] = m_full.groupby("id_cuenta")["en_sobregiro_actual"].shift(-1)
     # Excluir el último mes de cada cuenta (1998-12) donde no existe t + 1
@@ -196,6 +203,22 @@ def generar_datasets():
     m_valid["Clase"] = m_valid["Clase"].astype(int)
     m_valid["anio"] = m_valid["mes_per"].dt.year.astype(int)
     m_valid["mes"] = m_valid["mes_per"].dt.month.astype(int)
+
+    # Versión multiclase real en t + 1 (3 estados de liquidez futura):
+    #   1 = Saldo estable/creciente en t+1 (saldo_t+1 >= 0 y delta_t+1 >= 0)
+    #   2 = Caída de saldo sin sobregiro en t+1 (saldo_t+1 >= 0 y delta_t+1 < 0)
+    #   3 = En sobregiro en t+1 (saldo_t+1 < 0)
+    m_valid["Clase_Multiclase"] = np.where(
+        m_valid["Clase"] == 1,
+        3,
+        np.where(m_valid["delta_saldo_sig"] < 0, 2, 1),
+    ).astype(int)
+    map_dm2_multi = {
+        1: "1 Saldo estable/creciente t+1",
+        2: "2 Caída de saldo sin sobregiro t+1",
+        3: "3 En sobregiro t+1",
+    }
+    m_valid["Nombre_Multiclase"] = m_valid["Clase_Multiclase"].map(map_dm2_multi)
 
     # Enriquecer con atributos demográficos y distritales del titular (sin variables futuras)
     cli_tit = df_clientes[df_clientes["es_titular"] == 1][
@@ -223,10 +246,6 @@ def generar_datasets():
         how="left",
     )
 
-    # Nota: para evitar que saldo_fin_mes(t) < 0 delate trivialmente la persistencia de sobregiro,
-    # evaluamos la predicción de sobregiro en t+1 usando las variables de flujo y nivel centradas
-    # y conservamos todos los 708 positivos + 4,292 negativos aleatorios (N = 5,000) para el CSV,
-    # de modo que al partir 80/20 y submuestrear en Train/Test queden 708 vs 708 (1,416) exactos.
     pos_dm2 = m_valid[m_valid["Clase"] == 1]
     neg_dm2 = m_valid[m_valid["Clase"] == 0].sample(n=4292, random_state=SEMILLA)
     dm2 = (
@@ -237,8 +256,6 @@ def generar_datasets():
     dm2["Nombre_Clase"] = np.where(
         dm2["Clase"] == 1, "Sobregiro mes siguiente (1)", "Sin sobregiro mes siguiente (0)"
     )
-    dm2["Clase_Multiclase"] = dm2["Clase"] + 1
-    dm2["Nombre_Multiclase"] = dm2["Nombre_Clase"]
 
     x_cols_dm2 = [
         "anio",
@@ -349,7 +366,6 @@ def generar_datasets():
     tr_clean["Clase"] = tr_clean["tipo_transaccion"].isin(["VYDAJ", "VYBER"]).astype(int)
 
     # Muestra aleatoria estratificada de 20,000 movimientos (10,000 Egresos y 10,000 Ingresos)
-    # para trabajar con holgura estadística (80/20 -> 16,000 Train y 4,000 Test)
     egresos = tr_clean[tr_clean["Clase"] == 1].sample(n=10000, random_state=SEMILLA)
     ingresos = tr_clean[tr_clean["Clase"] == 0].sample(n=10000, random_state=SEMILLA)
     dm4 = (
@@ -372,12 +388,24 @@ def generar_datasets():
         how="left",
     )
     dm4["sexo_num"] = (dm4["sexo_cliente"] == "F").astype(int)
-    # Asegurar que monto_transaccion sea estrictamente magnitud sin signo
     dm4["monto_transaccion"] = dm4["monto_transaccion"].abs()
 
     dm4["Nombre_Clase"] = np.where(dm4["Clase"] == 1, "Egreso (1)", "Ingreso (0)")
-    dm4["Clase_Multiclase"] = dm4["Clase"] + 1
-    dm4["Nombre_Multiclase"] = dm4["Nombre_Clase"]
+    map_op_num = {
+        "VKLAD": 1,
+        "VYBER": 2,
+        "VYBER KARTOU": 2,
+        "PREVOD NA UCET": 3,
+        "PREVOD Z UCTU": 4,
+    }
+    map_op_nom = {
+        1: "1 VKLAD - Depósito efectivo",
+        2: "2 VYBER - Retiro efectivo/tarjeta",
+        3: "3 PREVOD NA UCET - Transf. enviada",
+        4: "4 PREVOD Z UCTU - Transf. recibida",
+    }
+    dm4["Clase_Multiclase"] = dm4["operation"].map(map_op_num).astype(int)
+    dm4["Nombre_Multiclase"] = dm4["Clase_Multiclase"].map(map_op_nom)
 
     x_cols_dm4 = [
         "monto_transaccion",
@@ -424,6 +452,7 @@ def generar_datasets():
             "features": x_cols_dm2,
             "nulos": int(dm2.isna().sum().sum()),
             "clases_binarias": dm2["Nombre_Clase"].value_counts().to_dict(),
+            "clases_multiclase": dm2["Nombre_Multiclase"].value_counts().to_dict(),
             "balanceo": "Submuestreo (undersampling 708 vs 708) tras partir 80/20",
         },
         "03_dm_ordenes.csv": {
@@ -444,6 +473,7 @@ def generar_datasets():
             "features": x_cols_dm4,
             "nulos": int(dm4.isna().sum().sum()),
             "clases_binarias": dm4["Nombre_Clase"].value_counts().to_dict(),
+            "clases_multiclase": dm4["Nombre_Multiclase"].value_counts().to_dict(),
             "balanceo": "Submuestreo balanceado (10,000 vs 10,000) con partición 80/20",
         },
     }
