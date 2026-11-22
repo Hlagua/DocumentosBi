@@ -1,0 +1,474 @@
+{
+  "sistema": "S4",
+  "titulo": "Riesgo de impago de un préstamo nuevo",
+  "clases": [
+    "Paga sin problemas (A o C)",
+    "Impago (B o D)"
+  ],
+  "criterio_seleccion": "mayor exactitud balanceada en validación",
+  "hiperparametros_fijos": {
+    "lote": 15,
+    "epocas_max": 300,
+    "paciencia": 20,
+    "optimizador": "Adam (lr = 0.001)",
+    "perdida": "entropía cruzada categórica",
+    "inicializacion": "Glorot uniforme",
+    "pesos_por_clase": null
+  },
+  "balanceo": {
+    "estrategia": "sobremuestreo",
+    "descripcion": "sobremuestreo aleatorio solo en entrenamiento hasta igualar las clases",
+    "entrenamiento_original_por_clase": {
+      "0": 364,
+      "1": 46
+    },
+    "entrenamiento_usado_por_clase": {
+      "0": 364,
+      "1": 364
+    }
+  },
+  "busqueda": [
+    {
+      "pca": false,
+      "dimension_red": 16,
+      "ocultas": [
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 31,
+      "exactitud_val": 0.8015,
+      "exactitud_balanceada_val": 0.7716
+    },
+    {
+      "pca": false,
+      "dimension_red": 16,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 0.0,
+      "epocas": 25,
+      "exactitud_val": 0.7794,
+      "exactitud_balanceada_val": 0.7592
+    },
+    {
+      "pca": false,
+      "dimension_red": 16,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 25,
+      "exactitud_val": 0.7721,
+      "exactitud_balanceada_val": 0.7259
+    },
+    {
+      "pca": false,
+      "dimension_red": 16,
+      "ocultas": [
+        128,
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 24,
+      "exactitud_val": 0.8309,
+      "exactitud_balanceada_val": 0.7882
+    },
+    {
+      "pca": false,
+      "dimension_red": 16,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 54,
+      "exactitud_val": 0.8529,
+      "exactitud_balanceada_val": 0.7421
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 35,
+      "exactitud_val": 0.7721,
+      "exactitud_balanceada_val": 0.7551
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 0.0,
+      "epocas": 31,
+      "exactitud_val": 0.8309,
+      "exactitud_balanceada_val": 0.759
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 31,
+      "exactitud_val": 0.8309,
+      "exactitud_balanceada_val": 0.759
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        128,
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 23,
+      "exactitud_val": 0.8088,
+      "exactitud_balanceada_val": 0.7758
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 77,
+      "exactitud_val": 0.8456,
+      "exactitud_balanceada_val": 0.738
+    }
+  ],
+  "elegida": {
+    "pca": false,
+    "dimension_red": 16,
+    "ocultas": [
+      128,
+      64,
+      32
+    ],
+    "activacion": "relu",
+    "dropout": 0.2,
+    "l1": 1e-05,
+    "epocas": 24,
+    "exactitud_val": 0.8309,
+    "exactitud_balanceada_val": 0.7882
+  },
+  "arquitectura": {
+    "capas": [
+      {
+        "nombre": "oculta_1",
+        "neuronas": 128,
+        "activacion": "relu",
+        "forma_W": [
+          16,
+          128
+        ],
+        "forma_b": [
+          128
+        ],
+        "parametros": 2176
+      },
+      {
+        "nombre": "oculta_2",
+        "neuronas": 64,
+        "activacion": "relu",
+        "forma_W": [
+          128,
+          64
+        ],
+        "forma_b": [
+          64
+        ],
+        "parametros": 8256
+      },
+      {
+        "nombre": "oculta_3",
+        "neuronas": 32,
+        "activacion": "relu",
+        "forma_W": [
+          64,
+          32
+        ],
+        "forma_b": [
+          32
+        ],
+        "parametros": 2080
+      },
+      {
+        "nombre": "softmax",
+        "neuronas": 2,
+        "activacion": "softmax",
+        "forma_W": [
+          32,
+          2
+        ],
+        "forma_b": [
+          2
+        ],
+        "parametros": 66
+      }
+    ],
+    "parametros_totales": 12578
+  },
+  "historial": {
+    "accuracy": [
+      0.62912,
+      0.71016,
+      0.79396,
+      0.80907,
+      0.8228,
+      0.86813,
+      0.87363,
+      0.88462,
+      0.90522,
+      0.92857,
+      0.93819,
+      0.93544,
+      0.93819,
+      0.94368,
+      0.95467,
+      0.93819,
+      0.95055,
+      0.96291,
+      0.96291,
+      0.98077,
+      0.96841,
+      0.96429,
+      0.96841,
+      0.96978
+    ],
+    "loss": [
+      0.65506,
+      0.55612,
+      0.45789,
+      0.4237,
+      0.39067,
+      0.32062,
+      0.29682,
+      0.30238,
+      0.25989,
+      0.20891,
+      0.20191,
+      0.19199,
+      0.17231,
+      0.17788,
+      0.14288,
+      0.15522,
+      0.14606,
+      0.12517,
+      0.1254,
+      0.09578,
+      0.10263,
+      0.12539,
+      0.10999,
+      0.09968
+    ],
+    "val_accuracy": [
+      0.82353,
+      0.82353,
+      0.77941,
+      0.83088,
+      0.83088,
+      0.81618,
+      0.83088,
+      0.85294,
+      0.83824,
+      0.83824,
+      0.86029,
+      0.84559,
+      0.86765,
+      0.84559,
+      0.85294,
+      0.86765,
+      0.86029,
+      0.86029,
+      0.86765,
+      0.85294,
+      0.86029,
+      0.86029,
+      0.86765,
+      0.85294
+    ],
+    "val_loss": [
+      0.5257,
+      0.44267,
+      0.42226,
+      0.38092,
+      0.39554,
+      0.39469,
+      0.43514,
+      0.41112,
+      0.4433,
+      0.45094,
+      0.47304,
+      0.5112,
+      0.50845,
+      0.5024,
+      0.53084,
+      0.598,
+      0.57344,
+      0.53926,
+      0.54402,
+      0.6264,
+      0.64222,
+      0.63723,
+      0.61572,
+      0.63984
+    ]
+  },
+  "entrenamiento": {
+    "exactitud": 0.8976,
+    "exactitud_balanceada": 0.8948,
+    "error": 0.1024,
+    "matriz_confusion": [
+      [
+        327,
+        37
+      ],
+      [
+        5,
+        41
+      ]
+    ],
+    "por_clase": {
+      "Paga sin problemas (A o C)": {
+        "precision": 0.9849,
+        "sensibilidad": 0.8984,
+        "f1": 0.9397,
+        "soporte": 364
+      },
+      "Impago (B o D)": {
+        "precision": 0.5256,
+        "sensibilidad": 0.8913,
+        "f1": 0.6613,
+        "soporte": 46
+      }
+    },
+    "f1_macro": 0.8005
+  },
+  "validacion": {
+    "exactitud": 0.8309,
+    "exactitud_balanceada": 0.7882,
+    "error": 0.1691,
+    "matriz_confusion": [
+      [
+        102,
+        19
+      ],
+      [
+        4,
+        11
+      ]
+    ],
+    "por_clase": {
+      "Paga sin problemas (A o C)": {
+        "precision": 0.9623,
+        "sensibilidad": 0.843,
+        "f1": 0.8987,
+        "soporte": 121
+      },
+      "Impago (B o D)": {
+        "precision": 0.3667,
+        "sensibilidad": 0.7333,
+        "f1": 0.4889,
+        "soporte": 15
+      }
+    },
+    "f1_macro": 0.6938
+  },
+  "prueba": {
+    "exactitud": 0.8456,
+    "exactitud_balanceada": 0.738,
+    "error": 0.1544,
+    "matriz_confusion": [
+      [
+        106,
+        15
+      ],
+      [
+        6,
+        9
+      ]
+    ],
+    "por_clase": {
+      "Paga sin problemas (A o C)": {
+        "precision": 0.9464,
+        "sensibilidad": 0.876,
+        "f1": 0.9099,
+        "soporte": 121
+      },
+      "Impago (B o D)": {
+        "precision": 0.375,
+        "sensibilidad": 0.6,
+        "f1": 0.4615,
+        "soporte": 15
+      }
+    },
+    "f1_macro": 0.6857,
+    "auc": 0.8562
+  },
+  "E_in": 0.1024,
+  "E_out": 0.1544,
+  "diferencia_E_out_E_in": 0.052,
+  "validacion_cruzada_5": {
+    "errores": [
+      0.1364,
+      0.1101,
+      0.2018,
+      0.1284,
+      0.1468
+    ],
+    "error_promedio": 0.1447,
+    "desviacion": 0.031
+  },
+  "comparacion_prueba": {
+    "red_neuronal": {
+      "exactitud": 0.8456,
+      "exactitud_balanceada": 0.738
+    },
+    "softmax_lineal": {
+      "exactitud": 0.7647,
+      "exactitud_balanceada": 0.7802
+    },
+    "clase_mayoritaria": {
+      "exactitud": 0.8897,
+      "exactitud_balanceada": 0.5
+    },
+    "aleatorio": {
+      "exactitud": 0.5,
+      "exactitud_balanceada": 0.5
+    }
+  },
+  "segundos": 155.6
+}

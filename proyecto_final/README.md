@@ -48,6 +48,30 @@ Cada red se eligió en validación. La búsqueda probó todas las X frente a PCA
 - Los modelos, el preprocesamiento (orden de X, medias, desviaciones) y las métricas completas (curvas, matriz de confusión, métricas por clase y búsqueda) están en `modelos/`.
 - **Tiempo:** S1 tardó unas 21 horas (14,400 filas, lotes de 15 y 10 configuraciones más 5 pliegues). S2 tardó 26 minutos y S3, 7. Para volver a entrenar un solo sistema: `python proyecto_final/02_entrenar_redes.py S2`.
 
+## Balanceo de clases: dos versiones (en evaluación)
+
+S2, S3 y S4 tienen clases desbalanceadas reales; S1 ya está balanceado (6,000 por clase). Hay dos versiones entrenadas con la misma partición:
+
+| Carpeta | Estrategia | Uso actual |
+| :--- | :--- | :--- |
+| `modelos/` | Datos reales y **pesos por clase** en la pérdida | La usa el aplicativo |
+| `modelos_sobremuestreo/` | Entrenamiento **50/50**: se repiten casos de las clases pequeñas solo en entrenamiento; validación y prueba quedan con la proporción real | Solo comparación |
+
+La comparación completa está en [`comparacion_balanceo.md`](comparacion_balanceo.md) (`python proyecto_final/03_comparar_balanceo.py`). En resumen:
+- El sobremuestreo mejora un poco a S2 y claramente a S4 (AUC 0.795 → 0.856; detecta 9 de 15 impagos en vez de 8).
+- S3 queda prácticamente igual.
+- En S3 y S4, E_out − E_in sube a 5.2 puntos, justo por encima del límite de 5.
+
+Para reentrenar con sobremuestreo: `python proyecto_final/02_entrenar_redes.py S2 S3 S4 --balanceo sobremuestreo --salida modelos_sobremuestreo`.
+
+## Verificación de los modelos
+
+`python proyecto_final/04_verificar_modelos.py` (~40 s) genera [`verificacion_modelos.md`](verificacion_modelos.md). Prueba las dos versiones con:
+- (A) datos parecidos al dataset, con ruido del 5 %;
+- (B) datos reales que el modelo nunca vio: 10,000 transacciones en S1 y 5,000 meses en S3;
+- (C) casos en la frontera de decisión;
+- (D) atajos: importancia por permutación y valores sintéticos extremos.
+
 ## Cómo ejecutar
 
 Desde la raíz del repositorio:
@@ -63,6 +87,7 @@ Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (p
 - El distrito se escribe por su nombre y se reconoce sin tildes ni mayúsculas.
 - Se valida cada dato y se comprueba que el vector X tenga la dimensión del modelo. Se avisa si un valor está fuera del rango visto al entrenar.
 - Se muestran la clase, las probabilidades softmax y el vector que entra a la red.
+- **Frontera de decisión:** si las dos clases más probables difieren en menos de 10 puntos, aparece el aviso "Caso en la frontera de decisión entre X e Y". La red igual asigna una sola clase, la de mayor probabilidad (argmax de softmax). El historial y el dashboard marcan esos casos con la etiqueta *frontera*.
 - Cada predicción se guarda en `app/predicciones.sqlite` (no se sube a git) y, si SQL Server está disponible, en `DM_Financial_Kimball_v2.dbo.Prediccion_Red_Neuronal`.
 - Verificación: 40 filas de prueba de cada sistema escritas como texto dieron la misma predicción que el modelo directo (40/40 en los 4).
 

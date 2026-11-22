@@ -26,6 +26,18 @@
   <p>Clase predicha:</p>
   <p class="clase">{{ resultado.clase }}</p>
   <p class="sub">Probabilidad {{ '%.1f'|format(resultado.probabilidades[resultado.clase]*100) }} %</p>
+  {% set f = resultado.frontera %}
+  {% if f.en_frontera %}
+  <div class="frontera">
+    <b>⚖ Caso en la frontera de decisión</b> entre <b>{{ f.clase_asignada }}</b> ({{ '%.1f'|format(f.prob_asignada*100) }} %)
+    y <b>{{ f.otra_clase }}</b> ({{ '%.1f'|format(f.prob_otra*100) }} %): la diferencia es de solo
+    {{ '%.1f'|format(f.margen*100) }} puntos (umbral {{ (f.umbral*100)|int }}).
+    La red lo asigna a <b>{{ f.clase_asignada }}</b>, la clase con mayor probabilidad (argmax de la capa softmax).
+    Conviene revisar este caso con más información.
+  </div>
+  {% else %}
+  <p class="ok">Fuera de la frontera: la clase asignada supera a la siguiente ({{ f.otra_clase }}) por {{ '%.1f'|format(f.margen*100) }} puntos.</p>
+  {% endif %}
   <table>
     <tr><th>Clase</th><th style="width:55%">Probabilidad (softmax)</th><th>%</th></tr>
     {% for clase, p in resultado.probabilidades.items() %}

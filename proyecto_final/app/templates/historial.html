@@ -11,7 +11,7 @@
     <tr>
       <td>{{ f.fecha_hora }}</td>
       <td>{{ f.sistema }} · {{ f.titulo }}</td>
-      <td><b>{{ f.clase_predicha }}</b></td>
+      <td><b>{{ f.clase_predicha }}</b>{% if f.en_frontera %}<span class="etiqueta-frontera" title="Margen de {{ '%.1f'|format(f.margen*100) }} puntos con la segunda clase">frontera</span>{% endif %}</td>
       <td>{{ '%.1f'|format(f.probabilidad*100) }} %</td>
       <td>1 × {{ f.dimension_x }}</td>
       <td class="ayuda">{% for k, v in f.entradas.items() %}{{ k }}={{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>

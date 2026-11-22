@@ -92,7 +92,7 @@
       {% if nuevos %}
       <table>
         <tr><th>Fecha y hora</th><th>Clase predicha</th><th>Prob.</th></tr>
-        {% for f in nuevos[:12] %}<tr><td>{{ f.fecha_hora }}</td><td>{{ f.clase_predicha }}</td><td>{{ '%.0f'|format(f.probabilidad*100) }} %</td></tr>{% endfor %}
+        {% for f in nuevos[:12] %}<tr><td>{{ f.fecha_hora }}</td><td>{{ f.clase_predicha }}{% if f.en_frontera %}<span class="etiqueta-frontera">frontera</span>{% endif %}</td><td>{{ '%.0f'|format(f.probabilidad*100) }} %</td></tr>{% endfor %}
       </table>
       {% else %}<p>Aún no se han escrito datos nuevos para este sistema.</p>{% endif %}
       <p class="ayuda">El mapa proyecta los datos de prueba a 2 dimensiones (v1, v2) con PCA, solo para visualizar; la red usa todas las características.</p>

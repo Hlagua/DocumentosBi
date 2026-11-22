@@ -24,6 +24,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 DATOS = RAIZ / "datos"
 MODELOS = RAIZ / "modelos"
 SISTEMAS = ["S1", "S2", "S3", "S4"]
+UMBRAL_FRONTERA = 0.10   # diferencia de probabilidad entre las dos clases más probables
 ARCHIVOS = {
     "S1": DATOS / "S1_transacciones.csv",
     "S2": DATOS / "S2_ordenes.csv",
@@ -228,14 +229,27 @@ class Sistema:
         z = (x - self.media) / self.desv
         return z @ self.pca.T if self.pca is not None else z
 
-    def predecir(self, X):
+    def predecir(self, X, umbral_frontera=UMBRAL_FRONTERA):
         x = self.vector(X)
         z = self.transformar(x)
         p = self.red.predict(z, verbose=0)[0]
         k = int(np.argmax(p))
+        # Frontera de decisión: las dos clases más probables casi empatadas.
+        # La red igual asigna UNA clase (la de mayor probabilidad, argmax de softmax).
+        segunda = int(np.argsort(p)[-2])
+        margen = float(p[k] - p[segunda])
         return {
             "clase": self.clases[k],
             "indice": k,
+            "frontera": {
+                "en_frontera": margen < umbral_frontera,
+                "margen": margen,
+                "umbral": umbral_frontera,
+                "clase_asignada": self.clases[k],
+                "otra_clase": self.clases[segunda],
+                "prob_asignada": float(p[k]),
+                "prob_otra": float(p[segunda]),
+            },
             "probabilidades": {c: float(v) for c, v in zip(self.clases, p)},
             "x": x[0].tolist(),
             "z": z[0].tolist(),

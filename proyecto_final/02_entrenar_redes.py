@@ -17,7 +17,9 @@ Proceso por sistema (S1, S2, S3):
      neuronas, activación, dropout y regularización L1.
      Entrenamiento con entropía cruzada categórica, optimizador Adam,
      lotes de 15 y parada temprana (early stopping) sobre la pérdida de
-     validación. Las clases desbalanceadas se compensan con pesos por clase.
+     validación. Las clases desbalanceadas se compensan con pesos por clase
+     (por defecto) o, con --balanceo sobremuestreo, repitiendo casos de las
+     clases pequeñas SOLO en entrenamiento hasta que todas queden iguales.
   4. Modelos de referencia con la misma partición:
        - clasificador aleatorio  (error teórico (M-1)/M)
        - clase mayoritaria
@@ -58,8 +60,8 @@ from sklearn.model_selection import StratifiedKFold
 
 DIR = Path(__file__).resolve().parent
 DATOS = DIR / "datos"
-MODELOS = DIR / "modelos"
-MODELOS.mkdir(exist_ok=True)
+MODELOS = DIR / "modelos"          # se puede cambiar con --salida
+BALANCEO = "pesos"                 # "pesos" (por defecto) o "sobremuestreo" (--balanceo)
 
 SEMILLA = 42
 LOTE = 15                 # tamaño de lote visto en clase
@@ -161,6 +163,29 @@ def pesos_por_clase(y):
     return {int(c): float(len(y) / (len(clases) * n)) for c, n in zip(clases, conteo)}
 
 
+def balancear(X, y):
+    """
+    Prepara el conjunto de ENTRENAMIENTO según la estrategia elegida:
+      * "pesos": deja los datos como están y devuelve pesos por clase.
+      * "sobremuestreo": repite al azar casos de las clases pequeñas hasta que
+        todas tengan tantos casos como la mayor (clases 50/50 o 1/M cada una).
+        Solo se aplica al entrenamiento; validación y prueba conservan la
+        proporción real.
+    """
+    if BALANCEO != "sobremuestreo":
+        return X, y, pesos_por_clase(y)
+    rng = np.random.default_rng(SEMILLA)
+    clases, conteo = np.unique(y, return_counts=True)
+    objetivo = conteo.max()
+    indices = []
+    for c, n in zip(clases, conteo):
+        idx = np.flatnonzero(y == c)
+        extra = rng.choice(idx, size=objetivo - n, replace=True) if n < objetivo else np.array([], dtype=int)
+        indices.append(np.concatenate([idx, extra]))
+    indices = rng.permutation(np.concatenate(indices))
+    return X[indices], y[indices], None
+
+
 def entrenar(red, Xtr, ytr, Xva, yva, pesos):
     parada = keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=PACIENCIA, restore_best_weights=True
@@ -227,9 +252,11 @@ def procesar(sistema, archivo, diccionario):
     part = {p: df[df["particion"] == p] for p in ["entrenamiento", "validacion", "prueba"]}
     X = {p: part[p][columnas].to_numpy(float) for p in part}
     y = {p: part[p]["clase"].to_numpy(int) for p in part}
-    pesos = pesos_por_clase(y["entrenamiento"])
+    Xbal, ybal, pesos = balancear(X["entrenamiento"], y["entrenamiento"])
+    conteo_bal = {int(c): int(n) for c, n in zip(*np.unique(ybal, return_counts=True))}
     print(f"\n{'=' * 78}\n{sistema}: {info['titulo']} | X = {len(columnas)} | clases = {n_clases} | "
-          f"entrenamiento/validación/prueba = {len(y['entrenamiento'])}/{len(y['validacion'])}/{len(y['prueba'])}")
+          f"entrenamiento/validación/prueba = {len(y['entrenamiento'])}/{len(y['validacion'])}/{len(y['prueba'])}"
+          f"\n  Balanceo: {BALANCEO} | entrenamiento por clase {conteo_bal}")
 
     # --- búsqueda: reducción de dimensión x arquitectura (decide la validación) ---
     busqueda = []
@@ -240,7 +267,7 @@ def procesar(sistema, archivo, diccionario):
         for ocultas, act, drop, l1 in CANDIDATAS:
             keras.utils.set_random_seed(SEMILLA)
             red = construir_red(pre.dimension_salida, n_clases, ocultas, act, drop, l1)
-            hist = entrenar(red, Ztr, y["entrenamiento"], Zva, y["validacion"], pesos)
+            hist = entrenar(red, pre.transformar(Xbal), ybal, Zva, y["validacion"], pesos)
             pva = predecir(red, Zva)
             fila = {
                 "pca": usar_pca, "dimension_red": int(pre.dimension_salida), "ocultas": ocultas,
@@ -262,7 +289,7 @@ def procesar(sistema, archivo, diccionario):
     # --- softmax lineal (sin capas ocultas) con el mismo preprocesamiento ---
     keras.utils.set_random_seed(SEMILLA)
     lineal = construir_red(pre.dimension_salida, n_clases, [], "linear", 0.0, 0.0)
-    entrenar(lineal, Ztr, y["entrenamiento"], Zva, y["validacion"], pesos)
+    entrenar(lineal, pre.transformar(Xbal), ybal, Zva, y["validacion"], pesos)
 
     # --- validación cruzada de 5 pliegues sobre entrenamiento + validación ---
     Xcv = np.vstack([X["entrenamiento"], X["validacion"]])
@@ -273,8 +300,8 @@ def procesar(sistema, archivo, diccionario):
         keras.utils.set_random_seed(SEMILLA)
         red_k = construir_red(pre_k.dimension_salida, n_clases, elegida["ocultas"], elegida["activacion"],
                               elegida["dropout"], elegida["l1"])
-        entrenar(red_k, pre_k.transformar(Xcv[itr]), ycv[itr], pre_k.transformar(Xcv[iva]), ycv[iva],
-                 pesos_por_clase(ycv[itr]))
+        Xk, yk, pesos_k = balancear(Xcv[itr], ycv[itr])
+        entrenar(red_k, pre_k.transformar(Xk), yk, pre_k.transformar(Xcv[iva]), ycv[iva], pesos_k)
         err = 1 - accuracy_score(ycv[iva], predecir(red_k, pre_k.transformar(Xcv[iva])))
         errores.append(round(float(err), 4))
         print(f"  pliegue {k}: error {err:.4f}", flush=True)
@@ -298,6 +325,13 @@ def procesar(sistema, archivo, diccionario):
         "hiperparametros_fijos": {"lote": LOTE, "epocas_max": EPOCAS_MAX, "paciencia": PACIENCIA,
                                   "optimizador": "Adam (lr = 0.001)", "perdida": "entropía cruzada categórica",
                                   "inicializacion": "Glorot uniforme", "pesos_por_clase": pesos},
+        "balanceo": {
+            "estrategia": BALANCEO,
+            "descripcion": ("sobremuestreo aleatorio solo en entrenamiento hasta igualar las clases"
+                            if BALANCEO == "sobremuestreo" else "datos reales con pesos por clase en la pérdida"),
+            "entrenamiento_original_por_clase": {int(c): int(n) for c, n in zip(*np.unique(y["entrenamiento"], return_counts=True))},
+            "entrenamiento_usado_por_clase": conteo_bal,
+        },
         "busqueda": busqueda,
         "elegida": elegida,
         "arquitectura": resumen_arquitectura(red),
@@ -335,11 +369,28 @@ def procesar(sistema, archivo, diccionario):
 
 
 def main():
+    """
+    Uso:
+      python 02_entrenar_redes.py [S1 S2 S3 S4] [--balanceo pesos|sobremuestreo] [--salida carpeta]
+    Por defecto entrena los 4 sistemas con pesos por clase y guarda en modelos/.
+    """
+    global BALANCEO, MODELOS
+    import argparse
+
     sys.stdout.reconfigure(encoding="utf-8")
-    print(f"TensorFlow/Keras {keras.__version__} | lote {LOTE} | semilla {SEMILLA}")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("sistemas", nargs="*", choices=list(SISTEMAS) + [], default=list(SISTEMAS))
+    ap.add_argument("--balanceo", choices=["pesos", "sobremuestreo"], default="pesos")
+    ap.add_argument("--salida", default="modelos", help="carpeta dentro de proyecto_final/")
+    args = ap.parse_args()
+    BALANCEO = args.balanceo
+    MODELOS = DIR / args.salida
+    MODELOS.mkdir(exist_ok=True)
+    print(f"TensorFlow/Keras {keras.__version__} | lote {LOTE} | semilla {SEMILLA} | "
+          f"balanceo {BALANCEO} | salida {MODELOS.name}/")
     with open(DATOS / "diccionario_caracteristicas.json", encoding="utf-8") as f:
         diccionario = json.load(f)
-    elegidos = sys.argv[1:] or list(SISTEMAS)
+    elegidos = args.sistemas or list(SISTEMAS)
     for s in elegidos:
         procesar(s, SISTEMAS[s], diccionario)
 

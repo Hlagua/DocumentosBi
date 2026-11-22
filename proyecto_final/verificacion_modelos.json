@@ -1,0 +1,1062 @@
+{
+  "control_reconstruccion": {
+    "S1": [
+      true,
+      24000
+    ],
+    "S1_disponibles": {
+      "0": 150743,
+      "1": 435377,
+      "2": 202283,
+      "3": 59226
+    },
+    "S3": [
+      true,
+      4708
+    ],
+    "S3_disponibles": {
+      "0": 106564,
+      "1": 69843
+    }
+  },
+  "sistemas": {
+    "S1": {
+      "titulo": "Tipo de transacción",
+      "clases": [
+        "Depósito en efectivo",
+        "Retiro (efectivo o tarjeta)",
+        "Transferencia enviada",
+        "Transferencia recibida"
+      ],
+      "versiones": {
+        "pesos": {
+          "carpeta": "modelos",
+          "prueba": {
+            "n": 4800,
+            "exactitud": 0.7681,
+            "exactitud_balanceada": 0.7681,
+            "sensibilidad_por_clase": [
+              0.5983,
+              0.6967,
+              0.8758,
+              0.9017
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.7681,
+            "exactitud_balanceada_con_ruido": 0.735,
+            "predicciones_iguales_con_ruido": 0.9318
+          },
+          "B_nunca_vistos": {
+            "n": 10000,
+            "exactitud": 0.7681,
+            "exactitud_balanceada": 0.7681,
+            "sensibilidad_por_clase": [
+              0.5976,
+              0.7104,
+              0.876,
+              0.8884
+            ]
+          },
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0689,
+            "n_en_frontera": 1020,
+            "acierto_en_frontera": 0.4902,
+            "acierto_fuera_de_frontera": 0.7887,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.9255,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.7681,
+            "importancia_permutacion": {
+              "monto": 0.2967,
+              "dia": 0.2601,
+              "edad": 0.139,
+              "saldo_despues": 0.0813,
+              "poblacion": 0.031,
+              "tasa_criminalidad": 0.0244,
+              "es_mujer": 0.0086,
+              "salario_promedio": 0.0073,
+              "anio": 0.0042,
+              "tasa_desempleo": 0.0041,
+              "mes": 0.0037,
+              "dia_semana": -0.0002
+            },
+            "caracteristica_principal": "monto",
+            "peso_relativo_principal": 0.3448,
+            "extremos": {
+              "monto:muy_alto": {
+                "valor": 192225.56,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.6104,
+                "confianza_media": 0.8436
+              },
+              "monto:muy_bajo": {
+                "valor": -117453.56,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.9975,
+                "confianza_media": 0.9987
+              },
+              "saldo_despues:muy_alto": {
+                "valor": 403677.48,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9833,
+                "confianza_media": 0.9337
+              },
+              "saldo_despues:muy_bajo": {
+                "valor": -247135.48,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9981,
+                "confianza_media": 0.9977
+              },
+              "edad:muy_alto": {
+                "valor": 251.69,
+                "clase_dominante": 3,
+                "proporcion_clase_dominante": 0.799,
+                "confianza_media": 0.9876
+              }
+            }
+          }
+        },
+        "sobremuestreo": {
+          "carpeta": "modelos",
+          "prueba": {
+            "n": 4800,
+            "exactitud": 0.7681,
+            "exactitud_balanceada": 0.7681,
+            "sensibilidad_por_clase": [
+              0.5983,
+              0.6967,
+              0.8758,
+              0.9017
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.7681,
+            "exactitud_balanceada_con_ruido": 0.735,
+            "predicciones_iguales_con_ruido": 0.9318
+          },
+          "B_nunca_vistos": {
+            "n": 10000,
+            "exactitud": 0.7681,
+            "exactitud_balanceada": 0.7681,
+            "sensibilidad_por_clase": [
+              0.5976,
+              0.7104,
+              0.876,
+              0.8884
+            ]
+          },
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0689,
+            "n_en_frontera": 1020,
+            "acierto_en_frontera": 0.4902,
+            "acierto_fuera_de_frontera": 0.7887,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.9255,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.7681,
+            "importancia_permutacion": {
+              "monto": 0.2967,
+              "dia": 0.2601,
+              "edad": 0.139,
+              "saldo_despues": 0.0813,
+              "poblacion": 0.031,
+              "tasa_criminalidad": 0.0244,
+              "es_mujer": 0.0086,
+              "salario_promedio": 0.0073,
+              "anio": 0.0042,
+              "tasa_desempleo": 0.0041,
+              "mes": 0.0037,
+              "dia_semana": -0.0002
+            },
+            "caracteristica_principal": "monto",
+            "peso_relativo_principal": 0.3448,
+            "extremos": {
+              "monto:muy_alto": {
+                "valor": 192225.56,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.6104,
+                "confianza_media": 0.8436
+              },
+              "monto:muy_bajo": {
+                "valor": -117453.56,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.9975,
+                "confianza_media": 0.9987
+              },
+              "saldo_despues:muy_alto": {
+                "valor": 403677.48,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9833,
+                "confianza_media": 0.9337
+              },
+              "saldo_despues:muy_bajo": {
+                "valor": -247135.48,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9981,
+                "confianza_media": 0.9977
+              },
+              "edad:muy_alto": {
+                "valor": 251.69,
+                "clase_dominante": 3,
+                "proporcion_clase_dominante": 0.799,
+                "confianza_media": 0.9876
+              }
+            }
+          }
+        }
+      }
+    },
+    "S2": {
+      "titulo": "Propósito de la orden permanente",
+      "clases": [
+        "Hogar (SIPO)",
+        "Préstamo (UVER)",
+        "Seguro (POJISTNE)",
+        "Arrendamiento (LEASING)"
+      ],
+      "versiones": {
+        "pesos": {
+          "carpeta": "modelos",
+          "prueba": {
+            "n": 1020,
+            "exactitud": 0.8137,
+            "exactitud_balanceada": 0.833,
+            "sensibilidad_por_clase": [
+              0.7846,
+              0.9444,
+              0.8972,
+              0.7059
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.833,
+            "exactitud_balanceada_con_ruido": 0.8404,
+            "predicciones_iguales_con_ruido": 0.9869
+          },
+          "B_nunca_vistos": null,
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0333,
+            "n_en_frontera": 34,
+            "acierto_en_frontera": 0.4412,
+            "acierto_fuera_de_frontera": 0.8266,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.9118,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.833,
+            "importancia_permutacion": {
+              "monto_orden": 0.3274,
+              "tiene_prestamo": 0.2392,
+              "cuota_prestamo": 0.2224,
+              "ordenes_activas_cuenta": 0.1434,
+              "retiro_mensual": 0.1095,
+              "poblacion": 0.0344,
+              "tasa_criminalidad": 0.0314,
+              "deposito_mensual": 0.0185,
+              "saldo_promedio_cuenta": -0.0016,
+              "salario_promedio": -0.0032,
+              "edad": -0.005,
+              "es_mujer": -0.0086,
+              "tasa_desempleo": -0.0137
+            },
+            "caracteristica_principal": "monto_orden",
+            "peso_relativo_principal": 0.2907,
+            "extremos": {
+              "monto_orden:muy_alto": {
+                "valor": 43144.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9668
+              },
+              "monto_orden:muy_bajo": {
+                "valor": -28261.89,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.9422,
+                "confianza_media": 0.7905
+              },
+              "edad:muy_alto": {
+                "valor": 245.64,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8049,
+                "confianza_media": 0.9131
+              },
+              "cuota_prestamo:muy_alto": {
+                "valor": 31785.01,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.7314,
+                "confianza_media": 0.876
+              },
+              "cuota_prestamo:muy_bajo": {
+                "valor": -21938.01,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.6706,
+                "confianza_media": 0.8359
+              },
+              "ordenes_activas_cuenta:muy_alto": {
+                "valor": 16.78,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.4529,
+                "confianza_media": 0.5636
+              },
+              "saldo_promedio_cuenta:muy_alto": {
+                "valor": 229481.26,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.7765,
+                "confianza_media": 0.8162
+              },
+              "saldo_promedio_cuenta:muy_bajo": {
+                "valor": -140431.57,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.4235,
+                "confianza_media": 0.6418
+              },
+              "deposito_mensual:muy_alto": {
+                "valor": 221197.1,
+                "clase_dominante": 3,
+                "proporcion_clase_dominante": 0.501,
+                "confianza_media": 0.7164
+              },
+              "deposito_mensual:muy_bajo": {
+                "valor": -145803.1,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.651,
+                "confianza_media": 0.7764
+              },
+              "retiro_mensual:muy_alto": {
+                "valor": 193889.85,
+                "clase_dominante": 3,
+                "proporcion_clase_dominante": 0.7941,
+                "confianza_media": 0.853
+              },
+              "retiro_mensual:muy_bajo": {
+                "valor": -121792.78,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9706,
+                "confianza_media": 0.854
+              }
+            }
+          }
+        },
+        "sobremuestreo": {
+          "carpeta": "modelos_sobremuestreo",
+          "prueba": {
+            "n": 1020,
+            "exactitud": 0.8216,
+            "exactitud_balanceada": 0.8359,
+            "sensibilidad_por_clase": [
+              0.7989,
+              0.9444,
+              0.8505,
+              0.75
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.8359,
+            "exactitud_balanceada_con_ruido": 0.8342,
+            "predicciones_iguales_con_ruido": 0.9835
+          },
+          "B_nunca_vistos": null,
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0343,
+            "n_en_frontera": 35,
+            "acierto_en_frontera": 0.3429,
+            "acierto_fuera_de_frontera": 0.8386,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.8571,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.8359,
+            "importancia_permutacion": {
+              "monto_orden": 0.3493,
+              "tiene_prestamo": 0.2556,
+              "cuota_prestamo": 0.2221,
+              "ordenes_activas_cuenta": 0.1444,
+              "retiro_mensual": 0.1358,
+              "tasa_criminalidad": 0.0444,
+              "poblacion": 0.0322,
+              "deposito_mensual": 0.0176,
+              "salario_promedio": 0.0125,
+              "saldo_promedio_cuenta": 0.0037,
+              "tasa_desempleo": -0.0017,
+              "edad": -0.0032,
+              "es_mujer": -0.0044
+            },
+            "caracteristica_principal": "monto_orden",
+            "peso_relativo_principal": 0.2869,
+            "extremos": {
+              "monto_orden:muy_alto": {
+                "valor": 43144.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9601
+              },
+              "monto_orden:muy_bajo": {
+                "valor": -28261.89,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.8588,
+                "confianza_media": 0.7814
+              },
+              "edad:muy_alto": {
+                "valor": 245.64,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.7716,
+                "confianza_media": 0.9109
+              },
+              "cuota_prestamo:muy_alto": {
+                "valor": 31785.01,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.751,
+                "confianza_media": 0.9045
+              },
+              "cuota_prestamo:muy_bajo": {
+                "valor": -21938.01,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.651,
+                "confianza_media": 0.8408
+              },
+              "ordenes_activas_cuenta:muy_alto": {
+                "valor": 16.78,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.3461,
+                "confianza_media": 0.604
+              },
+              "saldo_promedio_cuenta:muy_alto": {
+                "valor": 229481.26,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8784,
+                "confianza_media": 0.8205
+              },
+              "saldo_promedio_cuenta:muy_bajo": {
+                "valor": -140431.57,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.5814,
+                "confianza_media": 0.65
+              },
+              "deposito_mensual:muy_alto": {
+                "valor": 221197.1,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.4755,
+                "confianza_media": 0.7627
+              },
+              "deposito_mensual:muy_bajo": {
+                "valor": -145803.1,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.6735,
+                "confianza_media": 0.7737
+              },
+              "retiro_mensual:muy_alto": {
+                "valor": 193889.85,
+                "clase_dominante": 3,
+                "proporcion_clase_dominante": 0.6775,
+                "confianza_media": 0.7823
+              },
+              "retiro_mensual:muy_bajo": {
+                "valor": -121792.78,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9784,
+                "confianza_media": 0.95
+              }
+            }
+          }
+        }
+      }
+    },
+    "S3": {
+      "titulo": "Estado del saldo el mes siguiente",
+      "clases": [
+        "Saldo estable o creciente",
+        "Caída de saldo sin sobregiro",
+        "Sobregiro"
+      ],
+      "versiones": {
+        "pesos": {
+          "carpeta": "modelos",
+          "prueba": {
+            "n": 941,
+            "exactitud": 0.6355,
+            "exactitud_balanceada": 0.6851,
+            "sensibilidad_por_clase": [
+              0.4225,
+              0.7675,
+              0.8652
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.6851,
+            "exactitud_balanceada_con_ruido": 0.6829,
+            "predicciones_iguales_con_ruido": 0.98
+          },
+          "B_nunca_vistos": {
+            "n": 5000,
+            "exactitud": 0.5852,
+            "exactitud_balanceada": 0.5852,
+            "sensibilidad_por_clase": [
+              0.4,
+              0.7704,
+              null
+            ]
+          },
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.2415,
+            "n_en_frontera": 1435,
+            "acierto_en_frontera": 0.4976,
+            "acierto_fuera_de_frontera": 0.6236,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.9784,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.6851,
+            "importancia_permutacion": {
+              "saldo_fin_mes": 0.1468,
+              "saldo_promedio_mes": 0.1079,
+              "saldo_min_mes": 0.0434,
+              "monto_medio_mov": 0.0337,
+              "num_movimientos_mes": 0.0336,
+              "cambio_saldo_mes": 0.0208,
+              "anio": 0.0059,
+              "tasa_criminalidad": 0.0037,
+              "mes": 0.003,
+              "edad": 0.0021,
+              "poblacion": 0.0019,
+              "tasa_desempleo": 0.0019,
+              "es_mujer": 0.0008,
+              "salario_promedio": 0.0006,
+              "saldo_max_mes": -0.0024
+            },
+            "caracteristica_principal": "saldo_fin_mes",
+            "peso_relativo_principal": 0.3615,
+            "extremos": {
+              "saldo_fin_mes:muy_alto": {
+                "valor": 331683.99,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.8594
+              },
+              "saldo_fin_mes:muy_bajo": {
+                "valor": -263880.99,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9737
+              },
+              "saldo_promedio_mes:muy_alto": {
+                "valor": 309750.91,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9979,
+                "confianza_media": 0.6127
+              },
+              "saldo_promedio_mes:muy_bajo": {
+                "valor": -251137.49,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9958
+              },
+              "saldo_min_mes:muy_alto": {
+                "valor": 253503.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9979,
+                "confianza_media": 0.702
+              },
+              "saldo_min_mes:muy_bajo": {
+                "valor": -214600.89,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.983,
+                "confianza_media": 0.9229
+              },
+              "saldo_max_mes:muy_alto": {
+                "valor": 427911.54,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.7173,
+                "confianza_media": 0.5509
+              },
+              "saldo_max_mes:muy_bajo": {
+                "valor": -313357.54,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.6185,
+                "confianza_media": 0.587
+              },
+              "cambio_saldo_mes:muy_alto": {
+                "valor": 209732.8,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.6111,
+                "confianza_media": 0.4934
+              },
+              "cambio_saldo_mes:muy_bajo": {
+                "valor": -211585.8,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.6323,
+                "confianza_media": 0.4772
+              },
+              "num_movimientos_mes:muy_alto": {
+                "valor": 40.32,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.9075,
+                "confianza_media": 0.8403
+              },
+              "monto_medio_mov:muy_alto": {
+                "valor": 80811.33,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.967
+              },
+              "monto_medio_mov:muy_bajo": {
+                "valor": -47358.25,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9968,
+                "confianza_media": 0.6509
+              },
+              "edad:muy_alto": {
+                "valor": 247.09,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.8193,
+                "confianza_media": 0.5938
+              }
+            }
+          }
+        },
+        "sobremuestreo": {
+          "carpeta": "modelos_sobremuestreo",
+          "prueba": {
+            "n": 941,
+            "exactitud": 0.6366,
+            "exactitud_balanceada": 0.6859,
+            "sensibilidad_por_clase": [
+              0.465,
+              0.7275,
+              0.8652
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.6859,
+            "exactitud_balanceada_con_ruido": 0.6841,
+            "predicciones_iguales_con_ruido": 0.9853
+          },
+          "B_nunca_vistos": {
+            "n": 5000,
+            "exactitud": 0.5774,
+            "exactitud_balanceada": 0.5774,
+            "sensibilidad_por_clase": [
+              0.466,
+              0.6888,
+              null
+            ]
+          },
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.3545,
+            "n_en_frontera": 2106,
+            "acierto_en_frontera": 0.4934,
+            "acierto_fuera_de_frontera": 0.6381,
+            "clase_verdadera_entre_las_dos_mas_probables": 0.9877,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.6859,
+            "importancia_permutacion": {
+              "saldo_fin_mes": 0.1209,
+              "saldo_promedio_mes": 0.1002,
+              "saldo_min_mes": 0.0605,
+              "num_movimientos_mes": 0.0393,
+              "monto_medio_mov": 0.0246,
+              "edad": 0.0233,
+              "anio": 0.0221,
+              "cambio_saldo_mes": 0.0175,
+              "saldo_max_mes": 0.0157,
+              "mes": 0.0144,
+              "salario_promedio": 0.0091,
+              "tasa_desempleo": 0.0087,
+              "tasa_criminalidad": 0.0046,
+              "es_mujer": -0.0013,
+              "poblacion": -0.0021
+            },
+            "caracteristica_principal": "saldo_fin_mes",
+            "peso_relativo_principal": 0.2623,
+            "extremos": {
+              "saldo_fin_mes:muy_alto": {
+                "valor": 331683.99,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9398
+              },
+              "saldo_fin_mes:muy_bajo": {
+                "valor": -263880.99,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_promedio_mes:muy_alto": {
+                "valor": 309750.91,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9532,
+                "confianza_media": 0.6417
+              },
+              "saldo_promedio_mes:muy_bajo": {
+                "valor": -251137.49,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_min_mes:muy_alto": {
+                "valor": 253503.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9862,
+                "confianza_media": 0.8316
+              },
+              "saldo_min_mes:muy_bajo": {
+                "valor": -214600.89,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9979
+              },
+              "saldo_max_mes:muy_alto": {
+                "valor": 427911.54,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.745,
+                "confianza_media": 0.6695
+              },
+              "saldo_max_mes:muy_bajo": {
+                "valor": -313357.54,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.4113,
+                "confianza_media": 0.7456
+              },
+              "cambio_saldo_mes:muy_alto": {
+                "valor": 209732.8,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.7535,
+                "confianza_media": 0.8265
+              },
+              "cambio_saldo_mes:muy_bajo": {
+                "valor": -211585.8,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.8757,
+                "confianza_media": 0.9111
+              },
+              "num_movimientos_mes:muy_alto": {
+                "valor": 40.32,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8778,
+                "confianza_media": 0.83
+              },
+              "monto_medio_mov:muy_alto": {
+                "valor": 80811.33,
+                "clase_dominante": 2,
+                "proporcion_clase_dominante": 0.9872,
+                "confianza_media": 0.9803
+              },
+              "monto_medio_mov:muy_bajo": {
+                "valor": -47358.25,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9543,
+                "confianza_media": 0.7264
+              },
+              "edad:muy_alto": {
+                "valor": 247.09,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.5887,
+                "confianza_media": 0.6877
+              }
+            }
+          }
+        }
+      }
+    },
+    "S4": {
+      "titulo": "Riesgo de impago de un préstamo nuevo",
+      "clases": [
+        "Paga sin problemas (A o C)",
+        "Impago (B o D)"
+      ],
+      "versiones": {
+        "pesos": {
+          "carpeta": "modelos",
+          "prueba": {
+            "n": 136,
+            "exactitud": 0.7941,
+            "exactitud_balanceada": 0.6799,
+            "sensibilidad_por_clase": [
+              0.8264,
+              0.5333
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.6799,
+            "exactitud_balanceada_con_ruido": 0.6516,
+            "predicciones_iguales_con_ruido": 0.9794
+          },
+          "B_nunca_vistos": null,
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0735,
+            "n_en_frontera": 10,
+            "acierto_en_frontera": 0.5,
+            "acierto_fuera_de_frontera": 0.8175,
+            "clase_verdadera_entre_las_dos_mas_probables": 1.0,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.6799,
+            "importancia_permutacion": {
+              "saldo_minimo_previo": 0.1241,
+              "monto_prestamo": 0.1052,
+              "meses_historial": 0.015,
+              "tasa_desempleo": 0.0099,
+              "es_mujer": 0.0074,
+              "ingreso_mensual": 0.0067,
+              "tasa_criminalidad": 0.0041,
+              "salario_promedio": 0.0033,
+              "edad": 0.0,
+              "egreso_mensual": -0.0008,
+              "movimientos_mes": -0.0142,
+              "poblacion": -0.0217,
+              "saldo_promedio_previo": -0.0285,
+              "plazo_meses": -0.0421
+            },
+            "caracteristica_principal": "saldo_minimo_previo",
+            "peso_relativo_principal": 0.4501,
+            "extremos": {
+              "monto_prestamo:muy_alto": {
+                "valor": 1819185.18,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9926,
+                "confianza_media": 0.9972
+              },
+              "monto_prestamo:muy_bajo": {
+                "valor": -1223385.18,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "plazo_meses:muy_alto": {
+                "valor": 238.67,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9926,
+                "confianza_media": 0.9676
+              },
+              "saldo_promedio_previo:muy_alto": {
+                "valor": 219750.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 0.9975
+              },
+              "saldo_promedio_previo:muy_bajo": {
+                "valor": -128000.36,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_minimo_previo:muy_alto": {
+                "valor": 45844.45,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_minimo_previo:muy_bajo": {
+                "valor": -31121.45,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "ingreso_mensual:muy_alto": {
+                "valor": 225378.95,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9118,
+                "confianza_media": 0.857
+              },
+              "ingreso_mensual:muy_bajo": {
+                "valor": -142180.19,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.5662,
+                "confianza_media": 0.7626
+              },
+              "egreso_mensual:muy_alto": {
+                "valor": 216303.0,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8162,
+                "confianza_media": 0.822
+              },
+              "egreso_mensual:muy_bajo": {
+                "valor": -143199.47,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.6176,
+                "confianza_media": 0.7532
+              },
+              "movimientos_mes:muy_alto": {
+                "valor": 27.9,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9853,
+                "confianza_media": 0.966
+              },
+              "movimientos_mes:muy_bajo": {
+                "valor": -16.4,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.5662,
+                "confianza_media": 0.7518
+              },
+              "meses_historial:muy_alto": {
+                "valor": 75.09,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9044,
+                "confianza_media": 0.8732
+              },
+              "edad:muy_alto": {
+                "valor": 177.48,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8382,
+                "confianza_media": 0.7662
+              }
+            }
+          }
+        },
+        "sobremuestreo": {
+          "carpeta": "modelos_sobremuestreo",
+          "prueba": {
+            "n": 136,
+            "exactitud": 0.8456,
+            "exactitud_balanceada": 0.738,
+            "sensibilidad_por_clase": [
+              0.876,
+              0.6
+            ]
+          },
+          "A_parecidos": {
+            "exactitud_balanceada_original": 0.738,
+            "exactitud_balanceada_con_ruido": 0.7322,
+            "predicciones_iguales_con_ruido": 0.9779
+          },
+          "B_nunca_vistos": null,
+          "C_frontera": {
+            "umbral_margen": 0.1,
+            "proporcion_en_frontera": 0.0515,
+            "n_en_frontera": 7,
+            "acierto_en_frontera": 0.5714,
+            "acierto_fuera_de_frontera": 0.8605,
+            "clase_verdadera_entre_las_dos_mas_probables": 1.0,
+            "asignados_a_una_de_las_dos": 1.0
+          },
+          "D_atajos": {
+            "exactitud_balanceada_base": 0.738,
+            "importancia_permutacion": {
+              "saldo_minimo_previo": 0.1416,
+              "monto_prestamo": 0.1354,
+              "es_mujer": 0.0383,
+              "meses_historial": 0.0349,
+              "saldo_promedio_previo": 0.0347,
+              "ingreso_mensual": 0.0249,
+              "poblacion": 0.0066,
+              "tasa_criminalidad": 0.0058,
+              "egreso_mensual": 0.0016,
+              "tasa_desempleo": 0.0009,
+              "edad": 0.0008,
+              "plazo_meses": -0.0128,
+              "salario_promedio": -0.0183,
+              "movimientos_mes": -0.0366
+            },
+            "caracteristica_principal": "saldo_minimo_previo",
+            "peso_relativo_principal": 0.3328,
+            "extremos": {
+              "monto_prestamo:muy_alto": {
+                "valor": 1819185.18,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9853,
+                "confianza_media": 0.9818
+              },
+              "monto_prestamo:muy_bajo": {
+                "valor": -1223385.18,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "plazo_meses:muy_alto": {
+                "valor": 238.67,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9853,
+                "confianza_media": 0.9747
+              },
+              "saldo_promedio_previo:muy_alto": {
+                "valor": 219750.89,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_promedio_previo:muy_bajo": {
+                "valor": -128000.36,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_minimo_previo:muy_alto": {
+                "valor": 45844.45,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "saldo_minimo_previo:muy_bajo": {
+                "valor": -31121.45,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 1.0,
+                "confianza_media": 1.0
+              },
+              "ingreso_mensual:muy_alto": {
+                "valor": 225378.95,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.7721,
+                "confianza_media": 0.8479
+              },
+              "ingreso_mensual:muy_bajo": {
+                "valor": -142180.19,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9779,
+                "confianza_media": 0.9761
+              },
+              "egreso_mensual:muy_alto": {
+                "valor": 216303.0,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9706,
+                "confianza_media": 0.904
+              },
+              "egreso_mensual:muy_bajo": {
+                "valor": -143199.47,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9706,
+                "confianza_media": 0.9895
+              },
+              "movimientos_mes:muy_alto": {
+                "valor": 27.9,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.8676,
+                "confianza_media": 0.9125
+              },
+              "movimientos_mes:muy_bajo": {
+                "valor": -16.4,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.9559,
+                "confianza_media": 0.865
+              },
+              "meses_historial:muy_alto": {
+                "valor": 75.09,
+                "clase_dominante": 0,
+                "proporcion_clase_dominante": 0.9779,
+                "confianza_media": 0.9842
+              },
+              "edad:muy_alto": {
+                "valor": 177.48,
+                "clase_dominante": 1,
+                "proporcion_clase_dominante": 0.5294,
+                "confianza_media": 0.68
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "segundos": 37.2
+}

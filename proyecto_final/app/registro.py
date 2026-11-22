@@ -106,4 +106,7 @@ def historial(limite=50, sistema=None):
         f["entradas"] = json.loads(f["entradas"])
         f["probabilidades"] = json.loads(f["probabilidades"])
         f["x"] = json.loads(f["vector_x"])
+        dos = sorted(f["probabilidades"].values(), reverse=True)[:2]
+        f["margen"] = dos[0] - dos[1] if len(dos) == 2 else 1.0
+        f["en_frontera"] = f["margen"] < 0.10
     return filas
