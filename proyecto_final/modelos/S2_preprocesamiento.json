@@ -1,0 +1,57 @@
+{
+  "orden_X": [
+    "monto_orden",
+    "edad",
+    "es_mujer",
+    "tiene_prestamo",
+    "cuota_prestamo",
+    "ordenes_activas_cuenta",
+    "saldo_promedio_cuenta",
+    "deposito_mensual",
+    "retiro_mensual",
+    "poblacion",
+    "salario_promedio",
+    "tasa_desempleo",
+    "tasa_criminalidad"
+  ],
+  "dimension_entrada": 13,
+  "media": [
+    3587.757446808511,
+    45.08248772504091,
+    0.48936170212765956,
+    0.24288052373158756,
+    965.6183306055647,
+    2.0631751227495907,
+    36756.923675941085,
+    13520.91655319149,
+    12474.736062193128,
+    264964.2752864157,
+    9502.109001636662,
+    3.46481178396072,
+    15963.894599018004
+  ],
+  "desviacion": [
+    2755.2489562451005,
+    16.56928332634528,
+    0.49988681380726513,
+    0.4288234775795949,
+    2030.3121417136854,
+    1.1475166670889432,
+    14943.085493325787,
+    14146.042152308873,
+    11929.30429702589,
+    354435.9901824557,
+    1315.0370051612695,
+    2.2389183198158724,
+    30926.28083683375
+  ],
+  "usa_pca": false,
+  "dimension_red": 13,
+  "clases": [
+    "Hogar (SIPO)",
+    "Préstamo (UVER)",
+    "Seguro (POJISTNE)",
+    "Arrendamiento (LEASING)"
+  ],
+  "sistema": "S2"
+}

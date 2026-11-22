@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Resumen del proyecto{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Del dato a la decisión: lo visto en el semestre</h1>
+  <p class="sub">Cadena completa de Inteligencia de Negocios sobre el banco Financial_ijs (1993–1998, corte 31/12/1998).</p>
+  <div class="cadena">
+    <div><b>1. Fuente OLTP</b><span>MySQL remoto Financial_ijs (3FN)</span></div>
+    <div><b>2. Carta de Diseño v8</b><span>3 problemas con evidencia: mora, capacidad de pago, saldos</span></div>
+    <div><b>3. Data Mart Kimball</b><span>SQL Server: 4 hechos, 8 dimensiones, grano declarado</span></div>
+    <div><b>4. ETL y limpieza</b><span>Python + OpenRefine; distrito 69 imputado</span></div>
+    <div><b>5. NoSQL</b><span>MongoDB con $jsonSchema; reconciliación Δ = $0.00</span></div>
+    <div><b>6. Recomendadores</b><span>Slope One, ítem-ítem, contenido, demográfico</span></div>
+    <div><b>7. Dashboards</b><span>Power BI Kimball y Mongo, 12 páginas articuladas</span></div>
+    <div><b>8. Aprendizaje</b><span>Hoeffding, Bayes, perceptrón, regresión logística, t-SNE</span></div>
+    <div class="activo"><b>9. Redes neuronales</b><span>4 sistemas con softmax y este aplicativo</span></div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>Los cuatro sistemas predictivos</h2>
+  <img src="{{ grafico }}" alt="Resumen" style="width:100%">
+  <table>
+    <tr><th>Sistema</th><th>Observaciones</th><th>Clases</th><th>X</th><th>Arquitectura</th><th>Exactitud</th><th>Balanceada</th><th>Lineal (bal.)</th><th>E_in → E_out</th><th></th></tr>
+    {% for cod, s in sistemas.items() %}
+    {% set m = s.metricas %}{% set c = m.comparacion_prueba %}
+    <tr>
+      <td><b>{{ cod }}</b> {{ s.titulo }}</td>
+      <td>{{ '{:,}'.format(s.resumen.n_filas) }}</td>
+      <td>{{ s.clases|length }}</td>
+      <td>{{ s.orden_X|length }}</td>
+      <td>{{ 'PCA → ' if s.pre.usa_pca }}{{ '-'.join(m.elegida.ocultas|map('string')) }} {{ m.elegida.activacion }}</td>
+      <td>{{ '%.1f'|format(c.red_neuronal.exactitud*100) }} %</td>
+      <td>{{ '%.1f'|format(c.red_neuronal.exactitud_balanceada*100) }} %</td>
+      <td>{{ '%.1f'|format(c.softmax_lineal.exactitud_balanceada*100) }} %</td>
+      <td>{{ '%.1f'|format(m.E_in*100) }} → {{ '%.1f'|format(m.E_out*100) }} %</td>
+      <td><a href="/red/{{ cod }}">Ver red</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="ayuda">Predicciones registradas en el aplicativo: {{ total }}.</p>
+</div>
+{% endblock %}

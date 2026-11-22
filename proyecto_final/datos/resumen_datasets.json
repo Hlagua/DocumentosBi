@@ -1,0 +1,486 @@
+{
+  "semilla": 42,
+  "particion": "60/20/20 estratificada (entrenamiento/validacion/prueba)",
+  "hoeffding_formula": "N_test >= ln(2/delta) / (2*eps^2)",
+  "S1": {
+    "descripcion": "Predice el tipo de un movimiento bancario nuevo a partir del monto, el saldo, la fecha y el cliente.",
+    "n_filas": 24000,
+    "n_caracteristicas": 12,
+    "caracteristicas": [
+      "monto",
+      "saldo_despues",
+      "anio",
+      "mes",
+      "dia",
+      "dia_semana",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "Depósito en efectivo": 6000,
+      "Retiro (efectivo o tarjeta)": 6000,
+      "Transferencia enviada": 6000,
+      "Transferencia recibida": 6000
+    },
+    "clase_mayoritaria_prop": 0.25,
+    "clasificador_aleatorio_error": 0.75,
+    "particion": {
+      "entrenamiento": 14400,
+      "validacion": 4800,
+      "prueba": 4800
+    },
+    "hoeffding": {
+      "delta": 0.05,
+      "eps_objetivo": 0.02,
+      "n_test_minimo_para_eps_objetivo": 4612,
+      "n_test_real": 4800,
+      "eps_garantizado_con_n_test_real": 0.0196
+    },
+    "limpieza": {
+      "filas_iniciales": 24000,
+      "nulos_por_columna": {},
+      "filas_tras_quitar_nulos": 24000,
+      "duplicados_eliminados": 0,
+      "filas_con_X_repetida_y_clase_distinta": 0,
+      "filas_finales": 24000
+    },
+    "rangos_X": {
+      "monto": {
+        "min": 1.0,
+        "max": 74812.0,
+        "media": 9031.044
+      },
+      "saldo_despues": {
+        "min": -25569.0,
+        "max": 183702.0,
+        "media": 39604.5129
+      },
+      "anio": {
+        "min": 1993.0,
+        "max": 1998.0,
+        "media": 1996.5068
+      },
+      "mes": {
+        "min": 1.0,
+        "max": 12.0,
+        "media": 6.613
+      },
+      "dia": {
+        "min": 1.0,
+        "max": 31.0,
+        "media": 13.1372
+      },
+      "dia_semana": {
+        "min": 0.0,
+        "max": 6.0,
+        "media": 3.0079
+      },
+      "edad": {
+        "min": 16.0,
+        "max": 80.0,
+        "media": 45.1283
+      },
+      "es_mujer": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.4956
+      },
+      "poblacion": {
+        "min": 42821.0,
+        "max": 1204953.0,
+        "media": 270203.6751
+      },
+      "salario_promedio": {
+        "min": 8110.0,
+        "max": 12541.0,
+        "media": 9524.9176
+      },
+      "tasa_desempleo": {
+        "min": 0.0,
+        "max": 9.0,
+        "media": 3.4822
+      },
+      "tasa_criminalidad": {
+        "min": 888.0,
+        "max": 99107.0,
+        "media": 16387.6953
+      }
+    }
+  },
+  "S2": {
+    "descripcion": "Predice para qué es una orden de pago permanente nueva (hogar, préstamo, seguro o arrendamiento).",
+    "n_filas": 5092,
+    "n_caracteristicas": 13,
+    "caracteristicas": [
+      "monto_orden",
+      "edad",
+      "es_mujer",
+      "tiene_prestamo",
+      "cuota_prestamo",
+      "ordenes_activas_cuenta",
+      "saldo_promedio_cuenta",
+      "deposito_mensual",
+      "retiro_mensual",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "Hogar (SIPO)": 3502,
+      "Préstamo (UVER)": 717,
+      "Seguro (POJISTNE)": 532,
+      "Arrendamiento (LEASING)": 341
+    },
+    "clase_mayoritaria_prop": 0.6877,
+    "clasificador_aleatorio_error": 0.75,
+    "particion": {
+      "entrenamiento": 3055,
+      "validacion": 1017,
+      "prueba": 1020
+    },
+    "hoeffding": {
+      "delta": 0.05,
+      "eps_objetivo": 0.02,
+      "n_test_minimo_para_eps_objetivo": 4612,
+      "n_test_real": 1020,
+      "eps_garantizado_con_n_test_real": 0.0425
+    },
+    "limpieza": {
+      "filas_iniciales": 5092,
+      "nulos_por_columna": {},
+      "filas_tras_quitar_nulos": 5092,
+      "duplicados_eliminados": 0,
+      "filas_con_X_repetida_y_clase_distinta": 4,
+      "filas_finales": 5092
+    },
+    "rangos_X": {
+      "monto_orden": {
+        "min": 1.0,
+        "max": 14882.0,
+        "media": 3622.7618
+      },
+      "edad": {
+        "min": 18.0,
+        "max": 80.0,
+        "media": 45.2447
+      },
+      "es_mujer": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.4904
+      },
+      "tiene_prestamo": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.2429
+      },
+      "cuota_prestamo": {
+        "min": 0.0,
+        "max": 9910.0,
+        "media": 989.5632
+      },
+      "ordenes_activas_cuenta": {
+        "min": 1.0,
+        "max": 5.0,
+        "media": 2.0821
+      },
+      "saldo_promedio_cuenta": {
+        "min": 6690.55,
+        "max": 81192.82,
+        "media": 36884.1036
+      },
+      "deposito_mensual": {
+        "min": 2.79,
+        "max": 75391.13,
+        "media": 13703.2235
+      },
+      "retiro_mensual": {
+        "min": 108.83,
+        "max": 71934.03,
+        "media": 12588.9905
+      },
+      "poblacion": {
+        "min": 42821.0,
+        "max": 1204953.0,
+        "media": 271461.4586
+      },
+      "salario_promedio": {
+        "min": 8110.0,
+        "max": 12541.0,
+        "media": 9519.5405
+      },
+      "tasa_desempleo": {
+        "min": 0.0,
+        "max": 9.0,
+        "media": 3.4686
+      },
+      "tasa_criminalidad": {
+        "min": 888.0,
+        "max": 99107.0,
+        "media": 16508.4882
+      }
+    }
+  },
+  "S3": {
+    "descripcion": "Predice si el saldo de una cuenta el próximo mes se mantendrá, caerá o quedará en sobregiro.",
+    "n_filas": 4708,
+    "n_caracteristicas": 15,
+    "caracteristicas": [
+      "anio",
+      "mes",
+      "saldo_fin_mes",
+      "saldo_promedio_mes",
+      "saldo_min_mes",
+      "saldo_max_mes",
+      "cambio_saldo_mes",
+      "num_movimientos_mes",
+      "monto_medio_mov",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "Saldo estable o creciente": 2000,
+      "Caída de saldo sin sobregiro": 2000,
+      "Sobregiro": 708
+    },
+    "clase_mayoritaria_prop": 0.4248,
+    "clasificador_aleatorio_error": 0.6667,
+    "particion": {
+      "entrenamiento": 2825,
+      "validacion": 942,
+      "prueba": 941
+    },
+    "hoeffding": {
+      "delta": 0.05,
+      "eps_objetivo": 0.02,
+      "n_test_minimo_para_eps_objetivo": 4612,
+      "n_test_real": 941,
+      "eps_garantizado_con_n_test_real": 0.0443
+    },
+    "limpieza": {
+      "filas_iniciales": 4708,
+      "nulos_por_columna": {},
+      "filas_tras_quitar_nulos": 4708,
+      "duplicados_eliminados": 0,
+      "filas_con_X_repetida_y_clase_distinta": 0,
+      "filas_finales": 4708
+    },
+    "rangos_X": {
+      "anio": {
+        "min": 1993.0,
+        "max": 1998.0,
+        "media": 1996.4928
+      },
+      "mes": {
+        "min": 1.0,
+        "max": 12.0,
+        "media": 6.8422
+      },
+      "saldo_fin_mes": {
+        "min": -40817.0,
+        "max": 122342.0,
+        "media": 30482.8615
+      },
+      "saldo_promedio_mes": {
+        "min": -40699.0,
+        "max": 109807.875,
+        "media": 31759.6914
+      },
+      "saldo_min_mes": {
+        "min": -40817.0,
+        "max": 100603.0,
+        "media": 24603.452
+      },
+      "saldo_max_mes": {
+        "min": -40581.0,
+        "max": 163152.0,
+        "media": 40731.4998
+      },
+      "cambio_saldo_mes": {
+        "min": -98418.0,
+        "max": 90688.0,
+        "media": 377.4932
+      },
+      "num_movimientos_mes": {
+        "min": 0.0,
+        "max": 19.0,
+        "media": 5.5739
+      },
+      "monto_medio_mov": {
+        "min": 0.0,
+        "max": 33440.75,
+        "media": 5592.0252
+      },
+      "edad": {
+        "min": 16.0,
+        "max": 80.0,
+        "media": 43.6328
+      },
+      "es_mujer": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.496
+      },
+      "poblacion": {
+        "min": 42821.0,
+        "max": 1204953.0,
+        "media": 271264.6153
+      },
+      "salario_promedio": {
+        "min": 8110.0,
+        "max": 12541.0,
+        "media": 9546.7695
+      },
+      "tasa_desempleo": {
+        "min": 0.0,
+        "max": 9.0,
+        "media": 3.4373
+      },
+      "tasa_criminalidad": {
+        "min": 888.0,
+        "max": 99107.0,
+        "media": 16459.3029
+      }
+    }
+  },
+  "S4": {
+    "descripcion": "Estima si un préstamo nuevo terminará en impago según el monto, el plazo y el historial previo de la cuenta.",
+    "n_filas": 682,
+    "n_caracteristicas": 16,
+    "caracteristicas": [
+      "monto_prestamo",
+      "plazo_meses",
+      "cuota_mensual",
+      "ratio_cuota_saldo",
+      "saldo_promedio_previo",
+      "saldo_minimo_previo",
+      "ingreso_mensual",
+      "egreso_mensual",
+      "movimientos_mes",
+      "meses_historial",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "Paga sin problemas (A o C)": 606,
+      "Impago (B o D)": 76
+    },
+    "clase_mayoritaria_prop": 0.8886,
+    "clasificador_aleatorio_error": 0.5,
+    "particion": {
+      "entrenamiento": 410,
+      "validacion": 136,
+      "prueba": 136
+    },
+    "hoeffding": {
+      "delta": 0.05,
+      "eps_objetivo": 0.02,
+      "n_test_minimo_para_eps_objetivo": 4612,
+      "n_test_real": 136,
+      "eps_garantizado_con_n_test_real": 0.1165
+    },
+    "limpieza": {
+      "filas_iniciales": 682,
+      "nulos_por_columna": {},
+      "filas_tras_quitar_nulos": 682,
+      "duplicados_eliminados": 0,
+      "filas_con_X_repetida_y_clase_distinta": 0,
+      "filas_finales": 682
+    },
+    "rangos_X": {
+      "monto_prestamo": {
+        "min": 4980.0,
+        "max": 590820.0,
+        "media": 151410.176
+      },
+      "plazo_meses": {
+        "min": 12.0,
+        "max": 60.0,
+        "media": 36.4927
+      },
+      "cuota_mensual": {
+        "min": 304.0,
+        "max": 9910.0,
+        "media": 4190.6642
+      },
+      "ratio_cuota_saldo": {
+        "min": 0.005119130941780365,
+        "max": 1.3934579439252337,
+        "media": 0.1059
+      },
+      "saldo_promedio_previo": {
+        "min": 5350.0,
+        "max": 79500.53,
+        "media": 43606.8333
+      },
+      "saldo_minimo_previo": {
+        "min": -17030.0,
+        "max": 20574.0,
+        "media": 656.1466
+      },
+      "ingreso_mensual": {
+        "min": 3509.2,
+        "max": 78173.76470588235,
+        "media": 27365.8157
+      },
+      "egreso_mensual": {
+        "min": 0.0,
+        "max": 73103.5294117647,
+        "media": 23596.4554
+      },
+      "movimientos_mes": {
+        "min": 1.0,
+        "max": 10.5,
+        "media": 5.4504
+      },
+      "meses_historial": {
+        "min": 2.0,
+        "max": 24.0,
+        "media": 13.8314
+      },
+      "edad": {
+        "min": 18.0,
+        "max": 63.0,
+        "media": 39.9018
+      },
+      "es_mujer": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.5103
+      },
+      "poblacion": {
+        "min": 42821.0,
+        "max": 1204953.0,
+        "media": 272052.2361
+      },
+      "salario_promedio": {
+        "min": 8110.0,
+        "max": 12541.0,
+        "media": 9502.9868
+      },
+      "tasa_desempleo": {
+        "min": 0.0,
+        "max": 9.0,
+        "media": 3.4809
+      },
+      "tasa_criminalidad": {
+        "min": 888.0,
+        "max": 99107.0,
+        "media": 16390.8182
+      }
+    }
+  }
+}

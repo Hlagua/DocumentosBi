@@ -1,0 +1,85 @@
+"""
+==============================================================================
+UNIVERSIDAD TÉCNICA DE AMBATO - Inteligencia de Negocios (Proyecto final)
+AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
+==============================================================================
+Aplicativo web de los sistemas predictivos con redes neuronales.
+
+  * Cada sistema tiene un formulario donde se ESCRIBEN datos nuevos: solo
+    cajas de texto, sin listas desplegables ni autocompletado.
+  * Lo escrito se convierte en el vector X con la misma dimensión que la red,
+    se aplica el preprocesamiento del entrenamiento y la red devuelve la
+    clase con las probabilidades de la capa softmax.
+  * Cada predicción queda registrada (SQLite y, si está disponible, el Data
+    Mart Kimball en SQL Server).
+
+Ejecutar desde la raíz del repositorio:
+    python proyecto_final/app/app.py
+y abrir http://127.0.0.1:5000
+==============================================================================
+"""
+
+import sys
+from pathlib import Path
+
+from flask import Flask, abort, render_template, request
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import dashboard  # noqa: E402
+import nucleo  # noqa: E402
+import registro  # noqa: E402
+
+app = Flask(__name__)
+SISTEMAS = nucleo.cargar_sistemas()
+
+
+@app.route("/")
+def inicio():
+    return render_template("inicio.html", sistemas=SISTEMAS)
+
+
+@app.route("/predecir/<codigo>", methods=["GET", "POST"])
+def predecir(codigo):
+    sistema = SISTEMAS.get(codigo.upper())
+    if sistema is None:
+        abort(404)
+    escrito, errores, avisos, resultado, montos, destinos = {}, {}, [], None, None, []
+    if request.method == "POST":
+        escrito = {c["campo"]: request.form.get(c["campo"], "").strip() for c in sistema.campos}
+        X, lista_errores, avisos = sistema.construir_X(escrito)
+        errores = dict(lista_errores)
+        if X is not None:
+            resultado = sistema.predecir(X)
+            resultado["X"] = X
+            montos = sistema.monto_maximo(X)
+            destinos = registro.guardar(sistema.codigo, sistema.titulo, escrito, resultado)
+    return render_template(
+        "formulario.html", s=sistema, escrito=escrito, errores=errores, avisos=avisos,
+        resultado=resultado, montos=montos, destinos=destinos,
+    )
+
+
+@app.route("/red/<codigo>")
+def red(codigo):
+    sistema = SISTEMAS.get(codigo.upper())
+    if sistema is None:
+        abort(404)
+    nuevos = registro.historial(30, sistema.codigo)
+    figs = dashboard.figuras(sistema, nucleo.ARCHIVOS[sistema.codigo], nuevos)
+    return render_template("red.html", s=sistema, m=sistema.metricas, figs=figs, nuevos=nuevos,
+                           fuente=nucleo.FUENTES[sistema.codigo], sistemas=SISTEMAS)
+
+
+@app.route("/resumen")
+def resumen():
+    return render_template("resumen.html", sistemas=SISTEMAS, grafico=dashboard.grafico_resumen(SISTEMAS),
+                           total=len(registro.historial(100000)))
+
+
+@app.route("/historial")
+def historial():
+    return render_template("historial.html", filas=registro.historial(100), sistemas=SISTEMAS)
+
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=False)

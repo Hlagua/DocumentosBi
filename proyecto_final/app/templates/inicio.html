@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Sistemas predictivos con redes neuronales</h1>
+  <p class="sub">Escriba los datos de un caso nuevo y la red neuronal (salida softmax) devuelve la clase más probable. Datos de origen: Data Mart Kimball <b>DM_Financial_Kimball_v2</b>.</p>
+</div>
+<div class="rejilla">
+  {% for codigo, s in sistemas.items() %}
+  {% set c = s.metricas.comparacion_prueba %}
+  <div class="tarjeta">
+    <h2>{{ codigo }} · {{ s.titulo }}</h2>
+    <p class="sub">{{ s.descripcion }}</p>
+    <p style="font-size:13px">
+      Clases: {{ s.clases|length }} · Características: {{ s.orden_X|length }}<br>
+      Exactitud en prueba: <b>{{ '%.1f'|format(c.red_neuronal.exactitud*100) }} %</b>
+      (lineal {{ '%.1f'|format(c.softmax_lineal.exactitud*100) }} %, clase mayoritaria {{ '%.1f'|format(c.clase_mayoritaria.exactitud*100) }} %)
+    </p>
+    <a class="boton" href="/predecir/{{ codigo }}">Ingresar datos</a>
+    <a class="boton" style="background:#1f4e79" href="/red/{{ codigo }}">Ver la red</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

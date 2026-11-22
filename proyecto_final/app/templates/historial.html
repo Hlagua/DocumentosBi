@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de predicciones{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Historial de predicciones</h1>
+  <p class="sub">Últimas {{ filas|length }} predicciones hechas con datos escritos en el aplicativo.</p>
+  {% if filas %}
+  <table>
+    <tr><th>Fecha y hora</th><th>Sistema</th><th>Clase predicha</th><th>Probabilidad</th><th>Dimensión X</th><th>Datos escritos</th></tr>
+    {% for f in filas %}
+    <tr>
+      <td>{{ f.fecha_hora }}</td>
+      <td>{{ f.sistema }} · {{ f.titulo }}</td>
+      <td><b>{{ f.clase_predicha }}</b></td>
+      <td>{{ '%.1f'|format(f.probabilidad*100) }} %</td>
+      <td>1 × {{ f.dimension_x }}</td>
+      <td class="ayuda">{% for k, v in f.entradas.items() %}{{ k }}={{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>Todavía no hay predicciones.</p>
+  {% endif %}
+</div>
+{% endblock %}

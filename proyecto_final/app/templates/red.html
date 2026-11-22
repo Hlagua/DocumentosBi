@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block titulo %}Red {{ s.codigo }} · {{ s.titulo }}{% endblock %}
+{% block contenido %}
+{% set c = m.comparacion_prueba %}
+{% set h = s.resumen.hoeffding %}
+<div class="tarjeta">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <h1>Dashboard de la red · {{ s.codigo }} {{ s.titulo }}</h1>
+      <p class="sub">{{ s.descripcion }}</p>
+    </div>
+    <div>{% for cod in sistemas %}<a class="boton" style="margin-left:4px;{{ 'background:#1f4e79' if cod == s.codigo }}" href="/red/{{ cod }}">{{ cod }}</a>{% endfor %}
+      <a class="boton" style="margin-left:4px;background:#1e7b45" href="/predecir/{{ s.codigo }}">Ingresar datos</a></div>
+  </div>
+  <div class="rejilla kpis">
+    <div class="kpi"><span>Exactitud en prueba</span><b>{{ '%.1f'|format(c.red_neuronal.exactitud*100) }} %</b><small>balanceada {{ '%.1f'|format(c.red_neuronal.exactitud_balanceada*100) }} %{% if m.prueba.auc %} · AUC {{ m.prueba.auc }}{% endif %}</small></div>
+    <div class="kpi"><span>Softmax lineal</span><b>{{ '%.1f'|format(c.softmax_lineal.exactitud*100) }} %</b><small>balanceada {{ '%.1f'|format(c.softmax_lineal.exactitud_balanceada*100) }} %</small></div>
+    <div class="kpi"><span>E_in → E_out</span><b>{{ '%.1f'|format(m.E_in*100) }} → {{ '%.1f'|format(m.E_out*100) }} %</b><small>diferencia {{ '%+.1f'|format(m.diferencia_E_out_E_in*100) }} puntos (límite 5)</small></div>
+    <div class="kpi"><span>Validación cruzada (5)</span><b>{{ '%.1f'|format(m.validacion_cruzada_5.error_promedio*100) }} %</b><small>error promedio ± {{ '%.1f'|format(m.validacion_cruzada_5.desviacion*100) }}</small></div>
+    <div class="kpi"><span>Error del clasificador aleatorio</span><b>{{ '%.1f'|format((1 - 1/s.clases|length)*100) }} %</b><small>error (M−1)/M con M = {{ s.clases|length }}</small></div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>1. Datos: del Data Mart Kimball al dataset</h2>
+  <p class="sub">Fuente: <b>{{ fuente }}</b>. Etiqueta verdadera, sin fuga de información y con todas las X escribibles en el formulario.</p>
+  <div class="dos">
+    <img src="{{ figs.clases }}" alt="Clases por partición">
+    <table>
+      <tr><th>Concepto</th><th>Valor</th></tr>
+      <tr><td>Observaciones</td><td>{{ '{:,}'.format(s.resumen.n_filas) }}</td></tr>
+      <tr><td>Características (X)</td><td>{{ s.orden_X|length }}</td></tr>
+      <tr><td>Clases (M)</td><td>{{ s.clases|length }}</td></tr>
+      <tr><td>Entrenamiento / validación / prueba</td><td>{{ s.resumen.particion.entrenamiento }} / {{ s.resumen.particion.validacion }} / {{ s.resumen.particion.prueba }}</td></tr>
+      <tr><td>Hoeffding: N<sub>test</sub> ≥ ln(2/δ) / (2ε²)</td><td>δ = {{ h.delta }} → con {{ h.n_test_real }} datos de prueba, ε = ±{{ '%.1f'|format(h.eps_garantizado_con_n_test_real*100) }} %</td></tr>
+      <tr><td>Para ε = ±{{ (h.eps_objetivo*100)|int }} % harían falta</td><td>{{ '{:,}'.format(h.n_test_minimo_para_eps_objetivo) }} datos de prueba</td></tr>
+      <tr><td>Pesos por clase (desbalance)</td><td>{% for k, v in m.hiperparametros_fijos.pesos_por_clase.items() %}{{ '%.2f'|format(v) }}{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>2. Arquitectura de la red</h2>
+  <img src="{{ figs.red }}" alt="Arquitectura" style="width:100%">
+  <table>
+    <tr><th>Capa</th><th>Neuronas</th><th>Activación</th><th>W</th><th>b</th><th>Parámetros</th></tr>
+    {% if s.pre.usa_pca %}<tr><td>PCA (95 % de varianza)</td><td>{{ s.pre.dimension_red }}</td><td>—</td><td>{{ s.orden_X|length }} × {{ s.pre.dimension_red }}</td><td>—</td><td>0 (se ajusta, no se entrena)</td></tr>{% endif %}
+    {% for capa in m.arquitectura.capas %}
+    <tr><td>{{ capa.nombre }}</td><td>{{ capa.neuronas }}</td><td>{{ capa.activacion }}</td><td>{{ capa.forma_W[0] }} × {{ capa.forma_W[1] }}</td><td>{{ capa.forma_b[0] }}</td><td>{{ '{:,}'.format(capa.parametros) }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="ayuda">Entrenamiento: {{ m.hiperparametros_fijos.perdida }}, {{ m.hiperparametros_fijos.optimizador }}, lotes de {{ m.hiperparametros_fijos.lote }}, hasta {{ m.hiperparametros_fijos.epocas_max }} épocas con parada temprana (paciencia {{ m.hiperparametros_fijos.paciencia }}), dropout {{ m.elegida.dropout }}, L1 = {{ m.elegida.l1 }}, inicialización {{ m.hiperparametros_fijos.inicializacion }}.</p>
+</div>
+
+<div class="tarjeta">
+  <h2>3. Selección del modelo y reducción de dimensionalidad</h2>
+  <img src="{{ figs.busqueda }}" alt="Búsqueda" style="width:100%">
+  <p class="sub">Se probaron 5 arquitecturas con todas las características y con PCA (95 % de la varianza → {{ m.busqueda[-1].dimension_red }} componentes). Se eligió la de mayor exactitud balanceada en validación: <b>{{ '-'.join(m.elegida.ocultas|map('string')) }} {{ m.elegida.activacion }}{{ ' con PCA' if m.elegida.pca else ' sin PCA' }}</b>.</p>
+</div>
+
+<div class="tarjeta">
+  <h2>4. Entrenamiento</h2>
+  <img src="{{ figs.curvas }}" alt="Curvas" style="width:100%">
+  <p class="sub">La parada temprana conserva los pesos de la época con menor pérdida de validación; las curvas cercanas indican que no hay sobreajuste.</p>
+</div>
+
+<div class="tarjeta">
+  <h2>5. Evaluación en prueba</h2>
+  <div class="dos">
+    <img src="{{ figs.confusion }}" alt="Matriz de confusión">
+    <div>
+      <table>
+        <tr><th>Clase</th><th>Precisión</th><th>Sensibilidad</th><th>F1</th><th>n</th></tr>
+        {% for nombre, v in m.prueba.por_clase.items() %}
+        <tr><td>{{ nombre }}</td><td>{{ '%.2f'|format(v.precision) }}</td><td>{{ '%.2f'|format(v.sensibilidad) }}</td><td>{{ '%.2f'|format(v.f1) }}</td><td>{{ v.soporte }}</td></tr>
+        {% endfor %}
+        <tr><th>Promedio (macro)</th><th colspan="2"></th><th>{{ '%.2f'|format(m.prueba.f1_macro) }}</th><th></th></tr>
+      </table>
+    </div>
+  </div>
+  <div class="dos">
+    <img src="{{ figs.comparacion }}" alt="Comparación">
+    <img src="{{ figs.pliegues }}" alt="Validación cruzada">
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>6. Datos nuevos escritos en el aplicativo</h2>
+  <div class="dos">
+    <img src="{{ figs.mapa }}" alt="Mapa 2D">
+    <div>
+      {% if nuevos %}
+      <table>
+        <tr><th>Fecha y hora</th><th>Clase predicha</th><th>Prob.</th></tr>
+        {% for f in nuevos[:12] %}<tr><td>{{ f.fecha_hora }}</td><td>{{ f.clase_predicha }}</td><td>{{ '%.0f'|format(f.probabilidad*100) }} %</td></tr>{% endfor %}
+      </table>
+      {% else %}<p>Aún no se han escrito datos nuevos para este sistema.</p>{% endif %}
+      <p class="ayuda">El mapa proyecta los datos de prueba a 2 dimensiones (v1, v2) con PCA, solo para visualizar; la red usa todas las características.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

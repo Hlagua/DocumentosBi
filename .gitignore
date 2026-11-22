@@ -7,3 +7,6 @@ Thumbs.db
 # Power BI Desktop (cache local de los proyectos .pbip)
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
+
+# Proyecto final: historial local del aplicativo
+proyecto_final/app/predicciones.sqlite
