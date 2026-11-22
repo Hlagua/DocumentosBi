@@ -76,6 +76,26 @@ def resumen():
                            total=len(registro.historial(100000)))
 
 
+@app.route("/playground/")
+@app.route("/playground/<codigo>")
+def playground(codigo="S1"):
+    sistema = SISTEMAS.get(codigo.upper())
+    if sistema is None:
+        abort(404)
+    grabado = (nucleo.RAIZ / "playground" / f"{sistema.codigo}_entrenamiento.json").exists()
+    return render_template("playground.html", s=sistema, sistemas=SISTEMAS, grabado=grabado)
+
+
+@app.route("/playground/<codigo>/datos.json")
+def playground_datos(codigo):
+    from flask import send_from_directory
+
+    if codigo.upper() not in SISTEMAS:
+        abort(404)
+    return send_from_directory(nucleo.RAIZ / "playground", f"{codigo.upper()}_entrenamiento.json",
+                               mimetype="application/json", max_age=0)
+
+
 @app.route("/historial")
 def historial():
     return render_template("historial.html", filas=registro.historial(100), sistemas=SISTEMAS)

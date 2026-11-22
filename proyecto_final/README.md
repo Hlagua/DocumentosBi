@@ -144,4 +144,15 @@ Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (p
 
 `/resumen` presenta la cadena completa del semestre (de la fuente OLTP a las redes) y compara los 4 sistemas.
 
+## Playground (entrenamiento época por época)
+
+Las rutas `/playground/S1` … `/playground/S4` muestran una reproducción interactiva del entrenamiento real de cada red (al estilo de TensorFlow Playground), abriendo por defecto en la mejor época (★):
+- **Controles:** botón reproducir/pausar (▶), reinicio a época 0 y deslizador de épocas.
+- **Visualización:** mapas de calor de entradas y neuronas ocultas sobre el plano PCA 2D, aristas SVG con los pesos reales (azul positivo, naranja negativo, grosor proporcional a |w|), frontera de decisión con casillas para datos de entrenamiento, datos de prueba y errores de prueba, y curvas de pérdida/exactitud.
+- **Datos grabados:** se almacenan en `proyecto_final/playground/S1..S4_entrenamiento.json` (1.2 a 3.2 MB cada uno) y reproducen exactamente la exactitud en prueba del aplicativo.
+- **Cómo regenerarlo** (tarda alrededor de 2 minutos en total para los 4 sistemas, o se puede indicar uno solo):
+  ```bash
+  python proyecto_final/05_grabar_entrenamiento.py
+  ```
+
 El primer script genera en `proyecto_final/datos/`: los 3 CSV, `distritos.csv`, `diccionario_caracteristicas.json` (campos del formulario y orden de X) y `resumen_datasets.json` (limpieza, clases, partición y Hoeffding).
