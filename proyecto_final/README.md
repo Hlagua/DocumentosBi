@@ -54,8 +54,10 @@ S2, S3 y S4 tienen clases desbalanceadas reales; S1 ya está balanceado (6,000 p
 
 | Carpeta | Estrategia | Uso actual |
 | :--- | :--- | :--- |
-| `modelos/` | Datos reales y **pesos por clase** en la pérdida | La usa el aplicativo |
-| `modelos_sobremuestreo/` | Entrenamiento **50/50**: se repiten casos de las clases pequeñas solo en entrenamiento; validación y prueba quedan con la proporción real | Solo comparación |
+| `modelos/` | Datos reales y **pesos por clase** en la pérdida | El aplicativo la usa solo para S1, que ya estaba balanceado |
+| `modelos_sobremuestreo/` | Entrenamiento **50/50**: se repiten casos de las clases pequeñas solo en entrenamiento; validación y prueba quedan con la proporción real | **La usa el aplicativo en S2, S3 y S4** (decisión del 2026-11-22) |
+
+La versión de cada sistema se cambia en `VERSION_POR_SISTEMA`, en `app/nucleo.py`.
 
 La comparación completa está en [`comparacion_balanceo.md`](comparacion_balanceo.md) (`python proyecto_final/03_comparar_balanceo.py`). En resumen:
 - El sobremuestreo mejora un poco a S2 y claramente a S4 (AUC 0.795 → 0.856; detecta 9 de 15 impagos en vez de 8).

@@ -34,7 +34,12 @@
       <tr><td>Entrenamiento / validación / prueba</td><td>{{ s.resumen.particion.entrenamiento }} / {{ s.resumen.particion.validacion }} / {{ s.resumen.particion.prueba }}</td></tr>
       <tr><td>Hoeffding: N<sub>test</sub> ≥ ln(2/δ) / (2ε²)</td><td>δ = {{ h.delta }} → con {{ h.n_test_real }} datos de prueba, ε = ±{{ '%.1f'|format(h.eps_garantizado_con_n_test_real*100) }} %</td></tr>
       <tr><td>Para ε = ±{{ (h.eps_objetivo*100)|int }} % harían falta</td><td>{{ '{:,}'.format(h.n_test_minimo_para_eps_objetivo) }} datos de prueba</td></tr>
-      <tr><td>Pesos por clase (desbalance)</td><td>{% for k, v in m.hiperparametros_fijos.pesos_por_clase.items() %}{{ '%.2f'|format(v) }}{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>
+      <tr><td>Balanceo de clases</td><td>{{ s.balanceo.texto }}</td></tr>
+      {% if s.balanceo.por_clase %}
+      <tr><td>Entrenamiento usado por clase</td><td>{{ s.balanceo.por_clase.values()|join(' · ') }}</td></tr>
+      {% elif m.hiperparametros_fijos.pesos_por_clase %}
+      <tr><td>Pesos por clase</td><td>{% for k, v in m.hiperparametros_fijos.pesos_por_clase.items() %}{{ '%.2f'|format(v) }}{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>
+      {% endif %}
     </table>
   </div>
 </div>

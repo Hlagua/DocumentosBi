@@ -23,6 +23,18 @@ import keras
 RAIZ = Path(__file__).resolve().parents[1]
 DATOS = RAIZ / "datos"
 MODELOS = RAIZ / "modelos"
+
+# Versión de la red que usa el aplicativo en cada sistema:
+#   "modelos"               -> datos reales con pesos por clase
+#   "modelos_sobremuestreo" -> entrenamiento con clases balanceadas 50/50
+# S1 ya estaba balanceado (6,000 por clase), por eso solo tiene una versión.
+# Decisión del 2026-11-22: clases balanceadas en S2, S3 y S4.
+VERSION_POR_SISTEMA = {
+    "S1": "modelos",
+    "S2": "modelos_sobremuestreo",
+    "S3": "modelos_sobremuestreo",
+    "S4": "modelos_sobremuestreo",
+}
 SISTEMAS = ["S1", "S2", "S3", "S4"]
 UMBRAL_FRONTERA = 0.10   # diferencia de probabilidad entre las dos clases más probables
 ARCHIVOS = {
@@ -130,11 +142,24 @@ class Sistema:
         self.rangos = resumen[codigo]["rangos_X"]
         self.descripcion = resumen[codigo]["descripcion"]
         self.distritos = distritos
-        with open(MODELOS / f"{codigo}_preprocesamiento.json", encoding="utf-8") as f:
+        carpeta = RAIZ / VERSION_POR_SISTEMA.get(codigo, "modelos")
+        if not (carpeta / f"{codigo}_red.keras").exists():
+            carpeta = MODELOS
+        self.carpeta_modelo = carpeta.name
+        with open(carpeta / f"{codigo}_preprocesamiento.json", encoding="utf-8") as f:
             self.pre = json.load(f)
-        with open(MODELOS / f"{codigo}_metricas.json", encoding="utf-8") as f:
+        with open(carpeta / f"{codigo}_metricas.json", encoding="utf-8") as f:
             self.metricas = json.load(f)
-        self.red = keras.models.load_model(MODELOS / f"{codigo}_red.keras")
+        self.red = keras.models.load_model(carpeta / f"{codigo}_red.keras")
+        balanceo = self.metricas.get("balanceo", {})
+        self.balanceo = {
+            "estrategia": balanceo.get("estrategia", "pesos"),
+            "texto": ("Clases balanceadas 50/50 en entrenamiento (sobremuestreo)"
+                      if balanceo.get("estrategia") == "sobremuestreo"
+                      else ("Clases balanceadas en el dataset" if codigo == "S1"
+                            else "Datos reales con pesos por clase")),
+            "por_clase": balanceo.get("entrenamiento_usado_por_clase"),
+        }
         self.orden_X = self.pre["orden_X"]
         self.clases = self.pre["clases"]
         self.media = np.array(self.pre["media"])
