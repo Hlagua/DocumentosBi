@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block titulo %}{{ s.codigo }} · {{ s.titulo }}{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <span class="badge {{ s.salida }}">Salida: {{ s.salida }}</span>
+  <h1 style="margin-top:6px">{{ s.codigo }} · {{ s.titulo }}</h1>
+  <p class="sub">{{ s.descripcion }} Escriba todos los datos (solo cajas de texto); el modelo espera 1 × {{ s.orden_X|length }} características.</p>
+  <form method="post" autocomplete="off" novalidate>
+    <div class="rejilla">
+      {% for c in s.campos %}
+      <div>
+        <label for="{{ c.campo }}">{{ c.etiqueta }}</label>
+        <input type="text" id="{{ c.campo }}" name="{{ c.campo }}" value="{{ escrito.get(c.campo, '') }}"
+               autocomplete="off" spellcheck="false" class="{{ 'mal' if c.campo in errores }}"
+               placeholder="{{ c.placeholder }}">
+        {% if c.campo in errores %}<div class="error">{{ errores[c.campo] }}</div>{% endif %}
+        {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <p><button type="submit">Predecir</button></p>
+  </form>
+</div>
+
+{% if resultado %}
+<div class="tarjeta">
+  <h2>Resultado de la red neuronal ({{ s.salida }})</h2>
+  {% if resultado.tipo == 'regresion' %}
+    <p>Monto estimado para el mes siguiente (t+1):</p>
+    <p class="clase">{{ '{:,.2f}'.format(resultado.valor) }} {{ resultado.unidad }}</p>
+  {% else %}
+    <p>Clase predicha:</p>
+    <p class="clase">{{ resultado.clase }}</p>
+    <p class="sub">Probabilidad {{ '%.1f'|format(resultado.probabilidades[resultado.clase]*100) }} %</p>
+    {% set f = resultado.frontera %}
+    {% if f.en_frontera %}
+      <p class="aviso">⚖ Caso en la frontera de decisión (margen de {{ '%.1f'|format(f.margen*100) }} pts frente a {{ f.otra_clase }}).</p>
+    {% else %}
+      <p class="ok">Fuera de la frontera: supera a {{ f.otra_clase }} por {{ '%.1f'|format(f.margen*100) }} puntos.</p>
+    {% endif %}
+    <table>
+      <tr><th>Clase</th><th style="width:55%">Probabilidad ({{ s.salida }})</th><th>%</th></tr>
+      {% for clase, p in resultado.probabilidades.items() %}
+      <tr>
+        <td>{{ clase }}</td>
+        <td><div class="barra" style="width:{{ (p*100)|round(1) }}%; {{ 'background:#1e7b45' if clase == resultado.clase }}"></div></td>
+        <td>{{ '%.1f'|format(p*100) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  {% for a in avisos %}<p class="aviso">⚠ {{ a }}</p>{% endfor %}
+  {% if destinos %}<p class="ok">Guardado en: {{ destinos|join(', ') }}</p>{% endif %}
+</div>
+
+{% if montos %}
+<div class="tarjeta">
+  <h2>Monto máximo prudente (M1)</h2>
+  {% if montos.monto_maximo %}
+    <p>Con este perfil y plazo, la red estima una probabilidad de impago menor al 50 % hasta un monto de <b>{{ '{:,.0f}'.format(montos.monto_maximo) }} CZK</b>.</p>
+  {% else %}
+    <p>Con este perfil y plazo, la red estima riesgo alto de impago incluso con el monto mínimo evaluado.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="tarjeta">
+  <h2>Vector X procesado (1 × {{ resultado.dimension_x }}{% if resultado.dimension_red != resultado.dimension_x %} → PCA 1 × {{ resultado.dimension_red }}{% endif %})</h2>
+  <table>
+    <tr><th>#</th><th>Característica</th><th>Valor</th><th>Estandarizado (z)</th></tr>
+    {% for c in s.orden_X %}
+    <tr>
+      <td>{{ loop.index }}</td><td>{{ c }}</td>
+      <td>{{ '{:,.4f}'.format(resultado.x[loop.index0]) }}</td>
+      <td>{{ '%.3f'|format((resultado.x[loop.index0] - s.media[loop.index0]) / s.desv[loop.index0]) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

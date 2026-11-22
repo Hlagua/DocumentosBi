@@ -13,3 +13,7 @@ proyecto_final/app/predicciones.sqlite
 
 # Proyecto final: entorno virtual creado por iniciar_app.bat
 proyecto_final/.venv/
+
+# Modelos literatura Berka: historial local y entorno virtual
+modelos_literatura_berka/app/predicciones_berka.sqlite
+modelos_literatura_berka/.venv/

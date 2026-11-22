@@ -1,0 +1,621 @@
+{
+  "M1": {
+    "titulo": "Riesgo de impago de préstamos",
+    "tipo": "clasificacion",
+    "salida": "sigmoid",
+    "orden_X": [
+      "monto_prestamo",
+      "plazo_meses",
+      "cuota_mensual",
+      "ratio_cuota_saldo",
+      "saldo_promedio_previo",
+      "saldo_minimo_previo",
+      "ingreso_mensual",
+      "egreso_mensual",
+      "movimientos_mes",
+      "meses_historial",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "0": "Paga sin problemas (A o C)",
+      "1": "Impago (B o D)"
+    },
+    "campos": [
+      {
+        "campo": "monto_prestamo",
+        "etiqueta": "Monto del préstamo",
+        "tipo": "decimal",
+        "genera": [
+          "monto_prestamo"
+        ]
+      },
+      {
+        "campo": "plazo_meses",
+        "etiqueta": "Plazo en meses",
+        "tipo": "entero",
+        "genera": [
+          "plazo_meses",
+          "cuota_mensual",
+          "ratio_cuota_saldo"
+        ],
+        "regla": "cuota = monto / plazo; ratio = cuota / saldo promedio previo"
+      },
+      {
+        "campo": "saldo_promedio_previo",
+        "etiqueta": "Saldo promedio previo",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_promedio_previo"
+        ]
+      },
+      {
+        "campo": "saldo_minimo_previo",
+        "etiqueta": "Saldo mínimo previo",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_minimo_previo"
+        ]
+      },
+      {
+        "campo": "ingreso_mensual",
+        "etiqueta": "Ingreso mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "ingreso_mensual"
+        ]
+      },
+      {
+        "campo": "egreso_mensual",
+        "etiqueta": "Egreso mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "egreso_mensual"
+        ]
+      },
+      {
+        "campo": "movimientos_mes",
+        "etiqueta": "Movimientos por mes",
+        "tipo": "decimal",
+        "genera": [
+          "movimientos_mes"
+        ]
+      },
+      {
+        "campo": "meses_historial",
+        "etiqueta": "Meses de historial previo",
+        "tipo": "entero",
+        "genera": [
+          "meses_historial"
+        ]
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Nombre del distrito (se reconoce sin tildes ni mayúsculas desde distritos.csv)."
+      }
+    ]
+  },
+  "M2": {
+    "titulo": "Propensión a tarjeta de crédito",
+    "tipo": "clasificacion",
+    "salida": "sigmoid",
+    "orden_X": [
+      "saldo_promedio_cuenta",
+      "saldo_minimo_cuenta",
+      "saldo_maximo_cuenta",
+      "ingreso_mensual",
+      "egreso_mensual",
+      "movimientos_mes",
+      "meses_vida",
+      "tiene_prestamo",
+      "ordenes_activas",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "0": "Sin tarjeta de crédito",
+      "1": "Propenso / con tarjeta de crédito"
+    },
+    "campos": [
+      {
+        "campo": "saldo_promedio_cuenta",
+        "etiqueta": "Saldo promedio de la cuenta",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_promedio_cuenta"
+        ]
+      },
+      {
+        "campo": "saldo_minimo_cuenta",
+        "etiqueta": "Saldo mínimo de la cuenta",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_minimo_cuenta"
+        ]
+      },
+      {
+        "campo": "saldo_maximo_cuenta",
+        "etiqueta": "Saldo máximo de la cuenta",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_maximo_cuenta"
+        ]
+      },
+      {
+        "campo": "ingreso_mensual",
+        "etiqueta": "Ingreso mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "ingreso_mensual"
+        ]
+      },
+      {
+        "campo": "egreso_mensual",
+        "etiqueta": "Egreso mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "egreso_mensual"
+        ]
+      },
+      {
+        "campo": "movimientos_mes",
+        "etiqueta": "Movimientos por mes (sin tarjeta)",
+        "tipo": "decimal",
+        "genera": [
+          "movimientos_mes"
+        ]
+      },
+      {
+        "campo": "meses_vida",
+        "etiqueta": "Antigüedad de la cuenta (meses)",
+        "tipo": "entero",
+        "genera": [
+          "meses_vida"
+        ]
+      },
+      {
+        "campo": "tiene_prestamo",
+        "etiqueta": "¿Tiene préstamo? (si/no)",
+        "tipo": "texto",
+        "genera": [
+          "tiene_prestamo"
+        ],
+        "regla": "si -> 1, no -> 0"
+      },
+      {
+        "campo": "ordenes_activas",
+        "etiqueta": "Órdenes permanentes activas",
+        "tipo": "entero",
+        "genera": [
+          "ordenes_activas"
+        ]
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Nombre del distrito (se reconoce sin tildes ni mayúsculas desde distritos.csv)."
+      }
+    ]
+  },
+  "M3": {
+    "titulo": "Segmentación y perfilamiento de clientes",
+    "tipo": "clasificacion",
+    "salida": "softmax",
+    "orden_X": [
+      "saldo_promedio",
+      "deposito_mensual",
+      "retiro_mensual",
+      "ratio_retiro_deposito",
+      "movimientos_mes",
+      "meses_vida",
+      "ordenes_activas",
+      "tiene_prestamo",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "0": "Básico / Bajo saldo",
+      "1": "Estándar / Flujo moderado",
+      "2": "Activo / Alto movimiento",
+      "3": "Premium / Alto patrimonio"
+    },
+    "campos": [
+      {
+        "campo": "saldo_promedio",
+        "etiqueta": "Saldo promedio de la cuenta",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_promedio"
+        ]
+      },
+      {
+        "campo": "deposito_mensual",
+        "etiqueta": "Depósito mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "deposito_mensual",
+          "ratio_retiro_deposito"
+        ],
+        "regla": "ratio = retiro / depósito"
+      },
+      {
+        "campo": "retiro_mensual",
+        "etiqueta": "Retiro mensual promedio",
+        "tipo": "decimal",
+        "genera": [
+          "retiro_mensual"
+        ]
+      },
+      {
+        "campo": "movimientos_mes",
+        "etiqueta": "Movimientos por mes",
+        "tipo": "decimal",
+        "genera": [
+          "movimientos_mes"
+        ]
+      },
+      {
+        "campo": "meses_vida",
+        "etiqueta": "Antigüedad de la cuenta (meses)",
+        "tipo": "entero",
+        "genera": [
+          "meses_vida"
+        ]
+      },
+      {
+        "campo": "ordenes_activas",
+        "etiqueta": "Órdenes permanentes activas",
+        "tipo": "entero",
+        "genera": [
+          "ordenes_activas"
+        ]
+      },
+      {
+        "campo": "tiene_prestamo",
+        "etiqueta": "¿Tiene préstamo? (si/no)",
+        "tipo": "texto",
+        "genera": [
+          "tiene_prestamo"
+        ],
+        "regla": "si -> 1, no -> 0"
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Nombre del distrito (se reconoce sin tildes ni mayúsculas desde distritos.csv)."
+      }
+    ]
+  },
+  "M4": {
+    "titulo": "Detección de fuga de clientes (Churn)",
+    "tipo": "clasificacion",
+    "salida": "sigmoid",
+    "orden_X": [
+      "vol_h1_mensual",
+      "mov_h1_mensual",
+      "saldo_prom_h1",
+      "saldo_min_h1",
+      "saldo_fin_h1",
+      "ratio_retiro_ingreso_h1",
+      "meses_activos_h1",
+      "tiene_prestamo",
+      "ordenes_activas",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "0": "Cliente retenido (actividad estable)",
+      "1": "Fuga / caída severa de actividad"
+    },
+    "campos": [
+      {
+        "campo": "vol_h1_mensual",
+        "etiqueta": "Volumen transaccional mensual (semestre previo)",
+        "tipo": "decimal",
+        "genera": [
+          "vol_h1_mensual"
+        ]
+      },
+      {
+        "campo": "mov_h1_mensual",
+        "etiqueta": "Movimientos por mes (semestre previo)",
+        "tipo": "decimal",
+        "genera": [
+          "mov_h1_mensual"
+        ]
+      },
+      {
+        "campo": "saldo_prom_h1",
+        "etiqueta": "Saldo promedio (semestre previo)",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_prom_h1"
+        ]
+      },
+      {
+        "campo": "saldo_min_h1",
+        "etiqueta": "Saldo mínimo (semestre previo)",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_min_h1"
+        ]
+      },
+      {
+        "campo": "saldo_fin_h1",
+        "etiqueta": "Saldo al cierre del semestre previo",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_fin_h1"
+        ]
+      },
+      {
+        "campo": "ratio_retiro_ingreso_h1",
+        "etiqueta": "Ratio retiros / ingresos (ej. 0.85)",
+        "tipo": "decimal",
+        "genera": [
+          "ratio_retiro_ingreso_h1"
+        ]
+      },
+      {
+        "campo": "meses_activos_h1",
+        "etiqueta": "Meses con actividad en el semestre (1 a 6)",
+        "tipo": "entero",
+        "genera": [
+          "meses_activos_h1"
+        ]
+      },
+      {
+        "campo": "tiene_prestamo",
+        "etiqueta": "¿Tiene préstamo? (si/no)",
+        "tipo": "texto",
+        "genera": [
+          "tiene_prestamo"
+        ],
+        "regla": "si -> 1, no -> 0"
+      },
+      {
+        "campo": "ordenes_activas",
+        "etiqueta": "Órdenes permanentes activas",
+        "tipo": "entero",
+        "genera": [
+          "ordenes_activas"
+        ]
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Nombre del distrito (se reconoce sin tildes ni mayúsculas desde distritos.csv)."
+      }
+    ]
+  },
+  "M5": {
+    "titulo": "Pronóstico de transacciones (mes siguiente)",
+    "tipo": "regresion",
+    "salida": "linear",
+    "orden_X": [
+      "mes",
+      "volumen_mes_t",
+      "volumen_mes_t_1",
+      "depositos_mes_t",
+      "retiros_mes_t",
+      "num_movimientos_t",
+      "saldo_fin_mes_t",
+      "saldo_prom_mes_t",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "unidad": "CZK (monto mensual)",
+    "campos": [
+      {
+        "campo": "mes",
+        "etiqueta": "Mes actual (1 a 12)",
+        "tipo": "entero",
+        "genera": [
+          "mes"
+        ]
+      },
+      {
+        "campo": "volumen_mes_t",
+        "etiqueta": "Monto total transaccionado en el mes actual (t)",
+        "tipo": "decimal",
+        "genera": [
+          "volumen_mes_t"
+        ]
+      },
+      {
+        "campo": "volumen_mes_t_1",
+        "etiqueta": "Monto total transaccionado en el mes anterior (t-1)",
+        "tipo": "decimal",
+        "genera": [
+          "volumen_mes_t_1"
+        ]
+      },
+      {
+        "campo": "depositos_mes_t",
+        "etiqueta": "Total depósitos del mes actual",
+        "tipo": "decimal",
+        "genera": [
+          "depositos_mes_t"
+        ]
+      },
+      {
+        "campo": "retiros_mes_t",
+        "etiqueta": "Total retiros del mes actual",
+        "tipo": "decimal",
+        "genera": [
+          "retiros_mes_t"
+        ]
+      },
+      {
+        "campo": "num_movimientos_t",
+        "etiqueta": "Número de movimientos del mes actual",
+        "tipo": "entero",
+        "genera": [
+          "num_movimientos_t"
+        ]
+      },
+      {
+        "campo": "saldo_fin_mes_t",
+        "etiqueta": "Saldo al cierre del mes actual",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_fin_mes_t"
+        ]
+      },
+      {
+        "campo": "saldo_prom_mes_t",
+        "etiqueta": "Saldo promedio del mes actual",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_prom_mes_t"
+        ]
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Nombre del distrito (se reconoce sin tildes ni mayúsculas desde distritos.csv)."
+      }
+    ]
+  }
+}

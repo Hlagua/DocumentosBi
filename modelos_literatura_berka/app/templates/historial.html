@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Historial · Modelos Literatura Berka{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Historial de predicciones</h1>
+  <p class="sub">Últimas {{ filas|length }} predicciones registradas en <code>predicciones_berka.sqlite</code>.</p>
+  {% if filas %}
+  <table>
+    <tr><th>Fecha y hora</th><th>Modelo</th><th>Resultado</th><th>Dim X</th><th>Entradas</th></tr>
+    {% for f in filas %}
+    <tr>
+      <td>{{ f.fecha_hora }}</td>
+      <td><b>{{ f.codigo }}</b> · {{ f.titulo }}</td>
+      <td><b>{{ f.resultado_texto }}</b>{% if f.tipo == 'clasificacion' %} ({{ '%.1f'|format(f.valor_numerico*100) }} %){% endif %}</td>
+      <td>1 × {{ f.dimension_x }}</td>
+      <td class="ayuda">{% for k, v in f.entradas.items() %}{{ k }}={{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>Aún no se han realizado predicciones.</p>
+  {% endif %}
+</div>
+{% endblock %}

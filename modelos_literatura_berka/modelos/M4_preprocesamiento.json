@@ -1,0 +1,63 @@
+{
+  "orden_X": [
+    "vol_h1_mensual",
+    "mov_h1_mensual",
+    "saldo_prom_h1",
+    "saldo_min_h1",
+    "saldo_fin_h1",
+    "ratio_retiro_ingreso_h1",
+    "meses_activos_h1",
+    "tiene_prestamo",
+    "ordenes_activas",
+    "edad",
+    "es_mujer",
+    "poblacion",
+    "salario_promedio",
+    "tasa_desempleo",
+    "tasa_criminalidad"
+  ],
+  "dimension_entrada": 15,
+  "media": [
+    35309.38789903489,
+    5.26998267755506,
+    37317.23317396601,
+    21176.367112100965,
+    34531.27468448404,
+    70.7772007594456,
+    5.982925018559762,
+    0.1451373422420193,
+    1.425018559762435,
+    44.21343726800297,
+    0.4888641425389755,
+    263191.3923533779,
+    9486.77097253155,
+    3.4591685226429103,
+    15827.613214550855
+  ],
+  "desviacion": [
+    30265.40037420231,
+    1.5972514825899646,
+    18971.924327085104,
+    13461.584425089997,
+    20413.233687599168,
+    1802.694135462461,
+    0.2384795867757685,
+    0.3522392569390049,
+    1.0933343545281071,
+    17.22972726704331,
+    0.49987597729697686,
+    352956.79454397014,
+    1311.7435032980766,
+    2.2240008673591776,
+    30785.72006938301
+  ],
+  "usa_pca": false,
+  "dimension_red": 15,
+  "clases": [
+    "Cliente retenido (actividad estable)",
+    "Fuga / caída severa de actividad"
+  ],
+  "tipo": "clasificacion",
+  "salida": "sigmoid",
+  "codigo": "M4"
+}

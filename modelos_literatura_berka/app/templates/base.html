@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Modelos Literatura Berka · Redes Neuronales{% endblock %}</title>
+  <style>
+    :root { --azul:#1b3a5c; --azul2:#2b6cb0; --gris:#f4f6f9; --borde:#d5dde6; --texto:#1d2733; --rojo:#b3261e; --verde:#1e7b45; --ambar:#8a5a00; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Segoe UI", Arial, sans-serif; color:var(--texto); background:var(--gris); }
+    header { background:var(--azul); color:#fff; padding:14px 24px; display:flex; gap:22px; align-items:center; flex-wrap:wrap; }
+    header a { color:#fff; text-decoration:none; font-weight:600; }
+    header .marca { font-size:17px; }
+    main { max-width:1120px; margin:24px auto; padding:0 16px; }
+    .tarjeta { background:#fff; border:1px solid var(--borde); border-radius:8px; padding:20px; margin-bottom:18px; }
+    h1 { font-size:22px; margin:0 0 6px; } h2 { font-size:18px; margin:0 0 10px; }
+    .sub { color:#5a6878; margin:0 0 14px; font-size:14px; }
+    .rejilla { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+    .dos { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:16px; align-items:start; margin-bottom:12px; }
+    label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; }
+    input[type=text] { width:100%; padding:8px 10px; border:1px solid var(--borde); border-radius:6px; font-size:14px; }
+    input.mal { border-color:var(--rojo); background:#fff5f5; }
+    .error { color:var(--rojo); font-size:12px; margin-top:3px; }
+    .ayuda { color:#6b7785; font-size:11px; margin-top:2px; }
+    button, a.boton { display:inline-block; background:var(--azul2); color:#fff; border:0; border-radius:6px; padding:8px 15px; font-size:14px; cursor:pointer; text-decoration:none; margin-top:6px; }
+    table { border-collapse:collapse; width:100%; font-size:13px; }
+    th, td { border-bottom:1px solid var(--borde); padding:6px 8px; text-align:left; }
+    th { background:#eef2f7; }
+    .barra { height:16px; background:var(--azul2); border-radius:3px; }
+    .clase { font-size:24px; font-weight:700; color:var(--azul); }
+    .aviso { color:var(--ambar); font-size:13px; }
+    .ok { color:var(--verde); font-size:13px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; color:#fff; background:#2b6cb0; text-transform:uppercase; }
+    .badge.sigmoid { background:#0072B2; } .badge.softmax { background:#009E73; } .badge.linear { background:#CC79A7; }
+    .kpi { background:#f7f9fb; border:1px solid var(--borde); border-radius:8px; padding:10px 12px; }
+    .kpi span { display:block; font-size:12px; color:#5a6878; } .kpi b { display:block; font-size:21px; color:var(--azul); } .kpi small { color:#5a6878; font-size:11px; }
+    img { max-width:100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="marca">Literatura PKDD'99 / Berka · Redes Neuronales</span>
+    <a href="/">Los 5 modelos</a>
+    <a href="/resumen">Resumen comparativo</a>
+    <a href="/red/M1">Dashboard técnico</a>
+    <a href="/playground/M1">Playground</a>
+    <a href="/historial">Historial</a>
+  </header>
+  <main>{% block contenido %}{% endblock %}</main>
+</body>
+</html>

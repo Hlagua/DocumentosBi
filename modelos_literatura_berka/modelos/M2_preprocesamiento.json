@@ -1,0 +1,63 @@
+{
+  "orden_X": [
+    "saldo_promedio_cuenta",
+    "saldo_minimo_cuenta",
+    "saldo_maximo_cuenta",
+    "ingreso_mensual",
+    "egreso_mensual",
+    "movimientos_mes",
+    "meses_vida",
+    "tiene_prestamo",
+    "ordenes_activas",
+    "edad",
+    "es_mujer",
+    "poblacion",
+    "salario_promedio",
+    "tasa_desempleo",
+    "tasa_criminalidad"
+  ],
+  "dimension_entrada": 15,
+  "media": [
+    36821.74010867888,
+    400.1874074074074,
+    73512.01481481481,
+    17414.11864472626,
+    16039.176706019656,
+    5.512905396341019,
+    40.592307407407404,
+    0.14185185185185184,
+    1.4203703703703703,
+    44.23851851851852,
+    0.4948148148148148,
+    273475.79185185186,
+    9535.634444444444,
+    3.421851851851852,
+    16747.75259259259
+  ],
+  "desviacion": [
+    15060.37084098156,
+    2355.173102167813,
+    39517.692912647355,
+    13150.842753139246,
+    12764.3617073636,
+    1.331567585490184,
+    18.064112551367245,
+    0.34889812836708095,
+    1.0910205262742378,
+    17.1236072055843,
+    0.49997311313169157,
+    363645.68817740254,
+    1339.7433964088002,
+    2.2671985275306863,
+    31728.78238563664
+  ],
+  "usa_pca": false,
+  "dimension_red": 15,
+  "clases": [
+    "Sin tarjeta de crédito",
+    "Propenso / con tarjeta de crédito"
+  ],
+  "tipo": "clasificacion",
+  "salida": "sigmoid",
+  "codigo": "M2"
+}

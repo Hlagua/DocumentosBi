@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Resumen · Literatura PKDD'99 / Berka{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Resumen comparativo: los 5 problemas clásicos de Berka con Redes Neuronales</h1>
+  <p class="sub">Comparación de las redes neuronales (MLP) con capas de salida <b>sigmoide</b>, <b>softmax</b> y <b>lineal</b> frente a sus respectivos modelos lineales sin capas ocultas.</p>
+  <img src="{{ grafico }}" alt="Resumen">
+  <table style="margin-top:14px">
+    <tr><th>Modelo</th><th>Tarea</th><th>Salida</th><th>Filas</th><th>X</th><th>Arquitectura</th><th>Red (prueba)</th><th>Lineal (prueba)</th><th></th></tr>
+    {% for cod, s in sistemas.items() %}
+    {% set m = s.metricas %}
+    <tr>
+      <td><b>{{ cod }}</b></td>
+      <td>{{ s.titulo }}</td>
+      <td><span class="badge {{ s.salida }}">{{ s.salida }}</span></td>
+      <td>{{ '{:,}'.format(s.resumen.n_filas) }}</td>
+      <td>{{ s.orden_X|length }}</td>
+      <td>{{ 'PCA → ' if s.pre.usa_pca }}{{ '-'.join(m.elegida.ocultas|map('string')) }} {{ m.elegida.activacion }}</td>
+      <td>
+        {% if s.tipo == 'regresion' %}R² {{ '%.3f'|format(m.prueba.r2) }} (MAE {{ '{:,.0f}'.format(m.prueba.mae) }})
+        {% elif s.salida == 'sigmoid' %}AUC {{ '%.3f'|format(m.prueba.auc) }} · Bal {{ '%.1f'|format(m.prueba.exactitud_balanceada*100) }} %
+        {% else %}Acc {{ '%.1f'|format(m.prueba.exactitud*100) }} % · Bal {{ '%.1f'|format(m.prueba.exactitud_balanceada*100) }} %{% endif %}
+      </td>
+      <td>
+        {% if s.tipo == 'regresion' %}R² {{ '%.3f'|format(m.comparacion_prueba.regresion_lineal.r2) }}
+        {% elif s.salida == 'sigmoid' %}AUC {{ '%.3f'|format(m.comparacion_prueba.modelo_lineal.auc) }} · Bal {{ '%.1f'|format(m.comparacion_prueba.modelo_lineal.exactitud_balanceada*100) }} %
+        {% else %}Bal {{ '%.1f'|format(m.comparacion_prueba.modelo_lineal.exactitud_balanceada*100) }} %{% endif %}
+      </td>
+      <td><a href="/red/{{ cod }}">Dashboard</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="ayuda">Predicciones registradas: {{ total }}.</p>
+</div>
+{% endblock %}

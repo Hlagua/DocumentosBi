@@ -1,0 +1,589 @@
+{
+  "codigo": "M2",
+  "titulo": "Propensión a tarjeta de crédito",
+  "tipo": "clasificacion",
+  "salida": "sigmoid",
+  "clases": [
+    "Sin tarjeta de crédito",
+    "Propenso / con tarjeta de crédito"
+  ],
+  "hiperparametros_fijos": {
+    "lote": 32,
+    "epocas_max": 200,
+    "paciencia": 18,
+    "optimizador": "Adam (lr = 0.001)",
+    "perdida": "binary_crossentropy",
+    "pesos_por_clase": {
+      "0": 0.6092057761732852,
+      "1": 2.7892561983471076
+    }
+  },
+  "busqueda": [
+    {
+      "pca": false,
+      "dimension_red": 15,
+      "ocultas": [
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 78,
+      "exactitud_val": 0.7433,
+      "exactitud_balanceada_val": 0.7806,
+      "auc_val": 0.8537
+    },
+    {
+      "pca": false,
+      "dimension_red": 15,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 48,
+      "exactitud_val": 0.7456,
+      "exactitud_balanceada_val": 0.7892,
+      "auc_val": 0.8548
+    },
+    {
+      "pca": false,
+      "dimension_red": 15,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 62,
+      "exactitud_val": 0.7444,
+      "exactitud_balanceada_val": 0.7958,
+      "auc_val": 0.8608
+    },
+    {
+      "pca": false,
+      "dimension_red": 15,
+      "ocultas": [
+        128,
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 31,
+      "exactitud_val": 0.7056,
+      "exactitud_balanceada_val": 0.7721,
+      "auc_val": 0.8458
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 113,
+      "exactitud_val": 0.7,
+      "exactitud_balanceada_val": 0.7347,
+      "auc_val": 0.8064
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 69,
+      "exactitud_val": 0.68,
+      "exactitud_balanceada_val": 0.725,
+      "auc_val": 0.8042
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 93,
+      "exactitud_val": 0.6889,
+      "exactitud_balanceada_val": 0.7474,
+      "auc_val": 0.8113
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        128,
+        64,
+        32
+      ],
+      "activacion": "relu",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 35,
+      "exactitud_val": 0.6678,
+      "exactitud_balanceada_val": 0.7394,
+      "auc_val": 0.8025
+    }
+  ],
+  "elegida": {
+    "pca": false,
+    "dimension_red": 15,
+    "ocultas": [
+      64,
+      32
+    ],
+    "activacion": "tanh",
+    "dropout": 0.2,
+    "l1": 1e-05,
+    "epocas": 62,
+    "exactitud_val": 0.7444,
+    "exactitud_balanceada_val": 0.7958,
+    "auc_val": 0.8608
+  },
+  "arquitectura": {
+    "capas": [
+      {
+        "nombre": "oculta_1",
+        "neuronas": 64,
+        "activacion": "tanh",
+        "forma_W": [
+          15,
+          64
+        ],
+        "forma_b": [
+          64
+        ],
+        "parametros": 1024
+      },
+      {
+        "nombre": "oculta_2",
+        "neuronas": 32,
+        "activacion": "tanh",
+        "forma_W": [
+          64,
+          32
+        ],
+        "forma_b": [
+          32
+        ],
+        "parametros": 2080
+      },
+      {
+        "nombre": "sigmoide",
+        "neuronas": 1,
+        "activacion": "sigmoid",
+        "forma_W": [
+          32,
+          1
+        ],
+        "forma_b": [
+          1
+        ],
+        "parametros": 33
+      }
+    ],
+    "parametros_totales": 3137
+  },
+  "historial": {
+    "accuracy": [
+      0.68444,
+      0.7337,
+      0.7463,
+      0.75,
+      0.7537,
+      0.7437,
+      0.75481,
+      0.75481,
+      0.74667,
+      0.74185,
+      0.75926,
+      0.75481,
+      0.75037,
+      0.7437,
+      0.75481,
+      0.75,
+      0.74963,
+      0.74741,
+      0.75259,
+      0.74593,
+      0.75296,
+      0.74185,
+      0.74704,
+      0.74519,
+      0.75185,
+      0.74963,
+      0.74815,
+      0.7537,
+      0.7563,
+      0.75444,
+      0.75259,
+      0.74444,
+      0.74889,
+      0.75963,
+      0.7563,
+      0.76481,
+      0.75296,
+      0.7537,
+      0.75667,
+      0.75407,
+      0.75963,
+      0.74889,
+      0.75556,
+      0.75815,
+      0.76519,
+      0.75963,
+      0.75519,
+      0.75889,
+      0.75667,
+      0.76556,
+      0.76296,
+      0.75667,
+      0.76926,
+      0.75481,
+      0.75852,
+      0.75741,
+      0.76741,
+      0.76037,
+      0.76519,
+      0.76444,
+      0.76519,
+      0.77111
+    ],
+    "loss": [
+      0.55404,
+      0.50058,
+      0.4951,
+      0.48013,
+      0.48197,
+      0.47509,
+      0.47251,
+      0.47072,
+      0.47385,
+      0.47702,
+      0.45768,
+      0.4604,
+      0.46476,
+      0.46166,
+      0.44799,
+      0.45434,
+      0.4504,
+      0.45533,
+      0.45053,
+      0.44244,
+      0.44699,
+      0.45014,
+      0.44597,
+      0.44746,
+      0.43669,
+      0.44335,
+      0.44441,
+      0.44525,
+      0.4382,
+      0.43431,
+      0.43889,
+      0.44316,
+      0.43801,
+      0.42805,
+      0.43142,
+      0.43112,
+      0.43885,
+      0.43783,
+      0.42794,
+      0.43474,
+      0.42742,
+      0.43505,
+      0.42531,
+      0.42592,
+      0.42011,
+      0.42673,
+      0.42559,
+      0.42176,
+      0.42653,
+      0.42375,
+      0.42133,
+      0.42454,
+      0.42511,
+      0.42587,
+      0.42496,
+      0.42005,
+      0.41368,
+      0.4161,
+      0.41954,
+      0.41758,
+      0.41091,
+      0.40889
+    ],
+    "val_accuracy": [
+      0.71667,
+      0.73111,
+      0.73333,
+      0.73,
+      0.73111,
+      0.73222,
+      0.73222,
+      0.73111,
+      0.72556,
+      0.72444,
+      0.73556,
+      0.72556,
+      0.72667,
+      0.72333,
+      0.72667,
+      0.73111,
+      0.71778,
+      0.73,
+      0.72556,
+      0.73111,
+      0.72667,
+      0.73,
+      0.72556,
+      0.72556,
+      0.73333,
+      0.73222,
+      0.73333,
+      0.73444,
+      0.73778,
+      0.73556,
+      0.73,
+      0.73333,
+      0.73222,
+      0.73556,
+      0.73444,
+      0.73444,
+      0.73667,
+      0.73222,
+      0.74111,
+      0.73333,
+      0.73,
+      0.72667,
+      0.73111,
+      0.74444,
+      0.74111,
+      0.73667,
+      0.74,
+      0.74222,
+      0.74556,
+      0.74,
+      0.74222,
+      0.74444,
+      0.73222,
+      0.73556,
+      0.73667,
+      0.73667,
+      0.74222,
+      0.74111,
+      0.74333,
+      0.73778,
+      0.74333,
+      0.74778
+    ],
+    "val_loss": [
+      0.58744,
+      0.56105,
+      0.53283,
+      0.54556,
+      0.5312,
+      0.53839,
+      0.5396,
+      0.5335,
+      0.53248,
+      0.53734,
+      0.51849,
+      0.52629,
+      0.52526,
+      0.5294,
+      0.52548,
+      0.51504,
+      0.52754,
+      0.5111,
+      0.51865,
+      0.50533,
+      0.51868,
+      0.51484,
+      0.52361,
+      0.51666,
+      0.51287,
+      0.51129,
+      0.50584,
+      0.51536,
+      0.5129,
+      0.50413,
+      0.51455,
+      0.51766,
+      0.50668,
+      0.51315,
+      0.50525,
+      0.50434,
+      0.50984,
+      0.52342,
+      0.50427,
+      0.51201,
+      0.51215,
+      0.51782,
+      0.51195,
+      0.4954,
+      0.50014,
+      0.50923,
+      0.51039,
+      0.49734,
+      0.4958,
+      0.50778,
+      0.50523,
+      0.50511,
+      0.51805,
+      0.51457,
+      0.50537,
+      0.50762,
+      0.51281,
+      0.50154,
+      0.49935,
+      0.50929,
+      0.50017,
+      0.5024
+    ]
+  },
+  "entrenamiento": {
+    "exactitud": 0.7507,
+    "exactitud_balanceada": 0.8118,
+    "error": 0.2493,
+    "matriz_confusion": [
+      [
+        1588,
+        628
+      ],
+      [
+        45,
+        439
+      ]
+    ],
+    "por_clase": {
+      "Sin tarjeta de crédito": {
+        "precision": 0.9724,
+        "sensibilidad": 0.7166,
+        "f1": 0.8251,
+        "soporte": 2216
+      },
+      "Propenso / con tarjeta de crédito": {
+        "precision": 0.4114,
+        "sensibilidad": 0.907,
+        "f1": 0.5661,
+        "soporte": 484
+      }
+    },
+    "f1_macro": 0.6956,
+    "auc": 0.8882
+  },
+  "validacion": {
+    "exactitud": 0.7444,
+    "exactitud_balanceada": 0.7958,
+    "error": 0.2556,
+    "matriz_confusion": [
+      [
+        529,
+        210
+      ],
+      [
+        20,
+        141
+      ]
+    ],
+    "por_clase": {
+      "Sin tarjeta de crédito": {
+        "precision": 0.9636,
+        "sensibilidad": 0.7158,
+        "f1": 0.8214,
+        "soporte": 739
+      },
+      "Propenso / con tarjeta de crédito": {
+        "precision": 0.4017,
+        "sensibilidad": 0.8758,
+        "f1": 0.5508,
+        "soporte": 161
+      }
+    },
+    "f1_macro": 0.6861,
+    "auc": 0.8608
+  },
+  "prueba": {
+    "exactitud": 0.7533,
+    "exactitud_balanceada": 0.7942,
+    "error": 0.2467,
+    "matriz_confusion": [
+      [
+        539,
+        199
+      ],
+      [
+        23,
+        139
+      ]
+    ],
+    "por_clase": {
+      "Sin tarjeta de crédito": {
+        "precision": 0.9591,
+        "sensibilidad": 0.7304,
+        "f1": 0.8292,
+        "soporte": 738
+      },
+      "Propenso / con tarjeta de crédito": {
+        "precision": 0.4112,
+        "sensibilidad": 0.858,
+        "f1": 0.556,
+        "soporte": 162
+      }
+    },
+    "f1_macro": 0.6926,
+    "auc": 0.8771
+  },
+  "E_in": 0.2493,
+  "E_out": 0.2467,
+  "diferencia_E_out_E_in": -0.0026,
+  "validacion_cruzada_5": {
+    "errores": [
+      0.2194,
+      0.2431,
+      0.2486,
+      0.2694,
+      0.2083
+    ],
+    "error_promedio": 0.2378,
+    "desviacion": 0.0217
+  },
+  "comparacion_prueba": {
+    "red_neuronal": {
+      "exactitud": 0.7533,
+      "exactitud_balanceada": 0.7942,
+      "auc": 0.8771
+    },
+    "modelo_lineal": {
+      "nombre": "Regresión logística (sigmoide lineal)",
+      "exactitud": 0.7889,
+      "exactitud_balanceada": 0.7966,
+      "auc": 0.8776
+    },
+    "clase_mayoritaria": {
+      "exactitud": 0.82,
+      "exactitud_balanceada": 0.5
+    },
+    "aleatorio": {
+      "exactitud": 0.5,
+      "exactitud_balanceada": 0.5
+    }
+  },
+  "segundos": 165.9
+}

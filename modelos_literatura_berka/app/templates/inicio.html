@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>Los 5 modelos clásicos de la literatura PKDD'99 / Berka con Redes Neuronales</h1>
+  <p class="sub">Desarrollado de forma independiente sobre <b>DM_Financial_Kimball_v2</b> (carpeta <code>modelos_literatura_berka/</code>), cubriendo las tres capas de salida vistas en clase: <b>Sigmoide</b> (binaria), <b>Softmax</b> (multiclase) y <b>Lineal</b> (regresión).</p>
+</div>
+<div class="rejilla">
+  {% for codigo, s in sistemas.items() %}
+  {% set m = s.metricas %}
+  <div class="tarjeta">
+    <span class="badge {{ s.salida }}">{{ s.salida }}</span>
+    <h2 style="margin-top:6px">{{ codigo }} · {{ s.titulo }}</h2>
+    <p class="sub">{{ s.descripcion }}</p>
+    <p style="font-size:13px">
+      Variables X: <b>{{ s.orden_X|length }}</b> · Filas: <b>{{ '{:,}'.format(s.resumen.n_filas) }}</b><br>
+      {% if s.tipo == 'regresion' %}
+        Prueba: <b>R² = {{ '%.3f'|format(m.prueba.r2) }}</b> · MAE = {{ '{:,.0f}'.format(m.prueba.mae) }} CZK
+      {% elif s.salida == 'sigmoid' %}
+        Prueba: <b>AUC = {{ '%.3f'|format(m.prueba.auc) }}</b> · Bal. {{ '%.1f'|format(m.prueba.exactitud_balanceada*100) }} %
+      {% else %}
+        Prueba: <b>Exactitud {{ '%.1f'|format(m.prueba.exactitud*100) }} %</b> · Bal. {{ '%.1f'|format(m.prueba.exactitud_balanceada*100) }} %
+      {% endif %}
+    </p>
+    <a class="boton" href="/predecir/{{ codigo }}">Probar modelo</a>
+    <a class="boton" style="background:#1b3a5c" href="/red/{{ codigo }}">Ver dashboard</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

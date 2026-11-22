@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard {{ s.codigo }} · {{ s.titulo }}{% endblock %}
+{% block contenido %}
+{% set h = s.resumen.hoeffding %}
+<div class="tarjeta">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <span class="badge {{ s.salida }}">Salida: {{ s.salida }}</span>
+      <h1 style="margin-top:6px">{{ s.codigo }} · {{ s.titulo }}</h1>
+      <p class="sub">{{ s.descripcion }}</p>
+    </div>
+    <div>
+      {% for cod in sistemas %}<a class="boton" style="margin-left:4px;{{ 'background:#1b3a5c' if cod == s.codigo }}" href="/red/{{ cod }}">{{ cod }}</a>{% endfor %}
+      <a class="boton" style="margin-left:4px;background:#1e7b45" href="/predecir/{{ s.codigo }}">Probar</a>
+    </div>
+  </div>
+  <div class="rejilla" style="margin-top:12px">
+    {% if s.tipo == 'regresion' %}
+      <div class="kpi"><span>R² en prueba (Red)</span><b>{{ '%.3f'|format(m.prueba.r2) }}</b><small>Regresión lineal: {{ '%.3f'|format(m.comparacion_prueba.regresion_lineal.r2) }}</small></div>
+      <div class="kpi"><span>MAE en prueba</span><b>{{ '{:,.0f}'.format(m.prueba.mae) }}</b><small>RMSE: {{ '{:,.0f}'.format(m.prueba.rmse) }} CZK</small></div>
+      <div class="kpi"><span>CV-5 R² promedio</span><b>{{ '%.3f'|format(m.validacion_cruzada_5.r2_promedio) }}</b><small>± {{ '%.3f'|format(m.validacion_cruzada_5.desviacion) }}</small></div>
+      <div class="kpi"><span>Persistencia mes t</span><b>{{ '%.3f'|format(m.comparacion_prueba.persistencia_mes_anterior.r2) }}</b><small>MAE: {{ '{:,.0f}'.format(m.comparacion_prueba.persistencia_mes_anterior.mae) }} CZK</small></div>
+    {% else %}
+      <div class="kpi"><span>Exactitud en prueba</span><b>{{ '%.1f'|format(m.prueba.exactitud*100) }} %</b><small>Balanceada: {{ '%.1f'|format(m.prueba.exactitud_balanceada*100) }} %{% if m.prueba.auc %} · AUC {{ '%.3f'|format(m.prueba.auc) }}{% endif %}</small></div>
+      <div class="kpi"><span>Modelo lineal</span><b>{{ '%.1f'|format(m.comparacion_prueba.modelo_lineal.exactitud_balanceada*100) }} %</b><small>{{ m.comparacion_prueba.modelo_lineal.nombre }}</small></div>
+      <div class="kpi"><span>E_in → E_out</span><b>{{ '%.1f'|format(m.E_in*100) }} → {{ '%.1f'|format(m.E_out*100) }} %</b><small>Brecha {{ '%+.1f'|format(m.diferencia_E_out_E_in*100) }} pts</small></div>
+      <div class="kpi"><span>CV-5 Error promedio</span><b>{{ '%.1f'|format(m.validacion_cruzada_5.error_promedio*100) }} %</b><small>± {{ '%.1f'|format(m.validacion_cruzada_5.desviacion*100) }} %</small></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>1. Datos y arquitectura</h2>
+  <p class="sub">Fuente: <b>{{ fuente }}</b> · Partición 60/20/20 ({{ s.resumen.particion.entrenamiento }}/{{ s.resumen.particion.validacion }}/{{ s.resumen.particion.prueba }}) · Hoeffding (95 %): ε = ±{{ '%.1f'|format(h.eps_garantizado_con_n_test_real*100) }} %.</p>
+  <img src="{{ figs.red }}" alt="Arquitectura">
+</div>
+
+<div class="tarjeta">
+  <h2>2. Selección de arquitectura y curvas de entrenamiento</h2>
+  <img src="{{ figs.busqueda }}" alt="Búsqueda">
+  <img src="{{ figs.curvas }}" alt="Curvas" style="margin-top:12px">
+</div>
+
+<div class="tarjeta">
+  <h2>3. Evaluación en prueba</h2>
+  <div class="dos">
+    <img src="{{ figs.principal_1 }}" alt="Evaluación 1">
+    <img src="{{ figs.principal_2 }}" alt="Evaluación 2">
+  </div>
+  <div class="dos">
+    <img src="{{ figs.comparacion }}" alt="Comparación">
+    <img src="{{ figs.pliegues }}" alt="CV-5">
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block titulo %}Playground · {{ s.codigo }} {{ s.titulo }}{% endblock %}
+{% block contenido %}
+<style>
+  main { max-width: 1400px; }
+  .pg-barra { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
+  .pg-boton { width:44px; height:44px; border-radius:50%; border:0; background:#1b3a5c; color:#fff; font-size:18px; cursor:pointer; padding:0; }
+  .pg-boton.sec { width:34px; height:34px; font-size:14px; background:#5a6878; }
+  .pg-epoca { font-size:13px; color:#5a6878; } .pg-epoca b { font-size:26px; color:#1d2733; font-variant-numeric:tabular-nums; }
+  .pg-dato { font-size:12px; color:#5a6878; } .pg-dato b { display:block; font-size:14px; color:#1d2733; }
+  #deslizador { flex:1; min-width:200px; }
+  .pg-lienzo { position:relative; display:grid; grid-template-columns: 215px 1fr 340px; gap:26px; align-items:start; }
+  .pg-col h3 { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#5a6878; margin:0 0 8px; }
+  .pg-capas { display:flex; gap:52px; justify-content:space-around; }
+  .pg-capa { display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .pg-capa .cab { font-size:11px; color:#5a6878; text-align:center; min-height:30px; }
+  .nodo { position:relative; z-index:2; display:flex; align-items:center; gap:6px; }
+  .nodo canvas { width:38px; height:38px; border:1px solid #c5ced8; border-radius:3px; background:#fff; }
+  .nodo span { font-size:11px; color:#45515f; max-width:155px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .entradas .nodo { justify-content:flex-end; }
+  #aristas { position:absolute; inset:0; z-index:1; pointer-events:none; overflow:visible; }
+  #salida { width:300px; height:300px; border:1px solid #c5ced8; border-radius:4px; }
+  #curva { width:300px; height:110px; }
+  .leyenda span { display:inline-flex; align-items:center; gap:4px; margin-right:10px; font-size:12px; }
+  .leyenda i { width:12px; height:12px; border-radius:50%; display:inline-block; }
+  .escala { height:10px; width:140px; border-radius:3px; background:linear-gradient(90deg,#e8710a,#f7f7f7,#0877bd); display:inline-block; vertical-align:middle; }
+  .pg-opciones label { display:inline-flex; gap:5px; align-items:center; font-weight:400; font-size:13px; margin-right:12px; }
+  @media (max-width: 1100px) { .pg-lienzo { grid-template-columns: 1fr; } #aristas { display:none; } }
+</style>
+
+<div class="tarjeta">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <span class="badge {{ s.salida }}">Salida: {{ s.salida }}</span>
+      <h1 style="margin-top:6px">Playground · {{ s.codigo }} {{ s.titulo }}</h1>
+      <p class="sub">Reproducción época por época del entrenamiento real: pesos, activaciones, superficie/frontera de decisión y curvas de aprendizaje.</p>
+    </div>
+    <div>
+      {% for cod in sistemas %}<a class="boton" style="margin-left:4px;{{ 'background:#1b3a5c' if cod == s.codigo }}" href="/playground/{{ cod }}">{{ cod }}</a>{% endfor %}
+    </div>
+  </div>
+  {% if not grabado %}
+  <p class="aviso">Aún no se grabó el entrenamiento de {{ s.codigo }}. Ejecute <code>python modelos_literatura_berka/03_grabar_entrenamiento.py {{ s.codigo }}</code>.</p>
+  {% else %}
+  <div class="pg-barra">
+    <button class="pg-boton sec" id="reiniciar" title="Volver a la época 0">⟲</button>
+    <button class="pg-boton" id="reproducir" title="Reproducir / pausar">▶</button>
+    <div class="pg-epoca">Época<br><b id="epoca">0</b></div>
+    <input type="range" id="deslizador" min="0" value="0">
+    <div class="pg-dato">Salida<b id="sal-tipo"></b></div>
+    <div class="pg-dato">Activación<b id="act"></b></div>
+    <div class="pg-dato">Lote<b id="lote"></b></div>
+    <div class="pg-dato">Parámetros<b id="params"></b></div>
+  </div>
+  {% endif %}
+</div>
+
+{% if grabado %}
+<div class="tarjeta">
+  <div class="pg-lienzo" id="lienzo">
+    <svg id="aristas"></svg>
+    <div class="pg-col entradas">
+      <h3>Entradas (X)</h3>
+      <div id="col-entradas" class="pg-capa" style="align-items:flex-end"></div>
+    </div>
+    <div class="pg-col">
+      <h3 id="tit-ocultas">Capas ocultas</h3>
+      <div class="pg-capas" id="col-ocultas"></div>
+    </div>
+    <div class="pg-col">
+      <h3 id="tit-salida">Salida</h3>
+      <div id="col-salida" class="pg-capa" style="flex-direction:row;gap:8px;justify-content:center;margin-bottom:10px"></div>
+      <canvas id="salida" width="300" height="300"></canvas>
+      <div class="leyenda" id="leyenda" style="margin:6px 0"></div>
+      <div class="pg-opciones">
+        <label><input type="checkbox" id="ver-entrenamiento" checked> Entrenamiento</label>
+        <label><input type="checkbox" id="ver-prueba"> Prueba</label>
+        <label><input type="checkbox" id="ver-errores"> Marcar errores</label>
+      </div>
+      <p style="margin:10px 0 2px;font-size:13px">Pérdida prueba <b id="lte"></b> · entrenamiento <b id="ltr"></b></p>
+      <p style="margin:0 0 6px;font-size:13px"><span id="nom-met">Exactitud</span> prueba <b id="ate"></b> · entrenamiento <b id="atr"></b></p>
+      <canvas id="curva" width="300" height="110"></canvas>
+      <div class="ayuda"><span style="color:#0877bd">━</span> entrenamiento · <span style="color:#e8710a">━</span> prueba · línea vertical = mejor época</div>
+    </div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>Cómo leerlo</h2>
+  <ul class="sub" style="margin:0;padding-left:18px">
+    <li><b>Cada cuadrito</b> muestra lo que "ve" esa entrada o neurona sobre el plano PCA 2D (<span id="var2d"></span> de la varianza): <span class="escala"></span> naranja = negativo, azul = positivo.</li>
+    <li><b>Las líneas</b> son los pesos <i>w</i>: azul positivo, naranja negativo; grosor proporcional a |w|.</li>
+    <li id="nota-repro"></li>
+  </ul>
+</div>
+
+<script>
+(async function () {
+  const COLORES = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9", "#D55E00"];
+  const datos = await (await fetch("/playground/{{ s.codigo }}/datos.json")).json();
+  const N = datos.plano.rejilla, cuadros = datos.cuadros, curvas = datos.curvas;
+  const esReg = datos.tipo === "regresion";
+  const dec = (b) => Uint8Array.from(atob(b), (c) => c.charCodeAt(0));
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const arq = datos.arquitectura, ent = datos.entrenamiento;
+
+  document.getElementById("sal-tipo").textContent = datos.salida;
+  document.getElementById("act").textContent = arq.activacion;
+  document.getElementById("lote").textContent = ent.lote;
+  document.getElementById("params").textContent = arq.parametros.toLocaleString("es");
+  document.getElementById("var2d").textContent = Math.round(datos.plano.varianza_explicada * 100) + " %";
+  document.getElementById("tit-salida").textContent = `Salida (${datos.salida})`;
+  document.getElementById("nom-met").textContent = esReg ? "R²" : "Exactitud";
+  document.getElementById("nota-repro").textContent =
+    `Reentrenamiento idéntico (semilla 42): ${ent.epocas} épocas, mejor época ${ent.mejor_epoca}; ` +
+    `${esReg ? "R²" : "exactitud"} en prueba ${(ent.metrica_reentrenamiento * 100).toFixed(2)} % ` +
+    `(modelo del aplicativo ${(ent.metrica_aplicativo * 100).toFixed(2)} %).`;
+
+  if (esReg) {
+    document.getElementById("leyenda").innerHTML =
+      `<span>Bajo <span class="escala" style="width:90px"></span> Alto (CZK)</span>`;
+  } else {
+    document.getElementById("leyenda").innerHTML =
+      datos.clases.map((c, i) => `<span><i style="background:${COLORES[i]}"></i>${c}</span>`).join("");
+  }
+
+  function colorDivergente(t) {
+    const neg = [232, 113, 10], cero = [247, 247, 247], pos = [8, 119, 189];
+    const a = Math.abs(t), c = t < 0 ? neg : pos;
+    return [0, 1, 2].map((k) => Math.round(cero[k] + (c[k] - cero[k]) * a));
+  }
+  function mapaDivergente(canvas, bytes) {
+    const ctx = canvas.getContext("2d"), img = ctx.createImageData(N, N);
+    for (let i = 0; i < N * N; i++) {
+      const [r, g, b] = colorDivergente(bytes[i] / 255 * 2 - 1);
+      img.data[i * 4] = r; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function lienzoNodo(titulo, etiqueta) {
+    const d = document.createElement("div"); d.className = "nodo"; d.title = titulo;
+    const c = document.createElement("canvas"); c.width = N; c.height = N;
+    if (etiqueta) { const s = document.createElement("span"); s.textContent = etiqueta; d.append(s); }
+    d.append(c); return [d, c];
+  }
+
+  const colE = document.getElementById("col-entradas");
+  const nodosCapa = [[]];
+  arq.entradas.forEach((nombre, j) => {
+    const [d, c] = lienzoNodo(`Entrada ${nombre}`, nombre);
+    colE.append(d); mapaDivergente(c, dec(datos.mapas_entrada[j])); nodosCapa[0].push(d);
+  });
+
+  const colO = document.getElementById("col-ocultas");
+  document.getElementById("tit-ocultas").textContent = `${arq.ocultas.length} capa${arq.ocultas.length > 1 ? "s" : ""} oculta${arq.ocultas.length > 1 ? "s" : ""}`;
+  const lienzosNeurona = [];
+  arq.ocultas.forEach((n, i) => {
+    const capa = document.createElement("div"); capa.className = "pg-capa";
+    const sel = arq.neuronas_dibujadas[i];
+    capa.innerHTML = `<div class="cab"><b>Capa ${i + 1}</b><br>${n} neuronas${sel.length < n ? ` (muestra ${sel.length})` : ""}</div>`;
+    const nodos = [], lienzos = [];
+    sel.forEach((idx) => { const [d, c] = lienzoNodo(`Capa ${i + 1}, neurona ${idx + 1}`); capa.append(d); nodos.push(d); lienzos.push(c); });
+    colO.append(capa); nodosCapa.push(nodos); lienzosNeurona.push(lienzos);
+  });
+
+  const colS = document.getElementById("col-salida"), nodosSalida = [];
+  const nSal = arq.neuronas_dibujadas[arq.neuronas_dibujadas.length - 1].length;
+  for (let i = 0; i < nSal; i++) {
+    const d = document.createElement("div"); d.className = "nodo";
+    d.title = datos.clases[i] || `Salida ${i + 1}`;
+    d.innerHTML = `<i style="width:16px;height:16px;border-radius:50%;background:${esReg ? "#CC79A7" : COLORES[i]};display:inline-block"></i>`;
+    colS.append(d); nodosSalida.push(d);
+  }
+  nodosCapa.push(nodosSalida);
+
+  const svg = document.getElementById("aristas"), lienzo = document.getElementById("lienzo");
+  function centro(el, lado) {
+    const b = lienzo.getBoundingClientRect();
+    const c = el.querySelector("canvas, i") || el, rc = c.getBoundingClientRect();
+    return [(lado === "der" ? rc.right : rc.left) - b.left, rc.top + rc.height / 2 - b.top];
+  }
+  function dibujarAristas(cuadro) {
+    const maximo = Math.max(1e-9, ...cuadro.aristas.flat(2).map(Math.abs));
+    let html = "";
+    cuadro.aristas.forEach((W, capa) => {
+      const origen = nodosCapa[capa], destino = nodosCapa[capa + 1];
+      W.forEach((fila, a) => fila.forEach((w, b) => {
+        if (!origen[a] || !destino[b]) return;
+        const [x1, y1] = centro(origen[a], "der"), [x2, y2] = centro(destino[b], "izq");
+        const grosor = 0.3 + 4.5 * Math.abs(w) / maximo, color = w >= 0 ? "#0877bd" : "#e8710a";
+        const mx = (x1 + x2) / 2;
+        html += `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" stroke="${color}" stroke-width="${grosor.toFixed(2)}" fill="none" opacity="${(0.25 + 0.65 * Math.abs(w) / maximo).toFixed(2)}"/>`;
+      }));
+    });
+    svg.innerHTML = html;
+  }
+
+  const sal = document.getElementById("salida"), sctx = sal.getContext("2d");
+  const fondo = document.createElement("canvas"); fondo.width = N; fondo.height = N;
+  const [x0, x1] = datos.plano.x, [y0, y1] = datos.plano.y;
+  const aPix = ([x, y]) => [(x - x0) / (x1 - x0) * sal.width, (1 - (y - y0) / (y1 - y0)) * sal.height];
+
+  function dibujarSalida(cuadro) {
+    const fctx = fondo.getContext("2d"), img = fctx.createImageData(N, N);
+    if (esReg) {
+      const vals = dec(cuadro.valor_mapa);
+      for (let i = 0; i < N * N; i++) {
+        const [r, g, b] = colorDivergente(vals[i] / 255 * 2 - 1);
+        img.data[i * 4] = r; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255;
+      }
+    } else {
+      const clase = dec(cuadro.clase), conf = dec(cuadro.confianza);
+      for (let i = 0; i < N * N; i++) {
+        const c = rgb(COLORES[clase[i]]);
+        const a = 0.25 + 0.6 * Math.max(0, (conf[i] / 255 - 1 / datos.clases.length) / (1 - 1 / datos.clases.length));
+        for (let k = 0; k < 3; k++) img.data[i * 4 + k] = 255 + (c[k] - 255) * a;
+        img.data[i * 4 + 3] = 255;
+      }
+    }
+    fctx.putImageData(img, 0, 0);
+    sctx.imageSmoothingEnabled = true;
+    sctx.drawImage(fondo, 0, 0, sal.width, sal.height);
+
+    const punto = (xy, fill, borde, radio) => {
+      const [px, py] = aPix(xy); if (px < 0 || py < 0 || px > sal.width || py > sal.height) return;
+      sctx.beginPath(); sctx.arc(px, py, radio, 0, 2 * Math.PI);
+      sctx.fillStyle = fill; sctx.fill(); sctx.lineWidth = 1; sctx.strokeStyle = borde; sctx.stroke();
+    };
+    const fillVal = (v) => { const [r, g, b] = colorDivergente(v * 2 - 1); return `rgb(${r},${g},${b})`; };
+
+    if (document.getElementById("ver-entrenamiento").checked) {
+      datos.puntos.entrenamiento.xy.forEach((xy, i) => {
+        const fill = esReg ? fillVal(datos.puntos.entrenamiento.valor[i]) : COLORES[datos.puntos.entrenamiento.clase[i]];
+        punto(xy, fill, "#ffffff", 2.6);
+      });
+    }
+    if (document.getElementById("ver-prueba").checked || document.getElementById("ver-errores").checked) {
+      const pred = dec(cuadro.pred_prueba), soloErr = !document.getElementById("ver-prueba").checked;
+      datos.puntos.prueba.xy.forEach((xy, i) => {
+        const mal = esReg ? pred[i] === 1 : pred[i] !== datos.puntos.prueba.clase[i];
+        if (soloErr && !mal) return;
+        const fill = esReg ? fillVal(datos.puntos.prueba.valor[i]) : COLORES[datos.puntos.prueba.clase[i]];
+        const errOn = mal && document.getElementById("ver-errores").checked;
+        punto(xy, fill, errOn ? "#c00000" : "#1d2733", errOn ? 3.6 : 2.6);
+      });
+    }
+  }
+
+  const cur = document.getElementById("curva"), cctx = cur.getContext("2d");
+  const maxPerdida = Math.max(1e-6, ...curvas.map((c) => Math.max(c.perdida_entrenamiento, c.perdida_prueba)));
+  function dibujarCurva(epoca) {
+    const W = cur.width, H = cur.height, n = curvas.length - 1 || 1;
+    cctx.clearRect(0, 0, W, H);
+    cctx.strokeStyle = "#e3e8ee"; cctx.lineWidth = 1; cctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+    const xb = ent.mejor_epoca / n * W;
+    cctx.strokeStyle = "#8c96a3"; cctx.setLineDash([3, 3]); cctx.beginPath(); cctx.moveTo(xb, 0); cctx.lineTo(xb, H); cctx.stroke(); cctx.setLineDash([]);
+    [["perdida_entrenamiento", "#0877bd"], ["perdida_prueba", "#e8710a"]].forEach(([k, color]) => {
+      cctx.strokeStyle = color; cctx.lineWidth = 1.8; cctx.beginPath();
+      curvas.slice(0, epoca + 1).forEach((c, i) => {
+        const x = i / n * W, y = H - 6 - (c[k] / maxPerdida) * (H - 12);
+        i ? cctx.lineTo(x, y) : cctx.moveTo(x, y);
+      });
+      cctx.stroke();
+    });
+  }
+
+  const desl = document.getElementById("deslizador"), boton = document.getElementById("reproducir");
+  desl.max = cuadros.length - 1;
+  let actual = 0, reproduciendo = false, temporizador = null;
+  function mostrar(k) {
+    actual = k; desl.value = k;
+    const cuadro = cuadros[k], c = curvas[cuadro.epoca];
+    document.getElementById("epoca").textContent = String(cuadro.epoca).padStart(3, "0") +
+      (cuadro.epoca === ent.mejor_epoca ? " ★" : "");
+    document.getElementById("lte").textContent = c.perdida_prueba.toFixed(3);
+    document.getElementById("ltr").textContent = c.perdida_entrenamiento.toFixed(3);
+    document.getElementById("ate").textContent = (c.metrica_prueba * 100).toFixed(1) + " %";
+    document.getElementById("atr").textContent = (c.metrica_entrenamiento * 100).toFixed(1) + " %";
+    cuadro.neuronas && cuadro.neuronas.forEach((capa, i) => capa.forEach((b, j) => mapaDivergente(lienzosNeurona[i][j], dec(b))));
+    dibujarSalida(cuadro); dibujarAristas(cuadro); dibujarCurva(cuadro.epoca);
+  }
+  function paso() {
+    if (actual >= cuadros.length - 1) { pausar(); return; }
+    mostrar(actual + 1); temporizador = setTimeout(paso, Math.max(60, 4000 / cuadros.length));
+  }
+  function pausar() { reproduciendo = false; boton.textContent = "▶"; clearTimeout(temporizador); }
+  boton.onclick = () => {
+    if (reproduciendo) return pausar();
+    if (actual >= cuadros.length - 1) mostrar(0);
+    reproduciendo = true; boton.textContent = "❚❚"; paso();
+  };
+  document.getElementById("reiniciar").onclick = () => { pausar(); mostrar(0); };
+  desl.oninput = () => { pausar(); mostrar(+desl.value); };
+  ["ver-entrenamiento", "ver-prueba", "ver-errores"].forEach((id) => document.getElementById(id).onchange = () => dibujarSalida(cuadros[actual]));
+  window.addEventListener("resize", () => dibujarAristas(cuadros[actual]));
+
+  const idxMejor = cuadros.findIndex((c) => c.epoca === ent.mejor_epoca);
+  mostrar(idxMejor >= 0 ? idxMejor : cuadros.length - 1);
+})();
+</script>
+{% endif %}
+{% endblock %}
