@@ -4,14 +4,17 @@
 <div class="tarjeta">
   <h1>{{ s.codigo }} · {{ s.titulo }}</h1>
   <p class="sub">{{ s.descripcion }} Escriba todos los datos; el modelo necesita exactamente {{ s.orden_X|length }} características.</p>
-  <form method="post" autocomplete="off">
+  <form method="post" autocomplete="off" id="formulario" novalidate>
     <div class="rejilla">
       {% for c in s.campos %}
       <div>
         <label for="{{ c.campo }}">{{ c.etiqueta }}</label>
         <input type="text" id="{{ c.campo }}" name="{{ c.campo }}" value="{{ escrito.get(c.campo, '') }}"
-               autocomplete="off" spellcheck="false" class="{{ 'mal' if c.campo in errores }}">
-        {% if c.campo in errores %}<div class="error">{{ errores[c.campo] }}</div>{% endif %}
+               autocomplete="off" spellcheck="false" class="{{ 'mal' if c.campo in errores }}"
+               data-formato="{{ c.formato }}" data-negativo="{{ 1 if c.negativo else 0 }}"
+               placeholder="{{ c.placeholder }}" data-max="{{ c.maxlength }}"
+               inputmode="{{ 'numeric' if c.formato in ('entero', 'fecha', 'periodo') else ('decimal' if c.formato == 'decimal' else 'text') }}">
+        <div class="error" data-error-de="{{ c.campo }}">{{ errores[c.campo] if c.campo in errores }}</div>
         {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
       </div>
       {% endfor %}
@@ -19,6 +22,96 @@
     <p><button type="submit">Predecir</button></p>
   </form>
 </div>
+
+<script>
+/*
+ * Cada caja de texto solo deja escribir los caracteres de su tipo (sin listas
+ * desplegables ni autocompletado). El servidor vuelve a validar todo.
+ *   entero  -> dígitos (y "-" al inicio si el dato puede ser negativo)
+ *   decimal -> dígitos y un solo separador decimal ("." o ",")
+ *   fecha   -> AAAA-MM-DD (los guiones se ponen solos)
+ *   periodo -> AAAA-MM
+ *   sexo    -> M o F
+ *   sino    -> si o no
+ *   nombre  -> letras, espacios, puntos y guiones (sin números)
+ */
+(function () {
+  const REGLAS = {
+    entero:  { completo: /^-?\d+$/, mensaje: "Solo números enteros." },
+    decimal: { completo: /^-?\d+([.,]\d+)?$/, mensaje: "Solo números (con un punto o coma decimal)." },
+    fecha:   { completo: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, mensaje: "Fecha incompleta: AAAA-MM-DD." },
+    periodo: { completo: /^\d{4}-(0[1-9]|1[0-2])$/, mensaje: "Mes incompleto: AAAA-MM." },
+    sexo:    { completo: /^[MF]$/, mensaje: "Escriba M o F." },
+    sino:    { completo: /^(si|no)$/, mensaje: "Escriba si o no." },
+    nombre:  { completo: /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$/, mensaje: "Solo letras." },
+  };
+
+  function limpiar(valor, formato, negativo) {
+    let v = valor;
+    if (formato === "entero" || formato === "decimal") {
+      const menos = negativo && v.trimStart().startsWith("-");
+      if (formato === "entero") {
+        v = v.replace(/\D/g, "");
+      } else {
+        v = v.replace(/[^\d.,]/g, "");
+        const i = v.search(/[.,]/);                      // deja solo el primer separador
+        if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/[.,]/g, "");
+      }
+      return (menos ? "-" : "") + v;
+    }
+    if (formato === "fecha" || formato === "periodo") {
+      const d = v.replace(/\D/g, "").slice(0, formato === "fecha" ? 8 : 6);
+      let r = d.slice(0, 4);
+      if (d.length > 4) r += "-" + d.slice(4, 6);
+      if (formato === "fecha" && d.length > 6) r += "-" + d.slice(6, 8);
+      return r;
+    }
+    if (formato === "sexo") return v.toUpperCase().replace(/[^MF]/g, "").slice(0, 1);
+    if (formato === "sino") return v.toLowerCase().replace(/[^sino]/g, "").slice(0, 2);
+    if (formato === "nombre") return v.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]/g, "");
+    return v;
+  }
+
+  function revisar(caja, alSalir) {
+    const regla = REGLAS[caja.dataset.formato];
+    const error = document.querySelector(`[data-error-de="${caja.name}"]`);
+    const ok = caja.value === "" || regla.completo.test(caja.value);
+    if (alSalir || ok) {
+      caja.classList.toggle("mal", !ok);
+      if (error) error.textContent = ok ? "" : regla.mensaje;
+    }
+    return ok && caja.value !== "";
+  }
+
+  document.querySelectorAll("input[data-formato]").forEach((caja) => {
+    caja.addEventListener("input", () => {
+      const pos = caja.selectionStart, antes = caja.value.length;
+      // primero se limpia y después se recorta al largo máximo (así pegar "35 años" deja "35")
+      caja.value = limpiar(caja.value, caja.dataset.formato, caja.dataset.negativo === "1")
+        .slice(0, parseInt(caja.dataset.max || "40", 10));
+      const nueva = Math.max(0, pos + caja.value.length - antes);
+      try { caja.setSelectionRange(nueva, nueva); } catch (e) {}
+      revisar(caja, false);
+    });
+    caja.addEventListener("blur", () => revisar(caja, true));
+  });
+
+  document.getElementById("formulario").addEventListener("submit", (ev) => {
+    let primera = null;
+    document.querySelectorAll("input[data-formato]").forEach((caja) => {
+      const error = document.querySelector(`[data-error-de="${caja.name}"]`);
+      if (caja.value === "") {
+        caja.classList.add("mal");
+        if (error) error.textContent = "Este dato es obligatorio.";
+        primera = primera || caja;
+      } else if (!revisar(caja, true)) {
+        primera = primera || caja;
+      }
+    });
+    if (primera) { ev.preventDefault(); primera.focus(); }
+  });
+})();
+</script>
 
 {% if resultado %}
 <div class="tarjeta">

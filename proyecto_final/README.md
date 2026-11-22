@@ -74,6 +74,47 @@ Para reentrenar con sobremuestreo: `python proyecto_final/02_entrenar_redes.py S
 - (C) casos en la frontera de decisión;
 - (D) atajos: importancia por permutación y valores sintéticos extremos.
 
+## Cómo correrlo en otro computador (después de `git pull`)
+
+**Requisito:** Python **3.12** de [python.org](https://www.python.org/downloads/), con la casilla "Add python.exe to PATH" marcada al instalar. No hace falta SQL Server ni MongoDB: los datasets y las redes entrenadas ya vienen en el repositorio.
+
+**Opción fácil (Windows):**
+1. `git pull` en la carpeta del repositorio.
+2. Doble clic en `proyecto_final\iniciar_app.bat`.
+   - La primera vez crea un entorno virtual en `proyecto_final\.venv` (no se sube a git) e instala las librerías de `requirements.txt`. Tarda varios minutos, porque TensorFlow pesa unos 500 MB.
+   - Las siguientes veces abre el aplicativo directamente.
+3. El navegador se abre solo en **http://127.0.0.1:5000** (si no carga a la primera, actualice la página). Para cerrarlo, presione `Ctrl + C` en la ventana negra.
+
+**Opción manual (desde la raíz del repositorio):**
+```
+py -3.12 -m venv proyecto_final\.venv
+proyecto_final\.venv\Scripts\python -m pip install -r proyecto_final\requirements.txt
+proyecto_final\.venv\Scripts\python proyecto_final\app\app.py
+```
+
+**Para verificar el sistema** (unos 45 s): `proyecto_final\.venv\Scripts\python proyecto_final\04_verificar_modelos.py`. Regenera `verificacion_modelos.md`.
+
+**Notas:**
+- No abra los archivos de `app/templates/` con doble clic: son plantillas y solo se ven bien a través del servidor.
+- Las predicciones se guardan en `app/predicciones.sqlite` de cada computador. Si ese equipo tiene la base `DM_Financial_Kimball_v2` en LocalDB, se guardan también ahí.
+- Volver a entrenar las redes no es necesario. Si se hace, S1 tarda unas 21 horas.
+
+## Validación de los campos del formulario
+
+Cada caja de texto acepta solo su tipo de dato mientras se escribe, y el servidor vuelve a validar todo:
+
+| Tipo | Qué deja escribir | Ejemplo |
+| :--- | :--- | :--- |
+| Número | Dígitos y un punto o coma decimal. El signo "-" solo en saldos y en el cambio de saldo | `1250.50`, `-300,75` |
+| Entero | Solo dígitos, con rangos lógicos (edad de 10 a 110, plazo de 1 a 360 meses) | `35` |
+| Fecha | AAAA-MM-DD; los guiones se ponen solos y la fecha debe existir | `1997-05-14` |
+| Mes | AAAA-MM, con mes de 01 a 12 | `1997-05` |
+| Sexo | M o F | `F` |
+| Sí/No | si o no | `si` |
+| Distrito | Letras, espacios, puntos y guiones; se reconoce sin tildes ni mayúsculas | `pisek` |
+
+Si falta un dato o está incompleto, el formulario no se envía y marca el campo.
+
 ## Cómo ejecutar
 
 Desde la raíz del repositorio:

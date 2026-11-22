@@ -9,6 +9,7 @@ No usa Flask: se puede probar desde la consola.
 
 import json
 import os
+import re
 import unicodedata
 from datetime import date, datetime
 from pathlib import Path
@@ -69,62 +70,99 @@ def normalizar(texto):
 # ----------------------------------------------------------------------------
 # Lectura de valores escritos a mano
 # ----------------------------------------------------------------------------
-def leer_decimal(campo, texto):
-    t = str(texto).strip().replace(" ", "").replace("$", "")
+RE_DECIMAL = re.compile(r"^-?\d+([.,]\d+)?$")
+RE_ENTERO = re.compile(r"^-?\d+$")
+RE_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+RE_PERIODO = re.compile(r"^\d{4}-\d{2}$")
+RE_NOMBRE = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$")
+
+# Campos numéricos que SÍ pueden ser negativos (saldos y cambios de saldo).
+NEGATIVOS = {"saldo_despues", "saldo_fin_mes", "saldo_promedio_mes", "saldo_min_mes", "saldo_max_mes",
+             "cambio_saldo_mes", "saldo_minimo_previo"}
+# Rangos lógicos (no de entrenamiento): valores imposibles se rechazan.
+LIMITES = {"edad": (10, 110), "plazo_meses": (1, 360), "ordenes_activas_cuenta": (1, 50),
+           "num_movimientos_mes": (0, 500), "meses_historial": (0, 600)}
+ANIOS = (1900, 2100)
+
+
+def formato_de(campo):
+    """Cómo se escribe cada campo: lo usan el servidor y el formulario (máscara en el navegador)."""
+    nombre, tipo = campo["campo"], campo["tipo"]
+    if nombre == "distrito":
+        return "nombre"
+    if nombre == "sexo":
+        return "sexo"
+    if nombre == "tiene_prestamo":
+        return "sino"
+    return tipo  # decimal, entero, fecha, periodo
+
+
+def leer_decimal(campo, texto, negativo=False):
+    t = str(texto).strip().replace(" ", "")
     if not t:
         raise ErrorEntrada(campo, "Este dato es obligatorio.")
-    if "," in t and "." in t:          # 1,234.56 -> separador de miles
-        t = t.replace(",", "")
-    elif "," in t:                     # 1234,56 -> coma decimal
-        t = t.replace(",", ".")
-    try:
-        return float(t)
-    except ValueError:
-        raise ErrorEntrada(campo, f"«{texto}» no es un número.")
+    if not RE_DECIMAL.match(t):
+        raise ErrorEntrada(campo, f"«{texto}» no es un número válido. Use solo dígitos y, si hace falta, "
+                                  "un punto o coma decimal (por ejemplo 1250.50).")
+    valor = float(t.replace(",", "."))
+    if valor < 0 and not negativo:
+        raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
+    return valor
 
 
-def leer_entero(campo, texto):
-    valor = leer_decimal(campo, texto)
-    if valor != int(valor):
-        raise ErrorEntrada(campo, "Debe ser un número entero.")
-    return int(valor)
+def leer_entero(campo, texto, negativo=False):
+    t = str(texto).strip().replace(" ", "")
+    if not RE_ENTERO.match(t):
+        raise ErrorEntrada(campo, f"«{texto}» no es un número entero (solo dígitos, sin decimales).")
+    valor = int(t)
+    if valor < 0 and not negativo:
+        raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
+    if campo in LIMITES:
+        lo, hi = LIMITES[campo]
+        if not lo <= valor <= hi:
+            raise ErrorEntrada(campo, f"Debe estar entre {lo} y {hi}.")
+    return valor
 
 
 def leer_fecha(campo, texto):
     t = str(texto).strip()
-    for formato in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
-        try:
-            return datetime.strptime(t, formato).date()
-        except ValueError:
-            pass
-    raise ErrorEntrada(campo, "Escriba la fecha como AAAA-MM-DD (por ejemplo 1997-05-14).")
+    if not RE_FECHA.match(t):
+        raise ErrorEntrada(campo, "Escriba la fecha como AAAA-MM-DD (por ejemplo 1997-05-14).")
+    try:
+        d = datetime.strptime(t, "%Y-%m-%d").date()
+    except ValueError:
+        raise ErrorEntrada(campo, f"«{texto}» no es una fecha que exista.")
+    if not ANIOS[0] <= d.year <= ANIOS[1]:
+        raise ErrorEntrada(campo, f"El año debe estar entre {ANIOS[0]} y {ANIOS[1]}.")
+    return d
 
 
 def leer_periodo(campo, texto):
     t = str(texto).strip()
-    for formato in ("%Y-%m", "%m/%Y"):
-        try:
-            d = datetime.strptime(t, formato)
-            return d.year, d.month
-        except ValueError:
-            pass
-    raise ErrorEntrada(campo, "Escriba el mes como AAAA-MM (por ejemplo 1997-05).")
+    if not RE_PERIODO.match(t):
+        raise ErrorEntrada(campo, "Escriba el mes como AAAA-MM (por ejemplo 1997-05).")
+    anio, mes = int(t[:4]), int(t[5:])
+    if not 1 <= mes <= 12:
+        raise ErrorEntrada(campo, "El mes debe estar entre 01 y 12.")
+    if not ANIOS[0] <= anio <= ANIOS[1]:
+        raise ErrorEntrada(campo, f"El año debe estar entre {ANIOS[0]} y {ANIOS[1]}.")
+    return anio, mes
 
 
 def leer_sexo(campo, texto):
     t = normalizar(texto)
-    if t in {"f", "femenino", "mujer"}:
+    if t == "f":
         return 1
-    if t in {"m", "masculino", "hombre"}:
+    if t == "m":
         return 0
-    raise ErrorEntrada(campo, "Escriba M o F.")
+    raise ErrorEntrada(campo, "Escriba solo M o F.")
 
 
 def leer_si_no(campo, texto):
     t = normalizar(texto)
-    if t in {"si", "s", "1"}:
+    if t == "si":
         return 1
-    if t in {"no", "n", "0"}:
+    if t == "no":
         return 0
     raise ErrorEntrada(campo, "Escriba si o no.")
 
@@ -137,7 +175,15 @@ class Sistema:
         self.codigo = codigo
         self.info = diccionario[codigo]
         self.titulo = self.info["titulo"]
-        self.campos = self.info["campos"]
+        self.campos = [dict(c) for c in self.info["campos"]]
+        ejemplos = {"fecha": "AAAA-MM-DD", "periodo": "AAAA-MM", "sexo": "M o F", "sino": "si o no",
+                    "nombre": "nombre del distrito", "entero": "número entero", "decimal": "número"}
+        for c in self.campos:
+            c["formato"] = formato_de(c)
+            c["negativo"] = c["campo"] in NEGATIVOS
+            c["placeholder"] = ejemplos[c["formato"]] + (" (puede ser negativo)" if c["negativo"] else "")
+            c["maxlength"] = {"fecha": 10, "periodo": 7, "sexo": 1, "sino": 2, "nombre": 40,
+                              "entero": 6, "decimal": 15}[c["formato"]]
         self.resumen = resumen[codigo]
         self.rangos = resumen[codigo]["rangos_X"]
         self.descripcion = resumen[codigo]["descripcion"]
@@ -179,6 +225,8 @@ class Sistema:
                 if str(texto).strip() == "":
                     raise ErrorEntrada(nombre, "Este dato es obligatorio.")
                 if nombre == "distrito":
+                    if not RE_NOMBRE.match(str(texto).strip()):
+                        raise ErrorEntrada(nombre, "El nombre del distrito solo lleva letras, espacios, puntos o guiones.")
                     clave = normalizar(texto)
                     fila = self.distritos.get(clave)
                     if fila is None:
@@ -196,9 +244,9 @@ class Sistema:
                 elif tipo == "periodo":
                     valores["anio"], valores["mes"] = leer_periodo(nombre, texto)
                 elif tipo == "entero":
-                    valores[campo["genera"][0]] = leer_entero(nombre, texto)
+                    valores[campo["genera"][0]] = leer_entero(nombre, texto, nombre in NEGATIVOS)
                 else:
-                    valores[campo["genera"][0]] = leer_decimal(nombre, texto)
+                    valores[campo["genera"][0]] = leer_decimal(nombre, texto, nombre in NEGATIVOS)
             except ErrorEntrada as e:
                 errores.append((e.campo, e.mensaje))
 

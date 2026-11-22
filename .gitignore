@@ -10,3 +10,6 @@ Thumbs.db
 
 # Proyecto final: historial local del aplicativo
 proyecto_final/app/predicciones.sqlite
+
+# Proyecto final: entorno virtual creado por iniciar_app.bat
+proyecto_final/.venv/
