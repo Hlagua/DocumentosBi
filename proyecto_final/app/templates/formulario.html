@@ -149,10 +149,10 @@
 <div class="tarjeta">
   <h2>Monto máximo sugerido</h2>
   {% if montos.monto_maximo %}
-  <p>Con el mismo perfil y plazo, la red estima una probabilidad de impago menor que {{ (montos.umbral*100)|int }} % hasta un monto de
+  <p>Con el mismo perfil y plazo, la red estima una probabilidad de mora o impago menor que {{ (montos.umbral*100)|int }} % hasta un monto de
      <b>{{ '{:,.0f}'.format(montos.monto_maximo) }}</b>.</p>
   {% else %}
-  <p>Con este perfil y plazo, la red estima impago probable incluso con el monto más bajo evaluado.</p>
+  <p>Con este perfil y plazo, la red estima mora o impago probable incluso con el monto más bajo evaluado.</p>
   {% endif %}
   <p class="ayuda">Se recorren montos de 1,000 a 600,000 manteniendo los demás datos; la cuota y la relación cuota/saldo se recalculan para cada monto.</p>
 </div>

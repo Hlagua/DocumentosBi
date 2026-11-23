@@ -1,9 +1,9 @@
 {
   "sistema": "S4",
-  "titulo": "Riesgo de impago de un préstamo nuevo",
+  "titulo": "Mora al corte (31/12/1998) de un préstamo",
   "clases": [
-    "Paga sin problemas (A o C)",
-    "Impago (B o D)"
+    "Al día al corte (A o C)",
+    "En mora o impago al corte (B o D)"
   ],
   "criterio_seleccion": "mayor exactitud balanceada en validación",
   "hiperparametros_fijos": {
@@ -362,13 +362,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9849,
         "sensibilidad": 0.8984,
         "f1": 0.9397,
         "soporte": 364
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.5256,
         "sensibilidad": 0.8913,
         "f1": 0.6613,
@@ -392,13 +392,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9623,
         "sensibilidad": 0.843,
         "f1": 0.8987,
         "soporte": 121
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.3667,
         "sensibilidad": 0.7333,
         "f1": 0.4889,
@@ -422,13 +422,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9464,
         "sensibilidad": 0.876,
         "f1": 0.9099,
         "soporte": 121
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.375,
         "sensibilidad": 0.6,
         "f1": 0.4615,
@@ -444,13 +444,13 @@
   "validacion_cruzada_5": {
     "errores": [
       0.1364,
-      0.1101,
-      0.2018,
+      0.1376,
+      0.1927,
       0.1284,
-      0.1468
+      0.1835
     ],
-    "error_promedio": 0.1447,
-    "desviacion": 0.031
+    "error_promedio": 0.1557,
+    "desviacion": 0.0268
   },
   "comparacion_prueba": {
     "red_neuronal": {
@@ -470,5 +470,5 @@
       "exactitud_balanceada": 0.5
     }
   },
-  "segundos": 155.6
+  "segundos": 56.2
 }

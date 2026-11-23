@@ -125,19 +125,21 @@
     ]
   },
   "M2": {
-    "titulo": "Propensión a tarjeta de crédito",
+    "titulo": "Qué tarjeta ofrecer (sin tarjeta, classic o gold)",
     "tipo": "clasificacion",
-    "salida": "sigmoid",
+    "salida": "softmax",
     "orden_X": [
-      "saldo_promedio_cuenta",
-      "saldo_minimo_cuenta",
-      "saldo_maximo_cuenta",
+      "saldo_promedio_previo",
+      "saldo_minimo_previo",
+      "saldo_maximo_previo",
+      "saldo_final_previo",
       "ingreso_mensual",
       "egreso_mensual",
+      "retiro_efectivo_mensual",
       "movimientos_mes",
-      "meses_vida",
-      "tiene_prestamo",
-      "ordenes_activas",
+      "meses_historial",
+      "tiene_prestamo_previo",
+      "tiene_disponente",
       "edad",
       "es_mujer",
       "poblacion",
@@ -146,32 +148,41 @@
       "tasa_criminalidad"
     ],
     "clases": {
-      "0": "Sin tarjeta de crédito",
-      "1": "Propenso / con tarjeta de crédito"
+      "0": "Sin tarjeta",
+      "1": "Tarjeta classic",
+      "2": "Tarjeta gold"
     },
     "campos": [
       {
-        "campo": "saldo_promedio_cuenta",
-        "etiqueta": "Saldo promedio de la cuenta",
+        "campo": "saldo_promedio_previo",
+        "etiqueta": "Saldo promedio hasta hoy",
         "tipo": "decimal",
         "genera": [
-          "saldo_promedio_cuenta"
+          "saldo_promedio_previo"
         ]
       },
       {
-        "campo": "saldo_minimo_cuenta",
-        "etiqueta": "Saldo mínimo de la cuenta",
+        "campo": "saldo_minimo_previo",
+        "etiqueta": "Saldo mínimo hasta hoy",
         "tipo": "decimal",
         "genera": [
-          "saldo_minimo_cuenta"
+          "saldo_minimo_previo"
         ]
       },
       {
-        "campo": "saldo_maximo_cuenta",
-        "etiqueta": "Saldo máximo de la cuenta",
+        "campo": "saldo_maximo_previo",
+        "etiqueta": "Saldo máximo hasta hoy",
         "tipo": "decimal",
         "genera": [
-          "saldo_maximo_cuenta"
+          "saldo_maximo_previo"
+        ]
+      },
+      {
+        "campo": "saldo_final_previo",
+        "etiqueta": "Saldo actual",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_final_previo"
         ]
       },
       {
@@ -191,37 +202,46 @@
         ]
       },
       {
+        "campo": "retiro_efectivo_mensual",
+        "etiqueta": "Retiro mensual en efectivo",
+        "tipo": "decimal",
+        "genera": [
+          "retiro_efectivo_mensual"
+        ]
+      },
+      {
         "campo": "movimientos_mes",
-        "etiqueta": "Movimientos por mes (sin tarjeta)",
+        "etiqueta": "Movimientos por mes",
         "tipo": "decimal",
         "genera": [
           "movimientos_mes"
         ]
       },
       {
-        "campo": "meses_vida",
+        "campo": "meses_historial",
         "etiqueta": "Antigüedad de la cuenta (meses)",
         "tipo": "entero",
         "genera": [
-          "meses_vida"
+          "meses_historial"
         ]
       },
       {
-        "campo": "tiene_prestamo",
+        "campo": "tiene_prestamo_previo",
         "etiqueta": "¿Tiene préstamo? (si/no)",
         "tipo": "texto",
         "genera": [
-          "tiene_prestamo"
+          "tiene_prestamo_previo"
         ],
         "regla": "si -> 1, no -> 0"
       },
       {
-        "campo": "ordenes_activas",
-        "etiqueta": "Órdenes permanentes activas",
-        "tipo": "entero",
+        "campo": "tiene_disponente",
+        "etiqueta": "¿La cuenta tiene un segundo usuario (disponente)? (si/no)",
+        "tipo": "texto",
         "genera": [
-          "ordenes_activas"
-        ]
+          "tiene_disponente"
+        ],
+        "regla": "si -> 1, no -> 0"
       },
       {
         "campo": "edad",
@@ -229,7 +249,8 @@
         "tipo": "entero",
         "genera": [
           "edad"
-        ]
+        ],
+        "regla": "Mínimo 21 años (la tarjeta junior es para menores de 21 y no entra al modelo)."
       },
       {
         "campo": "sexo",

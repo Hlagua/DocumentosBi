@@ -7,8 +7,8 @@ ARCHIVO: modelos_literatura_berka/03_grabar_entrenamiento.py
 
 Graba el entrenamiento época por época de los 5 modelos de la literatura
 PKDD'99 / Berka (M1–M5) para el Playground interactivo:
-  * M1, M2, M4 -> clasificación binaria (salida SIGMOIDE)
-  * M3         -> clasificación 4 clases (salida SOFTMAX)
+  * M1, M4     -> clasificación binaria (salida SIGMOIDE)
+  * M2, M3     -> clasificación multiclase, 3 y 4 clases (salida SOFTMAX)
   * M5         -> regresión continua (salida LINEAL)
 
 Uso:    python modelos_literatura_berka/03_grabar_entrenamiento.py [M1..M5]

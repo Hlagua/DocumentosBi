@@ -19,34 +19,35 @@ Sistemas predictivos **multiclase** con redes neuronales sobre el Data Mart Kimb
 | S1 | ¿Qué tipo de movimiento es una transacción nueva? | 4 (depósito, retiro, transferencia enviada, transferencia recibida) | 24,000 | 12 |
 | S2 | ¿Para qué es una orden de pago permanente nueva? | 4 (hogar, préstamo, seguro, arrendamiento) | 5,092 | 13 |
 | S3 | ¿Cómo estará el saldo de la cuenta el próximo mes? | 3 (estable, caída, sobregiro) | 4,708 | 15 |
-| S4 | ¿Un préstamo nuevo terminará en impago? | 2 (paga sin problemas, impago) | 682 | 16 |
+| S4 | ¿Un préstamo estaría en mora al corte del 31/12/1998? | 2 (al día al corte, en mora o impago al corte) | 682 | 16 |
 
 - La etiqueta de cada fila es la **verdadera** (operación, propósito de la orden o saldo real del mes siguiente).
 - Las X son datos que se pueden **escribir** en el formulario. El distrito se escribe por su nombre y el aplicativo lo traduce a sus 4 indicadores con `datos/distritos.csv`.
-- La columna `particion` fija qué filas son de entrenamiento, validación y prueba (semilla 42).
+- La columna `particion` fija qué filas son de entrenamiento, validación y prueba (60/20/20, semilla 42).
+- **En S1, S2 y S3 la partición es por cuenta:** todas las filas de una cuenta quedan en un solo lado, y la validación cruzada también agrupa por cuenta. Así la prueba responde "¿y si es un cliente nuevo?". En S4 cada fila ya es una cuenta distinta.
+- **S4 se llama "mora al corte":** los 403 préstamos vigentes al día (estado C) siguen abiertos y podrían caer en mora después de 1998, así que la etiqueta no es "pagará o no pagará".
 
 ## Redes neuronales (fase 2)
 
-Cada red se eligió en validación. La búsqueda probó todas las X frente a PCA al 95 % y 5 arquitecturas. Todas usan Keras, salida softmax, entropía cruzada, Adam, lotes de 15, parada temprana y pesos por clase. Resultados en **prueba** (evaluada una sola vez):
+Cada red se eligió en validación. La búsqueda probó todas las X frente a PCA al 95 % y 5 arquitecturas. Todas usan Keras, salida softmax, entropía cruzada, Adam, lotes de 15 y parada temprana. Resultados en **prueba** (evaluada una sola vez) **de la versión que usa el aplicativo**, con partición por cuenta:
 
-| Sistema | Arquitectura elegida | Parámetros | Red | Softmax lineal | Clase mayoritaria | Aleatorio | E_in | E_out | Error CV-5 |
-| :--- | :--- | ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| S1 | 12 → 128 → 64 → 32 → 4, ReLU | 12,132 | **76.8 %** | 58.3 % | 25.0 % | 25.0 % | 20.4 % | 23.2 % | 22.7 % ± 0.3 |
-| S2 | 13 → 64 → 32 → 4, tanh | 3,108 | **81.4 %** (bal. 83.3 %) | 73.6 % | 68.7 % | 25.0 % | 16.1 % | 18.6 % | 18.4 % ± 1.9 |
-| S3 | 15 → 64 → 32 → 3, tanh | 3,203 | **63.6 %** (bal. 68.5 %) | 58.3 % | 42.5 % | 33.3 % | 35.7 % | 36.5 % | 37.3 % ± 1.3 |
-| S4 | 16 → PCA 10 → 128 → 64 → 32 → 2, ReLU | 11,810 | **79.4 %** (bal. 68.0 %, AUC 0.795) | 80.9 % (bal. 77.6 %) | 89.0 % (bal. 50 %) | 50.0 % | 17.3 % | 20.6 % | 16.1 % ± 0.5 |
+| Sistema | Versión | Arquitectura elegida | Parámetros | Red | Softmax lineal | Clase mayoritaria | Aleatorio | E_in | E_out | Error CV-5 |
+| :--- | :--- | :--- | ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| S1 | dataset balanceado | 12 → 64 → 32 → 4, ReLU | 3,044 | **76.9 %** | 58.4 % | 25.0 % | 25.0 % | 21.4 % | 23.1 % | 24.1 % ± 0.9 |
+| S2 | sobremuestreo 50/50 | 13 → 128 → 64 → 32 → 4, ReLU | 12,260 | **81.9 %** (bal. 84.6 %) | 75.0 % (bal. 78.5 %) | 68.8 % | 25.0 % | 15.9 % | 18.1 % | 18.3 % ± 1.1 |
+| S3 | sobremuestreo 50/50 | 15 → 64 → 32 → 3, tanh | 3,203 | **62.1 %** (bal. 67.5 %) | 57.2 % (bal. 64.5 %) | 42.5 % | 33.3 % | 32.7 % | 37.9 % | 37.3 % ± 1.2 |
+| S4 | sobremuestreo 50/50 | 16 → 128 → 64 → 32 → 2, ReLU | 12,578 | **84.6 %** (bal. 73.8 %, AUC 0.856) | 76.5 % (bal. **78.0 %**) | 89.0 % (bal. 50 %) | 50.0 % | 10.2 % | 15.4 % | 15.6 % ± 2.7 |
 
-**S4 (préstamos):**
-- Es el sistema binario permitido. Usa solo datos que el banco conoce al aprobar: monto, plazo, la cuota calculada y el historial de la cuenta antes del préstamo.
-- Es el único sistema donde **PCA ganó** en validación: hay pocos datos (682) para 16 características.
-- En prueba solo hay 15 impagos (ε = ±11.7 %). Ahí el softmax lineal queda por encima de la red, así que se debe presentar con esa cautela.
-- La red detecta 8 de 15 impagos. La clase mayoritaria tiene 89 % de exactitud pero no detecta ninguno.
-- El aplicativo calcula además el **monto máximo sugerido**: el mayor monto, con el mismo perfil y plazo, cuya probabilidad de impago es menor que 50 %. El riesgo crece con el monto, por eso el resultado tiene sentido.
+**Partición por cuenta: qué cambió.** Antes, en S1 el 94 % de la prueba eran cuentas ya vistas al entrenar (S3 54 %, S2 33 %). Ahora ninguna cuenta está en dos particiones. Las cifras de antes y de ahora no se comparan para sacar conclusiones, porque cambiaron a la vez la red (S1 era 128 → 64 → 32 y ahora es 64 → 32) y las filas de prueba. Lo que sí se afirma es el resultado actual: en S1, la red acierta 76.9 % en 857 cuentas que no vio al entrenar.
 
-- En los tres sistemas la red supera al softmax lineal, y E_out − E_in queda por debajo de 5 puntos: no hay sobreajuste.
-- **PCA no ayudó** en ninguno: perdió entre 2 y 11 puntos en validación. Por eso se usan todas las características, que además son pocas (12 a 15).
-- Los modelos, el preprocesamiento (orden de X, medias, desviaciones) y las métricas completas (curvas, matriz de confusión, métricas por clase y búsqueda) están en `modelos/`.
-- **Tiempo:** S1 tardó unas 21 horas (14,400 filas, lotes de 15 y 10 configuraciones más 5 pliegues). S2 tardó 26 minutos y S3, 7. Para volver a entrenar un solo sistema: `python proyecto_final/02_entrenar_redes.py S2`.
+**Lo que hay que decir en la defensa:**
+- **S1:** la red supera al lineal por 18 puntos en 857 cuentas que no vio al entrenar (76.9 %). Las 10,000 transacciones "nunca vistas" (76.3 % balanceada) **no son otro grupo de clientes**: salen de 1,057 cuentas, de las cuales 857 son las mismas de la prueba. Sirven para confirmar, con otros movimientos de esos clientes, que la prueba se sostiene; no para decir que hay otra población donde también da 76 %.
+- **S2:** la orden de préstamo suele tener monto = cuota. La regla de una línea "si el monto coincide con la cuota, es préstamo; si no, es hogar" acierta **81.6 %**, casi lo mismo que la red, pero su exactitud **balanceada es 47.7 %**: nunca reconoce seguro ni arrendamiento. La red llega a 84.6 % balanceada. Hay que mostrar esa regla al lado de la red.
+- **S3:** el dataset tiene 2,000 / 2,000 / 708 meses, pero en el banco el sobregiro es ~0.4 % de los meses. Con la **proporción real** (87,170 meses de cuentas nuevas), la red acierta 57.9 %, **por debajo del 60.7 % de responder siempre "estable"**. Esa comparación sí es nueva, porque casi todos esos meses no están en la prueba. El **87 % de sobregiros detectados sale de la prueba oficial**: los 142 sobregiros de la proporción real son exactamente los 142 de la prueba, porque todos los sobregiros del banco ya estaban en el dataset y no quedó ninguno aparte para medir. La exactitud balanceada (68.4 % frente a 33.3 % de "siempre estable") también se apoya en esos 142 casos. Se presenta como **alerta de riesgo**, no como pronóstico del estado de cualquier mes.
+- **S4:** es el binario permitido, con "mora al corte". **La regresión logística lo empata o lo supera:** con sobremuestreo, 78.0 % balanceada frente a 73.8 % de la red; con pesos, 77.6 % frente a 68.0 %. Con 15 casos de mora en prueba (ε = ±11.7 %) esas diferencias caben en el ruido. La red se presenta como el sistema pedido, no como una mejora. Además, E_out − E_in = 5.2 puntos, apenas sobre el límite de 5.
+- El aplicativo calcula además el **monto máximo sugerido** en S4: el mayor monto, con el mismo perfil y plazo, cuya probabilidad de mora es menor que 50 %. El riesgo crece con el monto.
+- **PCA** solo ganó en S4 con pesos por clase (pocos datos para 16 características). En los demás se usan todas las X.
+- Los modelos, el preprocesamiento y las métricas completas están en `modelos/` y `modelos_sobremuestreo/`. Reentrenar todo toma entre 20 y 30 minutos (S1 es el más largo, unos 23 minutos).
 
 ## Balanceo de clases: dos versiones (en evaluación)
 
@@ -60,9 +61,9 @@ S2, S3 y S4 tienen clases desbalanceadas reales; S1 ya está balanceado (6,000 p
 La versión de cada sistema se cambia en `VERSION_POR_SISTEMA`, en `app/nucleo.py`.
 
 La comparación completa está en [`comparacion_balanceo.md`](comparacion_balanceo.md) (`python proyecto_final/03_comparar_balanceo.py`). En resumen:
-- El sobremuestreo mejora un poco a S2 y claramente a S4 (AUC 0.795 → 0.856; detecta 9 de 15 impagos en vez de 8).
-- S3 queda prácticamente igual.
-- En S3 y S4, E_out − E_in sube a 5.2 puntos, justo por encima del límite de 5.
+- El sobremuestreo mejora un poco a S2 (balanceada 84.3 % → 84.6 %) y claramente a S4 (AUC 0.795 → 0.856).
+- En S3, con pesos por clase la balanceada es algo mayor (68.4 % frente a 67.5 %) y E_out − E_in queda en 4.0 puntos. Con sobremuestreo, ese valor es 5.2.
+- En S4 con sobremuestreo, E_out − E_in = 5.2 puntos, justo por encima del límite de 5.
 
 Para reentrenar con sobremuestreo: `python proyecto_final/02_entrenar_redes.py S2 S3 S4 --balanceo sobremuestreo --salida modelos_sobremuestreo`.
 
@@ -70,7 +71,9 @@ Para reentrenar con sobremuestreo: `python proyecto_final/02_entrenar_redes.py S
 
 `python proyecto_final/04_verificar_modelos.py` (~40 s) genera [`verificacion_modelos.md`](verificacion_modelos.md). Prueba las dos versiones con:
 - (A) datos parecidos al dataset, con ruido del 5 %;
-- (B) datos reales que el modelo nunca vio: 10,000 transacciones en S1 y 5,000 meses en S3;
+- (B) datos reales que el modelo nunca vio, **solo de cuentas que no se usaron para entrenar ni validar**: 10,000 transacciones en S1 y 5,000 meses en S3. Estas cuentas incluyen las de la prueba (en S1, 857 de 1,057), así que B confirma la prueba; no mide otra población;
+- (E) S2 frente a la regla de una línea "monto = cuota → préstamo";
+- (F) S3 con la proporción real de meses del banco (87,170 meses, sobregiro ~0.4 %). Sus 142 sobregiros son los mismos de la prueba, así que lo nuevo es la exactitud global frente a "siempre estable";
 - (C) casos en la frontera de decisión;
 - (D) atajos: importancia por permutación y valores sintéticos extremos.
 

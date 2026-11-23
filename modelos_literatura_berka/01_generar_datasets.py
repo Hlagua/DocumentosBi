@@ -14,11 +14,15 @@ carpeta `dataframes/`), sin modificar `proyecto_final/`:
       * Etiqueta: 1 = Impago (B, D), 0 = Paga sin problemas (A, C)
       * Sin fuga temporal: solo transacciones estrictamente anteriores al préstamo.
 
-  M2. Propensión / Recomendación de tarjeta de crédito (Binaria — salida SIGMOIDE)
-      * Fuente: rs_adopcion (RETIRO_TARJETA) + historial transaccional SIN
-        movimientos de tarjeta (`operation != 'VYBER KARTOU'`) + perfil/distrito.
-      * Etiqueta: 1 = Adopta/usa tarjeta de crédito, 0 = Sin tarjeta.
-      * Sin fuga: excluye operaciones de tarjeta al construir las X.
+  M2. Qué tarjeta ofrecer (Multiclase 3 — salida SOFTMAX)
+      * Fuente: tabla `cards` (dataframes/df_tarjetas.csv, 892 tarjetas) +
+        historial transaccional + perfil del titular + distrito.
+      * Etiqueta: 0 = Sin tarjeta, 1 = Classic, 2 = Gold (titulares de 21 años o
+        más; la junior depende solo de la edad y queda fuera).
+      * Sin fuga: solo movimientos ANTERIORES a la emisión. Las cuentas sin
+        tarjeta usan una fecha de referencia con la misma antigüedad que las
+        que sí la recibieron. Los retiros con tarjeta (VYBER KARTOU) ocurren
+        todos después de la emisión, así que no entran en ninguna X.
 
   M3. Segmentación y perfilamiento de clientes (Multiclase 4 — salida SOFTMAX)
       * Fuente: perfil financiero de las 4,500 cuentas (saldo, depósitos,
@@ -269,59 +273,94 @@ def construir_m1(prestamos, trans, distritos):
 
 
 # ============================================================================
-# M2. Propensión a tarjeta de crédito (Binaria — SIGMOIDE)
+# M2. Qué tarjeta ofrecer: sin tarjeta / classic / gold (Multiclase — SOFTMAX)
 # ============================================================================
-NOMBRES_M2 = {0: "Sin tarjeta de crédito", 1: "Propenso / con tarjeta de crédito"}
+NOMBRES_M2 = {0: "Sin tarjeta", 1: "Tarjeta classic", 2: "Tarjeta gold"}
 X_M2 = [
-    "saldo_promedio_cuenta", "saldo_minimo_cuenta", "saldo_maximo_cuenta",
-    "ingreso_mensual", "egreso_mensual", "movimientos_mes", "meses_vida",
-    "tiene_prestamo", "ordenes_activas", "edad", "es_mujer",
+    "saldo_promedio_previo", "saldo_minimo_previo", "saldo_maximo_previo", "saldo_final_previo",
+    "ingreso_mensual", "egreso_mensual", "retiro_efectivo_mensual", "movimientos_mes",
+    "meses_historial", "tiene_prestamo_previo", "tiene_disponente", "edad", "es_mujer",
 ] + COL_DISTRITO
+EDAD_MINIMA_M2 = 21          # las junior se emiten solo a menores de 21: se dejan fuera
+MESES_MINIMOS_M2 = 6         # ninguna tarjeta se emitió antes de 6.7 meses de abierta la cuenta
+FIN_DATOS = pd.Timestamp("1998-12-31")
 
 
-def construir_m2(perfiles, clientes, adopcion, trans, distritos):
-    print("\n[M2] Propensión / recomendación de tarjeta de crédito (Binaria — sigmoide)")
-    # Excluimos operaciones de tarjeta (VYBER KARTOU) para evitar fuga directa
-    t = trans[trans["operation"] != "VYBER KARTOU"].copy()
+def construir_m2(clientes, perfiles, prestamos, trans, distritos):
+    """Una fila por cuenta (titular). La historia se corta antes de la fecha de referencia:
+    la emisión de la tarjeta, o, si la cuenta no tiene tarjeta, una fecha con la misma
+    antigüedad que las cuentas que sí la recibieron (así la fecha no delata la clase)."""
+    print("\n[M2] Qué tarjeta ofrecer (multiclase 3 — softmax)")
+    rng = np.random.default_rng(SEMILLA)
+    tarj = pd.read_csv(DF_DIR / "df_tarjetas.csv", parse_dates=["fecha_emision"])
+    apertura = trans.groupby("id_cuenta")["fecha_dt"].min().rename("apertura")
+
+    tit = perfiles[["id_cuenta", "id_cliente"]].merge(
+        clientes[["id_cliente", "fecha_nacimiento", "sexo", "id_distrito"]], on="id_cliente", how="left")
+    tit = tit.merge(apertura, on="id_cuenta").merge(
+        tarj[["id_cuenta", "tipo_tarjeta", "fecha_emision"]], on="id_cuenta", how="left")
+    tit["fecha_nacimiento"] = pd.to_datetime(tit["fecha_nacimiento"])
+    tit = tit[tit["tipo_tarjeta"].ne("junior")].copy()
+
+    con = tit["tipo_tarjeta"].notna()
+    dias_con = (tit.loc[con, "fecha_emision"] - tit.loc[con, "apertura"]).dt.days.to_numpy()
+    disponibles = (FIN_DATOS - tit.loc[~con, "apertura"]).dt.days.to_numpy()
+    sorteo = []
+    for d in disponibles:                       # antigüedad sorteada de las cuentas con tarjeta
+        opciones = dias_con[dias_con <= d]
+        sorteo.append(float(rng.choice(opciones)) if len(opciones) else np.nan)
+    ref = tit["apertura"] + pd.to_timedelta(pd.Series(np.nan, index=tit.index), unit="D")
+    ref.loc[con] = tit.loc[con, "fecha_emision"].astype(ref.dtype)
+    ref.loc[~con] = (tit.loc[~con, "apertura"] + pd.to_timedelta(np.array(sorteo), unit="D")).astype(ref.dtype)
+    tit["fecha_ref"] = ref
+    tit = tit.dropna(subset=["fecha_ref"])
+    tit["edad"] = ((tit["fecha_ref"] - tit["fecha_nacimiento"]).dt.days / 365.25).astype(int)
+    tit = tit[tit["edad"] >= EDAD_MINIMA_M2]
+
+    t = trans.merge(tit[["id_cuenta", "fecha_ref"]], on="id_cuenta")
+    t = t[t["fecha_dt"] < t["fecha_ref"]].sort_values(["id_cuenta", "fecha_dt", "id_transaccion"])
     t["ingreso"] = np.where(t["tipo_transaccion"] == "PRIJEM", t["monto_transaccion"].abs(), 0.0)
     t["egreso"] = np.where(t["tipo_transaccion"] != "PRIJEM", t["monto_transaccion"].abs(), 0.0)
+    t["efectivo"] = np.where(t["operation"] == "VYBER", t["monto_transaccion"].abs(), 0.0)
     t["mes_per"] = t["fecha_dt"].dt.to_period("M")
     g = t.groupby("id_cuenta")
     meses = g["mes_per"].nunique().clip(lower=1)
-    agg = pd.DataFrame({
-        "saldo_promedio_cuenta": g["saldo_cuenta"].mean(),
-        "saldo_minimo_cuenta": g["saldo_cuenta"].min(),
-        "saldo_maximo_cuenta": g["saldo_cuenta"].max(),
+    previo = pd.DataFrame({
+        "saldo_promedio_previo": g["saldo_cuenta"].mean(),
+        "saldo_minimo_previo": g["saldo_cuenta"].min(),
+        "saldo_maximo_previo": g["saldo_cuenta"].max(),
+        "saldo_final_previo": g["saldo_cuenta"].last(),
         "ingreso_mensual": g["ingreso"].sum() / meses,
         "egreso_mensual": g["egreso"].sum() / meses,
+        "retiro_efectivo_mensual": g["efectivo"].sum() / meses,
         "movimientos_mes": g.size() / meses,
+        "meses_historial": meses,
     }).reset_index()
+    assert (t["operation"] != "VYBER KARTOU").all(), "Retiro con tarjeta antes de la referencia"
 
-    tit = clientes[clientes["es_titular"] == 1][
-        ["id_cliente", "id_distrito", "tiene_prestamo", "total_ordenes_activas"]
-    ]
-    df = (
-        perfiles[["id_cuenta", "id_cliente", "sexo", "edad_corte", "meses_vida"]]
-        .merge(adopcion[["id_cuenta", "RETIRO_TARJETA"]], on="id_cuenta", how="inner")
-        .merge(agg, on="id_cuenta", how="inner")
-        .merge(tit, on="id_cliente", how="left")
-        .merge(distritos[["id_distrito", "nombre_distrito"] + COL_DISTRITO], on="id_distrito", how="left")
-    )
-    df["clase"] = df["RETIRO_TARJETA"].astype(int)
-    df["tiene_prestamo"] = df["tiene_prestamo"].fillna(0).astype(int)
-    df["ordenes_activas"] = df["total_ordenes_activas"].fillna(0).astype(int)
-    df["edad"] = df["edad_corte"]
+    p = prestamos[["id_cuenta", "fecha_otorgamiento"]].copy()
+    p["fecha_otorgamiento"] = pd.to_datetime(p["fecha_otorgamiento"])
+    df = tit.merge(previo, on="id_cuenta").merge(p, on="id_cuenta", how="left")
+    df["tiene_prestamo_previo"] = (df["fecha_otorgamiento"] < df["fecha_ref"]).astype(int)
+    disp = pd.read_csv(DF_DIR / "df_disposiciones.csv")
+    cuentas_disp = set(disp.loc[disp["tipo_disposicion"] == "DISPONENT", "id_cuenta"])
+    df["tiene_disponente"] = df["id_cuenta"].isin(cuentas_disp).astype(int)
     df["es_mujer"] = (df["sexo"] == "F").astype(int)
+    df = df.merge(distritos[["id_distrito", "nombre_distrito"] + COL_DISTRITO], on="id_distrito", how="left")
+    df["clase"] = df["tipo_tarjeta"].map({"classic": 1, "gold": 2}).fillna(0).astype(int)
+    df["fecha_referencia"] = df["fecha_ref"].dt.strftime("%Y-%m-%d")
 
     df, rep = limpiar(df, X_M2, "clase", "M2")
     df["particion"] = particion_estratificada(df["clase"].values)
     df["nombre_clase"] = df["clase"].map(NOMBRES_M2)
-    cols = ["id_cuenta", "nombre_distrito"] + X_M2 + ["clase", "nombre_clase", "particion"]
+    print("  clases:", df["nombre_clase"].value_counts().to_dict())
+    cols = ["id_cuenta", "nombre_distrito", "fecha_referencia"] + X_M2 + ["clase", "nombre_clase", "particion"]
     df[cols].to_csv(OUT_DIR / "M2_propension_tarjeta.csv", index=False, encoding="utf-8")
     return resumir_clasificacion(
         df, X_M2, NOMBRES_M2, rep,
-        "Estima la propensión de un cliente a adoptar tarjeta de crédito según su perfil financiero sin incluir retiros con tarjeta (salida sigmoide).",
-        "sigmoid",
+        "Recomienda qué tarjeta ofrecer (ninguna, classic o gold) a un titular adulto con su historia anterior "
+        "a la emisión; las cuentas sin tarjeta usan una fecha de referencia con la misma antigüedad (salida softmax).",
+        "softmax",
     )
 
 
@@ -565,19 +604,24 @@ def construir_diccionario(nombres_m3):
             ],
         },
         "M2": {
-            "titulo": "Propensión a tarjeta de crédito", "tipo": "clasificacion", "salida": "sigmoid",
+            "titulo": "Qué tarjeta ofrecer (sin tarjeta, classic o gold)", "tipo": "clasificacion", "salida": "softmax",
             "orden_X": X_M2, "clases": {str(k): v for k, v in NOMBRES_M2.items()},
             "campos": [
-                {"campo": "saldo_promedio_cuenta", "etiqueta": "Saldo promedio de la cuenta", "tipo": "decimal", "genera": ["saldo_promedio_cuenta"]},
-                {"campo": "saldo_minimo_cuenta", "etiqueta": "Saldo mínimo de la cuenta", "tipo": "decimal", "genera": ["saldo_minimo_cuenta"]},
-                {"campo": "saldo_maximo_cuenta", "etiqueta": "Saldo máximo de la cuenta", "tipo": "decimal", "genera": ["saldo_maximo_cuenta"]},
+                {"campo": "saldo_promedio_previo", "etiqueta": "Saldo promedio hasta hoy", "tipo": "decimal", "genera": ["saldo_promedio_previo"]},
+                {"campo": "saldo_minimo_previo", "etiqueta": "Saldo mínimo hasta hoy", "tipo": "decimal", "genera": ["saldo_minimo_previo"]},
+                {"campo": "saldo_maximo_previo", "etiqueta": "Saldo máximo hasta hoy", "tipo": "decimal", "genera": ["saldo_maximo_previo"]},
+                {"campo": "saldo_final_previo", "etiqueta": "Saldo actual", "tipo": "decimal", "genera": ["saldo_final_previo"]},
                 {"campo": "ingreso_mensual", "etiqueta": "Ingreso mensual promedio", "tipo": "decimal", "genera": ["ingreso_mensual"]},
                 {"campo": "egreso_mensual", "etiqueta": "Egreso mensual promedio", "tipo": "decimal", "genera": ["egreso_mensual"]},
-                {"campo": "movimientos_mes", "etiqueta": "Movimientos por mes (sin tarjeta)", "tipo": "decimal", "genera": ["movimientos_mes"]},
-                {"campo": "meses_vida", "etiqueta": "Antigüedad de la cuenta (meses)", "tipo": "entero", "genera": ["meses_vida"]},
-                tiene_prestamo,
-                {"campo": "ordenes_activas", "etiqueta": "Órdenes permanentes activas", "tipo": "entero", "genera": ["ordenes_activas"]},
-                edad, sexo, distrito,
+                {"campo": "retiro_efectivo_mensual", "etiqueta": "Retiro mensual en efectivo", "tipo": "decimal", "genera": ["retiro_efectivo_mensual"]},
+                {"campo": "movimientos_mes", "etiqueta": "Movimientos por mes", "tipo": "decimal", "genera": ["movimientos_mes"]},
+                {"campo": "meses_historial", "etiqueta": "Antigüedad de la cuenta (meses)", "tipo": "entero", "genera": ["meses_historial"]},
+                {"campo": "tiene_prestamo_previo", "etiqueta": "¿Tiene préstamo? (si/no)", "tipo": "texto",
+                 "genera": ["tiene_prestamo_previo"], "regla": "si -> 1, no -> 0"},
+                {"campo": "tiene_disponente", "etiqueta": "¿La cuenta tiene un segundo usuario (disponente)? (si/no)", "tipo": "texto",
+                 "genera": ["tiene_disponente"], "regla": "si -> 1, no -> 0"},
+                {**edad, "regla": "Mínimo 21 años (la tarjeta junior es para menores de 21 y no entra al modelo)."},
+                sexo, distrito,
             ],
         },
         "M3": {
@@ -632,14 +676,14 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     distritos, clientes, perfiles, adopcion, prestamos, trans = cargar_fuentes()
     m1 = construir_m1(prestamos, trans, distritos)
-    m2 = construir_m2(perfiles, clientes, adopcion, trans, distritos)
+    m2 = construir_m2(clientes, perfiles, prestamos, trans, distritos)
     m3, nombres_m3 = construir_m3(perfiles, clientes, trans, distritos)
     m4 = construir_m4(perfiles, clientes, trans, distritos)
     m5 = construir_m5(perfiles, clientes, trans, distritos)
 
     resumen = {
         "semilla": SEMILLA,
-        "particion": "60/20/20 (estratificada en M1/M2/M4; agrupada por cuenta en M3/M5)",
+        "particion": "60/20/20 (estratificada en M1/M2/M4, una fila por cuenta; agrupada por cuenta en M3/M5)",
         "hoeffding_formula": "N_test >= ln(2/delta) / (2*eps^2)",
         "M1": m1, "M2": m2, "M3": m3, "M4": m4, "M5": m5,
     }

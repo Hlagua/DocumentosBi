@@ -1,9 +1,9 @@
 {
   "sistema": "S4",
-  "titulo": "Riesgo de impago de un préstamo nuevo",
+  "titulo": "Mora al corte (31/12/1998) de un préstamo",
   "clases": [
-    "Paga sin problemas (A o C)",
-    "Impago (B o D)"
+    "Al día al corte (A o C)",
+    "En mora o impago al corte (B o D)"
   ],
   "criterio_seleccion": "mayor exactitud balanceada en validación",
   "hiperparametros_fijos": {
@@ -16,6 +16,18 @@
     "pesos_por_clase": {
       "0": 0.5631868131868132,
       "1": 4.456521739130435
+    }
+  },
+  "balanceo": {
+    "estrategia": "pesos",
+    "descripcion": "datos reales con pesos por clase en la pérdida",
+    "entrenamiento_original_por_clase": {
+      "0": 364,
+      "1": 46
+    },
+    "entrenamiento_usado_por_clase": {
+      "0": 364,
+      "1": 46
     }
   },
   "busqueda": [
@@ -365,13 +377,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9711,
         "sensibilidad": 0.8297,
         "f1": 0.8948,
         "soporte": 364
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.3737,
         "sensibilidad": 0.8043,
         "f1": 0.5103,
@@ -395,13 +407,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9709,
         "sensibilidad": 0.8264,
         "f1": 0.8929,
         "soporte": 121
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.3636,
         "sensibilidad": 0.8,
         "f1": 0.5,
@@ -425,13 +437,13 @@
       ]
     ],
     "por_clase": {
-      "Paga sin problemas (A o C)": {
+      "Al día al corte (A o C)": {
         "precision": 0.9346,
         "sensibilidad": 0.8264,
         "f1": 0.8772,
         "soporte": 121
       },
-      "Impago (B o D)": {
+      "En mora o impago al corte (B o D)": {
         "precision": 0.2759,
         "sensibilidad": 0.5333,
         "f1": 0.3636,
@@ -446,14 +458,14 @@
   "diferencia_E_out_E_in": 0.0327,
   "validacion_cruzada_5": {
     "errores": [
-      0.1545,
-      0.1651,
-      0.1651,
+      0.2273,
       0.156,
-      0.1651
+      0.2385,
+      0.1284,
+      0.2018
     ],
-    "error_promedio": 0.1612,
-    "desviacion": 0.0048
+    "error_promedio": 0.1904,
+    "desviacion": 0.042
   },
   "comparacion_prueba": {
     "red_neuronal": {
@@ -473,5 +485,5 @@
       "exactitud_balanceada": 0.5
     }
   },
-  "segundos": 278.3
+  "segundos": 73.7
 }

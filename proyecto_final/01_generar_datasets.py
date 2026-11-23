@@ -17,9 +17,12 @@ Reglas que cumple cada dataset:
     salvo los 4 indicadores del distrito, que se obtienen del nombre del
     distrito escrito por el usuario.
   * Limpieza: sin nulos, sin duplicados exactos y con rangos válidos.
-  * Partición estratificada 60/20/20 (entrenamiento / validación / prueba)
-    con semilla fija, guardada en la columna `particion` para que todos los
-    modelos usen exactamente las mismas filas.
+  * Partición 60/20/20 (entrenamiento / validación / prueba) con semilla
+    fija, guardada en la columna `particion` para que todos los modelos usen
+    exactamente las mismas filas. En S1, S2 y S3 la partición es POR CUENTA
+    (estratificada por clase): todas las filas de una cuenta quedan en un solo
+    lado, así la prueba responde "¿y si es un cliente nuevo?". En S4 cada
+    fila ya es una cuenta distinta.
   * Tamaño mínimo de prueba calculado con la desigualdad de Hoeffding:
         P[|E_out_estimado - E_out| > eps] <= 2·exp(-2·eps²·N_test)
         =>  N_test >= ln(2/delta) / (2·eps²)
@@ -31,9 +34,12 @@ Sistemas (todos multiclase, salida softmax):
       préstamo (UVER), seguro (POJISTNE) y arrendamiento (LEASING).
   S3. Estado del saldo de la cuenta el mes siguiente (3 clases): estable o
       creciente, caída sin sobregiro y sobregiro.
-  S4. Riesgo de impago de un préstamo nuevo (2 clases, también con softmax):
-      paga sin problemas (A, C) o impago (B, D). Es el sistema binario
-      permitido; las X son datos que el banco conoce al aprobar el préstamo.
+  S4. Mora al corte del 31/12/1998 de un préstamo (2 clases, también con
+      softmax): al día (A, C) o en mora/impago (B, D) en esa fecha. Los
+      préstamos C siguen abiertos y podrían caer en mora después del corte,
+      por eso la etiqueta es "al corte" y no "pagará o no pagará". Es el
+      sistema binario permitido; las X son datos que el banco conoce al
+      aprobar el préstamo.
 
 Salidas en `proyecto_final/datos/`:
   S1_transacciones.csv, S2_ordenes.csv, S3_saldo_mensual.csv,
@@ -95,6 +101,22 @@ def muestrear_por_clase(df, n_por_clase, conservar_completas=()):
             g = g.sample(n=n_por_clase, random_state=SEMILLA)
         partes.append(g)
     return pd.concat(partes, ignore_index=True)
+
+
+def particion_por_cuenta(y, cuentas, semilla=SEMILLA):
+    """
+    60/20/20 agrupado por cuenta y estratificado por clase: se arman 5 bloques
+    de cuentas con la misma proporción de clases (3 de entrenamiento, 1 de
+    validación y 1 de prueba). Ninguna cuenta aparece en dos particiones.
+    """
+    from sklearn.model_selection import StratifiedGroupKFold
+
+    etiquetas = np.empty(len(y), dtype=object)
+    bloques = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=semilla).split(
+        np.zeros(len(y)), np.asarray(y), np.asarray(cuentas))
+    for k, (_, idx) in enumerate(bloques):
+        etiquetas[idx] = "entrenamiento" if k < 3 else ("validacion" if k == 3 else "prueba")
+    return etiquetas
 
 
 def particion_estratificada(y, semilla=SEMILLA, proporciones=(0.6, 0.2, 0.2)):
@@ -217,7 +239,7 @@ def construir_s1(trans, distritos):
 
     t = t[t["monto"] > 0]
     t, rep = limpiar(t, X_S1, "S1")
-    t["particion"] = particion_estratificada(t["clase"].values)
+    t["particion"] = particion_por_cuenta(t["clase"].values, t["id_cuenta"].values)
     t["nombre_clase"] = t["clase"].map(NOMBRES_S1)
     cols = ["id_transaccion", "id_cuenta", "fecha", "nombre_distrito"] + X_S1 + ["clase", "nombre_clase", "particion"]
     t = t[cols]
@@ -266,7 +288,7 @@ def construir_s2(ordenes, clientes, perfiles, distritos):
     o["saldo_promedio_cuenta"] = o["saldo_promedio"]
 
     o, rep = limpiar(o, X_S2, "S2")
-    o["particion"] = particion_estratificada(o["clase"].values)
+    o["particion"] = particion_por_cuenta(o["clase"].values, o["id_cuenta"].values)
     o["nombre_clase"] = o["clase"].map(NOMBRES_S2)
     cols = ["id_orden", "id_cuenta", "nombre_distrito"] + X_S2 + ["clase", "nombre_clase", "particion"]
     o = o[cols]
@@ -339,7 +361,7 @@ def construir_s3(trans, perfiles, clientes, distritos):
     # Muestra: todos los meses que terminan en sobregiro y 2,000 de cada una de las otras clases
     m = muestrear_por_clase(m, MUESTRA_POR_CLASE_S3, conservar_completas=(2,))
     m, rep = limpiar(m, X_S3, "S3")
-    m["particion"] = particion_estratificada(m["clase"].values)
+    m["particion"] = particion_por_cuenta(m["clase"].values, m["id_cuenta"].values)
     m["nombre_clase"] = m["clase"].map(NOMBRES_S3)
     m["periodo"] = m["mes_per"].astype(str)
     cols = ["id_cuenta", "periodo", "nombre_distrito"] + X_S3 + ["clase", "nombre_clase", "particion"]
@@ -350,11 +372,11 @@ def construir_s3(trans, perfiles, clientes, distritos):
 
 
 # ----------------------------------------------------------------------------
-# S4. Riesgo de impago de un préstamo nuevo (2 clases)
+# S4. Mora al corte (31/12/1998) de un préstamo (2 clases)
 # ----------------------------------------------------------------------------
 NOMBRES_S4 = {
-    0: "Paga sin problemas (A o C)",
-    1: "Impago (B o D)",
+    0: "Al día al corte (A o C)",
+    1: "En mora o impago al corte (B o D)",
 }
 X_S4 = [
     "monto_prestamo", "plazo_meses", "cuota_mensual", "ratio_cuota_saldo",
@@ -364,7 +386,7 @@ X_S4 = [
 
 
 def construir_s4(prestamos, trans, distritos):
-    print("\n[S4] Riesgo de impago de un préstamo nuevo (Fact_Prestamos)")
+    print("\n[S4] Mora al corte (31/12/1998) de un préstamo (Fact_Prestamos)")
     p = prestamos.copy()
     p["clase"] = p["estado_prestamo"].isin(["B", "D"]).astype(int)
     p["fecha_otorgamiento"] = pd.to_datetime(p["fecha_otorgamiento"])
@@ -405,7 +427,8 @@ def construir_s4(prestamos, trans, distritos):
     p = p[cols]
     p.to_csv(OUT_DIR / "S4_prestamos.csv", index=False, encoding="utf-8")
     return resumir(p, X_S4, NOMBRES_S4, rep,
-                   "Estima si un préstamo nuevo terminará en impago según el monto, el plazo y el historial previo de la cuenta.")
+                   "Estima si un préstamo estaría en mora o impago al corte del 31/12/1998 según el monto, el plazo y el "
+                   "historial previo de la cuenta. Los préstamos vigentes al día (C) podrían caer en mora después del corte.")
 
 
 # ----------------------------------------------------------------------------
@@ -459,7 +482,7 @@ def diccionario():
             {"campo": "monto_medio_mov", "etiqueta": "Monto medio por movimiento", "tipo": "decimal",
              "genera": ["monto_medio_mov"]},
             edad, sexo, distrito]},
-        "S4": {"titulo": "Riesgo de impago de un préstamo nuevo", "orden_X": X_S4, "clases": NOMBRES_S4, "campos": [
+        "S4": {"titulo": "Mora al corte (31/12/1998) de un préstamo", "orden_X": X_S4, "clases": NOMBRES_S4, "campos": [
             {"campo": "monto_prestamo", "etiqueta": "Monto solicitado", "tipo": "decimal", "genera": ["monto_prestamo"]},
             {"campo": "plazo_meses", "etiqueta": "Plazo en meses", "tipo": "entero",
              "genera": ["plazo_meses", "cuota_mensual", "ratio_cuota_saldo"],

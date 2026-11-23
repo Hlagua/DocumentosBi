@@ -1,6 +1,6 @@
 {
   "semilla": 42,
-  "particion": "60/20/20 (estratificada en M1/M2/M4; agrupada por cuenta en M3/M5)",
+  "particion": "60/20/20 (estratificada en M1/M2/M4, una fila por cuenta; agrupada por cuenta en M3/M5)",
   "hoeffding_formula": "N_test >= ln(2/delta) / (2*eps^2)",
   "M1": {
     "tipo": "clasificacion",
@@ -135,20 +135,22 @@
   },
   "M2": {
     "tipo": "clasificacion",
-    "tipo_salida": "sigmoid",
-    "descripcion": "Estima la propensión de un cliente a adoptar tarjeta de crédito según su perfil financiero sin incluir retiros con tarjeta (salida sigmoide).",
-    "n_filas": 4500,
-    "n_caracteristicas": 15,
+    "tipo_salida": "softmax",
+    "descripcion": "Recomienda qué tarjeta ofrecer (ninguna, classic o gold) a un titular adulto con su historia anterior a la emisión; las cuentas sin tarjeta usan una fecha de referencia con la misma antigüedad (salida softmax).",
+    "n_filas": 3988,
+    "n_caracteristicas": 17,
     "caracteristicas": [
-      "saldo_promedio_cuenta",
-      "saldo_minimo_cuenta",
-      "saldo_maximo_cuenta",
+      "saldo_promedio_previo",
+      "saldo_minimo_previo",
+      "saldo_maximo_previo",
+      "saldo_final_previo",
       "ingreso_mensual",
       "egreso_mensual",
+      "retiro_efectivo_mensual",
       "movimientos_mes",
-      "meses_vida",
-      "tiene_prestamo",
-      "ordenes_activas",
+      "meses_historial",
+      "tiene_prestamo_previo",
+      "tiene_disponente",
       "edad",
       "es_mujer",
       "poblacion",
@@ -157,104 +159,115 @@
       "tasa_criminalidad"
     ],
     "clases": {
-      "Sin tarjeta de crédito": 3693,
-      "Propenso / con tarjeta de crédito": 807
+      "Sin tarjeta": 3252,
+      "Tarjeta classic": 649,
+      "Tarjeta gold": 87
     },
-    "clase_mayoritaria_prop": 0.8207,
+    "clase_mayoritaria_prop": 0.8154,
     "particion": {
-      "entrenamiento": 2700,
-      "validacion": 900,
-      "prueba": 900
+      "entrenamiento": 2392,
+      "validacion": 797,
+      "prueba": 799
     },
     "hoeffding": {
       "delta": 0.05,
       "eps_objetivo": 0.02,
       "n_test_minimo_para_eps_objetivo": 4612,
-      "n_test_real": 900,
-      "eps_garantizado_con_n_test_real": 0.0453
+      "n_test_real": 799,
+      "eps_garantizado_con_n_test_real": 0.048
     },
     "limpieza": {
-      "filas_iniciales": 4500,
+      "filas_iniciales": 3988,
       "nulos_por_columna": {},
-      "filas_tras_quitar_nulos": 4500,
+      "filas_tras_quitar_nulos": 3988,
       "duplicados_eliminados": 0,
-      "filas_finales": 4500
+      "filas_finales": 3988
     },
     "rangos_X": {
-      "saldo_promedio_cuenta": {
-        "min": 5711.346153846154,
-        "max": 81405.86771300448,
-        "media": 36656.3295
+      "saldo_promedio_previo": {
+        "min": 6692.261780104712,
+        "max": 83600.36090225563,
+        "media": 35134.6023
       },
-      "saldo_minimo_cuenta": {
-        "min": -41126.0,
-        "max": 24483.0,
-        "media": 431.6709
+      "saldo_minimo_previo": {
+        "min": -19372.0,
+        "max": 32678.0,
+        "media": 667.6911
       },
-      "saldo_maximo_cuenta": {
-        "min": 16378.0,
-        "max": 209637.0,
-        "media": 73181.9989
+      "saldo_maximo_previo": {
+        "min": 15151.0,
+        "max": 196107.0,
+        "media": 64305.8631
+      },
+      "saldo_final_previo": {
+        "min": -18528.0,
+        "max": 159907.0,
+        "media": 36371.3819
       },
       "ingreso_mensual": {
-        "min": 934.6938775510204,
-        "max": 75197.3125,
-        "media": 17355.2132
+        "min": 1100.0,
+        "max": 99238.11111111111,
+        "media": 16833.0664
       },
       "egreso_mensual": {
-        "min": 107.6923076923077,
-        "max": 72087.4375,
-        "media": 15984.4059
+        "min": 0.0,
+        "max": 94384.0,
+        "media": 14665.2026
+      },
+      "retiro_efectivo_mensual": {
+        "min": 0.0,
+        "max": 94384.0,
+        "media": 11855.6119
       },
       "movimientos_mes": {
         "min": 1.0,
-        "max": 11.466666666666667,
-        "media": 5.5219
+        "max": 11.083333333333334,
+        "media": 4.9286
       },
-      "meses_vida": {
-        "min": 12.06,
-        "max": 71.95,
-        "media": 40.7698
+      "meses_historial": {
+        "min": 3.0,
+        "max": 71.0,
+        "media": 20.9208
       },
-      "tiene_prestamo": {
+      "tiene_prestamo_previo": {
         "min": 0.0,
         "max": 1.0,
-        "media": 0.1516
+        "media": 0.1113
       },
-      "ordenes_activas": {
+      "tiene_disponente": {
         "min": 0.0,
-        "max": 5.0,
-        "media": 1.438
+        "max": 1.0,
+        "media": 0.2059
       },
       "edad": {
-        "min": 16.0,
+        "min": 21.0,
         "max": 80.0,
-        "media": 44.1149
+        "media": 45.5629
       },
       "es_mujer": {
         "min": 0.0,
         "max": 1.0,
-        "media": 0.4907
+        "media": 0.4902
       },
       "poblacion": {
         "min": 42821.0,
         "max": 1204953.0,
-        "media": 267320.0931
+        "media": 265819.7545
       },
       "salario_promedio": {
         "min": 8110.0,
         "max": 12541.0,
-        "media": 9509.1242
+        "media": 9505.4135
       },
       "tasa_desempleo": {
         "min": 0.0,
         "max": 9.0,
-        "media": 3.4544
+        "media": 3.4727
       },
       "tasa_criminalidad": {
         "min": 888.0,
         "max": 99107.0,
-        "media": 16171.024
+        "media": 16041.1309
       }
     }
   },

@@ -9,7 +9,7 @@ Entrena los 5 modelos predictivos de la literatura sobre la base PKDD'99 /
 Berka usando redes neuronales (Keras/TensorFlow) con las 3 capas de salida
 vistas en clase:
   * M1 (Riesgo de impago):              clasificación binaria  -> SIGMOIDE
-  * M2 (Propensión a tarjeta):          clasificación binaria  -> SIGMOIDE
+  * M2 (Qué tarjeta ofrecer):           clasificación 3 clases -> SOFTMAX
   * M3 (Segmentación de clientes):      clasificación 4 clases -> SOFTMAX
   * M4 (Fuga / Churn silencioso):       clasificación binaria  -> SIGMOIDE
   * M5 (Pronóstico de transacciones):   regresión continua     -> LINEAL

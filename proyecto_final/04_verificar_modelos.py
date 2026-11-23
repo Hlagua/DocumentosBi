@@ -200,7 +200,11 @@ def datos_nunca_vistos():
     columnas1 = [c for c in ds1.columns if c in c1.columns and c not in ("id_transaccion", "fecha", "nombre_distrito",
                                                                        "nombre_clase", "particion", "clase", "id_cuenta")]
     control["S1"] = comprobar_reconstruccion(c1, ds1, ["id_transaccion"], columnas1)
-    libres = c1[~c1["id_transaccion"].isin(ds1["id_transaccion"])]
+    # Nunca vistos = movimientos que no están en el dataset y cuya CUENTA tampoco se usó para
+    # entrenar ni validar (cuentas de prueba o cuentas que no entraron al dataset).
+    vistas1 = set(ds1.loc[ds1["particion"] != "prueba", "id_cuenta"])
+    libres = c1[~c1["id_transaccion"].isin(ds1["id_transaccion"]) & ~c1["id_cuenta"].isin(vistas1)]
+    control["S1_cuentas_nuevas"] = int(libres["id_cuenta"].nunique())
     salida["S1"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres.groupby("clase")])
     control["S1_disponibles"] = {int(k): int(v) for k, v in libres["clase"].value_counts().sort_index().items()}
 
@@ -210,9 +214,16 @@ def datos_nunca_vistos():
                                                                        "nombre_clase", "particion", "clase")]
     control["S3"] = comprobar_reconstruccion(c3, ds3, ["id_cuenta", "periodo"], columnas3)
     usados = set(zip(ds3["id_cuenta"], ds3["periodo"]))
-    libres3 = c3[[(a, b) not in usados for a, b in zip(c3["id_cuenta"], c3["periodo"])]]
+    vistas3 = set(ds3.loc[ds3["particion"] != "prueba", "id_cuenta"])
+    nuevas3 = ~c3["id_cuenta"].isin(vistas3)
+    libres3 = c3[nuevas3 & np.array([(a, b) not in usados for a, b in zip(c3["id_cuenta"], c3["periodo"])])]
     salida["S3"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres3.groupby("clase")])
     control["S3_disponibles"] = {int(k): int(v) for k, v in libres3["clase"].value_counts().sort_index().items()}
+    control["S3_cuentas_nuevas"] = int(libres3["id_cuenta"].nunique())
+    # Prueba con la PROPORCIÓN REAL del banco: todos los meses de las cuentas que no se usaron para
+    # entrenar ni validar (en el banco el sobregiro es ~0.4 % de los meses).
+    salida["S3_real"] = c3[nuevas3].copy()
+    control["S3_real_por_clase"] = {int(k): int(v) for k, v in salida["S3_real"]["clase"].value_counts().sort_index().items()}
     for s in ("S1", "S3"):
         print(f"  {s}: reconstrucción idéntica al dataset = {control[s][0]} ({control[s][1]:,} filas comparadas); "
               f"nunca vistos disponibles por clase {control[s + '_disponibles']}", flush=True)
@@ -335,6 +346,17 @@ def main():
                 frontera_datos = prueba
             r["C_frontera"] = prueba_frontera(modelo, frontera_datos)
             r["D_atajos"] = prueba_atajos(s, modelo, prueba, n)
+            if s == "S2":
+                # Atajo dentro de la fila: la orden de préstamo suele tener monto == cuota del préstamo.
+                # Regla de una línea: "si el monto coincide con la cuota, es préstamo; si no, es hogar".
+                regla = np.where(np.isclose(prueba["monto_orden"], prueba["cuota_prestamo"]), 1, 0)
+                r["E_regla_monto_cuota"] = metricas(prueba["clase"], regla, n)
+            if s == "S3":
+                # Misma red evaluada con la proporción REAL de meses (cuentas no usadas para entrenar)
+                real = nuevos["S3_real"]
+                p_real = modelo.probabilidades(real).argmax(1)
+                r["F_proporcion_real"] = metricas(real["clase"], p_real, n)
+                r["F_proporcion_real"]["siempre_estable"] = metricas(real["clase"], np.zeros(len(real), dtype=int), n)
             resultados["sistemas"][s]["versiones"][version] = r
             print(f"  prueba bal {r['prueba']['exactitud_balanceada']} | parecidos bal "
                   f"{r['A_parecidos']['exactitud_balanceada_con_ruido']} (iguales {r['A_parecidos']['predicciones_iguales_con_ruido']})"
@@ -359,9 +381,24 @@ def escribir_markdown(r):
          "(C) casos en la frontera de decisión y (D) búsqueda de atajos con importancia por permutación y datos "
          "sintéticos extremos. S1 ya estaba balanceado, por eso sus dos columnas usan el mismo modelo.", ""]
     ctrl = r["control_reconstruccion"]
+    cuentas_prueba = {s: pd.read_csv(DATOS / ARCHIVOS[s], usecols=["id_cuenta", "particion"])
+                      .query("particion == 'prueba'")["id_cuenta"].nunique() for s in ("S1", "S3")}
+    real3 = ctrl.get("S3_real_por_clase", {})
     L += ["**Control:** los datos nunca vistos se recalcularon con el mismo procedimiento del dataset. "
           f"Al recalcular las filas que sí están en el dataset, coinciden exactamente: S1 = {ctrl['S1'][0]} "
-          f"({ctrl['S1'][1]:,} filas), S3 = {ctrl['S3'][0]} ({ctrl['S3'][1]:,} filas).", ""]
+          f"({ctrl['S1'][1]:,} filas), S3 = {ctrl['S3'][0]} ({ctrl['S3'][1]:,} filas).", "",
+          "**Partición por cuenta:** en S1, S2 y S3 ninguna cuenta está en dos particiones. "
+          "Los \"nunca vistos\" (B) salen solo de cuentas que no se usaron para entrenar ni validar "
+          f"(S1: {ctrl.get('S1_cuentas_nuevas', '—')} cuentas; S3: {ctrl.get('S3_cuentas_nuevas', '—')} cuentas), "
+          "pero no son un grupo de clientes aparte: incluyen las cuentas de la prueba "
+          f"(S1: {cuentas_prueba['S1']} de las {ctrl.get('S1_cuentas_nuevas', '—')}). "
+          "Por eso (B) confirma, con otros movimientos de esos mismos clientes, que el resultado de la prueba se sostiene; "
+          "no demuestra que la red acierte igual en otra población.", "",
+          "(E) compara S2 con una regla de una línea. (F) evalúa S3 con la proporción real de meses del banco. "
+          f"Los {real3.get('2', '—')} sobregiros de (F) son exactamente los mismos de la prueba, porque todos los "
+          "sobregiros del banco ya estaban en el dataset; la sensibilidad de sobregiro en (F) repite la de la prueba y no es "
+          "una medida nueva. Lo nuevo de (F) es la exactitud global frente a \"siempre estable\", porque casi todos esos "
+          "meses estables y de caída no están en la prueba.", ""]
     for s, info in r["sistemas"].items():
         v = info["versiones"]
         L += [f"## {s} · {info['titulo']}", "", "| Prueba | Pesos por clase | Sobremuestreo 50/50 |", "| :--- | :---: | :---: |"]
@@ -384,6 +421,21 @@ def escribir_markdown(r):
         fila("C. Clase real entre las dos más probables", lambda x: pct(x["C_frontera"]["clase_verdadera_entre_las_dos_mas_probables"]))
         fila("D. Característica más influyente (peso relativo)",
              lambda x: f"{x['D_atajos']['caracteristica_principal']} ({pct(x['D_atajos']['peso_relativo_principal'])})")
+        if "E_regla_monto_cuota" in v["pesos"]:
+            fila("E. Regla de una línea (monto = cuota → préstamo; si no, hogar): exactitud / balanceada",
+                 lambda x: f"{pct(x['E_regla_monto_cuota']['exactitud'])} / {pct(x['E_regla_monto_cuota']['exactitud_balanceada'])}")
+            fila("E. Red neuronal en la misma prueba: exactitud / balanceada",
+                 lambda x: f"{pct(x['prueba']['exactitud'])} / {pct(x['prueba']['exactitud_balanceada'])}")
+            fila("E. Sensibilidad de la regla por clase",
+                 lambda x: " · ".join(pct(a) for a in x["E_regla_monto_cuota"]["sensibilidad_por_clase"]))
+        if "F_proporcion_real" in v["pesos"]:
+            fila("F. Proporción real de meses: casos", lambda x: f"{x['F_proporcion_real']['n']:,}")
+            fila("F. Proporción real: exactitud / balanceada de la red",
+                 lambda x: f"{pct(x['F_proporcion_real']['exactitud'])} / {pct(x['F_proporcion_real']['exactitud_balanceada'])}")
+            fila("F. Proporción real: \"siempre estable\" (exactitud)",
+                 lambda x: pct(x["F_proporcion_real"]["siempre_estable"]["exactitud"]))
+            fila("F. Proporción real: sensibilidad por clase",
+                 lambda x: " · ".join(pct(a) for a in x["F_proporcion_real"]["sensibilidad_por_clase"]))
         L.append("")
         for version, etiqueta in (("pesos", "pesos por clase"), ("sobremuestreo", "sobremuestreo")):
             d = v[version]["D_atajos"]

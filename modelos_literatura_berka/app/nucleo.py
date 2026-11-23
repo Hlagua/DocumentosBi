@@ -1,8 +1,8 @@
 """
 Núcleo de inferencia para los 5 modelos de la literatura PKDD'99 / Berka.
 Soporta las 3 capas de salida vistas en clase:
-  * sigmoid (clasificación binaria: M1, M2, M4)
-  * softmax (clasificación multiclase: M3)
+  * sigmoid (clasificación binaria: M1, M4)
+  * softmax (clasificación multiclase: M2, M3)
   * linear  (regresión continua: M5)
 """
 
@@ -25,6 +25,7 @@ MODELOS = RAIZ / "modelos"
 
 CODIGOS = ["M1", "M2", "M3", "M4", "M5"]
 UMBRAL_FRONTERA = 0.10
+CAMPOS_SINO = {"tiene_prestamo", "tiene_prestamo_previo", "tiene_disponente"}
 
 ARCHIVOS = {
     "M1": DATOS / "M1_impago_prestamos.csv",
@@ -36,7 +37,7 @@ ARCHIVOS = {
 
 FUENTES = {
     "M1": "Fact_Prestamos (682 préstamos) + Fact_Transacciones (< fecha_otorgamiento) + Dim_Distrito",
-    "M2": "Adopcion_Producto (RETIRO_TARJETA, 4,500 cuentas) + Fact_Transacciones (sin retiros con tarjeta) + Dim_Distrito",
+    "M2": "cards (892 tarjetas; junior fuera) + Fact_Transacciones (< fecha de emisión o de referencia) + disps + Dim_Distrito",
     "M3": "Perfiles financieros de 4,500 cuentas (K-Means 4 segmentos en entrenamiento) + Dim_Distrito",
     "M4": "Fact_Transacciones 1998 sin intereses (X = H1 1998, y = fuga/caída en H2 1998) + Dim_Distrito",
     "M5": "Fact_Transacciones 1997–1998 sin intereses (X = mes t y t-1, y = monto mes t+1) + Dim_Distrito",
@@ -76,7 +77,7 @@ def formato_de(campo):
         return "nombre"
     if n == "sexo":
         return "sexo"
-    if n == "tiene_prestamo":
+    if n in CAMPOS_SINO:
         return "sino"
     return campo["tipo"]
 
@@ -160,11 +161,11 @@ class ModeloSistema:
                     if t not in ("m", "f"):
                         raise ErrorEntrada(nombre, "Escriba solo M o F.")
                     valores["es_mujer"] = 1 if t == "f" else 0
-                elif nombre == "tiene_prestamo":
+                elif nombre in CAMPOS_SINO:
                     t = normalizar(texto)
                     if t not in ("si", "no"):
                         raise ErrorEntrada(nombre, "Escriba si o no.")
-                    valores["tiene_prestamo"] = 1 if t == "si" else 0
+                    valores[campo["genera"][0]] = 1 if t == "si" else 0
                 elif tipo == "entero":
                     valores[campo["genera"][0]] = leer_entero(nombre, texto)
                 else:
@@ -181,6 +182,8 @@ class ModeloSistema:
                 else:
                     valores["cuota_mensual"] = valores["monto_prestamo"] / valores["plazo_meses"]
                     valores["ratio_cuota_saldo"] = valores["cuota_mensual"] / valores["saldo_promedio_previo"]
+            elif self.codigo == "M2" and valores["edad"] < 21:
+                errores.append(("edad", "El modelo es para titulares de 21 años o más (la tarjeta junior depende solo de la edad)."))
             elif self.codigo == "M3":
                 valores["ratio_retiro_deposito"] = valores["retiro_mensual"] / max(valores["deposito_mensual"], 1.0)
 

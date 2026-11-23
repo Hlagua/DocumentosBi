@@ -315,7 +315,7 @@
     ]
   },
   "S4": {
-    "titulo": "Riesgo de impago de un préstamo nuevo",
+    "titulo": "Mora al corte (31/12/1998) de un préstamo",
     "orden_X": [
       "monto_prestamo",
       "plazo_meses",
@@ -335,8 +335,8 @@
       "tasa_criminalidad"
     ],
     "clases": {
-      "0": "Paga sin problemas (A o C)",
-      "1": "Impago (B o D)"
+      "0": "Al día al corte (A o C)",
+      "1": "En mora o impago al corte (B o D)"
     },
     "campos": [
       {

@@ -56,7 +56,7 @@ from sklearn.metrics import (
     confusion_matrix,
     precision_recall_fscore_support,
 )
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 
 DIR = Path(__file__).resolve().parent
 DATOS = DIR / "datos"
@@ -294,8 +294,12 @@ def procesar(sistema, archivo, diccionario):
     # --- validación cruzada de 5 pliegues sobre entrenamiento + validación ---
     Xcv = np.vstack([X["entrenamiento"], X["validacion"]])
     ycv = np.concatenate([y["entrenamiento"], y["validacion"]])
+    # Pliegues agrupados por cuenta: ninguna cuenta queda a la vez en el entrenamiento y en la
+    # validación de un mismo pliegue (igual que la partición principal).
+    gcv = np.concatenate([part["entrenamiento"]["id_cuenta"].to_numpy(), part["validacion"]["id_cuenta"].to_numpy()])
     errores = []
-    for k, (itr, iva) in enumerate(StratifiedKFold(5, shuffle=True, random_state=SEMILLA).split(Xcv, ycv), 1):
+    pliegues = StratifiedGroupKFold(5, shuffle=True, random_state=SEMILLA).split(Xcv, ycv, gcv)
+    for k, (itr, iva) in enumerate(pliegues, 1):
         pre_k = Preprocesador(columnas, elegida["pca"]).ajustar(Xcv[itr])
         keras.utils.set_random_seed(SEMILLA)
         red_k = construir_red(pre_k.dimension_salida, n_clases, elegida["ocultas"], elegida["activacion"],

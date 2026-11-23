@@ -29,15 +29,15 @@
     "clase_mayoritaria_prop": 0.25,
     "clasificador_aleatorio_error": 0.75,
     "particion": {
-      "entrenamiento": 14400,
-      "validacion": 4800,
-      "prueba": 4800
+      "entrenamiento": 14402,
+      "validacion": 4799,
+      "prueba": 4799
     },
     "hoeffding": {
       "delta": 0.05,
       "eps_objetivo": 0.02,
       "n_test_minimo_para_eps_objetivo": 4612,
-      "n_test_real": 4800,
+      "n_test_real": 4799,
       "eps_garantizado_con_n_test_real": 0.0196
     },
     "limpieza": {
@@ -139,16 +139,16 @@
     "clase_mayoritaria_prop": 0.6877,
     "clasificador_aleatorio_error": 0.75,
     "particion": {
-      "entrenamiento": 3055,
-      "validacion": 1017,
-      "prueba": 1020
+      "entrenamiento": 3056,
+      "validacion": 1018,
+      "prueba": 1018
     },
     "hoeffding": {
       "delta": 0.05,
       "eps_objetivo": 0.02,
       "n_test_minimo_para_eps_objetivo": 4612,
-      "n_test_real": 1020,
-      "eps_garantizado_con_n_test_real": 0.0425
+      "n_test_real": 1018,
+      "eps_garantizado_con_n_test_real": 0.0426
     },
     "limpieza": {
       "filas_iniciales": 5092,
@@ -255,16 +255,16 @@
     "clase_mayoritaria_prop": 0.4248,
     "clasificador_aleatorio_error": 0.6667,
     "particion": {
-      "entrenamiento": 2825,
+      "entrenamiento": 2824,
       "validacion": 942,
-      "prueba": 941
+      "prueba": 942
     },
     "hoeffding": {
       "delta": 0.05,
       "eps_objetivo": 0.02,
       "n_test_minimo_para_eps_objetivo": 4612,
-      "n_test_real": 941,
-      "eps_garantizado_con_n_test_real": 0.0443
+      "n_test_real": 942,
+      "eps_garantizado_con_n_test_real": 0.0442
     },
     "limpieza": {
       "filas_iniciales": 4708,
@@ -353,7 +353,7 @@
     }
   },
   "S4": {
-    "descripcion": "Estima si un préstamo nuevo terminará en impago según el monto, el plazo y el historial previo de la cuenta.",
+    "descripcion": "Estima si un préstamo estaría en mora o impago al corte del 31/12/1998 según el monto, el plazo y el historial previo de la cuenta. Los préstamos vigentes al día (C) podrían caer en mora después del corte.",
     "n_filas": 682,
     "n_caracteristicas": 16,
     "caracteristicas": [
@@ -375,8 +375,8 @@
       "tasa_criminalidad"
     ],
     "clases": {
-      "Paga sin problemas (A o C)": 606,
-      "Impago (B o D)": 76
+      "Al día al corte (A o C)": 606,
+      "En mora o impago al corte (B o D)": 76
     },
     "clase_mayoritaria_prop": 0.8886,
     "clasificador_aleatorio_error": 0.5,

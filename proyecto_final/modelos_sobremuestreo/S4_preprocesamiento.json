@@ -57,8 +57,8 @@
   "usa_pca": false,
   "dimension_red": 16,
   "clases": [
-    "Paga sin problemas (A o C)",
-    "Impago (B o D)"
+    "Al día al corte (A o C)",
+    "En mora o impago al corte (B o D)"
   ],
   "sistema": "S4"
 }
