@@ -1,0 +1,91 @@
+{#
+  Buscador de distritos: se abre con el botón que va debajo de la caja "distrito".
+  Filtra los 77 distritos por nombre o región mientras se escribe y, al elegir uno,
+  copia el nombre en la caja del formulario. La caja de búsqueda no tiene "name",
+  así que no se envía con el formulario: el servidor sigue recibiendo solo el
+  nombre del distrito y lo valida igual que antes.
+#}
+{% set REGIONES = {"Prague": "Praga", "central Bohemia": "Bohemia central", "east Bohemia": "Bohemia oriental",
+                   "north Bohemia": "Bohemia del norte", "south Bohemia": "Bohemia del sur",
+                   "west Bohemia": "Bohemia occidental", "north Moravia": "Moravia del norte",
+                   "south Moravia": "Moravia del sur"} %}
+<button type="button" class="abrir-buscador" data-para="{{ c.campo }}" aria-expanded="false">🔍 Buscar distrito</button>
+<div class="buscador-distritos" id="buscador-{{ c.campo }}" hidden>
+  <input type="text" class="buscar" placeholder="Parte del nombre o de la región (ej.: praha, brno, morav)"
+         autocomplete="off" spellcheck="false" aria-label="Buscar distrito">
+  <div class="conteo"></div>
+  <ul class="lista" role="listbox">
+    {% for d in s.distritos.values()|sort(attribute="nombre_distrito") %}
+    <li role="option" tabindex="-1" data-nombre="{{ d.nombre_distrito }}"
+        data-busqueda="{{ d.nombre_distrito }} {{ d.region }} {{ REGIONES.get(d.region, '') }}">
+      <b>{{ d.nombre_distrito }}</b>
+      <span>{{ REGIONES.get(d.region, d.region) }} · {{ '{:,.0f}'.format(d.poblacion|float) }} hab.</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<style>
+  .abrir-buscador { background:none; color:var(--azul2); border:1px solid var(--azul2); padding:3px 10px;
+                    font-size:12px; margin-top:6px; border-radius:5px; }
+  .abrir-buscador:hover { background:#eef4fb; }
+  .buscador-distritos { border:1px solid var(--borde); border-radius:6px; padding:8px; margin-top:6px; background:#fbfcfe; }
+  .buscador-distritos .conteo { font-size:11px; color:#6b7785; margin:4px 0; }
+  .buscador-distritos .lista { list-style:none; margin:0; padding:0; max-height:220px; overflow-y:auto; }
+  .buscador-distritos li { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px;
+                           display:flex; justify-content:space-between; gap:8px; }
+  .buscador-distritos li[hidden], .buscador-distritos[hidden] { display:none; }
+  .buscador-distritos li span { color:#6b7785; font-size:11px; white-space:nowrap; }
+  .buscador-distritos li:hover, .buscador-distritos li.activo { background:#e8f1fb; }
+</style>
+
+<script>
+(function () {
+  const boton = document.querySelector('.abrir-buscador[data-para="{{ c.campo }}"]');
+  const panel = document.getElementById("buscador-{{ c.campo }}");
+  const caja = document.getElementById("{{ c.campo }}");
+  const buscar = panel.querySelector(".buscar");
+  const items = Array.from(panel.querySelectorAll("li"));
+  const conteo = panel.querySelector(".conteo");
+  const plano = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  items.forEach((li) => (li.dataset.busqueda = plano(li.dataset.busqueda)));
+  let activo = -1;
+
+  function visibles() { return items.filter((li) => !li.hidden); }
+  function marcar(i) {
+    const v = visibles();
+    items.forEach((li) => li.classList.remove("activo"));
+    activo = Math.max(0, Math.min(i, v.length - 1));
+    if (v[activo]) { v[activo].classList.add("activo"); v[activo].scrollIntoView({ block: "nearest" }); }
+  }
+  function filtrar() {
+    const q = plano(buscar.value.trim());
+    items.forEach((li) => (li.hidden = q !== "" && !li.dataset.busqueda.includes(q)));
+    const n = visibles().length;
+    conteo.textContent = n === 0 ? "Ningún distrito coincide." : `${n} de ${items.length} distritos`;
+    marcar(0);
+  }
+  function abrir(mostrar) {
+    panel.hidden = !mostrar;
+    boton.setAttribute("aria-expanded", String(mostrar));
+    if (mostrar) { buscar.value = ""; filtrar(); buscar.focus(); }
+  }
+  function elegir(li) {
+    caja.value = li.dataset.nombre;
+    caja.dispatchEvent(new Event("input", { bubbles: true }));   // limpia el error si lo había
+    caja.dispatchEvent(new Event("blur"));
+    abrir(false);
+    caja.focus();
+  }
+
+  boton.addEventListener("click", () => abrir(panel.hidden));
+  buscar.addEventListener("input", filtrar);
+  buscar.addEventListener("keydown", (ev) => {
+    if (ev.key === "ArrowDown") { ev.preventDefault(); marcar(activo + 1); }
+    else if (ev.key === "ArrowUp") { ev.preventDefault(); marcar(activo - 1); }
+    else if (ev.key === "Enter") { ev.preventDefault(); const v = visibles(); if (v[activo]) elegir(v[activo]); }
+    else if (ev.key === "Escape") { abrir(false); caja.focus(); }
+  });
+  items.forEach((li) => li.addEventListener("click", () => elegir(li)));
+})();
+</script>

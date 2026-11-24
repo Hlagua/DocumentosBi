@@ -16,6 +16,7 @@
                inputmode="{{ 'numeric' if c.formato in ('entero', 'fecha', 'periodo') else ('decimal' if c.formato == 'decimal' else 'text') }}">
         <div class="error" data-error-de="{{ c.campo }}">{{ errores[c.campo] if c.campo in errores }}</div>
         {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
+        {% if c.campo == 'distrito' %}{% include '_buscador_distritos.html' %}{% endif %}
       </div>
       {% endfor %}
     </div>
@@ -26,7 +27,8 @@
 <script>
 /*
  * Cada caja de texto solo deja escribir los caracteres de su tipo (sin listas
- * desplegables ni autocompletado). El servidor vuelve a validar todo.
+ * desplegables ni autocompletado). El distrito se puede escribir o elegir con el
+ * botón "Buscar distrito" (_buscador_distritos.html). El servidor vuelve a validar todo.
  *   entero  -> dígitos (y "-" al inicio si el dato puede ser negativo)
  *   decimal -> dígitos y un solo separador decimal ("." o ",")
  *   fecha   -> AAAA-MM-DD (los guiones se ponen solos)

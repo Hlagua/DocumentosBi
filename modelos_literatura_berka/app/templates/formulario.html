@@ -15,6 +15,7 @@
                placeholder="{{ c.placeholder }}">
         {% if c.campo in errores %}<div class="error">{{ errores[c.campo] }}</div>{% endif %}
         {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
+        {% if c.campo == 'distrito' %}{% include '_buscador_distritos.html' %}{% endif %}
       </div>
       {% endfor %}
     </div>
