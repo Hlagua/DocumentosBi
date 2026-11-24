@@ -28,31 +28,6 @@ Las dos versiones usan los mismos datos, la misma partición 60/20/20 y la misma
 | Seguro (POJISTNE) | 87.7 % | 87.7 % |
 | Arrendamiento (LEASING) | 82.3 % | 80.9 % |
 
-## S3 · Estado del saldo el mes siguiente
-
-| Métrica | Pesos por clase | Sobremuestreo 50/50 |
-| :--- | :---: | :---: |
-| Entrenamiento por clase | 1200 / 1200 / 424 | 1200 / 1200 / 1200 |
-| Arquitectura elegida | PCA → 64-32 tanh | 64-32 tanh |
-| Exactitud (prueba) | 62.1 % | 62.1 % |
-| Exactitud balanceada (prueba) | 67.4 % | 67.5 % |
-| F1 macro (prueba) | 0.658 | 0.667 |
-| E_in (entrenamiento real) | 32.5 % | 32.6 % |
-| E_out (prueba) | 37.9 % | 37.9 % |
-| E_out − E_in (límite 5 puntos) | +5.4 ⚠ | +5.2 ⚠ |
-| Error CV-5 (promedio ± σ) | 36.5 ± 0.9 % | 37.3 ± 1.1 % |
-| Softmax lineal, exactitud balanceada | 64.8 % | 64.5 % |
-| Épocas (mejor época) | 98 (78) | 72 (52) |
-| Tiempo total del proceso | 9.0 min | 8.0 min |
-
-**Sensibilidad por clase (prueba):**
-
-| Clase | Pesos por clase | Sobremuestreo 50/50 |
-| :--- | :---: | :---: |
-| Saldo estable o creciente | 42.5 % | 48.5 % |
-| Caída de saldo sin sobregiro | 73.0 % | 66.8 % |
-| Sobregiro | 86.6 % | 87.3 % |
-
 ## S4 · Mora al corte (31/12/1998) de un préstamo
 
 | Métrica | Pesos por clase | Sobremuestreo 50/50 |

@@ -15,13 +15,16 @@ clase y `modelos_sobremuestreo/`) con cuatro pruebas:
   B. Datos NUNCA VISTOS: casos reales del Data Mart que no están en el
      dataset (ni en entrenamiento, ni en validación, ni en prueba).
        S1: transacciones que no se usaron (hay más de 800 mil).
-       S3: meses cuenta x mes que no se usaron (de las clases 1 y 2; los
-           708 sobregiros reales ya están todos en el dataset).
+       S5: meses cuenta x mes que no se usaron (el dataset es una muestra de
+           9,000 de 131,890 meses).
        S2 y S4: la base no tiene más órdenes con propósito ni más
            préstamos; se informa y se usan solo las pruebas A, C y D.
   C. FRONTERA DE DECISIÓN: casos donde las dos clases más probables están
      a menos de 10 puntos de probabilidad. La red los asigna siempre a una
      de las dos (argmax de softmax); se mide cuántos son y cuánto acierta.
+  F. PROPORCIÓN REAL (S5): todos los meses de las cuentas que no se usaron
+     para entrenar ni validar, con la proporción real de clases, frente a
+     responder siempre "estable".
   D. ATAJOS: (1) importancia por permutación: cuánto cae la exactitud
      balanceada si se desordena una característica; si una sola explica
      casi todo, el modelo depende de ella. (2) datos sintéticos extremos:
@@ -53,7 +56,8 @@ RAIZ = DIR.parent
 DATOS = DIR / "datos"
 DF_DIR = RAIZ / "dataframes"
 SEMILLA = 42
-ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S3": "S3_saldo_mensual.csv", "S4": "S4_prestamos.csv",
+# Sistemas presentados (S3 se descartó el 2026-11-23: no superaba a "siempre estable" con la proporción real)
+ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S4": "S4_prestamos.csv",
             "S5": "S5_movimiento_mensual.csv"}
 VERSIONES = {"pesos": DIR / "modelos", "sobremuestreo": DIR / "modelos_sobremuestreo"}
 COL_DISTRITO = ["poblacion", "salario_promedio", "tasa_desempleo", "tasa_criminalidad"]
@@ -216,23 +220,6 @@ def datos_nunca_vistos():
     salida["S1"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres.groupby("clase")])
     control["S1_disponibles"] = {int(k): int(v) for k, v in libres["clase"].value_counts().sort_index().items()}
 
-    ds3 = pd.read_csv(DATOS / ARCHIVOS["S3"])
-    c3 = s3_completo(trans)
-    columnas3 = [c for c in ds3.columns if c in c3.columns and c not in ("id_cuenta", "periodo", "nombre_distrito",
-                                                                       "nombre_clase", "particion", "clase")]
-    control["S3"] = comprobar_reconstruccion(c3, ds3, ["id_cuenta", "periodo"], columnas3)
-    usados = set(zip(ds3["id_cuenta"], ds3["periodo"]))
-    vistas3 = set(ds3.loc[ds3["particion"] != "prueba", "id_cuenta"])
-    nuevas3 = ~c3["id_cuenta"].isin(vistas3)
-    libres3 = c3[nuevas3 & np.array([(a, b) not in usados for a, b in zip(c3["id_cuenta"], c3["periodo"])])]
-    salida["S3"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres3.groupby("clase")])
-    control["S3_disponibles"] = {int(k): int(v) for k, v in libres3["clase"].value_counts().sort_index().items()}
-    control["S3_cuentas_nuevas"] = int(libres3["id_cuenta"].nunique())
-    # Prueba con la PROPORCIÓN REAL del banco: todos los meses de las cuentas que no se usaron para
-    # entrenar ni validar (en el banco el sobregiro es ~0.4 % de los meses).
-    salida["S3_real"] = c3[nuevas3].copy()
-    control["S3_real_por_clase"] = {int(k): int(v) for k, v in salida["S3_real"]["clase"].value_counts().sort_index().items()}
-
     # S5: meses de cuentas que no se usaron para entrenar ni validar (el dataset toma 9,000 de 131,890)
     spec = importlib.util.spec_from_file_location("generador", DIR / "01_generar_datasets.py")
     gen = importlib.util.module_from_spec(spec)
@@ -255,7 +242,7 @@ def datos_nunca_vistos():
     control["S5_cuentas_nuevas"] = int(libres5["id_cuenta"].nunique())
     salida["S5_real"] = c5[nuevas5].copy()
     control["S5_real_por_clase"] = {int(k): int(v) for k, v in salida["S5_real"]["clase"].value_counts().sort_index().items()}
-    for s in ("S1", "S3", "S5"):
+    for s in ("S1", "S5"):
         print(f"  {s}: reconstrucción idéntica al dataset = {control[s][0]} ({control[s][1]:,} filas comparadas); "
               f"nunca vistos disponibles por clase {control[s + '_disponibles']}", flush=True)
     return salida, control
@@ -382,11 +369,11 @@ def main():
                 # Regla de una línea: "si el monto coincide con la cuota, es préstamo; si no, es hogar".
                 regla = np.where(np.isclose(prueba["monto_orden"], prueba["cuota_prestamo"]), 1, 0)
                 r["E_regla_monto_cuota"] = metricas(prueba["clase"], regla, n)
-            if s in ("S3", "S5"):
+            if s == "S5":
                 # Misma red evaluada con la proporción REAL de meses (cuentas no usadas para entrenar)
                 real = nuevos[f"{s}_real"]
                 p_real = modelo.probabilidades(real).argmax(1)
-                estable = 0 if s == "S3" else 1                  # índice de la clase "estable" en cada sistema
+                estable = 1                                      # índice de la clase "estable"
                 r["F_proporcion_real"] = metricas(real["clase"], p_real, n)
                 r["F_proporcion_real"]["siempre_estable"] = metricas(real["clase"], np.full(len(real), estable), n)
             resultados["sistemas"][s]["versiones"][version] = r
@@ -413,24 +400,16 @@ def escribir_markdown(r):
          "(C) casos en la frontera de decisión y (D) búsqueda de atajos con importancia por permutación y datos "
          "sintéticos extremos. S1 y S5 ya estaban balanceados, por eso sus dos columnas usan el mismo modelo.", ""]
     ctrl = r["control_reconstruccion"]
-    cuentas_prueba = {s: pd.read_csv(DATOS / ARCHIVOS[s], usecols=["id_cuenta", "particion"])
-                      .query("particion == 'prueba'")["id_cuenta"].nunique() for s in ("S1", "S3")}
-    real3 = ctrl.get("S3_real_por_clase", {})
+    cuentas_prueba = pd.read_csv(DATOS / ARCHIVOS["S1"], usecols=["id_cuenta", "particion"])         .query("particion == 'prueba'")["id_cuenta"].nunique()
     L += ["**Control:** los datos nunca vistos se recalcularon con el mismo procedimiento del dataset. "
           f"Al recalcular las filas que sí están en el dataset, coinciden exactamente: S1 = {ctrl['S1'][0]} "
-          f"({ctrl['S1'][1]:,} filas), S3 = {ctrl['S3'][0]} ({ctrl['S3'][1]:,} filas).", "",
-          "**Partición por cuenta:** en S1, S2 y S3 ninguna cuenta está en dos particiones. "
-          "Los \"nunca vistos\" (B) salen solo de cuentas que no se usaron para entrenar ni validar "
-          f"(S1: {ctrl.get('S1_cuentas_nuevas', '—')} cuentas; S3: {ctrl.get('S3_cuentas_nuevas', '—')} cuentas), "
-          "pero no son un grupo de clientes aparte: incluyen las cuentas de la prueba "
-          f"(S1: {cuentas_prueba['S1']} de las {ctrl.get('S1_cuentas_nuevas', '—')}). "
-          "Por eso (B) confirma, con otros movimientos de esos mismos clientes, que el resultado de la prueba se sostiene; "
-          "no demuestra que la red acierte igual en otra población.", "",
-          "(E) compara S2 con una regla de una línea. (F) evalúa S3 con la proporción real de meses del banco. "
-          f"Los {real3.get(2, real3.get('2', '—'))} sobregiros de (F) son exactamente los mismos de la prueba, porque todos los "
-          "sobregiros del banco ya estaban en el dataset; la sensibilidad de sobregiro en (F) repite la de la prueba y no es "
-          "una medida nueva. Lo nuevo de (F) es la exactitud global frente a \"siempre estable\", porque casi todos esos "
-          "meses estables y de caída no están en la prueba.", "",
+          f"({ctrl['S1'][1]:,} filas), S5 = {ctrl['S5'][0]} ({ctrl['S5'][1]:,} filas).", "",
+          "**Partición por cuenta:** en S1, S2 y S5 ninguna cuenta está en dos particiones. "
+          "Los \"nunca vistos\" (B) salen solo de cuentas que no se usaron para entrenar ni validar. "
+          f"En S1 son {ctrl.get('S1_cuentas_nuevas', '—')} cuentas, pero no son un grupo de clientes aparte: incluyen "
+          f"las {cuentas_prueba} cuentas de la prueba. Por eso en S1 (B) confirma, con otros movimientos de esos mismos "
+          "clientes, que el resultado de la prueba se sostiene; no demuestra que la red acierte igual en otra población.", "",
+          "(E) compara S2 con una regla de una línea.", "",
           f"**S5:** el dataset usa 9,000 de los 131,890 meses (3,000 por clase). (B) toma meses de "
           f"{ctrl.get('S5_cuentas_nuevas', '—')} cuentas que no se usaron para entrenar ni validar, y (F) evalúa todos "
           f"los meses de esas cuentas con la proporción real de clases (baja · estable · sube = "

@@ -5,7 +5,7 @@ AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 ==============================================================================
 ARCHIVO: proyecto_final/03_comparar_balanceo.py
 
-Compara las dos formas de tratar el desbalance de clases en S2, S3 y S4:
+Compara las dos formas de tratar el desbalance de clases en S2 y S4:
   * modelos/                 -> pesos por clase en la pérdida (datos reales)
   * modelos_sobremuestreo/   -> entrenamiento 50/50 por sobremuestreo
 Ambas versiones se evalúan sobre la MISMA partición de prueba (proporción real).
@@ -40,7 +40,7 @@ def main():
         "Cambia solo cómo se trata el desbalance **en el entrenamiento**; validación y prueba conservan la proporción real.",
         "",
     ]
-    for s in ["S2", "S3", "S4"]:
+    for s in ["S2", "S4"]:
         m = {v: cargar(c, s) for v, c in VERSIONES.items()}
         ref = next(iter(m.values()))
         lineas += [f"## {s} · {ref['titulo']}", ""]
