@@ -8,6 +8,7 @@ No usa Flask: se puede probar desde la consola.
 """
 
 import json
+import math
 import os
 import re
 import unicodedata
@@ -90,6 +91,9 @@ NEGATIVOS = {"saldo_despues", "saldo_fin_mes", "saldo_promedio_mes", "saldo_min_
 LIMITES = {"edad": (10, 110), "plazo_meses": (1, 360), "ordenes_activas_cuenta": (1, 50),
            "num_movimientos_mes": (0, 500), "meses_historial": (0, 600), "num_movimientos_t": (0, 500)}
 ANIOS = (1900, 2100)
+# Las cajas del formulario aceptan hasta 15 caracteres; el servidor no admite más que eso (ni infinitos).
+MAX_NUMERO = 10 ** 15
+MENSAJE_GRANDE = f"El número es demasiado grande (máximo {MAX_NUMERO:,})."
 
 
 def formato_de(campo):
@@ -112,6 +116,8 @@ def leer_decimal(campo, texto, negativo=False):
         raise ErrorEntrada(campo, f"«{texto}» no es un número válido. Use solo dígitos y, si hace falta, "
                                   "un punto o coma decimal (por ejemplo 1250.50).")
     valor = float(t.replace(",", "."))
+    if not math.isfinite(valor) or abs(valor) > MAX_NUMERO:      # "9" * 400 se convertía en infinito
+        raise ErrorEntrada(campo, MENSAJE_GRANDE)
     if valor < 0 and not negativo:
         raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
     return valor
@@ -121,7 +127,12 @@ def leer_entero(campo, texto, negativo=False):
     t = str(texto).strip().replace(" ", "")
     if not RE_ENTERO.match(t):
         raise ErrorEntrada(campo, f"«{texto}» no es un número entero (solo dígitos, sin decimales).")
-    valor = int(t)
+    try:
+        valor = int(t)
+    except ValueError:                                           # más de 4,300 dígitos: Python no lo convierte
+        raise ErrorEntrada(campo, MENSAJE_GRANDE) from None
+    if abs(valor) > MAX_NUMERO:
+        raise ErrorEntrada(campo, MENSAJE_GRANDE)
     if valor < 0 and not negativo:
         raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
     if campo in LIMITES:

@@ -262,25 +262,3 @@ def _fijas(codigo, ruta, sistema):
         }
     return _CACHE[codigo]
 
-
-# ----------------------------------------------------------------------------
-# Resumen de los sistemas
-# ----------------------------------------------------------------------------
-def grafico_resumen(sistemas):
-    codigos = list(sistemas)
-    red = [sistemas[s].metricas["comparacion_prueba"]["red_neuronal"]["exactitud_balanceada"] * 100 for s in codigos]
-    lin = [sistemas[s].metricas["comparacion_prueba"]["softmax_lineal"]["exactitud_balanceada"] * 100 for s in codigos]
-    ale = [100 / len(sistemas[s].clases) for s in codigos]
-    x = np.arange(len(codigos))
-    fig, ax = plt.subplots(figsize=(8, 3.4))
-    b1 = ax.bar(x - 0.27, red, 0.27, label="Red neuronal", color=PALETA[0])
-    b2 = ax.bar(x, lin, 0.27, label="Softmax lineal", color=PALETA[1])
-    b3 = ax.bar(x + 0.27, ale, 0.27, label="Aleatorio", color=GRIS)
-    for b in (b1, b2, b3):
-        ax.bar_label(b, fmt="%.1f", fontsize=7)
-    ax.set_xticks(x, [f"{s}\n" + etiquetas_cortas([sistemas[s].titulo], 20)[0] for s in codigos], fontsize=8)
-    ax.set_ylabel("Exactitud balanceada en prueba (%)")
-    ax.set_ylim(0, 100)
-    ax.set_title("Los sistemas frente a sus referencias")
-    ax.legend(fontsize=8, frameon=False)
-    return a_png(fig)

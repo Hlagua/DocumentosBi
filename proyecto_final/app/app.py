@@ -6,7 +6,8 @@ AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 Aplicativo web de los sistemas predictivos con redes neuronales.
 
   * Cada sistema tiene un formulario donde se ESCRIBEN datos nuevos: solo
-    cajas de texto, sin listas desplegables ni autocompletado.
+    cajas de texto, sin listas desplegables (el distrito sugiere nombres
+    mientras se escribe). La dirección raíz abre el dashboard de S1.
   * Lo escrito se convierte en el vector X con la misma dimensión que la red,
     se aplica el preprocesamiento del entrenamiento y la red devuelve la
     clase con las probabilidades de la capa softmax.
@@ -22,7 +23,7 @@ y abrir http://127.0.0.1:5000
 import sys
 from pathlib import Path
 
-from flask import Flask, abort, render_template, request
+from flask import Flask, abort, redirect, render_template, request, url_for
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dashboard  # noqa: E402
@@ -35,7 +36,8 @@ SISTEMAS = nucleo.cargar_sistemas()
 
 @app.route("/")
 def inicio():
-    return render_template("inicio.html", sistemas=SISTEMAS)
+    # No hay página de inicio: la dirección raíz abre el dashboard de la red del primer sistema.
+    return redirect(url_for("red", codigo=next(iter(SISTEMAS))))
 
 
 @app.route("/predecir/<codigo>", methods=["GET", "POST"])
@@ -55,7 +57,7 @@ def predecir(codigo):
             destinos = registro.guardar(sistema.codigo, sistema.titulo, escrito, resultado)
     return render_template(
         "formulario.html", s=sistema, escrito=escrito, errores=errores, avisos=avisos,
-        resultado=resultado, montos=montos, destinos=destinos,
+        resultado=resultado, montos=montos, destinos=destinos, sistemas=SISTEMAS,
     )
 
 
@@ -68,12 +70,6 @@ def red(codigo):
     figs = dashboard.figuras(sistema, nucleo.ARCHIVOS[sistema.codigo], nuevos)
     return render_template("red.html", s=sistema, m=sistema.metricas, figs=figs, nuevos=nuevos,
                            fuente=nucleo.FUENTES[sistema.codigo], sistemas=SISTEMAS)
-
-
-@app.route("/resumen")
-def resumen():
-    return render_template("resumen.html", sistemas=SISTEMAS, grafico=dashboard.grafico_resumen(SISTEMAS),
-                           total=len(registro.historial(100000)))
 
 
 @app.route("/playground/")

@@ -9,7 +9,7 @@ Sistemas predictivos **multiclase** con redes neuronales sobre el Data Mart Kimb
 | 1 | Datasets multiclase limpios, partición 60/20/20 y Hoeffding | ✅ `01_generar_datasets.py` |
 | 2 | Redes neuronales (Keras) y comparación con modelos base | ✅ `02_entrenar_redes.py` |
 | 3 | Aplicativo con formulario (sin combos) y registro de predicciones | ✅ `app/` |
-| 4 | Dashboard de la red neuronal | ✅ `app/dashboard.py`, páginas `/red/S#` y `/resumen` |
+| 4 | Dashboard de la red neuronal | ✅ `app/dashboard.py`, página `/red/S#` |
 | 5 | Pruebas con datos escritos a mano, informe y defensa | ⏳ |
 
 ## Los sistemas (uno por cada data mart)
@@ -138,7 +138,7 @@ python proyecto_final/01_generar_datasets.py
 
 Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (probado con TF 2.21 y Keras 3.15).
 
-**Aplicativo:** `python proyecto_final/app/app.py` y abrir http://127.0.0.1:5000.
+**Aplicativo:** `python proyecto_final/app/app.py` y abrir http://127.0.0.1:5000. La dirección raíz abre el dashboard de S1 (`/red/S1`); no hay página de inicio ni de resumen. Cada página del dashboard y del formulario trae los botones S1, S2, S4 y S5 para cambiar de sistema.
 - Cada sistema tiene un formulario **solo con cajas de texto**, sin listas desplegables. La caja del distrito, que sigue siendo de texto, sugiere desde la primera letra los distritos que empiezan con lo escrito (clic, o flechas y Enter). El formulario se abre en una **ventana modal** al entrar a `/predecir/S1` … `/predecir/S5`; se cierra con Cancelar, la × o Esc y se vuelve a abrir con el botón «Ingresar datos». Si falta un dato o hay un error, el modal se abre de nuevo con los campos marcados.
 - El distrito se escribe por su nombre y se reconoce sin tildes ni mayúsculas.
 - Se valida cada dato y se comprueba que el vector X tenga la dimensión del modelo. Se avisa si un valor está fuera del rango visto al entrenar.
@@ -154,8 +154,6 @@ Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (p
 4. Curvas de pérdida y exactitud por época.
 5. Evaluación: matriz de confusión, precisión, sensibilidad y F1 por clase, comparación con softmax lineal, clase mayoritaria y aleatorio, y los 5 pliegues con ±1σ.
 6. Mapa 2D con los datos nuevos escritos en el aplicativo (★) y su historial.
-
-`/resumen` presenta la cadena completa del semestre (de la fuente OLTP a las redes) y compara los 4 sistemas presentados.
 
 ## Playground (entrenamiento época por época)
 

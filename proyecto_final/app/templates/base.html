@@ -10,7 +10,7 @@
     body { margin:0; font-family:"Segoe UI", Arial, sans-serif; color:var(--texto); background:var(--gris); }
     header { background:var(--azul); color:#fff; padding:14px 24px; display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
     header a { color:#fff; text-decoration:none; font-weight:600; }
-    header .marca { font-size:18px; }
+    header .marca { font-size:18px; font-weight:400; }   /* el título es un enlace al dashboard de S1, pero se ve igual que antes */
     main { max-width:1100px; margin:24px auto; padding:0 16px; }
     .tarjeta { background:#fff; border:1px solid var(--borde); border-radius:8px; padding:20px; margin-bottom:18px; }
     h1 { font-size:22px; margin:0 0 6px; } h2 { font-size:18px; margin:0 0 10px; }
@@ -64,9 +64,7 @@
 </head>
 <body>
   <header>
-    <span class="marca">Redes neuronales · Banco Financial_ijs</span>
-    <a href="/">Sistemas</a>
-    <a href="/resumen">Resumen del semestre</a>
+    <a class="marca" href="/">Redes neuronales · Banco Financial_ijs</a>
     <a href="/red/S1">Dashboard de la red</a>
     <a href="/playground/S1">Playground</a>
     <a href="/historial">Historial de predicciones</a>

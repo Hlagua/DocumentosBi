@@ -2,8 +2,14 @@
 {% block titulo %}{{ s.codigo }} · {{ s.titulo }}{% endblock %}
 {% block contenido %}
 <div class="tarjeta">
-  <h1>{{ s.codigo }} · {{ s.titulo }}</h1>
-  <p class="sub">{{ s.descripcion }} Escriba todos los datos; el modelo necesita exactamente {{ s.orden_X|length }} características.</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <h1>{{ s.codigo }} · {{ s.titulo }}</h1>
+      <p class="sub">{{ s.descripcion }} Escriba todos los datos; el modelo necesita exactamente {{ s.orden_X|length }} características.</p>
+    </div>
+    <div>{% for cod in sistemas %}<a class="boton" style="margin-left:4px;{{ 'background:#1f4e79' if cod == s.codigo }}" href="/predecir/{{ cod }}">{{ cod }}</a>{% endfor %}
+      <a class="boton" style="margin-left:4px;background:#1e7b45" href="/red/{{ s.codigo }}">Ver la red</a></div>
+  </div>
   <button type="button" class="boton-modal" data-abrir="modal-ingreso" aria-haspopup="dialog">{{ 'Ingresar otros datos' if resultado else 'Ingresar datos' }}</button>
 </div>
 

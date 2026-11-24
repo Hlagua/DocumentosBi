@@ -7,6 +7,7 @@ Soporta las 3 capas de salida vistas en clase:
 """
 
 import json
+import math
 import os
 import re
 import unicodedata
@@ -50,7 +51,11 @@ RE_NOMBRE = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$")
 NEGATIVOS = {
     "saldo_minimo_previo", "saldo_minimo_cuenta", "saldo_min_h1",
     "saldo_fin_h1", "saldo_fin_mes_t", "saldo_prom_mes_t",
+    "saldo_final_previo", "saldo_prom_h1",     # M2 y M4: el dataset tiene cuentas con saldo promedio o final negativo
 }
+# Las cajas del formulario aceptan hasta 15 caracteres; el servidor no admite más que eso (ni infinitos).
+MAX_NUMERO = 10 ** 15
+MENSAJE_GRANDE = f"El número es demasiado grande (máximo {MAX_NUMERO:,})."
 LIMITES = {
     "edad": (10, 110), "plazo_meses": (1, 360), "ordenes_activas": (0, 50),
     "meses_historial": (1, 600), "meses_vida": (1, 600), "meses_activos_h1": (1, 6),
@@ -89,6 +94,8 @@ def leer_decimal(campo, texto, negativo=False):
     if not RE_DECIMAL.match(t):
         raise ErrorEntrada(campo, f"«{texto}» no es un número válido.")
     v = float(t.replace(",", "."))
+    if not math.isfinite(v) or abs(v) > MAX_NUMERO:              # "9" * 400 se convertía en infinito
+        raise ErrorEntrada(campo, MENSAJE_GRANDE)
     if v < 0 and not negativo:
         raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
     return v
@@ -98,7 +105,12 @@ def leer_entero(campo, texto):
     t = str(texto).strip().replace(" ", "")
     if not RE_ENTERO.match(t):
         raise ErrorEntrada(campo, f"«{texto}» no es un entero válido.")
-    v = int(t)
+    try:
+        v = int(t)
+    except ValueError:                                           # más de 4,300 dígitos: Python no lo convierte
+        raise ErrorEntrada(campo, MENSAJE_GRANDE) from None
+    if abs(v) > MAX_NUMERO:
+        raise ErrorEntrada(campo, MENSAJE_GRANDE)
     if v < 0:
         raise ErrorEntrada(campo, "Este dato no puede ser negativo.")
     if campo in LIMITES:
