@@ -7,7 +7,7 @@ Sistemas predictivos **multiclase** con redes neuronales sobre el Data Mart Kimb
 | Fase | Contenido | Estado |
 | :--- | :--- | :--- |
 | 1 | Datasets multiclase limpios, partición 60/20/20 y Hoeffding | ✅ `01_generar_datasets.py` |
-| 2 | Redes neuronales (Keras) y comparación con modelos base | ✅ `02_entrenar_redes.py` |
+| 2 | Redes neuronales (Keras) y comparación con modelos base | ✅ `entrenar_S1.py`, `entrenar_S2.py`, `entrenar_S4.py` (procedimiento común en `02_entrenar_redes.py`) |
 | 3 | Aplicativo con formulario (sin combos) y registro de predicciones | ✅ `app/` |
 | 4 | Dashboard de la red neuronal | ✅ `app/dashboard.py`, página `/red/S#` |
 | 5 | Pruebas con datos escritos a mano, informe y defensa | ⏳ |
@@ -137,7 +137,19 @@ Desde la raíz del repositorio:
 python proyecto_final/01_generar_datasets.py
 ```
 
-Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (probado con TF 2.21 y Keras 3.15).
+Luego se entrena cada red con su propio archivo (requiere `tensorflow`; probado con TF 2.21 y Keras 3.15):
+
+| Archivo | Sistema | Balanceo | Guarda en | Tiempo aproximado |
+| :--- | :--- | :--- | :--- | :--- |
+| `entrenar_S1.py` | S1 · Tipo de transacción | Dataset balanceado | `modelos/` | ~25 min enchufado |
+| `entrenar_S2.py` | S2 · Propósito de la orden | Sobremuestreo 50/50 | `modelos_sobremuestreo/` | ~10 min |
+| `entrenar_S4.py` | S4 · Mora al corte | Pesos por clase | `modelos/` | ~5 min |
+
+```
+python proyecto_final/entrenar_S4.py
+```
+
+Cada archivo solo indica su sistema, su balanceo y su carpeta; el procedimiento (z-score, PCA, búsqueda de arquitectura, validación cruzada y prueba) es el mismo para los tres y está en `02_entrenar_redes.py` (función `entrenar_sistema`). Con `--salida OTRA_CARPETA` se entrena sin reemplazar el modelo que usa el aplicativo. Cada sistema fija su semilla, así que los tres se pueden correr a la vez en terminales distintas.
 
 **Aplicativo:** `python proyecto_final/app/app.py` y abrir http://127.0.0.1:5000. La dirección raíz abre el dashboard de S1 (`/red/S1`); no hay página de inicio ni de resumen. Cada página del dashboard y del formulario trae los botones S1, S2 y S4 para cambiar de sistema.
 - Cada sistema tiene un formulario **solo con cajas de texto**, sin listas desplegables. La caja del distrito, que sigue siendo de texto, sugiere desde la primera letra los distritos que empiezan con lo escrito (clic, o flechas y Enter). El formulario se abre en una **ventana modal** al entrar a `/predecir/S1`, `/predecir/S2` y `/predecir/S4`; se cierra con Cancelar, la × o Esc y se vuelve a abrir con el botón «Ingresar datos». Si falta un dato o hay un error, el modal se abre de nuevo con los campos marcados.

@@ -375,11 +375,30 @@ def procesar(sistema, archivo, diccionario):
     return resultado
 
 
+def entrenar_sistema(sistema, balanceo="pesos", salida="modelos"):
+    """
+    Entrena un solo sistema con el procedimiento común. Lo usan entrenar_S1.py,
+    entrenar_S2.py y entrenar_S4.py, uno por cada sistema que se presenta.
+    """
+    global BALANCEO, MODELOS
+    sys.stdout.reconfigure(encoding="utf-8")
+    BALANCEO = balanceo
+    MODELOS = DIR / salida
+    MODELOS.mkdir(parents=True, exist_ok=True)
+    print(f"TensorFlow/Keras {keras.__version__} | lote {LOTE} | semilla {SEMILLA} | "
+          f"balanceo {BALANCEO} | salida {MODELOS.name}/")
+    with open(DATOS / "diccionario_caracteristicas.json", encoding="utf-8") as f:
+        diccionario = json.load(f)
+    return procesar(sistema, SISTEMAS[sistema], diccionario)
+
+
 def main():
     """
     Uso:
       python 02_entrenar_redes.py [S1 S2 S3 S4 S5] [--balanceo pesos|sobremuestreo] [--salida carpeta]
-    Por defecto entrena los 4 sistemas con pesos por clase y guarda en modelos/.
+    Por defecto entrena todos los sistemas con pesos por clase y guarda en modelos/.
+    Para los sistemas que se presentan hay un archivo por sistema: entrenar_S1.py, entrenar_S2.py
+    y entrenar_S4.py. S3 y S5 se descartaron y quedan aquí solo como respaldo.
     """
     global BALANCEO, MODELOS
     import argparse
