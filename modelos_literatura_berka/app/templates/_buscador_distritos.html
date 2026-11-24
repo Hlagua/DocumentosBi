@@ -84,7 +84,7 @@
     if (ev.key === "ArrowDown") { ev.preventDefault(); marcar(activo + 1); }
     else if (ev.key === "ArrowUp") { ev.preventDefault(); marcar(activo - 1); }
     else if (ev.key === "Enter") { ev.preventDefault(); const v = visibles(); if (v[activo]) elegir(v[activo]); }
-    else if (ev.key === "Escape") { abrir(false); caja.focus(); }
+    else if (ev.key === "Escape") { ev.preventDefault(); abrir(false); caja.focus(); }   // Esc cierra solo la lista, no el modal
   });
   items.forEach((li) => li.addEventListener("click", () => elegir(li)));
 })();

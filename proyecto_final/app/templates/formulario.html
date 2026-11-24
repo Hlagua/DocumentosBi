@@ -4,25 +4,43 @@
 <div class="tarjeta">
   <h1>{{ s.codigo }} · {{ s.titulo }}</h1>
   <p class="sub">{{ s.descripcion }} Escriba todos los datos; el modelo necesita exactamente {{ s.orden_X|length }} características.</p>
-  <form method="post" autocomplete="off" id="formulario" novalidate>
-    <div class="rejilla">
-      {% for c in s.campos %}
-      <div>
-        <label for="{{ c.campo }}">{{ c.etiqueta }}</label>
-        <input type="text" id="{{ c.campo }}" name="{{ c.campo }}" value="{{ escrito.get(c.campo, '') }}"
-               autocomplete="off" spellcheck="false" class="{{ 'mal' if c.campo in errores }}"
-               data-formato="{{ c.formato }}" data-negativo="{{ 1 if c.negativo else 0 }}"
-               placeholder="{{ c.placeholder }}" data-max="{{ c.maxlength }}"
-               inputmode="{{ 'numeric' if c.formato in ('entero', 'fecha', 'periodo') else ('decimal' if c.formato == 'decimal' else 'text') }}">
-        <div class="error" data-error-de="{{ c.campo }}">{{ errores[c.campo] if c.campo in errores }}</div>
-        {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
-        {% if c.campo == 'distrito' %}{% include '_buscador_distritos.html' %}{% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    <p><button type="submit">Predecir</button></p>
-  </form>
+  <button type="button" class="boton-modal" data-abrir="modal-ingreso" aria-haspopup="dialog">{{ 'Ingresar otros datos' if resultado else 'Ingresar datos' }}</button>
 </div>
+
+{# El formulario vive en una ventana modal. Sigue enviándose por POST a esta misma dirección: el servidor, la validación y el registro no cambian. #}
+<dialog id="modal-ingreso" class="modal" data-sin-fondo aria-labelledby="modal-ingreso-titulo">
+  <div class="modal-cab">
+    <div>
+      <h2 id="modal-ingreso-titulo">Ingresar datos · {{ s.codigo }} {{ s.titulo }}</h2>
+      <p class="sub">Complete los {{ s.campos|length }} campos; con ellos se arman las {{ s.orden_X|length }} características del modelo. Cada caja acepta solo su tipo de dato.</p>
+    </div>
+    <button type="button" class="modal-x" data-cerrar aria-label="Cerrar">&times;</button>
+  </div>
+  <form method="post" action="{{ request.path }}" autocomplete="off" id="formulario" class="modal-form" novalidate>
+    <div class="modal-cuerpo">
+      {% if errores %}<p class="error" style="margin:0 0 10px;font-size:14px">Revise los datos marcados en rojo.</p>{% endif %}
+      <div class="rejilla">
+        {% for c in s.campos %}
+        <div>
+          <label for="{{ c.campo }}">{{ c.etiqueta }}</label>
+          <input type="text" id="{{ c.campo }}" name="{{ c.campo }}" value="{{ escrito.get(c.campo, '') }}"
+                 autocomplete="off" spellcheck="false" class="{{ 'mal' if c.campo in errores }}"{{ ' autofocus' if loop.first }}
+                 data-formato="{{ c.formato }}" data-negativo="{{ 1 if c.negativo else 0 }}"
+                 placeholder="{{ c.placeholder }}" data-max="{{ c.maxlength }}"
+                 inputmode="{{ 'numeric' if c.formato in ('entero', 'fecha', 'periodo') else ('decimal' if c.formato == 'decimal' else 'text') }}">
+          <div class="error" data-error-de="{{ c.campo }}">{{ errores[c.campo] if c.campo in errores }}</div>
+          {% if c.regla %}<div class="ayuda">{{ c.regla }}</div>{% endif %}
+          {% if c.campo == 'distrito' %}{% include '_buscador_distritos.html' %}{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="modal-pie">
+      <button type="submit">Predecir</button>
+      <button type="button" class="secundario" data-cerrar>Cancelar</button>
+    </div>
+  </form>
+</dialog>
 
 <script>
 /*
@@ -112,6 +130,18 @@
     });
     if (primera) { ev.preventDefault(); primera.focus(); }
   });
+})();
+</script>
+
+<script>
+/* El modal se abre solo al entrar a la página y cuando el servidor devuelve errores; con un resultado queda cerrado para que se vea. */
+(function () {
+  var d = document.getElementById("modal-ingreso");
+  {% if not resultado %}
+  if (d.showModal) { if (!d.open) d.showModal(); } else { d.setAttribute("open", ""); }
+  var primera = d.querySelector("input.mal") || d.querySelector("input");
+  if (primera) primera.focus();
+  {% endif %}
 })();
 </script>
 

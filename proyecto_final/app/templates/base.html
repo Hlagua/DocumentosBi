@@ -33,7 +33,7 @@
     img { max-width:100%; }
     .frontera { background:#fff7e6; border:1px solid #e6b450; border-left:5px solid #e69f00; border-radius:6px; padding:10px 12px; margin:10px 0; font-size:14px; }
     .etiqueta-frontera { background:#e69f00; color:#fff; border-radius:4px; padding:1px 6px; font-size:11px; margin-left:4px; }
-    .dos { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:16px; align-items:start; margin-bottom:12px; }
+    .dos { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:16px; align-items:start; margin-bottom:12px; }
     .kpis { margin-top:12px; }
     .kpi { background:#f7f9fb; border:1px solid var(--borde); border-radius:8px; padding:10px 12px; }
     .kpi span { display:block; font-size:12px; color:#5a6878; } .kpi b { display:block; font-size:22px; color:var(--azul); } .kpi small { color:#5a6878; font-size:11px; }
@@ -42,6 +42,24 @@
     .cadena div.activo { border-left-color:#1e7b45; background:#f1faf4; }
     .cadena span { display:block; color:#5a6878; font-size:12px; margin-top:3px; }
     a.boton { display:inline-block; background:var(--azul2); color:#fff; padding:8px 14px; border-radius:6px; text-decoration:none; margin-top:8px; }
+    /* Ventana modal (elemento <dialog> nativo): se cierra con la X, con Esc o con un clic en el fondo oscuro */
+    button.boton-modal { background:#1e7b45; color:#fff; border:0; border-radius:6px; padding:10px 22px; font:inherit; cursor:pointer; }
+    button.boton-modal:hover, button.boton-modal:focus-visible { background:#17623a; }
+    button.secundario { background:#fff; color:var(--azul); border:1px solid var(--borde); }
+    button.secundario:hover, button.secundario:focus-visible { background:#eef2f7; }
+    dialog.modal { border:0; border-radius:10px; padding:0; width:min(980px, 94vw); max-height:90vh; color:var(--texto); box-shadow:0 24px 70px rgba(0,0,0,.4); }
+    dialog.modal[open] { display:flex; flex-direction:column; }
+    dialog.modal::backdrop { background:rgba(15,25,40,.6); }
+    .modal-cab { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 20px 12px; border-bottom:1px solid var(--borde); }
+    .modal-cab h2 { margin:0 0 4px; } .modal-cab .sub { margin:0; }
+    .modal-x { background:transparent; color:#5a6878; font-size:28px; line-height:1; padding:0 8px; }
+    .modal-x:hover, .modal-x:focus-visible { background:transparent; color:var(--rojo); }
+    .modal-cuerpo { padding:16px 20px 22px; overflow:auto; }
+    form.modal-form { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }   /* el cuerpo se desplaza y el pie con los botones queda a la vista */
+    .modal-pie { display:flex; gap:10px; align-items:center; padding:12px 20px; border-top:1px solid var(--borde); background:#f7f9fb; border-radius:0 0 10px 10px; }
+    .modal-pie p { margin:0; }
+    body:has(dialog[open]) { overflow:hidden; }
+    @media (max-width:640px) { table { display:block; overflow-x:auto; max-width:100%; } }   /* celular: la tabla se desplaza en vez de ensanchar la página */
   </style>
 </head>
 <body>
@@ -54,5 +72,30 @@
     <a href="/historial">Historial de predicciones</a>
   </header>
   <main>{% block contenido %}{% endblock %}</main>
+  <script>
+  // Abrir/cerrar ventanas modales. data-abrir="modal-ingreso" abre #modal-ingreso y deja el enlace "#ingreso".
+  (function () {
+    function abrir(id) {
+      var d = document.getElementById(id);
+      if (d && d.tagName === 'DIALOG' && !d.open && d.showModal) d.showModal();
+    }
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-abrir]');
+      if (a) {
+        var id = a.getAttribute('data-abrir');
+        abrir(id);
+        history.replaceState(null, '', '#' + id.replace('modal-', ''));
+        return;
+      }
+      var c = e.target.closest('[data-cerrar]');
+      if (c) { c.closest('dialog').close(); return; }
+      if (e.target.tagName === 'DIALOG' && !e.target.hasAttribute('data-sin-fondo')) e.target.close();   // clic en el fondo oscuro (los formularios no se cierran así)
+    });
+    document.addEventListener('close', function (e) {         // al cerrar, se quita el "#datos" de la dirección
+      if (e.target.tagName === 'DIALOG') history.replaceState(null, '', location.pathname + location.search);
+    }, true);
+    if (location.hash.length > 1) abrir('modal-' + location.hash.slice(1));
+  })();
+  </script>
 </body>
 </html>
