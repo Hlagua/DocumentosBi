@@ -139,7 +139,7 @@ python proyecto_final/01_generar_datasets.py
 Luego `python proyecto_final/02_entrenar_redes.py`, que requiere `tensorflow` (probado con TF 2.21 y Keras 3.15).
 
 **Aplicativo:** `python proyecto_final/app/app.py` y abrir http://127.0.0.1:5000.
-- Cada sistema tiene un formulario **solo con cajas de texto**, sin listas desplegables ni autocompletado. El formulario se abre en una **ventana modal** al entrar a `/predecir/S1` … `/predecir/S5`; se cierra con Cancelar, la × o Esc y se vuelve a abrir con el botón «Ingresar datos». Si falta un dato o hay un error, el modal se abre de nuevo con los campos marcados.
+- Cada sistema tiene un formulario **solo con cajas de texto**, sin listas desplegables. La caja del distrito, que sigue siendo de texto, sugiere desde la primera letra los distritos que empiezan con lo escrito (clic, o flechas y Enter). El formulario se abre en una **ventana modal** al entrar a `/predecir/S1` … `/predecir/S5`; se cierra con Cancelar, la × o Esc y se vuelve a abrir con el botón «Ingresar datos». Si falta un dato o hay un error, el modal se abre de nuevo con los campos marcados.
 - El distrito se escribe por su nombre y se reconoce sin tildes ni mayúsculas.
 - Se valida cada dato y se comprueba que el vector X tenga la dimensión del modelo. Se avisa si un valor está fuera del rango visto al entrenar.
 - Se muestran la clase, las probabilidades softmax y el vector que entra a la red.
