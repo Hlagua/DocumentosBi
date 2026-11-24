@@ -1,14 +1,12 @@
 # Verificación de las redes neuronales (pesos por clase frente a sobremuestreo)
 
-Pruebas pedidas para la defensa: (A) datos parecidos al dataset, (B) datos que el modelo nunca vio, (C) casos en la frontera de decisión y (D) búsqueda de atajos con importancia por permutación y datos sintéticos extremos. S1 y S5 ya estaban balanceados, por eso sus dos columnas usan el mismo modelo.
+Pruebas pedidas para la defensa: (A) datos parecidos al dataset, (B) datos que el modelo nunca vio, (C) casos en la frontera de decisión y (D) búsqueda de atajos con importancia por permutación y datos sintéticos extremos. S1 ya estaba balanceado, por eso sus dos columnas usan el mismo modelo.
 
-**Control:** los datos nunca vistos se recalcularon con el mismo procedimiento del dataset. Al recalcular las filas que sí están en el dataset, coinciden exactamente: S1 = True (24,000 filas), S5 = True (9,000 filas).
+**Control:** los datos nunca vistos se recalcularon con el mismo procedimiento del dataset. Al recalcular las filas que sí están en el dataset, coinciden exactamente: S1 = True (24,000 filas).
 
-**Partición por cuenta:** en S1, S2 y S5 ninguna cuenta está en dos particiones. Los "nunca vistos" (B) salen solo de cuentas que no se usaron para entrenar ni validar. En S1 son 1057 cuentas, pero no son un grupo de clientes aparte: incluyen las 857 cuentas de la prueba. Por eso en S1 (B) confirma, con otros movimientos de esos mismos clientes, que el resultado de la prueba se sostiene; no demuestra que la red acierte igual en otra población.
+**Partición por cuenta:** en S1 y S2 ninguna cuenta está en dos particiones (en S4 cada fila es una cuenta). Los "nunca vistos" (B) salen solo de cuentas que no se usaron para entrenar ni validar. En S1 son 1057 cuentas, pero no son un grupo de clientes aparte: incluyen las 857 cuentas de la prueba. Por eso en S1 (B) confirma, con otros movimientos de esos mismos clientes, que el resultado de la prueba se sostiene; no demuestra que la red acierte igual en otra población.
 
 (E) compara S2 con una regla de una línea.
-
-**S5:** el dataset usa 9,000 de los 131,890 meses (3,000 por clase). (B) toma meses de 1435 cuentas que no se usaron para entrenar ni validar, y (F) evalúa todos los meses de esas cuentas con la proporción real de clases (baja · estable · sube = 10,039 · 17,694 · 11,767). Aquí casi todos los meses son nuevos, porque el dataset es solo una muestra. Reconstrucción idéntica al dataset: True.
 
 ## S1 · Tipo de transacción
 
@@ -73,30 +71,3 @@ Pruebas pedidas para la defensa: (A) datos parecidos al dataset, (B) datos que e
 
 **D. Importancia por permutación (sobremuestreo):** saldo_minimo_previo +10.8 · monto_prestamo +6.0 · meses_historial +2.5 · tasa_desempleo +1.4 · salario_promedio -0.2 (puntos de exactitud balanceada que se pierden al desordenarla)
 **D. Extremos sintéticos (sobremuestreo):** monto_prestamo:muy_alto → En mora o impago al corte (B o D) 96.3 %; monto_prestamo:muy_bajo → Al día al corte (A o C) 100.0 %; plazo_meses:muy_alto → En mora o impago al corte (B o D) 96.3 %; saldo_promedio_previo:muy_bajo → En mora o impago al corte (B o D) 100.0 %; saldo_minimo_previo:muy_alto → Al día al corte (A o C) 100.0 %; saldo_minimo_previo:muy_bajo → En mora o impago al corte (B o D) 100.0 %; movimientos_mes:muy_alto → Al día al corte (A o C) 94.8 %; meses_historial:muy_alto → Al día al corte (A o C) 97.1 %; edad:muy_alto → En mora o impago al corte (B o D) 97.1 %
-
-## S5 · Movimiento de la cuenta el mes siguiente
-
-| Prueba | Pesos por clase | Sobremuestreo 50/50 |
-| :--- | :---: | :---: |
-| Prueba original: exactitud balanceada | 61.6 % | 61.6 % |
-| A. Parecidos (ruido 5 %): exactitud balanceada | 61.2 % | 61.2 % |
-| A. Parecidos: predicciones que no cambian | 93.7 % | 93.7 % |
-| B. Nunca vistos: casos | 7,500 | 7,500 |
-| B. Nunca vistos: exactitud | 63.0 % | 63.0 % |
-| B. Nunca vistos: exactitud balanceada | 63.0 % | 63.0 % |
-| B. Nunca vistos: sensibilidad por clase (— = sin casos) | 64.8 % · 69.5 % · 54.5 % | 64.8 % · 69.5 % · 54.5 % |
-| Prueba original: sensibilidad por clase | 61.8 % · 67.0 % · 56.0 % | 61.8 % · 67.0 % · 56.0 % |
-| C. Casos en frontera (margen < 10 pts) | 14.0 % (1,305) | 14.0 % (1,305) |
-| C. Acierto en frontera / fuera | 44.5 % / 65.7 % | 44.5 % / 65.7 % |
-| C. Clase real entre las dos más probables | 84.1 % | 84.1 % |
-| D. Característica más influyente (peso relativo) | volumen_mes_t_1 (22.8 %) | volumen_mes_t_1 (22.8 %) |
-| F. Proporción real de meses: casos | 39,500 | 39,500 |
-| F. Proporción real: exactitud / balanceada de la red | 63.8 % / 62.9 % | 63.8 % / 62.9 % |
-| F. Proporción real: "siempre estable" (exactitud) | 44.8 % | 44.8 % |
-| F. Proporción real: sensibilidad por clase | 64.7 % · 69.8 % · 54.2 % | 64.7 % · 69.8 % · 54.2 % |
-
-**D. Importancia por permutación (pesos por clase):** volumen_mes_t_1 +14.9 · depositos_mes_t +14.7 · retiros_mes_t +11.6 · mes +11.4 · num_movimientos_t +6.9 (puntos de exactitud balanceada que se pierden al desordenarla)
-**D. Extremos sintéticos (pesos por clase):** depositos_mes_t:muy_alto → Baja el movimiento (más de 20 % menos) 100.0 %; retiros_mes_t:muy_alto → Baja el movimiento (más de 20 % menos) 100.0 %; num_movimientos_t:muy_alto → Baja el movimiento (más de 20 % menos) 98.1 %; saldo_fin_mes_t:muy_bajo → Baja el movimiento (más de 20 % menos) 99.7 %; saldo_prom_mes_t:muy_bajo → Baja el movimiento (más de 20 % menos) 99.2 %; edad:muy_alto → Baja el movimiento (más de 20 % menos) 90.3 %
-
-**D. Importancia por permutación (sobremuestreo):** volumen_mes_t_1 +14.9 · depositos_mes_t +14.7 · retiros_mes_t +11.6 · mes +11.4 · num_movimientos_t +6.9 (puntos de exactitud balanceada que se pierden al desordenarla)
-**D. Extremos sintéticos (sobremuestreo):** depositos_mes_t:muy_alto → Baja el movimiento (más de 20 % menos) 100.0 %; retiros_mes_t:muy_alto → Baja el movimiento (más de 20 % menos) 100.0 %; num_movimientos_t:muy_alto → Baja el movimiento (más de 20 % menos) 98.1 %; saldo_fin_mes_t:muy_bajo → Baja el movimiento (más de 20 % menos) 99.7 %; saldo_prom_mes_t:muy_bajo → Baja el movimiento (más de 20 % menos) 99.2 %; edad:muy_alto → Baja el movimiento (más de 20 % menos) 90.3 %

@@ -56,9 +56,10 @@ RAIZ = DIR.parent
 DATOS = DIR / "datos"
 DF_DIR = RAIZ / "dataframes"
 SEMILLA = 42
-# Sistemas presentados (S3 se descartó el 2026-11-23: no superaba a "siempre estable" con la proporción real)
-ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S4": "S4_prestamos.csv",
-            "S5": "S5_movimiento_mensual.csv"}
+# Sistemas presentados: S1, S2 y S4. S3 se descartó el 2026-11-23 (no superaba a "siempre estable" con la
+# proporción real) y S5 el 2026-11-24 (no hubo tiempo de subirlo a 70 %). Para volver a verificar S5 basta con
+# agregar "S5": "S5_movimiento_mensual.csv" a este diccionario.
+ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S4": "S4_prestamos.csv"}
 VERSIONES = {"pesos": DIR / "modelos", "sobremuestreo": DIR / "modelos_sobremuestreo"}
 COL_DISTRITO = ["poblacion", "salario_promedio", "tasa_desempleo", "tasa_criminalidad"]
 
@@ -220,29 +221,30 @@ def datos_nunca_vistos():
     salida["S1"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres.groupby("clase")])
     control["S1_disponibles"] = {int(k): int(v) for k, v in libres["clase"].value_counts().sort_index().items()}
 
-    # S5: meses de cuentas que no se usaron para entrenar ni validar (el dataset toma 9,000 de 131,890)
-    spec = importlib.util.spec_from_file_location("generador", DIR / "01_generar_datasets.py")
-    gen = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(gen)
-    dist5 = pd.read_csv(DF_DIR / "df_distritos_clean.csv", encoding="utf-8-sig").rename(
-        columns={"tasa_desempleo_1996": "tasa_desempleo", "tasa_criminalidad_1996": "tasa_criminalidad"})
-    clientes5 = pd.read_csv(DF_DIR / "df_cliente_consolidado_clean.csv", encoding="utf-8-sig")
-    perfiles5 = pd.read_csv(DF_DIR / "rs_perfiles.csv", encoding="utf-8-sig")
-    ds5 = pd.read_csv(DATOS / ARCHIVOS["S5"])
-    c5 = gen.meses_s5(trans, perfiles5, clientes5, dist5)
-    columnas5 = [c for c in ds5.columns if c in c5.columns and c not in ("id_cuenta", "periodo", "nombre_distrito",
-                                                                       "nombre_clase", "particion", "clase")]
-    control["S5"] = comprobar_reconstruccion(c5, ds5, ["id_cuenta", "periodo"], columnas5)
-    usados5 = set(zip(ds5["id_cuenta"], ds5["periodo"]))
-    vistas5 = set(ds5.loc[ds5["particion"] != "prueba", "id_cuenta"])
-    nuevas5 = ~c5["id_cuenta"].isin(vistas5)
-    libres5 = c5[nuevas5 & np.array([(a, b) not in usados5 for a, b in zip(c5["id_cuenta"], c5["periodo"])])]
-    salida["S5"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres5.groupby("clase")])
-    control["S5_disponibles"] = {int(k): int(v) for k, v in libres5["clase"].value_counts().sort_index().items()}
-    control["S5_cuentas_nuevas"] = int(libres5["id_cuenta"].nunique())
-    salida["S5_real"] = c5[nuevas5].copy()
-    control["S5_real_por_clase"] = {int(k): int(v) for k, v in salida["S5_real"]["clase"].value_counts().sort_index().items()}
-    for s in ("S1", "S5"):
+    if "S5" in ARCHIVOS:
+        # S5: meses de cuentas que no se usaron para entrenar ni validar (el dataset toma 9,000 de 131,890)
+        spec = importlib.util.spec_from_file_location("generador", DIR / "01_generar_datasets.py")
+        gen = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gen)
+        dist5 = pd.read_csv(DF_DIR / "df_distritos_clean.csv", encoding="utf-8-sig").rename(
+            columns={"tasa_desempleo_1996": "tasa_desempleo", "tasa_criminalidad_1996": "tasa_criminalidad"})
+        clientes5 = pd.read_csv(DF_DIR / "df_cliente_consolidado_clean.csv", encoding="utf-8-sig")
+        perfiles5 = pd.read_csv(DF_DIR / "rs_perfiles.csv", encoding="utf-8-sig")
+        ds5 = pd.read_csv(DATOS / ARCHIVOS["S5"])
+        c5 = gen.meses_s5(trans, perfiles5, clientes5, dist5)
+        columnas5 = [c for c in ds5.columns if c in c5.columns and c not in ("id_cuenta", "periodo", "nombre_distrito",
+                                                                           "nombre_clase", "particion", "clase")]
+        control["S5"] = comprobar_reconstruccion(c5, ds5, ["id_cuenta", "periodo"], columnas5)
+        usados5 = set(zip(ds5["id_cuenta"], ds5["periodo"]))
+        vistas5 = set(ds5.loc[ds5["particion"] != "prueba", "id_cuenta"])
+        nuevas5 = ~c5["id_cuenta"].isin(vistas5)
+        libres5 = c5[nuevas5 & np.array([(a, b) not in usados5 for a, b in zip(c5["id_cuenta"], c5["periodo"])])]
+        salida["S5"] = pd.concat([g.sample(min(2500, len(g)), random_state=rng_estado) for _, g in libres5.groupby("clase")])
+        control["S5_disponibles"] = {int(k): int(v) for k, v in libres5["clase"].value_counts().sort_index().items()}
+        control["S5_cuentas_nuevas"] = int(libres5["id_cuenta"].nunique())
+        salida["S5_real"] = c5[nuevas5].copy()
+        control["S5_real_por_clase"] = {int(k): int(v) for k, v in salida["S5_real"]["clase"].value_counts().sort_index().items()}
+    for s in [x for x in ("S1", "S5") if x in control]:
         print(f"  {s}: reconstrucción idéntica al dataset = {control[s][0]} ({control[s][1]:,} filas comparadas); "
               f"nunca vistos disponibles por clase {control[s + '_disponibles']}", flush=True)
     return salida, control
@@ -398,19 +400,21 @@ def escribir_markdown(r):
     L = ["# Verificación de las redes neuronales (pesos por clase frente a sobremuestreo)", "",
          "Pruebas pedidas para la defensa: (A) datos parecidos al dataset, (B) datos que el modelo nunca vio, "
          "(C) casos en la frontera de decisión y (D) búsqueda de atajos con importancia por permutación y datos "
-         "sintéticos extremos. S1 y S5 ya estaban balanceados, por eso sus dos columnas usan el mismo modelo.", ""]
+         "sintéticos extremos. S1 ya estaba balanceado, por eso sus dos columnas usan el mismo modelo.", ""]
     ctrl = r["control_reconstruccion"]
     cuentas_prueba = pd.read_csv(DATOS / ARCHIVOS["S1"], usecols=["id_cuenta", "particion"])         .query("particion == 'prueba'")["id_cuenta"].nunique()
     L += ["**Control:** los datos nunca vistos se recalcularon con el mismo procedimiento del dataset. "
           f"Al recalcular las filas que sí están en el dataset, coinciden exactamente: S1 = {ctrl['S1'][0]} "
-          f"({ctrl['S1'][1]:,} filas), S5 = {ctrl['S5'][0]} ({ctrl['S5'][1]:,} filas).", "",
-          "**Partición por cuenta:** en S1, S2 y S5 ninguna cuenta está en dos particiones. "
+          f"({ctrl['S1'][1]:,} filas)" + (f", S5 = {ctrl['S5'][0]} ({ctrl['S5'][1]:,} filas)" if "S5" in ctrl else "") + ".", "",
+          "**Partición por cuenta:** en S1 y S2 ninguna cuenta está en dos particiones (en S4 cada fila es una cuenta). "
           "Los \"nunca vistos\" (B) salen solo de cuentas que no se usaron para entrenar ni validar. "
           f"En S1 son {ctrl.get('S1_cuentas_nuevas', '—')} cuentas, pero no son un grupo de clientes aparte: incluyen "
           f"las {cuentas_prueba} cuentas de la prueba. Por eso en S1 (B) confirma, con otros movimientos de esos mismos "
           "clientes, que el resultado de la prueba se sostiene; no demuestra que la red acierte igual en otra población.", "",
-          "(E) compara S2 con una regla de una línea.", "",
-          f"**S5:** el dataset usa 9,000 de los 131,890 meses (3,000 por clase). (B) toma meses de "
+          "(E) compara S2 con una regla de una línea.", "",]
+    if "S5" in ctrl:
+        L += [
+            f"**S5:** el dataset usa 9,000 de los 131,890 meses (3,000 por clase). (B) toma meses de "
           f"{ctrl.get('S5_cuentas_nuevas', '—')} cuentas que no se usaron para entrenar ni validar, y (F) evalúa todos "
           f"los meses de esas cuentas con la proporción real de clases (baja · estable · sube = "
           f"{' · '.join(f'{v:,}' for v in ctrl.get('S5_real_por_clase', {}).values())}). "

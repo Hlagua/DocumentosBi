@@ -41,8 +41,10 @@ VERSION_POR_SISTEMA = {
     "S5": "modelos",          # ya balanceado (3,000 meses por clase), como S1
 }
 # Sistemas que se presentan. S3 (estado del saldo) se descartó el 2026-11-23: con la proporción real de
-# meses del banco no superaba a responder siempre "estable"; su data mart (Saldo mensual) lo cubre S5.
-SISTEMAS = ["S1", "S2", "S4", "S5"]
+# meses del banco no superaba a responder siempre "estable".
+# S5 (movimiento de la cuenta el mes siguiente) se retiró el 2026-11-24: acertaba 61.6 % y no hubo tiempo
+# de subirlo a 70 %. Sus archivos quedan como respaldo; para volver a mostrarlo basta con agregarlo aquí.
+SISTEMAS = ["S1", "S2", "S4"]
 UMBRAL_FRONTERA = 0.10   # diferencia de probabilidad entre las dos clases más probables
 ARCHIVOS = {
     "S1": DATOS / "S1_transacciones.csv",
