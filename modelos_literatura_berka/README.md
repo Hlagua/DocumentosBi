@@ -18,10 +18,25 @@ La tabla `cards` (892 tarjetas: 659 classic, 145 junior, 88 gold) se extrae con 
 
 - **Antes**, M2 era binaria y su etiqueta era "ya hizo un retiro con tarjeta", con datos de toda la historia. Eso mide uso de la tarjeta, no a quién ofrecerla, y por eso daba 79.4 % balanceada.
 - **Ahora** responde "¿qué tarjeta ofrecer?" con tres clases: sin tarjeta (3,252), classic (649) y gold (87). Solo entran titulares de 21 años o más, porque la junior se emite únicamente a menores de 21: con ella la red aprendería solo la edad.
-- **Resultado en prueba (799 cuentas):** exactitud 74.5 %, balanceada 67.6 %. El softmax lineal llega a 70.3 % balanceada, así que la red **no lo supera**. Responder siempre "sin tarjeta" da 81.5 % de exactitud, pero 33.3 % balanceada.
-- **Por clase:** detecta 78 % de las classic y 9 de las 18 gold de prueba. Con 18 casos, el resultado de gold tiene un margen muy amplio.
-- E_out − E_in = 5.9 puntos; validación cruzada 24.2 % ± 1.1 de error.
+- **Resultado en prueba (799 cuentas):** exactitud 75.5 %, balanceada 65.2 %. El softmax lineal llega a 70.3 % balanceada, así que la red **no lo supera**. Responder siempre "sin tarjeta" da 81.5 % de exactitud, pero 33.3 % balanceada.
+- **Por clase:** detecta 82 % de las classic y 7 de las 18 gold de prueba. Con 18 casos, el resultado de gold tiene un margen muy amplio.
+- E_out − E_in = 3.8 puntos; validación cruzada 24.4 % ± 1.1 de error.
 - Lo que más pesa es el saldo (promedio, máximo y final) y el ingreso mensual. El año de la fecha de referencia no agrega nada (un bosque aleatorio da lo mismo con y sin él), así que la fecha no delata la clase.
+
+## Funciones de activación de las capas ocultas (2026-11-23)
+
+Por indicación del docente, las capas ocultas **no usan ReLU**. La búsqueda en validación elige entre **tangente hiperbólica** (`tanh`, centrada en cero: tanh(z) = 2·σ(2z) − 1) con 32, 64-32 y 128-64-32 neuronas, y una red 64-32 con **sigmoide logística**. La capa de salida no cambia (sigmoide, softmax o lineal según la tarea).
+
+| Código | Elegida | Prueba | Modelo lineal | Antes, con ReLU |
+| :---: | :--- | :--- | :--- | :--- |
+| M1 | 64-32 sigmoide | AUC 0.858 · bal. 76.3 % · E_out − E_in 1.6 | AUC 0.865 · bal. 83.0 % | AUC 0.867 · bal. 74.2 % · 6.2 |
+| M2 | 128-64-32 tanh | 75.5 % · bal. 65.2 % · 3.8 | bal. 70.3 % | 74.5 % · bal. 67.6 % · 5.9 |
+| M3 | 64-32 sigmoide | 98.9 % · bal. 99.1 % · 0.5 | 98.2 % | 98.8 % (ya era tanh) |
+| M4 | 32 tanh | AUC 0.763 · bal. 69.5 % · 7.0 | AUC 0.747 · bal. 70.5 % | AUC 0.817 · bal. 72.0 % · 6.3 |
+| M5 | 64-32 tanh | R² 0.512 | — | R² 0.512 (ya era tanh) |
+
+- Los cambios son pequeños, salvo M4, que pierde unos 5 puntos de AUC. En M1, M2 y M4 la red **no supera claramente** al modelo lineal; hay que decirlo en la defensa.
+- La sigmoide ganó en M1 y M3: con 2 capas ocultas no aparece el desvanecimiento del gradiente que sí afecta a redes profundas.
 
 ## Control anti-fuga de datos (*Data Leakage*)
 - **M1:** solo transacciones con `fecha < fecha_otorgamiento` (0 fuga temporal).

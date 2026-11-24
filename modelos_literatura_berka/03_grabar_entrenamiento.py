@@ -223,7 +223,9 @@ def grabar(codigo):
 
     for capa in range(len(densas) - 1):
         bloque = np.stack([a[capa] for a in activaciones])
-        escala = 1.0 if el["activacion"] == "tanh" else np.maximum(np.abs(bloque).max(axis=(0, 1)), 1e-9)
+        if el["activacion"] == "sigmoid":
+            bloque = 2 * bloque - 1                                       # sigmoide [0, 1] -> [-1, 1]
+        escala = 1.0 if el["activacion"] in ("tanh", "sigmoid") else np.maximum(np.abs(bloque).max(axis=(0, 1)), 1e-9)
         normal = np.clip(bloque / escala, -1, 1)
         for k, cuadro in enumerate(salida_cuadros):
             cuadro.setdefault("neuronas", []).append(

@@ -72,11 +72,12 @@ ARCHIVOS = {
     "M5": "M5_pronostico_transacciones.csv",
 }
 
+# Capas ocultas sin ReLU (indicación del docente): tangente hiperbólica y sigmoide logística
 CANDIDATAS = [
-    ([32], "relu", 0.0, 0.0),
-    ([64, 32], "relu", 0.2, 1e-5),
+    ([32], "tanh", 0.0, 0.0),
     ([64, 32], "tanh", 0.2, 1e-5),
-    ([128, 64, 32], "relu", 0.2, 1e-5),
+    ([128, 64, 32], "tanh", 0.2, 1e-5),
+    ([64, 32], "sigmoid", 0.2, 1e-5),
 ]
 
 

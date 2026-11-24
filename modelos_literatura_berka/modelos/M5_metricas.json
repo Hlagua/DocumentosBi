@@ -18,28 +18,13 @@
       "ocultas": [
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.0,
       "l1": 0.0,
-      "epocas": 51,
-      "mae_val": 16137.05,
-      "rmse_val": 31821.66,
-      "r2_val": 0.4338
-    },
-    {
-      "pca": false,
-      "dimension_red": 14,
-      "ocultas": [
-        64,
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.2,
-      "l1": 1e-05,
-      "epocas": 38,
-      "mae_val": 16154.44,
-      "rmse_val": 31731.11,
-      "r2_val": 0.437
+      "epocas": 24,
+      "mae_val": 16185.81,
+      "rmse_val": 31849.89,
+      "r2_val": 0.4328
     },
     {
       "pca": false,
@@ -64,42 +49,42 @@
         64,
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.2,
       "l1": 1e-05,
-      "epocas": 40,
-      "mae_val": 16997.03,
-      "rmse_val": 31805.13,
-      "r2_val": 0.4343
+      "epocas": 25,
+      "mae_val": 16222.8,
+      "rmse_val": 31845.48,
+      "r2_val": 0.4329
     },
     {
-      "pca": true,
-      "dimension_red": 9,
-      "ocultas": [
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.0,
-      "l1": 0.0,
-      "epocas": 27,
-      "mae_val": 16391.72,
-      "rmse_val": 32029.95,
-      "r2_val": 0.4263
-    },
-    {
-      "pca": true,
-      "dimension_red": 9,
+      "pca": false,
+      "dimension_red": 14,
       "ocultas": [
         64,
         32
       ],
-      "activacion": "relu",
+      "activacion": "sigmoid",
       "dropout": 0.2,
       "l1": 1e-05,
       "epocas": 46,
-      "mae_val": 16048.77,
-      "rmse_val": 32021.21,
-      "r2_val": 0.4266
+      "mae_val": 15745.61,
+      "rmse_val": 31643.31,
+      "r2_val": 0.4401
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 64,
+      "mae_val": 16072.0,
+      "rmse_val": 32086.87,
+      "r2_val": 0.4243
     },
     {
       "pca": true,
@@ -124,13 +109,28 @@
         64,
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.2,
       "l1": 1e-05,
-      "epocas": 27,
-      "mae_val": 16739.77,
-      "rmse_val": 32151.85,
-      "r2_val": 0.4219
+      "epocas": 25,
+      "mae_val": 16255.1,
+      "rmse_val": 32197.82,
+      "r2_val": 0.4203
+    },
+    {
+      "pca": true,
+      "dimension_red": 9,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "sigmoid",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 40,
+      "mae_val": 15964.08,
+      "rmse_val": 32008.25,
+      "r2_val": 0.4271
     }
   ],
   "elegida": {
@@ -566,5 +566,5 @@
       "r2": -0.003
     }
   },
-  "segundos": 197.1
+  "segundos": 345.6
 }

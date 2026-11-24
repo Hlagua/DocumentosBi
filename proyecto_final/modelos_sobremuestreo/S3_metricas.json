@@ -37,12 +37,12 @@
       "ocultas": [
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.0,
       "l1": 0.0,
-      "epocas": 52,
-      "exactitud_val": 0.6295,
-      "exactitud_balanceada_val": 0.6865
+      "epocas": 58,
+      "exactitud_val": 0.6104,
+      "exactitud_balanceada_val": 0.6684
     },
     {
       "pca": false,
@@ -51,41 +51,12 @@
         64,
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.2,
       "l1": 0.0,
-      "epocas": 53,
-      "exactitud_val": 0.6359,
-      "exactitud_balanceada_val": 0.6915
-    },
-    {
-      "pca": false,
-      "dimension_red": 15,
-      "ocultas": [
-        64,
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.2,
-      "l1": 1e-05,
-      "epocas": 53,
-      "exactitud_val": 0.6295,
-      "exactitud_balanceada_val": 0.6849
-    },
-    {
-      "pca": false,
-      "dimension_red": 15,
-      "ocultas": [
-        128,
-        64,
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.2,
-      "l1": 1e-05,
-      "epocas": 33,
-      "exactitud_val": 0.6231,
-      "exactitud_balanceada_val": 0.6815
+      "epocas": 72,
+      "exactitud_val": 0.6454,
+      "exactitud_balanceada_val": 0.6944
     },
     {
       "pca": false,
@@ -102,60 +73,60 @@
       "exactitud_balanceada_val": 0.6976
     },
     {
-      "pca": true,
-      "dimension_red": 10,
-      "ocultas": [
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.0,
-      "l1": 0.0,
-      "epocas": 54,
-      "exactitud_val": 0.6115,
-      "exactitud_balanceada_val": 0.6738
-    },
-    {
-      "pca": true,
-      "dimension_red": 10,
-      "ocultas": [
-        64,
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.2,
-      "l1": 0.0,
-      "epocas": 68,
-      "exactitud_val": 0.6454,
-      "exactitud_balanceada_val": 0.6944
-    },
-    {
-      "pca": true,
-      "dimension_red": 10,
-      "ocultas": [
-        64,
-        32
-      ],
-      "activacion": "relu",
-      "dropout": 0.2,
-      "l1": 1e-05,
-      "epocas": 67,
-      "exactitud_val": 0.6433,
-      "exactitud_balanceada_val": 0.6973
-    },
-    {
-      "pca": true,
-      "dimension_red": 10,
+      "pca": false,
+      "dimension_red": 15,
       "ocultas": [
         128,
         64,
         32
       ],
-      "activacion": "relu",
+      "activacion": "tanh",
       "dropout": 0.2,
       "l1": 1e-05,
-      "epocas": 28,
-      "exactitud_val": 0.6295,
-      "exactitud_balanceada_val": 0.6849
+      "epocas": 42,
+      "exactitud_val": 0.6274,
+      "exactitud_balanceada_val": 0.6848
+    },
+    {
+      "pca": false,
+      "dimension_red": 15,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "sigmoid",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 97,
+      "exactitud_val": 0.6338,
+      "exactitud_balanceada_val": 0.6883
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.0,
+      "l1": 0.0,
+      "epocas": 56,
+      "exactitud_val": 0.6115,
+      "exactitud_balanceada_val": 0.6723
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 0.0,
+      "epocas": 88,
+      "exactitud_val": 0.6327,
+      "exactitud_balanceada_val": 0.689
     },
     {
       "pca": true,
@@ -170,6 +141,35 @@
       "epocas": 100,
       "exactitud_val": 0.6359,
       "exactitud_balanceada_val": 0.6899
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        128,
+        64,
+        32
+      ],
+      "activacion": "tanh",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 60,
+      "exactitud_val": 0.6316,
+      "exactitud_balanceada_val": 0.6881
+    },
+    {
+      "pca": true,
+      "dimension_red": 10,
+      "ocultas": [
+        64,
+        32
+      ],
+      "activacion": "sigmoid",
+      "dropout": 0.2,
+      "l1": 1e-05,
+      "epocas": 198,
+      "exactitud_val": 0.6348,
+      "exactitud_balanceada_val": 0.68
     }
   ],
   "elegida": {
@@ -689,5 +689,5 @@
       "exactitud_balanceada": 0.3333
     }
   },
-  "segundos": 241.4
+  "segundos": 478.8
 }

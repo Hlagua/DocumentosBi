@@ -29,25 +29,25 @@ Sistemas predictivos **multiclase** con redes neuronales sobre el Data Mart Kimb
 
 ## Redes neuronales (fase 2)
 
-Cada red se eligió en validación. La búsqueda probó todas las X frente a PCA al 95 % y 5 arquitecturas. Todas usan Keras, salida softmax, entropía cruzada, Adam, lotes de 15 y parada temprana. Resultados en **prueba** (evaluada una sola vez) **de la versión que usa el aplicativo**, con partición por cuenta:
+Cada red se eligió en validación. La búsqueda probó todas las X frente a PCA al 95 % y 5 arquitecturas. **Por indicación del docente, las capas ocultas no usan ReLU:** se elige entre tangente hiperbólica (32, 64-32 con y sin L1, 128-64-32) y una red 64-32 con sigmoide logística. Todas usan Keras, salida softmax, entropía cruzada, Adam, lotes de 15 y parada temprana. Resultados en **prueba** (evaluada una sola vez) **de la versión que usa el aplicativo**, con partición por cuenta:
 
 | Sistema | Versión | Arquitectura elegida | Parámetros | Red | Softmax lineal | Clase mayoritaria | Aleatorio | E_in | E_out | Error CV-5 |
 | :--- | :--- | :--- | ---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| S1 | dataset balanceado | 12 → 64 → 32 → 4, ReLU | 3,044 | **76.9 %** | 58.4 % | 25.0 % | 25.0 % | 21.4 % | 23.1 % | 24.1 % ± 0.9 |
-| S2 | sobremuestreo 50/50 | 13 → 128 → 64 → 32 → 4, ReLU | 12,260 | **81.9 %** (bal. 84.6 %) | 75.0 % (bal. 78.5 %) | 68.8 % | 25.0 % | 15.9 % | 18.1 % | 18.3 % ± 1.1 |
+| S1 | dataset balanceado | 12 → 64 → 32 → 4, sigmoide | 3,044 | **76.9 %** | 58.4 % | 25.0 % | 25.0 % | 22.5 % | 23.1 % | 23.9 % ± 0.9 |
+| S2 | sobremuestreo 50/50 | 13 → 64 → 32 → 4, sigmoide | 3,108 | **82.2 %** (bal. 85.4 %) | 75.0 % (bal. 78.5 %) | 68.8 % | 25.0 % | 16.1 % | 17.8 % | 18.7 % ± 0.8 |
 | S3 | sobremuestreo 50/50 | 15 → 64 → 32 → 3, tanh | 3,203 | **62.1 %** (bal. 67.5 %) | 57.2 % (bal. 64.5 %) | 42.5 % | 33.3 % | 32.7 % | 37.9 % | 37.3 % ± 1.2 |
-| S4 | sobremuestreo 50/50 | 16 → 128 → 64 → 32 → 2, ReLU | 12,578 | **84.6 %** (bal. 73.8 %, AUC 0.856) | 76.5 % (bal. **78.0 %**) | 89.0 % (bal. 50 %) | 50.0 % | 10.2 % | 15.4 % | 15.6 % ± 2.7 |
+| S4 | pesos por clase | PCA 16 → 10, 10 → 64 → 32 → 2, tanh | 2,850 | **83.1 %** (bal. **81.7 %**, AUC 0.829) | 80.9 % (bal. 77.6 %) | 89.0 % (bal. 50 %) | 50.0 % | 16.1 % | 16.9 % | 17.8 % ± 3.8 |
 
 **Partición por cuenta: qué cambió.** Antes, en S1 el 94 % de la prueba eran cuentas ya vistas al entrenar (S3 54 %, S2 33 %). Ahora ninguna cuenta está en dos particiones. Las cifras de antes y de ahora no se comparan para sacar conclusiones, porque cambiaron a la vez la red (S1 era 128 → 64 → 32 y ahora es 64 → 32) y las filas de prueba. Lo que sí se afirma es el resultado actual: en S1, la red acierta 76.9 % en 857 cuentas que no vio al entrenar.
 
 **Lo que hay que decir en la defensa:**
-- **S1:** la red supera al lineal por 18 puntos en 857 cuentas que no vio al entrenar (76.9 %). Las 10,000 transacciones "nunca vistas" (76.3 % balanceada) **no son otro grupo de clientes**: salen de 1,057 cuentas, de las cuales 857 son las mismas de la prueba. Sirven para confirmar, con otros movimientos de esos clientes, que la prueba se sostiene; no para decir que hay otra población donde también da 76 %.
-- **S2:** la orden de préstamo suele tener monto = cuota. La regla de una línea "si el monto coincide con la cuota, es préstamo; si no, es hogar" acierta **81.6 %**, casi lo mismo que la red, pero su exactitud **balanceada es 47.7 %**: nunca reconoce seguro ni arrendamiento. La red llega a 84.6 % balanceada. Hay que mostrar esa regla al lado de la red.
+- **S1:** la red supera al lineal por 18 puntos en 857 cuentas que no vio al entrenar (76.9 %). Las 10,000 transacciones "nunca vistas" (76.2 % balanceada) **no son otro grupo de clientes**: salen de 1,057 cuentas, de las cuales 857 son las mismas de la prueba. Sirven para confirmar, con otros movimientos de esos clientes, que la prueba se sostiene; no para decir que hay otra población donde también da 76 %.
+- **S2:** la orden de préstamo suele tener monto = cuota. La regla de una línea "si el monto coincide con la cuota, es préstamo; si no, es hogar" acierta **81.6 %**, casi lo mismo que la red, pero su exactitud **balanceada es 47.7 %**: nunca reconoce seguro ni arrendamiento. La red llega a 85.4 % balanceada. Hay que mostrar esa regla al lado de la red.
 - **S3:** el dataset tiene 2,000 / 2,000 / 708 meses, pero en el banco el sobregiro es ~0.4 % de los meses. Con la **proporción real** (87,170 meses de cuentas nuevas), la red acierta 57.9 %, **por debajo del 60.7 % de responder siempre "estable"**. Esa comparación sí es nueva, porque casi todos esos meses no están en la prueba. El **87 % de sobregiros detectados sale de la prueba oficial**: los 142 sobregiros de la proporción real son exactamente los 142 de la prueba, porque todos los sobregiros del banco ya estaban en el dataset y no quedó ninguno aparte para medir. La exactitud balanceada (68.4 % frente a 33.3 % de "siempre estable") también se apoya en esos 142 casos. Se presenta como **alerta de riesgo**, no como pronóstico del estado de cualquier mes.
-- **S4:** es el binario permitido, con "mora al corte". **La regresión logística lo empata o lo supera:** con sobremuestreo, 78.0 % balanceada frente a 73.8 % de la red; con pesos, 77.6 % frente a 68.0 %. Con 15 casos de mora en prueba (ε = ±11.7 %) esas diferencias caben en el ruido. La red se presenta como el sistema pedido, no como una mejora. Además, E_out − E_in = 5.2 puntos, apenas sobre el límite de 5.
+- **S4:** es el binario permitido, con "mora al corte". Con tanh y pesos por clase la red llega a **81.7 % balanceada** frente a 77.6 % de la regresión logística, y E_out − E_in = 0.8 puntos. Con 15 casos de mora en prueba (ε = ±11.7 %) esa ventaja cabe en el ruido, así que la red se presenta como el sistema pedido, no como una mejora demostrada. Con ReLU y sobremuestreo la logística ganaba (78.0 % frente a 73.8 %).
 - El aplicativo calcula además el **monto máximo sugerido** en S4: el mayor monto, con el mismo perfil y plazo, cuya probabilidad de mora es menor que 50 %. El riesgo crece con el monto.
-- **PCA** solo ganó en S4 con pesos por clase (pocos datos para 16 características). En los demás se usan todas las X.
-- Los modelos, el preprocesamiento y las métricas completas están en `modelos/` y `modelos_sobremuestreo/`. Reentrenar todo toma entre 20 y 30 minutos (S1 es el más largo, unos 23 minutos).
+- **PCA** ganó en S4 (pocos datos para 16 características: 10 componentes) y en S3 con pesos por clase. En los sistemas del aplicativo solo S4 usa PCA; los demás usan todas las X.
+- Los modelos, el preprocesamiento y las métricas completas están en `modelos/` y `modelos_sobremuestreo/`. Reentrenar todo toma entre 30 minutos y más de 2 horas según el equipo y si está conectado a la corriente (S1 es el más largo). Los sistemas se pueden entrenar en paralelo, uno por proceso: cada uno fija su semilla y da el mismo resultado.
 
 ## Balanceo de clases: dos versiones (en evaluación)
 
@@ -55,15 +55,15 @@ S2, S3 y S4 tienen clases desbalanceadas reales; S1 ya está balanceado (6,000 p
 
 | Carpeta | Estrategia | Uso actual |
 | :--- | :--- | :--- |
-| `modelos/` | Datos reales y **pesos por clase** en la pérdida | El aplicativo la usa solo para S1, que ya estaba balanceado |
-| `modelos_sobremuestreo/` | Entrenamiento **50/50**: se repiten casos de las clases pequeñas solo en entrenamiento; validación y prueba quedan con la proporción real | **La usa el aplicativo en S2, S3 y S4** (decisión del 2026-11-22) |
+| `modelos/` | Datos reales y **pesos por clase** en la pérdida | El aplicativo la usa en S1 (ya balanceado) y en **S4** (desde el 2026-11-23) |
+| `modelos_sobremuestreo/` | Entrenamiento **50/50**: se repiten casos de las clases pequeñas solo en entrenamiento; validación y prueba quedan con la proporción real | **La usa el aplicativo en S2 y S3** (decisión del 2026-11-22) |
 
 La versión de cada sistema se cambia en `VERSION_POR_SISTEMA`, en `app/nucleo.py`.
 
 La comparación completa está en [`comparacion_balanceo.md`](comparacion_balanceo.md) (`python proyecto_final/03_comparar_balanceo.py`). En resumen:
-- El sobremuestreo mejora un poco a S2 (balanceada 84.3 % → 84.6 %) y claramente a S4 (AUC 0.795 → 0.856).
-- En S3, con pesos por clase la balanceada es algo mayor (68.4 % frente a 67.5 %) y E_out − E_in queda en 4.0 puntos. Con sobremuestreo, ese valor es 5.2.
-- En S4 con sobremuestreo, E_out − E_in = 5.2 puntos, justo por encima del límite de 5.
+- En S2 las dos versiones quedan iguales (balanceada 85.3 % con pesos y 85.4 % con sobremuestreo).
+- En S3 también (67.4 % y 67.5 %); E_out − E_in es 5.4 con pesos y 5.2 con sobremuestreo.
+- En S4, con tanh, **los pesos por clase ganan**: balanceada 81.7 % frente a 68.4 %, AUC 0.829 frente a 0.798, y E_out − E_in 0.8 frente a 11.1 puntos (el sobremuestreo memoriza los 46 casos de mora repetidos). Por eso el aplicativo pasó S4 a `modelos/`.
 
 Para reentrenar con sobremuestreo: `python proyecto_final/02_entrenar_redes.py S2 S3 S4 --balanceo sobremuestreo --salida modelos_sobremuestreo`.
 
@@ -100,7 +100,7 @@ proyecto_final\.venv\Scripts\python proyecto_final\app\app.py
 **Notas:**
 - No abra los archivos de `app/templates/` con doble clic: son plantillas y solo se ven bien a través del servidor.
 - Las predicciones se guardan en `app/predicciones.sqlite` de cada computador. Si ese equipo tiene la base `DM_Financial_Kimball_v2` en LocalDB, se guardan también ahí.
-- Volver a entrenar las redes no es necesario. Si se hace, S1 tarda unas 21 horas.
+- Volver a entrenar las redes no es necesario. Si se hace, S1 es el más largo (de 25 minutos a más de 2 horas, según el equipo).
 
 ## Validación de los campos del formulario
 

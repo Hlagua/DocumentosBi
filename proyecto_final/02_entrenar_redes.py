@@ -77,12 +77,14 @@ SISTEMAS = {
 }
 
 # Arquitecturas candidatas: (capas ocultas, activación, dropout, L1)
+# Por indicación del docente las capas ocultas no usan ReLU: tangente hiperbólica
+# (centrada en cero, tanh(z) = 2·σ(2z) − 1) y una candidata con sigmoide logística.
 CANDIDATAS = [
-    ([32], "relu", 0.0, 0.0),
-    ([64, 32], "relu", 0.2, 0.0),
-    ([64, 32], "relu", 0.2, 1e-5),
-    ([128, 64, 32], "relu", 0.2, 1e-5),
+    ([32], "tanh", 0.0, 0.0),
+    ([64, 32], "tanh", 0.2, 0.0),
     ([64, 32], "tanh", 0.2, 1e-5),
+    ([128, 64, 32], "tanh", 0.2, 1e-5),
+    ([64, 32], "sigmoid", 0.2, 1e-5),
 ]
 
 

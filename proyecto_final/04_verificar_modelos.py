@@ -395,7 +395,7 @@ def escribir_markdown(r):
           "Por eso (B) confirma, con otros movimientos de esos mismos clientes, que el resultado de la prueba se sostiene; "
           "no demuestra que la red acierte igual en otra población.", "",
           "(E) compara S2 con una regla de una línea. (F) evalúa S3 con la proporción real de meses del banco. "
-          f"Los {real3.get('2', '—')} sobregiros de (F) son exactamente los mismos de la prueba, porque todos los "
+          f"Los {real3.get(2, real3.get('2', '—'))} sobregiros de (F) son exactamente los mismos de la prueba, porque todos los "
           "sobregiros del banco ya estaban en el dataset; la sensibilidad de sobregiro en (F) repite la de la prueba y no es "
           "una medida nueva. Lo nuevo de (F) es la exactitud global frente a \"siempre estable\", porque casi todos esos "
           "meses estables y de caída no están en la prueba.", ""]

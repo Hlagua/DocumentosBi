@@ -7,73 +7,73 @@ Las dos versiones usan los mismos datos, la misma partición 60/20/20 y la misma
 | Métrica | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
 | Entrenamiento por clase | 2101 / 430 / 320 / 205 | 2101 / 2101 / 2101 / 2101 |
-| Arquitectura elegida | 64-32 relu | 128-64-32 relu |
-| Exactitud (prueba) | 80.8 % | 81.9 % |
-| Exactitud balanceada (prueba) | 84.3 % | 84.6 % |
-| F1 macro (prueba) | 0.743 | 0.753 |
-| E_in (entrenamiento real) | 16.5 % | 15.9 % |
-| E_out (prueba) | 19.2 % | 18.1 % |
-| E_out − E_in (límite 5 puntos) | +2.6 ✅ | +2.2 ✅ |
-| Error CV-5 (promedio ± σ) | 18.0 ± 1.2 % | 18.3 ± 1.1 % |
+| Arquitectura elegida | 128-64-32 tanh | 64-32 sigmoid |
+| Exactitud (prueba) | 81.1 % | 82.2 % |
+| Exactitud balanceada (prueba) | 85.3 % | 85.4 % |
+| F1 macro (prueba) | 0.751 | 0.758 |
+| E_in (entrenamiento real) | 16.6 % | 16.1 % |
+| E_out (prueba) | 18.9 % | 17.8 % |
+| E_out − E_in (límite 5 puntos) | +2.2 ✅ | +1.7 ✅ |
+| Error CV-5 (promedio ± σ) | 17.8 ± 1.3 % | 18.7 ± 0.8 % |
 | Softmax lineal, exactitud balanceada | 78.5 % | 78.5 % |
-| Épocas (mejor época) | 80 (60) | 30 (10) |
-| Tiempo total del proceso | 5.7 min | 5.4 min |
+| Épocas (mejor época) | 82 (62) | 120 (100) |
+| Tiempo total del proceso | 78.2 min | 85.0 min |
 
 **Sensibilidad por clase (prueba):**
 
 | Clase | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
-| Hogar (SIPO) | 77.6 % | 79.3 % |
-| Préstamo (UVER) | 92.4 % | 93.8 % |
-| Seguro (POJISTNE) | 87.7 % | 83.0 % |
-| Arrendamiento (LEASING) | 79.4 % | 82.3 % |
+| Hogar (SIPO) | 77.4 % | 79.1 % |
+| Préstamo (UVER) | 93.8 % | 93.8 % |
+| Seguro (POJISTNE) | 87.7 % | 87.7 % |
+| Arrendamiento (LEASING) | 82.3 % | 80.9 % |
 
 ## S3 · Estado del saldo el mes siguiente
 
 | Métrica | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
 | Entrenamiento por clase | 1200 / 1200 / 424 | 1200 / 1200 / 1200 |
-| Arquitectura elegida | 128-64-32 relu | 64-32 tanh |
-| Exactitud (prueba) | 62.8 % | 62.1 % |
-| Exactitud balanceada (prueba) | 68.4 % | 67.5 % |
-| F1 macro (prueba) | 0.656 | 0.667 |
-| E_in (entrenamiento real) | 33.1 % | 32.6 % |
-| E_out (prueba) | 37.1 % | 37.9 % |
-| E_out − E_in (límite 5 puntos) | +4.0 ✅ | +5.2 ⚠ |
-| Error CV-5 (promedio ± σ) | 37.8 ± 1.5 % | 37.3 ± 1.1 % |
-| Softmax lineal, exactitud balanceada | 65.3 % | 64.5 % |
-| Épocas (mejor época) | 43 (23) | 72 (52) |
-| Tiempo total del proceso | 4.4 min | 4.0 min |
+| Arquitectura elegida | PCA → 64-32 tanh | 64-32 tanh |
+| Exactitud (prueba) | 62.1 % | 62.1 % |
+| Exactitud balanceada (prueba) | 67.4 % | 67.5 % |
+| F1 macro (prueba) | 0.658 | 0.667 |
+| E_in (entrenamiento real) | 32.5 % | 32.6 % |
+| E_out (prueba) | 37.9 % | 37.9 % |
+| E_out − E_in (límite 5 puntos) | +5.4 ⚠ | +5.2 ⚠ |
+| Error CV-5 (promedio ± σ) | 36.5 ± 0.9 % | 37.3 ± 1.1 % |
+| Softmax lineal, exactitud balanceada | 64.8 % | 64.5 % |
+| Épocas (mejor época) | 98 (78) | 72 (52) |
+| Tiempo total del proceso | 9.0 min | 8.0 min |
 
 **Sensibilidad por clase (prueba):**
 
 | Clase | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
-| Saldo estable o creciente | 36.0 % | 48.5 % |
-| Caída de saldo sin sobregiro | 80.5 % | 66.8 % |
-| Sobregiro | 88.7 % | 87.3 % |
+| Saldo estable o creciente | 42.5 % | 48.5 % |
+| Caída de saldo sin sobregiro | 73.0 % | 66.8 % |
+| Sobregiro | 86.6 % | 87.3 % |
 
 ## S4 · Mora al corte (31/12/1998) de un préstamo
 
 | Métrica | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
 | Entrenamiento por clase | 364 / 46 | 364 / 364 |
-| Arquitectura elegida | PCA → 128-64-32 relu | 128-64-32 relu |
-| Exactitud (prueba) | 79.4 % | 84.6 % |
-| Exactitud balanceada (prueba) | 68.0 % | 73.8 % |
-| F1 macro (prueba) | 0.620 | 0.686 |
-| AUC (prueba) | 0.795 | 0.856 |
-| E_in (entrenamiento real) | 17.3 % | 10.2 % |
-| E_out (prueba) | 20.6 % | 15.4 % |
-| E_out − E_in (límite 5 puntos) | +3.3 ✅ | +5.2 ⚠ |
-| Error CV-5 (promedio ± σ) | 19.0 ± 4.2 % | 15.6 ± 2.7 % |
-| Softmax lineal, exactitud balanceada | 77.6 % | 78.0 % |
-| Épocas (mejor época) | 27 (7) | 24 (4) |
-| Tiempo total del proceso | 1.2 min | 0.9 min |
+| Arquitectura elegida | PCA → 64-32 tanh | PCA → 32 tanh |
+| Exactitud (prueba) | 83.1 % | 85.3 % |
+| Exactitud balanceada (prueba) | 81.7 % | 68.4 % |
+| F1 macro (prueba) | 0.704 | 0.664 |
+| AUC (prueba) | 0.829 | 0.798 |
+| E_in (entrenamiento real) | 16.1 % | 3.7 % |
+| E_out (prueba) | 16.9 % | 14.7 % |
+| E_out − E_in (límite 5 puntos) | +0.8 ✅ | +11.1 ⚠ |
+| Error CV-5 (promedio ± σ) | 17.8 ± 3.8 % | 15.9 ± 2.3 % |
+| Softmax lineal, exactitud balanceada | 77.6 % | 74.7 % |
+| Épocas (mejor época) | 48 (28) | 93 (73) |
+| Tiempo total del proceso | 4.7 min | 4.1 min |
 
 **Sensibilidad por clase (prueba):**
 
 | Clase | Pesos por clase | Sobremuestreo 50/50 |
 | :--- | :---: | :---: |
-| Al día al corte (A o C) | 82.6 % | 87.6 % |
-| En mora o impago al corte (B o D) | 53.3 % | 60.0 % |
+| Al día al corte (A o C) | 83.5 % | 90.1 % |
+| En mora o impago al corte (B o D) | 80.0 % | 46.7 % |

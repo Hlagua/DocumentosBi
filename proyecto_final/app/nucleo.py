@@ -29,12 +29,14 @@ MODELOS = RAIZ / "modelos"
 #   "modelos"               -> datos reales con pesos por clase
 #   "modelos_sobremuestreo" -> entrenamiento con clases balanceadas 50/50
 # S1 ya estaba balanceado (6,000 por clase), por eso solo tiene una versión.
-# Decisión del 2026-11-22: clases balanceadas en S2, S3 y S4.
+# Decisión del 2026-11-22: clases balanceadas en S2 y S3. Al pasar las capas
+# ocultas a tanh/sigmoide (2026-11-23), S4 con pesos por clase quedó mejor que con
+# sobremuestreo (balanceada 81.7 % frente a 68.4 %, E_out − E_in 0.8 frente a 11.1).
 VERSION_POR_SISTEMA = {
     "S1": "modelos",
     "S2": "modelos_sobremuestreo",
     "S3": "modelos_sobremuestreo",
-    "S4": "modelos_sobremuestreo",
+    "S4": "modelos",
 }
 SISTEMAS = ["S1", "S2", "S3", "S4"]
 UMBRAL_FRONTERA = 0.10   # diferencia de probabilidad entre las dos clases más probables
