@@ -21,7 +21,7 @@ final de cada época. Con esos pesos se calcula, en cada época:
 La versión de cada sistema es la misma que usa el aplicativo
 (VERSION_POR_SISTEMA en app/nucleo.py).
 
-Uso:  python proyecto_final/05_grabar_entrenamiento.py [S1 S2 S3 S4]
+Uso:  python proyecto_final/05_grabar_entrenamiento.py [S1 S2 S3 S4 S5]
 Salida: proyecto_final/playground/S#_entrenamiento.json
 ==============================================================================
 """
@@ -54,7 +54,8 @@ _spec.loader.exec_module(E)
 sys.path.insert(0, str(DIR / "app"))
 from nucleo import VERSION_POR_SISTEMA  # noqa: E402
 
-ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S3": "S3_saldo_mensual.csv", "S4": "S4_prestamos.csv"}
+ARCHIVOS = {"S1": "S1_transacciones.csv", "S2": "S2_ordenes.csv", "S3": "S3_saldo_mensual.csv", "S4": "S4_prestamos.csv",
+            "S5": "S5_movimiento_mensual.csv"}
 REJILLA = 40          # celdas por lado del mapa 2D
 NEURONAS_POR_CAPA = 6  # neuronas que se dibujan por capa oculta (las de mayor influencia)
 MAX_CUADROS = 80       # épocas que se guardan como cuadros de la animación

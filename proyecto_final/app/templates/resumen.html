@@ -13,12 +13,12 @@
     <div><b>6. Recomendadores</b><span>Slope One, ítem-ítem, contenido, demográfico</span></div>
     <div><b>7. Dashboards</b><span>Power BI Kimball y Mongo, 12 páginas articuladas</span></div>
     <div><b>8. Aprendizaje</b><span>Hoeffding, Bayes, perceptrón, regresión logística, t-SNE</span></div>
-    <div class="activo"><b>9. Redes neuronales</b><span>4 sistemas con softmax y este aplicativo</span></div>
+    <div class="activo"><b>9. Redes neuronales</b><span>5 sistemas con softmax y este aplicativo</span></div>
   </div>
 </div>
 
 <div class="tarjeta">
-  <h2>Los cuatro sistemas predictivos</h2>
+  <h2>Los sistemas predictivos</h2>
   <img src="{{ grafico }}" alt="Resumen" style="width:100%">
   <table>
     <tr><th>Sistema</th><th>Observaciones</th><th>Clases</th><th>X</th><th>Arquitectura</th><th>Balanceo</th><th>Exactitud</th><th>Balanceada</th><th>Lineal (bal.)</th><th>E_in → E_out</th><th></th></tr>
@@ -30,7 +30,7 @@
       <td>{{ s.clases|length }}</td>
       <td>{{ s.orden_X|length }}</td>
       <td>{{ 'PCA → ' if s.pre.usa_pca }}{{ '-'.join(m.elegida.ocultas|map('string')) }} {{ m.elegida.activacion }}</td>
-      <td>{{ 'Sobremuestreo 50/50' if s.balanceo.estrategia == 'sobremuestreo' else ('Dataset balanceado' if cod == 'S1' else 'Pesos por clase') }}</td>
+      <td>{{ 'Sobremuestreo 50/50' if s.balanceo.estrategia == 'sobremuestreo' else ('Dataset balanceado' if cod in ('S1', 'S5') else 'Pesos por clase') }}</td>
       <td>{{ '%.1f'|format(c.red_neuronal.exactitud*100) }} %</td>
       <td>{{ '%.1f'|format(c.red_neuronal.exactitud_balanceada*100) }} %</td>
       <td>{{ '%.1f'|format(c.softmax_lineal.exactitud_balanceada*100) }} %</td>

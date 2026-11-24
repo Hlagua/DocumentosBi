@@ -264,7 +264,7 @@ def _fijas(codigo, ruta, sistema):
 
 
 # ----------------------------------------------------------------------------
-# Resumen de los cuatro sistemas
+# Resumen de los sistemas
 # ----------------------------------------------------------------------------
 def grafico_resumen(sistemas):
     codigos = list(sistemas)
@@ -281,6 +281,6 @@ def grafico_resumen(sistemas):
     ax.set_xticks(x, [f"{s}\n" + etiquetas_cortas([sistemas[s].titulo], 20)[0] for s in codigos], fontsize=8)
     ax.set_ylabel("Exactitud balanceada en prueba (%)")
     ax.set_ylim(0, 100)
-    ax.set_title("Los cuatro sistemas frente a sus referencias")
+    ax.set_title("Los sistemas frente a sus referencias")
     ax.legend(fontsize=8, frameon=False)
     return a_png(fig)

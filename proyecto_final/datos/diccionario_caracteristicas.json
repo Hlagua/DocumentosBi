@@ -436,5 +436,120 @@
         "regla": "Se escribe el nombre; se compara sin tildes ni mayúsculas con los 77 distritos de distritos.csv."
       }
     ]
+  },
+  "S5": {
+    "titulo": "Movimiento de la cuenta el mes siguiente",
+    "orden_X": [
+      "anio",
+      "mes",
+      "volumen_mes_t",
+      "volumen_mes_t_1",
+      "depositos_mes_t",
+      "retiros_mes_t",
+      "num_movimientos_t",
+      "saldo_fin_mes_t",
+      "saldo_prom_mes_t",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "0": "Baja el movimiento (más de 20 % menos)",
+      "1": "Movimiento estable (±20 %)",
+      "2": "Sube el movimiento (más de 20 % más)"
+    },
+    "campos": [
+      {
+        "campo": "periodo",
+        "etiqueta": "Mes evaluado (AAAA-MM)",
+        "tipo": "periodo",
+        "genera": [
+          "anio",
+          "mes"
+        ]
+      },
+      {
+        "campo": "depositos_mes_t",
+        "etiqueta": "Depósitos del mes (sin intereses)",
+        "tipo": "decimal",
+        "genera": [
+          "depositos_mes_t",
+          "volumen_mes_t"
+        ],
+        "regla": "volumen del mes = depósitos + retiros"
+      },
+      {
+        "campo": "retiros_mes_t",
+        "etiqueta": "Retiros y pagos del mes",
+        "tipo": "decimal",
+        "genera": [
+          "retiros_mes_t"
+        ]
+      },
+      {
+        "campo": "volumen_mes_t_1",
+        "etiqueta": "Volumen del mes anterior (depósitos + retiros)",
+        "tipo": "decimal",
+        "genera": [
+          "volumen_mes_t_1"
+        ]
+      },
+      {
+        "campo": "num_movimientos_t",
+        "etiqueta": "Número de movimientos del mes",
+        "tipo": "entero",
+        "genera": [
+          "num_movimientos_t"
+        ]
+      },
+      {
+        "campo": "saldo_fin_mes_t",
+        "etiqueta": "Saldo al cierre del mes",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_fin_mes_t"
+        ]
+      },
+      {
+        "campo": "saldo_prom_mes_t",
+        "etiqueta": "Saldo promedio del mes",
+        "tipo": "decimal",
+        "genera": [
+          "saldo_prom_mes_t"
+        ]
+      },
+      {
+        "campo": "edad",
+        "etiqueta": "Edad (años)",
+        "tipo": "entero",
+        "genera": [
+          "edad"
+        ]
+      },
+      {
+        "campo": "sexo",
+        "etiqueta": "Sexo (M/F)",
+        "tipo": "texto",
+        "genera": [
+          "es_mujer"
+        ],
+        "regla": "F -> 1, M -> 0"
+      },
+      {
+        "campo": "distrito",
+        "etiqueta": "Distrito (ciudad) del cliente",
+        "tipo": "texto",
+        "genera": [
+          "poblacion",
+          "salario_promedio",
+          "tasa_desempleo",
+          "tasa_criminalidad"
+        ],
+        "regla": "Se escribe el nombre; se compara sin tildes ni mayúsculas con los 77 distritos de distritos.csv."
+      }
+    ]
   }
 }

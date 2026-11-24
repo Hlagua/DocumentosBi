@@ -37,20 +37,23 @@ VERSION_POR_SISTEMA = {
     "S2": "modelos_sobremuestreo",
     "S3": "modelos_sobremuestreo",
     "S4": "modelos",
+    "S5": "modelos",          # ya balanceado (3,000 meses por clase), como S1
 }
-SISTEMAS = ["S1", "S2", "S3", "S4"]
+SISTEMAS = ["S1", "S2", "S3", "S4", "S5"]
 UMBRAL_FRONTERA = 0.10   # diferencia de probabilidad entre las dos clases más probables
 ARCHIVOS = {
     "S1": DATOS / "S1_transacciones.csv",
     "S2": DATOS / "S2_ordenes.csv",
     "S3": DATOS / "S3_saldo_mensual.csv",
     "S4": DATOS / "S4_prestamos.csv",
+    "S5": DATOS / "S5_movimiento_mensual.csv",
 }
 FUENTES = {
     "S1": "Fact_Transacciones (1,056,320 movimientos) + Dim_Cliente + Dim_Distrito",
     "S2": "Fact_Ordenes (6,471 órdenes; 5,092 con propósito) + Dim_Cliente + Dim_Cuenta + Dim_Distrito",
     "S3": "Fact_Saldo_Cuenta_Mensual (185,615 meses cuenta × mes) + Dim_Cliente + Dim_Distrito",
     "S4": "Fact_Prestamos (682 préstamos) + historial previo de Fact_Transacciones + Dim_Distrito",
+    "S5": "Fact_Saldo_Cuenta_Mensual (movimiento mensual de cada cuenta, 131,890 meses de 1996 a 1998) + Dim_Cliente + Dim_Distrito",
 }
 
 
@@ -80,10 +83,10 @@ RE_NOMBRE = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$")
 
 # Campos numéricos que SÍ pueden ser negativos (saldos y cambios de saldo).
 NEGATIVOS = {"saldo_despues", "saldo_fin_mes", "saldo_promedio_mes", "saldo_min_mes", "saldo_max_mes",
-             "cambio_saldo_mes", "saldo_minimo_previo"}
+             "cambio_saldo_mes", "saldo_minimo_previo", "saldo_fin_mes_t", "saldo_prom_mes_t"}
 # Rangos lógicos (no de entrenamiento): valores imposibles se rechazan.
 LIMITES = {"edad": (10, 110), "plazo_meses": (1, 360), "ordenes_activas_cuenta": (1, 50),
-           "num_movimientos_mes": (0, 500), "meses_historial": (0, 600)}
+           "num_movimientos_mes": (0, 500), "meses_historial": (0, 600), "num_movimientos_t": (0, 500)}
 ANIOS = (1900, 2100)
 
 
@@ -204,7 +207,7 @@ class Sistema:
             "estrategia": balanceo.get("estrategia", "pesos"),
             "texto": ("Clases balanceadas 50/50 en entrenamiento (sobremuestreo)"
                       if balanceo.get("estrategia") == "sobremuestreo"
-                      else ("Clases balanceadas en el dataset" if codigo == "S1"
+                      else ("Clases balanceadas en el dataset" if codigo in ("S1", "S5")
                             else "Datos reales con pesos por clase")),
             "por_clase": balanceo.get("entrenamiento_usado_por_clase"),
         }
@@ -289,6 +292,11 @@ class Sistema:
             else:
                 v["cuota_mensual"] = v["monto_prestamo"] / v["plazo_meses"]
                 v["ratio_cuota_saldo"] = v["cuota_mensual"] / v["saldo_promedio_previo"]
+        if self.codigo == "S5":
+            # El volumen del mes es depósitos + retiros (así se calculó en el dataset)
+            v["volumen_mes_t"] = v["depositos_mes_t"] + v["retiros_mes_t"]
+            if v["num_movimientos_t"] == 0 and v["volumen_mes_t"] > 0:
+                errores.append(("num_movimientos_t", "Si hubo depósitos o retiros, el número de movimientos no puede ser 0."))
         return errores
 
     # -- X -> predicción ------------------------------------------------------

@@ -5,8 +5,8 @@ AUTORES: Alison Marcela Cobos Taco / Henry Daniel Lagua Flores
 ==============================================================================
 ARCHIVO: proyecto_final/01_generar_datasets.py
 
-Fase 1 del proyecto final: construye los 3 datasets MULTICLASE (uno por cada
-sistema predictivo) a partir de los DataFrames extraídos del Data Mart Kimball
+Fase 1 del proyecto final: construye los 5 datasets (uno por cada sistema
+predictivo) a partir de los DataFrames extraídos del Data Mart Kimball
 `DM_Financial_Kimball_v2` (carpeta `dataframes/`, generada por el script 32).
 
 Reglas que cumple cada dataset:
@@ -19,7 +19,7 @@ Reglas que cumple cada dataset:
   * Limpieza: sin nulos, sin duplicados exactos y con rangos válidos.
   * Partición 60/20/20 (entrenamiento / validación / prueba) con semilla
     fija, guardada en la columna `particion` para que todos los modelos usen
-    exactamente las mismas filas. En S1, S2 y S3 la partición es POR CUENTA
+    exactamente las mismas filas. En S1, S2, S3 y S5 la partición es POR CUENTA
     (estratificada por clase): todas las filas de una cuenta quedan en un solo
     lado, así la prueba responde "¿y si es un cliente nuevo?". En S4 cada
     fila ya es una cuenta distinta.
@@ -40,9 +40,13 @@ Sistemas (todos multiclase, salida softmax):
       por eso la etiqueta es "al corte" y no "pagará o no pagará". Es el
       sistema binario permitido; las X son datos que el banco conoce al
       aprobar el préstamo.
+  S5. Movimiento de la cuenta el mes siguiente (3 clases): baja más de 20 %,
+      estable (±20 %) o sube más de 20 % el volumen (depósitos + retiros, sin
+      intereses) del mes t+1 frente al mes t. Muestra de 3,000 meses por clase.
 
 Salidas en `proyecto_final/datos/`:
-  S1_transacciones.csv, S2_ordenes.csv, S3_saldo_mensual.csv,
+  S1_transacciones.csv, S2_ordenes.csv, S3_saldo_mensual.csv, S4_prestamos.csv,
+  S5_movimiento_mensual.csv,
   distritos.csv (tabla para traducir el nombre del distrito a sus indicadores),
   diccionario_caracteristicas.json (campos del formulario, orden de X, rangos)
   resumen_datasets.json (limpieza, clases, partición y Hoeffding).
@@ -432,6 +436,97 @@ def construir_s4(prestamos, trans, distritos):
 
 
 # ----------------------------------------------------------------------------
+# S5. Movimiento de la cuenta el mes siguiente (3 clases)
+# ----------------------------------------------------------------------------
+NOMBRES_S5 = {
+    0: "Baja el movimiento (más de 20 % menos)",
+    1: "Movimiento estable (±20 %)",
+    2: "Sube el movimiento (más de 20 % más)",
+}
+X_S5 = [
+    "anio", "mes", "volumen_mes_t", "volumen_mes_t_1", "depositos_mes_t", "retiros_mes_t",
+    "num_movimientos_t", "saldo_fin_mes_t", "saldo_prom_mes_t",
+    "edad", "es_mujer",
+] + COLUMNAS_DISTRITO
+UMBRAL_CAMBIO_S5 = 0.20         # ±20 % frente al volumen del mes actual
+MUESTRA_POR_CLASE_S5 = 3000
+DESDE_S5, HASTA_S5 = "1996-01", "1998-11"   # meses t evaluados (t+1 llega hasta 1998-12)
+
+
+def meses_s5(trans, perfiles, clientes, distritos):
+    """Todos los meses cuenta x mes de S5 (antes de muestrear). Lo usa también 04_verificar_modelos.py."""
+    # Volumen = depósitos + retiros del mes, sin los intereses que pone el banco (UROK)
+    tr = trans[~trans["k_symbol"].isin(["UROK", "SANKC. UROK"])][
+        ["id_transaccion", "id_cuenta", "fecha", "monto_transaccion", "saldo_cuenta", "tipo_transaccion"]].copy()
+    tr["fecha_dt"] = pd.to_datetime(tr["fecha"])
+    tr = tr.sort_values(["id_cuenta", "fecha_dt", "id_transaccion"])
+    tr["mes_per"] = tr["fecha_dt"].dt.to_period("M")
+    tr["abs_m"] = tr["monto_transaccion"].abs()
+    tr["dep"] = np.where(tr["tipo_transaccion"] == "PRIJEM", tr["abs_m"], 0.0)
+    tr["ret"] = np.where(tr["tipo_transaccion"] != "PRIJEM", tr["abs_m"], 0.0)
+    g = tr.groupby(["id_cuenta", "mes_per"])
+    mensual = pd.DataFrame({
+        "depositos_mes_t": g["dep"].sum(),
+        "retiros_mes_t": g["ret"].sum(),
+        "num_movimientos_t": g.size(),
+        "saldo_fin_mes_t": g["saldo_cuenta"].last(),
+        "saldo_prom_mes_t": g["saldo_cuenta"].mean(),
+    }).reset_index()
+
+    # Calendario completo por cuenta: un mes sin movimientos tiene volumen 0 y conserva el saldo
+    partes = []
+    for cuenta, grupo in mensual.groupby("id_cuenta"):
+        meses = pd.period_range(grupo["mes_per"].min(), pd.Period("1998-12", "M"), freq="M")
+        partes.append(grupo.set_index("mes_per").reindex(meses).rename_axis("mes_per").reset_index().assign(id_cuenta=cuenta))
+    m = pd.concat(partes, ignore_index=True)
+    m["saldo_fin_mes_t"] = m.groupby("id_cuenta")["saldo_fin_mes_t"].ffill()
+    m["saldo_prom_mes_t"] = m["saldo_prom_mes_t"].fillna(m["saldo_fin_mes_t"])
+    for c in ["depositos_mes_t", "retiros_mes_t", "num_movimientos_t"]:
+        m[c] = m[c].fillna(0)
+    m["num_movimientos_t"] = m["num_movimientos_t"].astype(int)
+    m["volumen_mes_t"] = m["depositos_mes_t"] + m["retiros_mes_t"]
+    m["volumen_mes_t_1"] = m.groupby("id_cuenta")["volumen_mes_t"].shift(1)
+
+    # Etiqueta verdadera: volumen real del mes t+1 (nunca entra en X)
+    sig = m.groupby("id_cuenta")["volumen_mes_t"].shift(-1)
+    m["volumen_sig"] = sig
+    m = m[sig.notna() & m["volumen_mes_t_1"].notna()]
+    m = m[(m["mes_per"] >= pd.Period(DESDE_S5, "M")) & (m["mes_per"] <= pd.Period(HASTA_S5, "M"))].copy()
+    v0, v1 = m["volumen_mes_t"], m["volumen_sig"]
+    m["clase"] = np.select(
+        [v1 < (1 - UMBRAL_CAMBIO_S5) * v0, v1 > (1 + UMBRAL_CAMBIO_S5) * v0], [0, 2], 1).astype(int)
+    m["anio"] = m["mes_per"].dt.year.astype(int)
+    m["mes"] = m["mes_per"].dt.month.astype(int)
+    print(f"      Meses cuenta x mes evaluados ({DESDE_S5} a {HASTA_S5}): {len(m):,}")
+    print(f"      Población por clase: {m['clase'].value_counts().sort_index().to_dict()}")
+
+    titulares = clientes[clientes["es_titular"] == 1][["id_cliente", "id_distrito"]]
+    ctx = perfiles[["id_cuenta", "id_cliente", "sexo", "edad_corte"]].merge(titulares, on="id_cliente", how="left")
+    ctx = ctx.merge(distritos[["id_distrito", "nombre_distrito"] + COLUMNAS_DISTRITO], on="id_distrito", how="left")
+    m = m.merge(ctx, on="id_cuenta", how="left")
+    m["edad"] = m["edad_corte"]
+    m["es_mujer"] = (m["sexo"] == "F").astype(int)
+    m["periodo"] = m["mes_per"].astype(str)
+    return m.reset_index(drop=True)
+
+
+def construir_s5(trans, perfiles, clientes, distritos):
+    print("\n[S5] Movimiento de la cuenta el mes siguiente (Fact_Saldo_Cuenta_Mensual)")
+    m = meses_s5(trans, perfiles, clientes, distritos)
+    # Muestra balanceada: 3,000 meses por clase
+    m = muestrear_por_clase(m, MUESTRA_POR_CLASE_S5)
+    m, rep = limpiar(m, X_S5, "S5")
+    m["particion"] = particion_por_cuenta(m["clase"].values, m["id_cuenta"].values)
+    m["nombre_clase"] = m["clase"].map(NOMBRES_S5)
+    cols = ["id_cuenta", "periodo", "nombre_distrito"] + X_S5 + ["volumen_sig", "clase", "nombre_clase", "particion"]
+    m = m[cols]
+    m.to_csv(OUT_DIR / "S5_movimiento_mensual.csv", index=False, encoding="utf-8")
+    return resumir(m, X_S5, NOMBRES_S5, rep,
+                   "Predice si el dinero que mueve la cuenta (depósitos + retiros) el próximo mes bajará más de 20 %, "
+                   "se mantendrá o subirá más de 20 %.")
+
+
+# ----------------------------------------------------------------------------
 # Diccionario del formulario: qué escribe el usuario y cómo se convierte en X
 # ----------------------------------------------------------------------------
 def diccionario():
@@ -500,29 +595,62 @@ def diccionario():
             {"campo": "meses_historial", "etiqueta": "Meses de historial de la cuenta", "tipo": "entero",
              "genera": ["meses_historial"]},
             edad, sexo, distrito]},
+        "S5": {"titulo": "Movimiento de la cuenta el mes siguiente", "orden_X": X_S5, "clases": NOMBRES_S5, "campos": [
+            {"campo": "periodo", "etiqueta": "Mes evaluado (AAAA-MM)", "tipo": "periodo", "genera": ["anio", "mes"]},
+            {"campo": "depositos_mes_t", "etiqueta": "Depósitos del mes (sin intereses)", "tipo": "decimal",
+             "genera": ["depositos_mes_t", "volumen_mes_t"], "regla": "volumen del mes = depósitos + retiros"},
+            {"campo": "retiros_mes_t", "etiqueta": "Retiros y pagos del mes", "tipo": "decimal",
+             "genera": ["retiros_mes_t"]},
+            {"campo": "volumen_mes_t_1", "etiqueta": "Volumen del mes anterior (depósitos + retiros)", "tipo": "decimal",
+             "genera": ["volumen_mes_t_1"]},
+            {"campo": "num_movimientos_t", "etiqueta": "Número de movimientos del mes", "tipo": "entero",
+             "genera": ["num_movimientos_t"]},
+            {"campo": "saldo_fin_mes_t", "etiqueta": "Saldo al cierre del mes", "tipo": "decimal",
+             "genera": ["saldo_fin_mes_t"]},
+            {"campo": "saldo_prom_mes_t", "etiqueta": "Saldo promedio del mes", "tipo": "decimal",
+             "genera": ["saldo_prom_mes_t"]},
+            edad, sexo, distrito]},
     }
+
+
+CONSTRUCTORES = ["S1", "S2", "S3", "S4", "S5"]
 
 
 def main():
+    """
+    Uso: python 01_generar_datasets.py [S1 S2 S3 S4 S5]
+    Sin argumentos regenera todos. Con argumentos solo regenera esos sistemas y
+    conserva en resumen_datasets.json lo que ya estaba de los demás.
+    """
     sys.stdout.reconfigure(encoding="utf-8")
+    elegidos = [s for s in sys.argv[1:] if s in CONSTRUCTORES] or CONSTRUCTORES
     distritos, clientes, perfiles, ordenes, trans, prestamos = cargar()
-    resumen = {
+    construir = {
+        "S1": lambda: construir_s1(trans, distritos),
+        "S2": lambda: construir_s2(ordenes, clientes, perfiles, distritos),
+        "S3": lambda: construir_s3(trans, perfiles, clientes, distritos),
+        "S4": lambda: construir_s4(prestamos, trans, distritos),
+        "S5": lambda: construir_s5(trans, perfiles, clientes, distritos),
+    }
+    ruta_resumen = OUT_DIR / "resumen_datasets.json"
+    resumen = {}
+    if elegidos != CONSTRUCTORES and ruta_resumen.exists():
+        resumen = json.loads(ruta_resumen.read_text(encoding="utf-8"))
+    resumen.update({
         "semilla": SEMILLA,
         "particion": "60/20/20 estratificada (entrenamiento/validacion/prueba)",
         "hoeffding_formula": "N_test >= ln(2/delta) / (2*eps^2)",
-        "S1": construir_s1(trans, distritos),
-        "S2": construir_s2(ordenes, clientes, perfiles, distritos),
-        "S3": construir_s3(trans, perfiles, clientes, distritos),
-        "S4": construir_s4(prestamos, trans, distritos),
-    }
+    })
+    for s in elegidos:
+        resumen[s] = construir[s]()
     distritos.drop(columns="nombre_normalizado").to_csv(OUT_DIR / "distritos.csv", index=False, encoding="utf-8")
-    with open(OUT_DIR / "resumen_datasets.json", "w", encoding="utf-8") as f:
+    with open(ruta_resumen, "w", encoding="utf-8") as f:
         json.dump(resumen, f, ensure_ascii=False, indent=2)
     with open(OUT_DIR / "diccionario_caracteristicas.json", "w", encoding="utf-8") as f:
         json.dump(diccionario(), f, ensure_ascii=False, indent=2)
 
     print("\nResumen:")
-    for s in ["S1", "S2", "S3", "S4"]:
+    for s in elegidos:
         r = resumen[s]
         h = r["hoeffding"]
         print(f"  {s}: {r['n_filas']:,} filas, {r['n_caracteristicas']} X, clases {r['clases']}, "

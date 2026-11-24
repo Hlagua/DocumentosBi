@@ -74,6 +74,7 @@ SISTEMAS = {
     "S2": "S2_ordenes.csv",
     "S3": "S3_saldo_mensual.csv",
     "S4": "S4_prestamos.csv",
+    "S5": "S5_movimiento_mensual.csv",
 }
 
 # Arquitecturas candidatas: (capas ocultas, activación, dropout, L1)
@@ -377,7 +378,7 @@ def procesar(sistema, archivo, diccionario):
 def main():
     """
     Uso:
-      python 02_entrenar_redes.py [S1 S2 S3 S4] [--balanceo pesos|sobremuestreo] [--salida carpeta]
+      python 02_entrenar_redes.py [S1 S2 S3 S4 S5] [--balanceo pesos|sobremuestreo] [--salida carpeta]
     Por defecto entrena los 4 sistemas con pesos por clase y guarda en modelos/.
     """
     global BALANCEO, MODELOS

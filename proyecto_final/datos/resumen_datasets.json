@@ -482,5 +482,131 @@
         "media": 16390.8182
       }
     }
+  },
+  "S5": {
+    "descripcion": "Predice si el dinero que mueve la cuenta (depósitos + retiros) el próximo mes bajará más de 20 %, se mantendrá o subirá más de 20 %.",
+    "n_filas": 9000,
+    "n_caracteristicas": 15,
+    "caracteristicas": [
+      "anio",
+      "mes",
+      "volumen_mes_t",
+      "volumen_mes_t_1",
+      "depositos_mes_t",
+      "retiros_mes_t",
+      "num_movimientos_t",
+      "saldo_fin_mes_t",
+      "saldo_prom_mes_t",
+      "edad",
+      "es_mujer",
+      "poblacion",
+      "salario_promedio",
+      "tasa_desempleo",
+      "tasa_criminalidad"
+    ],
+    "clases": {
+      "Baja el movimiento (más de 20 % menos)": 3000,
+      "Movimiento estable (±20 %)": 3000,
+      "Sube el movimiento (más de 20 % más)": 3000
+    },
+    "clase_mayoritaria_prop": 0.3333,
+    "clasificador_aleatorio_error": 0.6667,
+    "particion": {
+      "entrenamiento": 5398,
+      "validacion": 1802,
+      "prueba": 1800
+    },
+    "hoeffding": {
+      "delta": 0.05,
+      "eps_objetivo": 0.02,
+      "n_test_minimo_para_eps_objetivo": 4612,
+      "n_test_real": 1800,
+      "eps_garantizado_con_n_test_real": 0.032
+    },
+    "limpieza": {
+      "filas_iniciales": 9000,
+      "nulos_por_columna": {},
+      "filas_tras_quitar_nulos": 9000,
+      "duplicados_eliminados": 0,
+      "filas_con_X_repetida_y_clase_distinta": 0,
+      "filas_finales": 9000
+    },
+    "rangos_X": {
+      "anio": {
+        "min": 1996.0,
+        "max": 1998.0,
+        "media": 1997.1234
+      },
+      "mes": {
+        "min": 1.0,
+        "max": 12.0,
+        "media": 6.4623
+      },
+      "volumen_mes_t": {
+        "min": 0.0,
+        "max": 473102.0,
+        "media": 35906.3436
+      },
+      "volumen_mes_t_1": {
+        "min": 0.0,
+        "max": 432570.0,
+        "media": 34380.2311
+      },
+      "depositos_mes_t": {
+        "min": 0.0,
+        "max": 238345.0,
+        "media": 18012.6077
+      },
+      "retiros_mes_t": {
+        "min": 0.0,
+        "max": 234757.0,
+        "media": 17893.7359
+      },
+      "num_movimientos_t": {
+        "min": 0.0,
+        "max": 18.0,
+        "media": 4.9718
+      },
+      "saldo_fin_mes_t": {
+        "min": -25562.0,
+        "max": 122767.0,
+        "media": 35707.9626
+      },
+      "saldo_prom_mes_t": {
+        "min": -25562.0,
+        "max": 122767.0,
+        "media": 37613.9317
+      },
+      "edad": {
+        "min": 16.0,
+        "max": 80.0,
+        "media": 43.9818
+      },
+      "es_mujer": {
+        "min": 0.0,
+        "max": 1.0,
+        "media": 0.4996
+      },
+      "poblacion": {
+        "min": 42821.0,
+        "max": 1204953.0,
+        "media": 267807.9943
+      },
+      "salario_promedio": {
+        "min": 8110.0,
+        "max": 12541.0,
+        "media": 9510.5018
+      },
+      "tasa_desempleo": {
+        "min": 0.0,
+        "max": 9.0,
+        "media": 3.4033
+      },
+      "tasa_criminalidad": {
+        "min": 888.0,
+        "max": 99107.0,
+        "media": 16272.3673
+      }
+    }
   }
 }
